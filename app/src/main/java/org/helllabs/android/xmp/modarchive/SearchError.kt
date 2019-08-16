@@ -19,20 +19,12 @@ class SearchError : AppCompatActivity(), Runnable {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        //		// Hide the status bar
-        //        if (Build.VERSION.SDK_INT < 16) {
-        //            getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        //        } else {
-        //        	final View decorView = getWindow().getDecorView();
-        //        	decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
-        //        }
-
         setContentView(R.layout.search_error)
 
-        setTitle("Search error")
+        title = "Search error"
 
-        val error = getIntent().getSerializableExtra(Search.ERROR) as Throwable
-        msg = findViewById(R.id.error_message) as TextView
+        val error = intent.getSerializableExtra(Search.ERROR) as Throwable
+        msg = findViewById<TextView>(R.id.error_message)
         //msg.getPaint().setAntiAlias(false);
 
         var message: String? = error.message
@@ -45,17 +37,17 @@ class SearchError : AppCompatActivity(), Runnable {
                 message = message.substring(idx + 11)
             }
 
-            if (message.trim { it <= ' ' }.isEmpty()) {
-                message = UNKNOWN_ERROR
+            message = if (message.trim { it <= ' ' }.isEmpty()) {
+                UNKNOWN_ERROR
             } else {
-                message = message.substring(0, 1).toUpperCase(Locale.US) + message.substring(1) + ".  Press back button to continue."
+                message.substring(0, 1).toUpperCase(Locale.US) + message.substring(1) + ".  Press back button to continue."
             }
         }
 
         msg!!.text = message
 
-        val typeface = Typeface.createFromAsset(getAssets(), "fonts/TopazPlus_a500_v1.0.ttf")
-        msg!!.setTypeface(typeface)
+        val typeface = Typeface.createFromAsset(assets, "fonts/TopazPlus_a500_v1.0.ttf")
+        msg!!.typeface = typeface
 
         msg!!.postDelayed(this, PERIOD.toLong())
     }
@@ -82,14 +74,14 @@ class SearchError : AppCompatActivity(), Runnable {
 
     override fun run() {
         // Guru frame blink
-        msg!!.setBackgroundDrawable(getResources().getDrawable(if (frameBlink) R.drawable.guru_frame else R.drawable.guru_frame_2))
+        @Suppress("DEPRECATION")
+        msg!!.setBackgroundDrawable(resources.getDrawable(if (frameBlink) R.drawable.guru_frame else R.drawable.guru_frame_2))
         frameBlink = frameBlink xor true
         msg!!.postDelayed(this, PERIOD.toLong())
     }
 
     companion object {
-
-        private val PERIOD = 1337
-        private val UNKNOWN_ERROR = "Software Failure.   Press back to continue.\n\nGuru Meditation #35068035.48454C50"
+        private const val PERIOD = 1337
+        private const val UNKNOWN_ERROR = "Software Failure.   Press back to continue.\n\nGuru Meditation #35068035.48454C50"
     }
 }

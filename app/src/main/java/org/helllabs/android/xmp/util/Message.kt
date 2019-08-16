@@ -16,7 +16,7 @@ object Message {
             val alertDialog = AlertDialog.Builder(activity).create()
             alertDialog.setTitle(R.string.error)
             alertDialog.setMessage(message)
-            alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, activity.getString(R.string.exit)) { dialog, which ->
+            alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, activity.getString(R.string.exit)) { dialog, _ ->
                 dialog.dismiss()
                 activity.finish()
             }
@@ -30,7 +30,7 @@ object Message {
             val alertDialog = AlertDialog.Builder(activity).create()
             alertDialog.setTitle(R.string.error)
             alertDialog.setMessage(message)
-            alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, activity.getString(R.string.dismiss)) { dialog, which ->
+            alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, activity.getString(R.string.dismiss)) { _, _ ->
                 //
             }
             alertDialog.show()
@@ -52,7 +52,7 @@ object Message {
     fun yesNoDialog(activity: Activity, title: String, message: String, runnable: Runnable) {
 
         activity.runOnUiThread {
-            val listener = DialogInterface.OnClickListener { dialog, which ->
+            val listener = DialogInterface.OnClickListener { _, which ->
                 if (which == DialogInterface.BUTTON_POSITIVE) {
                     runnable.run()
                 }

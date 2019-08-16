@@ -7,18 +7,16 @@ import android.content.SharedPreferences
 import android.os.Bundle
 import android.os.IBinder
 import android.os.RemoteException
-import android.preference.PreferenceManager
 import android.view.Menu
-import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.MotionEvent
 import android.view.View
 import android.view.View.OnClickListener
 import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
+import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter
@@ -31,8 +29,7 @@ import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.util.InfoCache
 import org.helllabs.android.xmp.util.Log
 import org.helllabs.android.xmp.util.Message
-
-import java.util.ArrayList
+import java.util.*
 
 abstract class BasePlaylistActivity : AppCompatActivity() {
     private var mShowToasts: Boolean = false
@@ -100,14 +97,13 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
 
     protected abstract val allFiles: List<String>
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mPrefs = PreferenceManager.getDefaultSharedPreferences(this)
         mShowToasts = mPrefs.getBoolean(Preferences.SHOW_TOAST, true)
 
         // Action bar icon navigation
-        getSupportActionBar()!!.setDisplayHomeAsUpEnabled(true)
+        supportActionBar!!.setDisplayHomeAsUpEnabled(true)
     }
 
     override fun onResume() {
@@ -120,23 +116,21 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     protected abstract fun update()
 
     protected fun setSwipeRefresh(recyclerView: RecyclerView) {
-        val swipeRefresh = findViewById(R.id.swipeContainer) as SwipeRefreshLayout
-        swipeRefresh.setOnRefreshListener(object : SwipeRefreshLayout.OnRefreshListener {
-            override fun onRefresh() {
-                update()
-                swipeRefresh.setRefreshing(false)
-            }
-        })
+        val swipeRefresh = findViewById<SwipeRefreshLayout>(R.id.swipeContainer)
+        swipeRefresh.setOnRefreshListener {
+            update()
+            swipeRefresh.isRefreshing = false
+        }
         swipeRefresh.setColorSchemeResources(R.color.refresh_color)
 
         recyclerView.addOnItemTouchListener(object : RecyclerView.OnItemTouchListener {
             override fun onInterceptTouchEvent(rv: RecyclerView, e: MotionEvent): Boolean {
                 if (e.action == MotionEvent.ACTION_DOWN) {
                     var enable = false
-                    if (recyclerView.getChildCount() > 0) {
+                    if (recyclerView.childCount > 0) {
                         enable = !recyclerView.canScrollVertically(-1)
                     }
-                    swipeRefresh.setEnabled(enable)
+                    swipeRefresh.isEnabled = enable
                 }
 
                 return false
@@ -153,9 +147,9 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     }
 
     protected fun setupButtons() {
-        val playAllButton = findViewById(R.id.play_all) as ImageButton
-        val toggleLoopButton = findViewById(R.id.toggle_loop) as ImageButton
-        val toggleShuffleButton = findViewById(R.id.toggle_shuffle) as ImageButton
+        val playAllButton = findViewById<ImageButton>(R.id.play_all)
+        val toggleLoopButton = findViewById<ImageButton>(R.id.toggle_loop)
+        val toggleShuffleButton = findViewById<ImageButton>(R.id.toggle_shuffle)
 
         playAllButton.setImageResource(R.drawable.list_play)
         playAllButton.setOnClickListener(playAllButtonListener)
@@ -172,22 +166,23 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
 
         val mode = Integer.parseInt(mPrefs.getString(Preferences.PLAYLIST_MODE, "1")!!)
 
-        /* Test module again if invalid, in case a new file format is added to the
+        /*
+         * Test module again if invalid, in case a new file format is added to the
 		 * player library and the file was previously unrecognized and cached as invalid.
 		 */
         if (InfoCache.testModuleForceIfInvalid(filename)) {
             when (mode) {
-                1                                // play all starting at this one
-                -> {
+                // play all starting at this one
+                1 -> {
                     val count = position - adapter.directoryCount
                     if (count >= 0) {
                         playModule(adapter.filenameList, count, isShuffleMode)
                     }
                 }
-                2                                // play this one
-                -> playModule(filename)
-                3                                // add to queue
-                -> {
+                // play this one
+                2 -> playModule(filename)
+                // add to queue
+                3 -> {
                     addToQueue(filename)
                     Message.toast(this, "Added to queue")
                 }
@@ -197,17 +192,6 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         }
     }
 
-    /*
-	// Item click
-	protected void setOnItemClickListener(final RecyclerView list) {
-		list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-			@Override
-			public void onItemClick(final AdapterView<?> list, final View view, final int position, final long id) {
-				onListItemClick(list, view, position, id);
-			}
-		});
-	}
-    */
 
     // Play this module
     protected fun playModule(mod: String) {
@@ -227,12 +211,11 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
 
     private fun playModule(modList: List<String>, start: Int, keepFirst: Boolean) {
         val intent = Intent(this, PlayerActivity::class.java)
-        (getApplication() as XmpApplication).fileList = modList.toMutableList()
+        (application as XmpApplication).fileList = modList.toMutableList()
         intent.putExtra(PlayerActivity.PARM_SHUFFLE, isShuffleMode)
         intent.putExtra(PlayerActivity.PARM_LOOP, isLoopMode)
         intent.putExtra(PlayerActivity.PARM_START, start)
         intent.putExtra(PlayerActivity.PARM_KEEPFIRST, keepFirst)
-        //intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);	// prevent screen flicker when starting player activity
         Log.i(TAG, "Start Player activity")
         startActivityForResult(intent, PLAY_MOD_REQUEST)
     }
@@ -295,9 +278,8 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     }
 
     // Menu
-
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        val inflater = getMenuInflater()
+        val inflater = menuInflater
         inflater.inflate(R.menu.options_menu, menu)
 
         // Calling super after populating the menu is necessary here to ensure that the
@@ -322,9 +304,9 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     }
 
     companion object {
-        private val TAG = "PlaylistActivity"
-        private val SETTINGS_REQUEST = 45
-        private val PLAY_MOD_REQUEST = 669
-        private val SEARCH_REQUEST = 47
+        private const val TAG = "PlaylistActivity"
+        private const val SETTINGS_REQUEST = 45
+        private const val PLAY_MOD_REQUEST = 669
+        private const val SEARCH_REQUEST = 47
     }
 }

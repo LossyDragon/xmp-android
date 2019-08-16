@@ -23,8 +23,7 @@ import android.os.Build
 import android.os.IBinder
 import android.os.RemoteCallbackList
 import android.os.RemoteException
-import android.preference.PreferenceManager
-
+import androidx.preference.PreferenceManager
 
 class PlayerService : Service(), OnAudioFocusChangeListener {
 
@@ -271,12 +270,10 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         //session = new MediaSessionCompat(this, getPackageName());
         //session.setActive(true);
 
-        if (Build.VERSION.SDK_INT >= 26) {
-            notifier = OreoNotifier(this)
-        } else if (Build.VERSION.SDK_INT >= 21) {
-            notifier = LollipopNotifier(this)
-        } else {
-            notifier = LegacyNotifier(this)
+        when {
+            Build.VERSION.SDK_INT >= 26 -> notifier = OreoNotifier(this)
+            Build.VERSION.SDK_INT >= 21 -> notifier = LollipopNotifier(this)
+            else -> notifier = LegacyNotifier(this)
         }
 
         watchdog = Watchdog(10)
@@ -291,7 +288,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
-        return Service.START_NOT_STICKY
+        return START_NOT_STICKY
     }
 
     override fun onDestroy() {
@@ -475,10 +472,10 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                 val interpTypes = intArrayOf(Xmp.INTERP_NEAREST, Xmp.INTERP_LINEAR, Xmp.INTERP_SPLINE)
                 val temp = Integer.parseInt(prefs!!.getString(Preferences.INTERP_TYPE, "1")!!)
                 var interpType: Int
-                if (temp >= 1 && temp <= 2) {
-                    interpType = interpTypes[temp]
+                interpType = if (temp in 1..2) {
+                    interpTypes[temp]
                 } else {
-                    interpType = Xmp.INTERP_LINEAR
+                    Xmp.INTERP_LINEAR
                 }
 
                 if (!prefs!!.getBoolean(Preferences.INTERPOLATE, true)) {
@@ -510,10 +507,10 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                 Xmp.setPlayer(Xmp.PLAYER_DSP, Xmp.DSP_LOWPASS)
 
                 var flags = Xmp.getPlayer(Xmp.PLAYER_CFLAGS)
-                if (prefs!!.getBoolean(Preferences.AMIGA_MIXER, false)) {
-                    flags = flags or Xmp.FLAGS_A500
+                flags = if (prefs!!.getBoolean(Preferences.AMIGA_MIXER, false)) {
+                    flags or Xmp.FLAGS_A500
                 } else {
-                    flags = flags and Xmp.FLAGS_A500.inv()
+                    flags and Xmp.FLAGS_A500.inv()
                 }
                 Xmp.setPlayer(Xmp.PLAYER_CFLAGS, flags)
 
@@ -731,22 +728,22 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
     }
 
     companion object {
-        private val TAG = "PlayerService"
+        private const val TAG = "PlayerService"
 
-        val RESULT_OK = 0
-        val RESULT_CANT_OPEN_AUDIO = 1
-        val RESULT_NO_AUDIO_FOCUS = 2
+        const val RESULT_OK = 0
+        const val RESULT_CANT_OPEN_AUDIO = 1
+        const val RESULT_NO_AUDIO_FOCUS = 2
 
-        private val CMD_NONE = 0
-        private val CMD_NEXT = 1
-        private val CMD_PREV = 2
-        private val CMD_STOP = 3
+        private const val CMD_NONE = 0
+        private const val CMD_NEXT = 1
+        private const val CMD_PREV = 2
+        private const val CMD_STOP = 3
 
-        private val MIN_BUFFER_MS = 80
-        private val MAX_BUFFER_MS = 1000
-        private val DEFAULT_BUFFER_MS = 400
+        private const val MIN_BUFFER_MS = 80
+        private const val MAX_BUFFER_MS = 1000
+        private const val DEFAULT_BUFFER_MS = 400
 
-        private val DUCK_VOLUME = 0x500
+        private const val DUCK_VOLUME = 0x500
 
         var isAlive: Boolean = false
         var isLoaded: Boolean = false

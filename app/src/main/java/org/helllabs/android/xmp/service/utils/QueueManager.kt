@@ -3,7 +3,13 @@ package org.helllabs.android.xmp.service.utils
 import java.util.Collections
 
 
-class QueueManager(private val list: MutableList<String>, start: Int, private val shuffleMode: Boolean, private val loopListMode: Boolean, keepFirst: Boolean) {
+class QueueManager(
+        private val list: MutableList<String>,
+        start: Int,
+        private val shuffleMode: Boolean,
+        private val loopListMode: Boolean,
+        keepFirst: Boolean
+) {
     private val ridx: RandomIndex
     var index: Int = 0
     private var randomStart: Int = 0
@@ -15,23 +21,23 @@ class QueueManager(private val list: MutableList<String>, start: Int, private va
         }
 
     init {
-        var start = start
-        if (start >= list.size) {
-            start = list.size - 1
+        var queueStart = start
+        if (queueStart >= list.size) {
+            queueStart = list.size - 1
         }
 
         if (keepFirst) {
-            Collections.swap(list, 0, start)
-            start = 0
+            Collections.swap(list, 0, queueStart)
+            queueStart = 0
             randomStart = 1
         }
 
-        index = start
+        index = queueStart
         ridx = RandomIndex(randomStart, list.size)
     }
 
     fun add(fileList: List<String>) {
-        if (!fileList.isEmpty()) {
+        if (fileList.isNotEmpty()) {
             ridx.extend(fileList.size, index + 1)
             list.addAll(fileList)
         }

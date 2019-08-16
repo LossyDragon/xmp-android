@@ -8,23 +8,19 @@ import androidx.core.app.NotificationCompat
 
 class LegacyNotifier(service: Service) : Notifier(service) {
 
-    private val `when`: Long
-
-    init {
-        `when` = System.currentTimeMillis()
-    }
+    private val `when`: Long = System.currentTimeMillis()
 
     override fun notify(title: String, info: String, index: Int, type: Int) {
-        var title = title
+        var notifyTitle = title
 
-        if (title != null && title.trim { it <= ' ' }.isEmpty()) {
-            title = "<untitled>"
+        if (notifyTitle.trim { it <= ' ' }.isEmpty()) {
+            notifyTitle = "<untitled>"
         }
 
         val indexText = formatIndex(index)
 
         val builder = NotificationCompat.Builder(service)
-                .setContentTitle(title)
+                .setContentTitle(notifyTitle)
                 .setContentText(info)
                 .setContentInfo(indexText)
                 .setContentIntent(contentIntent)
@@ -34,7 +30,7 @@ class LegacyNotifier(service: Service) : Notifier(service) {
                 .setWhen(`when`)
                 .addAction(R.drawable.ic_action_stop, "Stop", stopIntent)
 
-        if (type == Notifier.TYPE_PAUSE) {
+        if (type == TYPE_PAUSE) {
             builder.addAction(R.drawable.ic_action_play, "Play", pauseIntent)
             builder.setContentText("(paused)")
         } else {
@@ -43,15 +39,15 @@ class LegacyNotifier(service: Service) : Notifier(service) {
 
         builder.addAction(R.drawable.ic_action_next, "Next", nextIntent)
 
-        if (type == Notifier.TYPE_TICKER) {
+        if (type == TYPE_TICKER) {
             if (queueManager.size() > 1) {
-                builder.setTicker("$title ($indexText)")
+                builder.setTicker("$notifyTitle ($indexText)")
             } else {
-                builder.setTicker(title)
+                builder.setTicker(notifyTitle)
             }
         }
 
-        service.startForeground(Notifier.NOTIFY_ID, builder.build())
+        service.startForeground(NOTIFY_ID, builder.build())
     }
 
 }

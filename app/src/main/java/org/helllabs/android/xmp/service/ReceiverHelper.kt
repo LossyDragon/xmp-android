@@ -12,23 +12,18 @@ import android.bluetooth.BluetoothDevice
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.SharedPreferences
-import android.os.Build
-import android.preference.PreferenceManager
 import android.view.KeyEvent
+import androidx.preference.PreferenceManager
 
 class ReceiverHelper(private val player: PlayerService) {
     private var headsetPlugReceiver: HeadsetPlugReceiver? = null
     private var bluetoothConnectionReceiver: BluetoothConnectionReceiver? = null
     private var mediaButtons: MediaButtons? = null
-    private val prefs: SharedPreferences
+    private val prefs: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(player)
 
     // Autopause
     var isAutoPaused: Boolean = false            // paused on phone call
     var isHeadsetPaused: Boolean = false
-
-    init {
-        prefs = PreferenceManager.getDefaultSharedPreferences(player)
-    }
 
     fun registerReceivers() {
         if (prefs.getBoolean(Preferences.HEADSET_PAUSE, true)) {
@@ -46,9 +41,8 @@ class ReceiverHelper(private val player: PlayerService) {
             filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED)
             filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED)
             filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED)
-            if (Build.VERSION.SDK_INT >= 11) {
-                filter.addAction(BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED)
-            }
+            filter.addAction(BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED)
+
             player.registerReceiver(bluetoothConnectionReceiver, filter)
         }
 
@@ -222,7 +216,6 @@ class ReceiverHelper(private val player: PlayerService) {
     }
 
     companion object {
-
-        private val TAG = "ReceiverHelper"
+        private const val TAG = "ReceiverHelper"
     }
 }

@@ -19,13 +19,10 @@ import org.helllabs.android.xmp.util.Message
 import android.app.Activity
 import android.content.Context
 import android.content.SharedPreferences
-import android.preference.PreferenceManager
+import androidx.preference.PreferenceManager
 
 class Playlist @Throws(IOException::class)
-constructor(context: Context,
-        // Accessors
-
-            val name: String) {
+constructor(context: Context, val name: String) {
     var comment: String? = null
     private var mListChanged: Boolean = false
     private var mCommentChanged: Boolean = false
@@ -38,15 +35,15 @@ constructor(context: Context,
         get() = mList
 
     private class ListFile : File {
-        constructor(name: String) : super(Preferences.DATA_DIR, name + PLAYLIST_SUFFIX) {}
+        constructor(name: String) : super(Preferences.DATA_DIR, name + PLAYLIST_SUFFIX)
 
-        constructor(name: String, suffix: String) : super(Preferences.DATA_DIR, name + PLAYLIST_SUFFIX + suffix) {}
+        constructor(name: String, suffix: String) : super(Preferences.DATA_DIR, name + PLAYLIST_SUFFIX + suffix)
     }
 
     private class CommentFile : File {
-        constructor(name: String) : super(Preferences.DATA_DIR, name + COMMENT_SUFFIX) {}
+        constructor(name: String) : super(Preferences.DATA_DIR, name + COMMENT_SUFFIX)
 
-        constructor(name: String, suffix: String) : super(Preferences.DATA_DIR, name + COMMENT_SUFFIX + suffix) {}
+        constructor(name: String, suffix: String) : super(Preferences.DATA_DIR, name + COMMENT_SUFFIX + suffix)
     }
 
     init {
@@ -106,26 +103,6 @@ constructor(context: Context,
         }
     }
 
-    //	/**
-    //	 * Add a new item to the playlist.
-    //	 *
-    //	 * @param item The item to be added
-    //	 */
-    //	public void add(final PlaylistItem item) {
-    //		mList.add(item);
-    //	}
-    //
-    //	/**
-    //	 * Add new items to the playlist.
-    //	 *
-    //	 * @param items The items to be added
-    //	 */
-    //	public void add(final PlaylistItem[] items) {
-    //		for (final PlaylistItem item : items) {
-    //			add(item);
-    //		}
-    //	}
-
     /**
      * Remove an item from the playlist.
      *
@@ -144,9 +121,7 @@ constructor(context: Context,
         mList.clear()
 
         val file = ListFile(name)
-        var line: String
         var lineNum: Int
-
         val invalidList = ArrayList<Int>()
 
         try {
@@ -177,7 +152,7 @@ constructor(context: Context,
             return false
         }
 
-        if (!invalidList.isEmpty()) {
+        if (invalidList.isNotEmpty()) {
             val array = IntArray(invalidList.size)
             val iterator = invalidList.iterator()
             for (i in array.indices) {
@@ -246,18 +221,16 @@ constructor(context: Context,
     }
 
     companion object {
-        private val TAG = "Playlist"
-        val COMMENT_SUFFIX = ".comment"
-        val PLAYLIST_SUFFIX = ".playlist"
-        private val OPTIONS_PREFIX = "options_"
-        private val SHUFFLE_MODE = "_shuffleMode"
-        private val LOOP_MODE = "_loopMode"
-        private val DEFAULT_SHUFFLE_MODE = true
-        private val DEFAULT_LOOP_MODE = false
-
+        private const val TAG = "Playlist"
+        const val COMMENT_SUFFIX = ".comment"
+        const val PLAYLIST_SUFFIX = ".playlist"
+        private const val OPTIONS_PREFIX = "options_"
+        private const val SHUFFLE_MODE = "_shuffleMode"
+        private const val LOOP_MODE = "_loopMode"
+        private const val DEFAULT_SHUFFLE_MODE = true
+        private const val DEFAULT_LOOP_MODE = false
 
         // Static utilities
-
         /**
          * Rename a playlist.
          *
@@ -315,21 +288,6 @@ constructor(context: Context,
         }
 
         /**
-         * Add an item to the specified playlist file.
-         *
-         * @param context The context we're running in
-         * @param name The playlist name
-         * @param item The playlist item to add
-         */
-        /*public static void addToList(final Context context, final String name, final PlaylistItem item) {
-		try {
-			FileUtils.writeToFile(new File(Preferences.DATA_DIR, name + PLAYLIST_SUFFIX), item.toString());
-		} catch (IOException e) {
-			Message.error(context, context.getString(R.string.error_write_to_playlist));
-		}
-	}*/
-
-        /**
          * Add a list of items to the specified playlist file.
          *
          * @param activity The activity we're running
@@ -339,17 +297,15 @@ constructor(context: Context,
         fun addToList(activity: Activity, name: String, items: List<PlaylistItem>) {
             val lines: MutableList<String> = mutableListOf()
 
-            var i = 0
             for (item in items) {
-                //lines[i++] = item.toString()
                 lines.add(item.toString())
             }
+
             try {
                 FileUtils.writeToFile(File(Preferences.DATA_DIR, name + PLAYLIST_SUFFIX), lines.toTypedArray())
             } catch (e: IOException) {
                 Message.error(activity, activity.getString(R.string.error_write_to_playlist))
             }
-
         }
 
         /**

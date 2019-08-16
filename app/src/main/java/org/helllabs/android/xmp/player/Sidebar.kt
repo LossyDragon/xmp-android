@@ -1,5 +1,6 @@
 package org.helllabs.android.xmp.player
 
+import android.annotation.SuppressLint
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.util.Log
 
@@ -40,7 +41,7 @@ class Sidebar(private val activity: PlayerActivity) {
         allSequencesButton.setImageResource(if (activity.allSequences) R.drawable.sub_on else R.drawable.sub_off)
 
         seqGroup = activity.findViewById<View>(R.id.sidebar_sequences) as RadioGroup
-        seqGroupListener = RadioGroup.OnCheckedChangeListener { group, checkedId ->
+        seqGroupListener = RadioGroup.OnCheckedChangeListener { _, checkedId ->
             Log.e(TAG, "Selection changed to sequence $checkedId")
             activity.playNewSequence(checkedId)
         }
@@ -48,10 +49,10 @@ class Sidebar(private val activity: PlayerActivity) {
     }
 
     fun setDetails(numPat: Int, numIns: Int, numSmp: Int, numChn: Int, allSequences: Boolean) {
-        numPatText.text = Integer.toString(numPat)
-        numInsText.text = Integer.toString(numIns)
-        numSmpText.text = Integer.toString(numSmp)
-        numChnText.text = Integer.toString(numChn)
+        numPatText.text = numPat.toString()
+        numInsText.text = numIns.toString()
+        numSmpText.text = numSmp.toString()
+        numChnText.text = numChn.toString()
         allSequencesButton.setImageResource(if (allSequences) R.drawable.sub_on else R.drawable.sub_off)
     }
 
@@ -59,13 +60,14 @@ class Sidebar(private val activity: PlayerActivity) {
         seqGroup.removeAllViews()
     }
 
+    @SuppressLint("InflateParams")
     fun addSequence(num: Int, duration: Int) {
         //final RadioButton button = new RadioButton(activity);
         // Can't get it styled this way, see http://stackoverflow.com/questions/3142067/android-set-style-in-code
 
         val button = activity.layoutInflater.inflate(R.layout.sequence_item, null) as RadioButton
 
-        val text = if (num == 0) "main song" else "subsong " + Integer.toString(num)
+        val text = if (num == 0) "main song" else "subsong $num"
         button.text = String.format("%2d:%02d (%s)", duration / 60000, duration / 1000 % 60, text)
         button.id = num
         seqGroup.addView(button, num, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
@@ -85,16 +87,6 @@ class Sidebar(private val activity: PlayerActivity) {
     }
 
     companion object {
-        private val TAG = "Sidebar"
+        private const val TAG = "Sidebar"
     }
-
-    //	private void commentClick() {
-    //		final String comment = Xmp.getComment();
-    //		if (comment != null) {
-    //			final Intent intent = new Intent(activity, CommentActivity.class);
-    //			intent.putExtra("comment", comment);
-    //			activity.startActivity(intent);
-    //		}
-    //
-    //	}
 }

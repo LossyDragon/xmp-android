@@ -1,22 +1,25 @@
 package org.helllabs.android.xmp.preferences.about
 
-import java.util.Arrays
-
-import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.Xmp
-
-import android.app.ListActivity
 import android.os.Bundle
 import android.widget.ArrayAdapter
+import androidx.appcompat.app.AppCompatActivity
+import kotlinx.android.synthetic.main.list_formats.*
+import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.Xmp
+import java.util.*
 
 
-class ListFormats : ListActivity() {
+class ListFormats : AppCompatActivity() {
     private val formats = Xmp.formats
 
-    public override fun onCreate(icicle: Bundle?) {
-        super.onCreate(icicle)
-        setContentView(R.layout.list_formats)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        setContentView(R.layout.pref_formats)
+
+        supportActionBar!!.setHomeAsUpIndicator(R.drawable.ic_close)
+
         Arrays.sort(formats)
-        listAdapter = ArrayAdapter<String>(this, R.layout.format_list_item, formats)
+        list.adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, formats)
     }
 }

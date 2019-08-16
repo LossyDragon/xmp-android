@@ -130,6 +130,7 @@ Java_org_helllabs_android_xmp_Xmp_testModule(JNIEnv *env, jobject obj, jstring n
 
 	if (res == 0) {
 		if (info != NULL) {
+			//-------------------------------------> Lint can't find this because Kotlin. It's OK
 			jclass modInfoClass = (*env)->FindClass(env,"org/helllabs/android/xmp/util/ModInfo");
 			jfieldID field;
 	

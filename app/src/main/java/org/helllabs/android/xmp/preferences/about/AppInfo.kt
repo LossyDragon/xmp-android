@@ -1,13 +1,12 @@
 package org.helllabs.android.xmp.preferences.about
 
 import android.content.Context
-import android.content.pm.PackageInfo
 import android.content.pm.PackageManager.NameNotFoundException
 
 internal object AppInfo {
 
     fun getVersion(context: Context): String {
-        try {
+        return try {
             val packageInfo = context.packageManager.getPackageInfo(
                     context.packageName, 0)
             var version = packageInfo.versionName
@@ -16,9 +15,9 @@ internal object AppInfo {
                 version = version.substring(0, end)
             }
 
-            return version
+            version
         } catch (e: NameNotFoundException) {
-            return ""
+            ""
         }
 
     }

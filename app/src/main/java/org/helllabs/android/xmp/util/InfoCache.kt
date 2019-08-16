@@ -49,7 +49,7 @@ object InfoCache {
 
     fun deleteRecursive(filename: String): Boolean {
         val file = File(filename)
-        if (file.isDirectory) {
+        return if (file.isDirectory) {
             for (f in file.listFiles()!!) {
                 if (f.isDirectory) {
                     deleteRecursive(f.path)
@@ -59,10 +59,10 @@ object InfoCache {
             }
             file.delete()
             removeCacheDir(filename)
-            return true
+            true
         } else {
             clearCache(filename)
-            return file.delete()
+            file.delete()
         }
     }
 
@@ -104,13 +104,9 @@ object InfoCache {
 
                 if (size.toLong() == file.length()) {
                     info.name = reader.readLine()
-                    if (info.name != null) {
-                        reader.readLine()                // skip filename
-                        info.type = reader.readLine()
-                        if (info.type != null) {
-                            ret = true
-                        }
-                    }
+                    reader.readLine()                // skip filename
+                    info.type = reader.readLine()
+                    ret = true
                 }
             } catch (e: NumberFormatException) {
                 // Someone had binary contents in the cache file, breaking parseInt()

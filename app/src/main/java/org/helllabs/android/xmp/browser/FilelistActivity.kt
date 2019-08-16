@@ -1,38 +1,24 @@
 package org.helllabs.android.xmp.browser
 
 import android.annotation.SuppressLint
-import java.io.File
-import java.text.DateFormat
-import java.util.ArrayList
-import java.util.Collections
-
+import android.app.AlertDialog
+import android.content.DialogInterface
+import android.os.Bundle
+import android.view.*
+import android.widget.TextView
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.h6ah4i.android.widget.advrecyclerview.decoration.SimpleListDividerDecorator
+import com.pluscubed.recyclerfastscroll.RecyclerFastScroller
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter
 import org.helllabs.android.xmp.browser.playlist.PlaylistItem
 import org.helllabs.android.xmp.browser.playlist.PlaylistUtils
 import org.helllabs.android.xmp.preferences.Preferences
-import org.helllabs.android.xmp.util.Crossfader
-import org.helllabs.android.xmp.util.FileUtils
-import org.helllabs.android.xmp.util.InfoCache
-import org.helllabs.android.xmp.util.Log
-import org.helllabs.android.xmp.util.Message
-
-import android.app.AlertDialog
-import android.content.DialogInterface
-import android.content.SharedPreferences
-import android.os.Bundle
-import android.view.ContextMenu
-import android.view.KeyEvent
-import android.view.Menu
-import android.view.MenuItem
-import android.view.MotionEvent
-import android.view.View
-import android.widget.TextView
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-
-import com.h6ah4i.android.widget.advrecyclerview.decoration.SimpleListDividerDecorator
-import com.pluscubed.recyclerfastscroll.RecyclerFastScroller
+import org.helllabs.android.xmp.util.*
+import java.io.File
+import java.text.DateFormat
+import java.util.*
 
 class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickListener {
 
@@ -40,8 +26,8 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
     private var recyclerView: RecyclerView? = null
     private var isPathMenu: Boolean = false
     private var curPath: TextView? = null
-    protected override var isLoopMode: Boolean = false
-    protected override var isShuffleMode: Boolean = false
+    override var isLoopMode: Boolean = false
+    override var isShuffleMode: Boolean = false
     private var mBackButtonParentdir: Boolean = false
     private var mCrossfade: Crossfader? = null
 
@@ -87,7 +73,7 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         }
     }
 
-    protected override val allFiles: List<String>
+    override val allFiles: List<String>
         get() = recursiveList(mNavigation!!.currentDir)
 
     /**
@@ -114,15 +100,21 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
 
         alertDialog.setTitle("Path not found")
         alertDialog.setMessage("$media_path not found. Create this directory or change the module path.")
-        alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, getString(R.string.create)) { dialog, which ->
+        alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, getString(R.string.create)) { _, _ ->
             val ret = Examples.install(this@FilelistActivity, media_path, mPrefs.getBoolean(Preferences.EXAMPLES, true))
+
             if (ret < 0) {
                 Message.error(this@FilelistActivity, "Error creating directory $media_path.")
             }
+
             mNavigation!!.startNavigation(File(media_path))
             updateModlist()
         }
-        alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, getString(R.string.cancel)) { dialog, which -> finish() }
+
+        alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, getString(R.string.cancel)) { _, _ ->
+            finish()
+        }
+
         alertDialog.show()
     }
 
@@ -138,20 +130,21 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.modlist)
-        recyclerView = findViewById(R.id.modlist_listview) as RecyclerView
+        recyclerView = findViewById<RecyclerView>(R.id.modlist_listview)
         setSwipeRefresh(recyclerView!!)
 
         val layoutManager = LinearLayoutManager(this)
-        layoutManager.setOrientation(LinearLayoutManager.VERTICAL)
-        recyclerView!!.setLayoutManager(layoutManager)
+        layoutManager.orientation = LinearLayoutManager.VERTICAL
+        recyclerView!!.layoutManager = layoutManager
 
-        mPlaylistAdapter = PlaylistAdapter(this, ArrayList<PlaylistItem>(), false, PlaylistAdapter.LAYOUT_LIST)
+        mPlaylistAdapter = PlaylistAdapter(this, ArrayList(), false, PlaylistAdapter.LAYOUT_LIST)
         mPlaylistAdapter!!.setOnItemClickListener(this)
-        recyclerView!!.setAdapter(mPlaylistAdapter)
-        recyclerView!!.addItemDecoration(SimpleListDividerDecorator(getResources().getDrawable(R.drawable.list_divider), true))
+        recyclerView!!.adapter = mPlaylistAdapter
+        @Suppress("DEPRECATION")
+        recyclerView!!.addItemDecoration(SimpleListDividerDecorator(resources.getDrawable(R.drawable.list_divider), true))
 
         // fast scroll
-        val fastScroller = findViewById(R.id.fast_scroller) as RecyclerFastScroller
+        val fastScroller = findViewById<RecyclerFastScroller>(R.id.fast_scroller)
         fastScroller.attachRecyclerView(recyclerView)
 
         registerForContextMenu(recyclerView)
@@ -163,7 +156,7 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         mCrossfade = Crossfader(this)
         mCrossfade!!.setup(R.id.modlist_content, R.id.modlist_spinner)
 
-        curPath = findViewById(R.id.current_path) as TextView
+        curPath = findViewById<TextView>(R.id.current_path)
         registerForContextMenu(curPath)
 
         mBackButtonParentdir = mPrefs.getBoolean(Preferences.BACK_BUTTON_NAVIGATION, true)
@@ -173,7 +166,8 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
             if (event.action == MotionEvent.ACTION_UP) {
                 curPath!!.setTextColor(textColor)
             } else {
-                curPath!!.setTextColor(getResources().getColor(R.color.pressed_color))
+                @Suppress("DEPRECATION")
+                curPath!!.setTextColor(resources.getColor(R.color.pressed_color))
             }
             view.performClick()
             false
@@ -208,13 +202,11 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
-            //if (mBackButtonParentdir) {
             // Return to parent dir up to the starting level, then act as regular back
             if (!mNavigation!!.isAtTopDir) {
                 parentDir()
                 return true
             }
-            //}
         }
         return super.onKeyDown(keyCode, event)
     }
@@ -255,18 +247,18 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         if (dirFiles != null) {
             for (file in dirFiles) {
                 val item: PlaylistItem
-                if (file.isDirectory) {
-                    item = PlaylistItem(PlaylistItem.TYPE_DIRECTORY, file.name, getString(R.string.directory))    // NOPMD
+                item = if (file.isDirectory) {
+                    PlaylistItem(PlaylistItem.TYPE_DIRECTORY, file.name, getString(R.string.directory))
                 } else {
                     val date = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM).format(file.lastModified())
                     val comment = date + String.format(" (%d kB)", file.length() / 1024)
-                    item = PlaylistItem(PlaylistItem.TYPE_FILE, file.name, comment)    // NOPMD
+                    PlaylistItem(PlaylistItem.TYPE_FILE, file.name, comment)
                 }
                 item.file = file
                 list.add(item)
             }
         }
-        Collections.sort(list)
+        list.sort()
         PlaylistUtils.renumberIds(list)
         mPlaylistAdapter!!.addList(list)
         mPlaylistAdapter!!.notifyDataSetChanged()
@@ -296,14 +288,14 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
     private fun choosePlaylist(fileSelection: Int, choice: PlaylistChoice) {
 
         // Return if no playlists exist
-        if (PlaylistUtils.list().size <= 0) {
+        if (PlaylistUtils.list().isEmpty()) {
             Message.toast(this, getString(R.string.msg_no_playlists))
             return
         }
 
         val playlistSelection = IntArray(1)
 
-        val listener = DialogInterface.OnClickListener { dialog, which ->
+        val listener = DialogInterface.OnClickListener { _, which ->
             if (which == DialogInterface.BUTTON_POSITIVE && playlistSelection[0] >= 0) {
                 choice.execute(fileSelection, playlistSelection[0])
             }
@@ -313,7 +305,9 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         builder.setTitle(R.string.msg_select_playlist)
                 .setPositiveButton(R.string.ok, listener)
                 .setNegativeButton(R.string.cancel, listener)
-                .setSingleChoiceItems(PlaylistUtils.listNoSuffix(), 0) { dialog, which -> playlistSelection[0] = which }.show()
+                .setSingleChoiceItems(PlaylistUtils.listNoSuffix(), 0) { _, which ->
+                    playlistSelection[0] = which
+                }.show()
     }
 
     private fun clearCachedEntries(fileList: List<String>) {
@@ -434,11 +428,11 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
     }
 
     companion object {
-        private val TAG = "BasePlaylistActivity"
-        private val OPTIONS_SHUFFLE_MODE = "options_shuffleMode"
-        private val OPTIONS_LOOP_MODE = "options_loopMode"
-        private val DEFAULT_SHUFFLE_MODE = true
-        private val DEFAULT_LOOP_MODE = false
+        private const val TAG = "BasePlaylistActivity"
+        private const val OPTIONS_SHUFFLE_MODE = "options_shuffleMode"
+        private const val OPTIONS_LOOP_MODE = "options_loopMode"
+        private const val DEFAULT_SHUFFLE_MODE = true
+        private const val DEFAULT_LOOP_MODE = false
 
         private fun recursiveList(file: File?): List<String> {
             val list = ArrayList<String>()
@@ -447,6 +441,7 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
                 return list
             }
 
+            //TODO introduce Kotlin's recursive
             if (file.isDirectory) {
                 val fileArray = file.listFiles()
 

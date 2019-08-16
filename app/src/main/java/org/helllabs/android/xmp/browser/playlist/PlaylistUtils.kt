@@ -1,24 +1,21 @@
 package org.helllabs.android.xmp.browser.playlist
 
-import java.io.File
-import java.io.IOException
-import java.util.ArrayList
-
-import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.Xmp
-import org.helllabs.android.xmp.preferences.Preferences
-import org.helllabs.android.xmp.util.Message
-import org.helllabs.android.xmp.util.ModInfo
-
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
 import android.app.ProgressDialog
 import android.content.Context
-import android.content.DialogInterface
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.EditText
+import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.Xmp
+import org.helllabs.android.xmp.preferences.Preferences
+import org.helllabs.android.xmp.util.Message
+import org.helllabs.android.xmp.util.ModInfo
+import java.io.File
+import java.io.IOException
+import java.util.*
 
 
 object PlaylistUtils {
@@ -36,7 +33,7 @@ object PlaylistUtils {
 
         alert.setView(layout)
 
-        alert.setPositiveButton(R.string.ok) { dialog, whichButton ->
+        alert.setPositiveButton(R.string.ok) { _, _ ->
             val e1 = layout.findViewById<View>(R.id.new_playlist_name) as EditText
             val e2 = layout.findViewById<View>(R.id.new_playlist_comment) as EditText
             val name = e1.text.toString()
@@ -47,7 +44,7 @@ object PlaylistUtils {
             }
         }
 
-        alert.setNegativeButton(R.string.cancel) { dialog, whichButton ->
+        alert.setNegativeButton(R.string.cancel) { _, _ ->
             // Canceled.
         }
 
@@ -62,18 +59,17 @@ object PlaylistUtils {
         val modInfo = ModInfo()
         var hasInvalid = false
 
-        val id = 0
         for (filename in fileList) {
             if (Xmp.testModule(filename, modInfo)) {
-                val item = PlaylistItem(PlaylistItem.TYPE_FILE, modInfo.name, modInfo.type)    // NOPMD
-                item.file = File(filename)    // NOPMD
+                val item = PlaylistItem(PlaylistItem.TYPE_FILE, modInfo.name, modInfo.type)
+                item.file = File(filename)
                 list.add(item)
             } else {
                 hasInvalid = true
             }
         }
 
-        if (!list.isEmpty()) {
+        if (list.isNotEmpty()) {
             Playlist.addToList(activity, playlistName, list)
 
             if (hasInvalid) {
@@ -116,7 +112,7 @@ object PlaylistUtils {
     fun listNoSuffix(): Array<String> {
         val pList = list()
         for (i in pList.indices) {
-            pList[i] = pList[i].substring(0, pList[i].lastIndexOf(Playlist.PLAYLIST_SUFFIX))    //NOPMD
+            pList[i] = pList[i].substring(0, pList[i].lastIndexOf(Playlist.PLAYLIST_SUFFIX))
         }
         return pList
     }
@@ -127,23 +123,21 @@ object PlaylistUtils {
     }
 
     fun createEmptyPlaylist(activity: Activity, name: String, comment: String): Boolean {
-        try {
+        return try {
             val playlist = Playlist(activity, name)
             playlist.comment = comment
             playlist.commit()
-            return true
+            true
         } catch (e: IOException) {
             Message.error(activity, activity.getString(R.string.error_create_playlist))
-            return false
+            false
         }
-
     }
 
     // Stable IDs for used by Advanced RecyclerView
     fun renumberIds(list: List<PlaylistItem>) {
-        var id = 0
-        for (item in list) {
-            item.id = id++
+        for ((index, item) in list.withIndex()) {
+            item.id = index
         }
     }
 }

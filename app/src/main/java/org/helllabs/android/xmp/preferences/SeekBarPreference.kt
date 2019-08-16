@@ -6,10 +6,7 @@ package org.helllabs.android.xmp.preferences
  * http://www.apache.org/licenses/LICENSE-2.0
  */
 
-import org.helllabs.android.xmp.R
-
 import android.content.Context
-import android.content.res.TypedArray
 import android.preference.DialogPreference
 import android.util.AttributeSet
 import android.view.Gravity
@@ -17,6 +14,7 @@ import android.view.View
 import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.TextView
+import org.helllabs.android.xmp.R
 
 
 class SeekBarPreference(private val mContext: Context, attrs: AttributeSet) : DialogPreference(mContext, attrs), SeekBar.OnSeekBarChangeListener {
@@ -49,7 +47,9 @@ class SeekBarPreference(private val mContext: Context, attrs: AttributeSet) : Di
     }
 
     override fun onCreateDialogView(): View {
-        val params: LinearLayout.LayoutParams
+        val params: LinearLayout.LayoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT)
         val layout = LinearLayout(mContext)
         layout.orientation = LinearLayout.VERTICAL
         layout.setPadding(6, 6, 6, 6)
@@ -63,9 +63,6 @@ class SeekBarPreference(private val mContext: Context, attrs: AttributeSet) : Di
         mValueText = TextView(mContext)
         mValueText!!.gravity = Gravity.CENTER_HORIZONTAL
         mValueText!!.textSize = 32f
-        params = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT)
         layout.addView(mValueText, params)
 
         mSeekBar = SeekBar(mContext)
@@ -90,10 +87,10 @@ class SeekBarPreference(private val mContext: Context, attrs: AttributeSet) : Di
 
     override fun onSetInitialValue(restore: Boolean, defaultValue: Any) {
         super.onSetInitialValue(restore, defaultValue)
-        if (restore) {
-            mValue = if (shouldPersist()) getPersistedInt(mDefault) else 0
+        mValue = if (restore) {
+            if (shouldPersist()) getPersistedInt(mDefault) else 0
         } else {
-            mValue = defaultValue as Int
+            defaultValue as Int
         }
     }
 

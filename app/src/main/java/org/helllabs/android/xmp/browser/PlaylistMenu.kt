@@ -1,32 +1,24 @@
 package org.helllabs.android.xmp.browser
 
 import android.Manifest
-import android.annotation.TargetApi
 import android.app.Activity
 import android.content.Context
-import android.content.DialogInterface
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
-import android.preference.PreferenceManager
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
-import android.view.ContextMenu
-import android.view.Menu
-import android.view.MenuInflater
-import android.view.MenuItem
-import android.view.MotionEvent
-import android.view.View
+import android.view.*
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.browser.playlist.Playlist
 import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter
@@ -40,10 +32,9 @@ import org.helllabs.android.xmp.util.ChangeLog
 import org.helllabs.android.xmp.util.FileUtils
 import org.helllabs.android.xmp.util.Log
 import org.helllabs.android.xmp.util.Message
-
 import java.io.File
 import java.io.IOException
-import java.util.ArrayList
+import java.util.*
 
 
 class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
@@ -58,39 +49,35 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
 
         Log.i(TAG, "start application")
 
-        val toolbar = findViewById(R.id.toolbar) as Toolbar
+        val toolbar = findViewById<Toolbar>(R.id.toolbar)
 
-        if (toolbar != null) {
-            setSupportActionBar(toolbar)
-            //getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar()?.setElevation(0f) // or other
-        }
+        setSupportActionBar(toolbar)
+        //getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        supportActionBar?.elevation = 0f // or other
 
-        setTitle("")
+        title = ""
 
-        val title = findViewById(R.id.toolbar_title) as TextView
-        title?.setOnClickListener { startPlayerActivity() }
+        val title = findViewById<TextView>(R.id.toolbar_title)
+        title.setOnClickListener { startPlayerActivity() }
 
         // Swipe refresh
-        val swipeRefresh = findViewById(R.id.swipeContainer) as SwipeRefreshLayout
-        swipeRefresh.setOnRefreshListener(object : SwipeRefreshLayout.OnRefreshListener {
-            override fun onRefresh() {
-                updateList()
-                swipeRefresh.setRefreshing(false)
-            }
-        })
+        val swipeRefresh = findViewById<SwipeRefreshLayout>(R.id.swipeContainer)
+        swipeRefresh.setOnRefreshListener {
+            updateList()
+            swipeRefresh.isRefreshing = false
+        }
         swipeRefresh.setColorSchemeResources(R.color.refresh_color)
 
-        val recyclerView = findViewById(R.id.plist_menu_list) as RecyclerView
+        val recyclerView = findViewById<RecyclerView>(R.id.plist_menu_list)
 
         recyclerView.addOnItemTouchListener(object : RecyclerView.OnItemTouchListener {
             override fun onInterceptTouchEvent(rv: RecyclerView, e: MotionEvent): Boolean {
                 if (e.action == MotionEvent.ACTION_DOWN) {
                     var enable = false
-                    if (recyclerView.getChildCount() > 0) {
+                    if (recyclerView.childCount > 0) {
                         enable = !recyclerView.canScrollVertically(-1)
                     }
-                    swipeRefresh.setEnabled(enable)
+                    swipeRefresh.isEnabled = enable
                 }
 
                 return false
@@ -107,12 +94,12 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
 
 
         val layoutManager = LinearLayoutManager(this)
-        layoutManager.setOrientation(LinearLayoutManager.VERTICAL)
-        recyclerView.setLayoutManager(layoutManager)
+        layoutManager.orientation = LinearLayoutManager.VERTICAL
+        recyclerView.layoutManager = layoutManager
 
-        playlistAdapter = PlaylistAdapter(this@PlaylistMenu, ArrayList<PlaylistItem>(), false, PlaylistAdapter.LAYOUT_CARD)
+        playlistAdapter = PlaylistAdapter(this@PlaylistMenu, ArrayList(), false, PlaylistAdapter.LAYOUT_CARD)
         playlistAdapter!!.setOnItemClickListener(this)
-        recyclerView.setAdapter(playlistAdapter)
+        recyclerView.adapter = playlistAdapter
 
         registerForContextMenu(recyclerView)
         prefs = PreferenceManager.getDefaultSharedPreferences(this)
@@ -130,13 +117,9 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
         val changeLog = ChangeLog(this)
         changeLog.show()
 
-        if (getIntent().getFlags() and Intent.FLAG_ACTIVITY_NEW_TASK !== 0) {
+        if (intent.flags and Intent.FLAG_ACTIVITY_NEW_TASK != 0) {
             startPlayerActivity()
         }
-
-        //enableHomeButton();
-
-        //updateList();
     }
 
     override fun onResume() {
@@ -146,7 +129,7 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
 
     private fun getStoragePermissions() {
         val hasPermission = ContextCompat.checkSelfPermission(this,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE) === PackageManager.PERMISSION_GRANTED
+                Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
         if (hasPermission) {
             setupDataDir()
             updateList()
@@ -161,7 +144,7 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
             REQUEST_WRITE_STORAGE -> {
-                if (grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     setupDataDir()
                     updateList()
                 }
@@ -179,15 +162,6 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
             }
         }
     }
-
-    /*
-	@TargetApi(14)
-	private void enableHomeButton() {
-		if (Build.VERSION.SDK_INT >= 14) {
-			getSupportActionBar().setHomeButtonEnabled(true);
-		}
-	}
-	*/
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
@@ -227,7 +201,7 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
         playlistAdapter!!.add(browserItem)
 
         for (name in PlaylistUtils.listNoSuffix()) {
-            val item = PlaylistItem(PlaylistItem.TYPE_PLAYLIST, name, Playlist.readComment(this, name))    // NOPMD
+            val item = PlaylistItem(PlaylistItem.TYPE_PLAYLIST, name, Playlist.readComment(this, name))
             item.imageRes = R.drawable.list
             playlistAdapter!!.add(item)
         }
@@ -240,15 +214,14 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
     // Playlist context menu
 
     override fun onCreateContextMenu(menu: ContextMenu, view: View, menuInfo: ContextMenu.ContextMenuInfo) {
-        //final AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)menuInfo;
         menu.setHeaderTitle("Playlist options")
 
-        val position = playlistAdapter!!.position
-
-        if (position == 0) {                    // Module list
+        if (playlistAdapter!!.position == 0) {
+            // Module list
             menu.add(Menu.NONE, 0, 0, "Change directory")
             //menu.add(Menu.NONE, 1, 1, "Add to playlist");
-        } else {                                    // Playlists
+        } else {
+            // Playlists
             menu.add(Menu.NONE, 0, 0, "Rename")
             menu.add(Menu.NONE, 1, 1, "Edit comment")
             menu.add(Menu.NONE, 2, 2, "Delete playlist")
@@ -256,32 +229,30 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
     }
 
     override fun onContextItemSelected(item: MenuItem): Boolean {
-        //final AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)item.getMenuInfo();
-
         val index = item.itemId
         val position = playlistAdapter!!.position
 
-        if (position == 0) {        // First item of list
-            if (index == 0) {            // First item of context menu
+        if (position == 0) {            // First item of list
+            if (index == 0) {           // First item of context menu
                 changeDir(this)
                 return true
             }
         } else {
             when (index) {
-                0                        // Rename
-                -> {
+                // Rename
+                0 -> {
                     renameList(this, position - 1)
                     updateList()
                     return true
                 }
-                1                        // Edit comment
-                -> {
+                // Edit comment
+                1 -> {
                     editComment(this, position - 1)
                     updateList()
                     return true
                 }
-                2                        // Delete
-                -> {
+                // Delete
+                2 -> {
                     deletePosition = position - 1
                     Message.yesNoDialog(this, "Delete", "Are you sure to delete playlist " +
                             PlaylistUtils.listNoSuffix()[deletePosition] + "?", Runnable {
@@ -306,7 +277,7 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
         alert.setMessage("Enter the new playlist name:")
         alert.input.setText(name)
 
-        alert.setPositiveButton(R.string.ok) { dialog, whichButton ->
+        alert.setPositiveButton(R.string.ok) { _, _ ->
             val value = alert.input.text.toString()
 
             if (!Playlist.rename(activity, name, value)) {
@@ -316,7 +287,7 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
             updateList()
         }
 
-        alert.setNegativeButton(R.string.cancel) { dialog, whichButton ->
+        alert.setNegativeButton(R.string.cancel) { _, _ ->
             // Canceled.
         }
 
@@ -329,7 +300,7 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
         alert.setMessage("Enter the mod directory:")
         alert.input.setText(mediaPath)
 
-        alert.setPositiveButton(R.string.ok) { dialog, whichButton ->
+        alert.setPositiveButton(R.string.ok) { _, _ ->
             val value = alert.input.text.toString()
             if (value != mediaPath) {
                 val editor = prefs!!.edit()
@@ -339,7 +310,7 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
             }
         }
 
-        alert.setNegativeButton(R.string.cancel) { dialog, whichButton ->
+        alert.setNegativeButton(R.string.cancel) { _, _ ->
             // Canceled.
         }
 
@@ -353,7 +324,7 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
         alert.setMessage("Enter the new comment for $name:")
         alert.input.setText(Playlist.readComment(activity, name))
 
-        alert.setPositiveButton(R.string.ok) { dialog, whichButton ->
+        alert.setPositiveButton(R.string.ok) { _, _ ->
             val value = alert.input.text.toString().replace("\n", " ")
             val file = File(Preferences.DATA_DIR, name + Playlist.COMMENT_SUFFIX)
             try {
@@ -367,7 +338,7 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
             updateList()
         }
 
-        alert.setNegativeButton(R.string.cancel) { dialog, whichButton ->
+        alert.setNegativeButton(R.string.cancel) { _, _ ->
             // Canceled.
         }
 
@@ -386,11 +357,9 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
         }
     }
 
-
     // Menu
-
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        val inflater = getMenuInflater()
+        val inflater = menuInflater
         inflater.inflate(R.menu.options_menu, menu)
 
         // Calling super after populating the menu is necessary here to ensure that the
@@ -416,20 +385,20 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
     }
 
     companion object {
-        private val TAG = "PlaylistMenu"
-        private val SETTINGS_REQUEST = 45
-        private val PLAYLIST_REQUEST = 46
+        private const val TAG = "PlaylistMenu"
+        private const val SETTINGS_REQUEST = 45
+        private const val PLAYLIST_REQUEST = 46
 
-        private val REQUEST_WRITE_STORAGE = 112
+        private const val REQUEST_WRITE_STORAGE = 112
 
         private fun checkStorage(): Boolean {
             val state = Environment.getExternalStorageState()
 
-            if (Environment.MEDIA_MOUNTED == state || Environment.MEDIA_MOUNTED_READ_ONLY == state) {
-                return true
+            return if (Environment.MEDIA_MOUNTED == state || Environment.MEDIA_MOUNTED_READ_ONLY == state) {
+                true
             } else {
                 Log.e(TAG, "External storage state error: $state")
-                return false
+                false
             }
         }
     }

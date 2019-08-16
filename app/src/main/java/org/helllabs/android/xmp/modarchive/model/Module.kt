@@ -9,21 +9,27 @@ class Module {
     var url: String? = null
     var bytes: Int = 0
     var songTitle: String? = null
-        set(songtitle) = if (songtitle!!.isEmpty()) {
-            field = Module.UNTITLED
-        } else {
-            field = Html.fromHtml(songtitle).toString()
+        set(songtitle) {
+            field = if (songtitle!!.isEmpty()) {
+                UNTITLED
+            } else {
+                @Suppress("DEPRECATION")
+                Html.fromHtml(songtitle).toString()
+            }
         }
     var license: String? = null
         set(license) {
+            @Suppress("DEPRECATION")
             field = Html.fromHtml(license).toString()
         }
     var licenseDescription: String? = null
         set(licenseDescription) {
+            @Suppress("DEPRECATION")
             field = Html.fromHtml(licenseDescription).toString()
         }
     var legalUrl: String? = null
         set(legalUrl) {
+            @Suppress("DEPRECATION")
             field = Html.fromHtml(legalUrl).toString()
         }
     var instruments: String? = null
@@ -31,6 +37,7 @@ class Module {
             val lines = instruments!!.split("\n".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
             val buffer = StringBuilder()
             for (line in lines) {
+                @Suppress("DEPRECATION")
                 buffer.append(Html.fromHtml(line).toString())
                 buffer.append('\n')
             }
@@ -47,6 +54,6 @@ class Module {
     }
 
     companion object {
-        private val UNTITLED = "(untitled)"
+        private const val UNTITLED = "(untitled)"
     }
 }

@@ -7,7 +7,6 @@ import org.helllabs.android.xmp.R
 class PlaylistItem(val type: Int, val name: String, val comment: String) : Comparable<PlaylistItem> {
 
     // Accessors
-
     var id: Int = 0
     var file: File? = null
     var imageRes: Int = 0
@@ -16,12 +15,11 @@ class PlaylistItem(val type: Int, val name: String, val comment: String) : Compa
         get() = file!!.name
 
     init {
-
-        when (type) {
-            TYPE_DIRECTORY -> imageRes = R.drawable.folder
-            TYPE_PLAYLIST -> imageRes = R.drawable.list
-            TYPE_FILE -> imageRes = R.drawable.file
-            else -> imageRes = -1
+        imageRes = when (type) {
+            TYPE_DIRECTORY -> R.drawable.folder
+            TYPE_PLAYLIST -> R.drawable.list
+            TYPE_FILE -> R.drawable.file
+            else -> -1
         }
     }
 
@@ -30,22 +28,21 @@ class PlaylistItem(val type: Int, val name: String, val comment: String) : Compa
     }
 
     // Comparable
-
-    override fun compareTo(info: PlaylistItem): Int {
+    override fun compareTo(other: PlaylistItem): Int {
         val d1 = this.file!!.isDirectory
-        val d2 = info.file!!.isDirectory
+        val d2 = other.file!!.isDirectory
 
         return if (d1 xor d2) {
             if (d1) -1 else 1
         } else {
-            this.name.compareTo(info.name)
+            this.name.compareTo(other.name)
         }
     }
 
     companion object {
-        val TYPE_DIRECTORY = 1
-        val TYPE_PLAYLIST = 2
-        val TYPE_FILE = 3
-        val TYPE_SPECIAL = 4
+        const val TYPE_DIRECTORY = 1
+        const val TYPE_PLAYLIST = 2
+        const val TYPE_FILE = 3
+        const val TYPE_SPECIAL = 4
     }
 }

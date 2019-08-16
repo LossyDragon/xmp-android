@@ -1,16 +1,20 @@
 package org.helllabs.android.xmp.modarchive.result
 
-import java.io.File
-import java.io.IOException
-import java.io.UnsupportedEncodingException
-import java.util.ArrayList
-
+import android.content.Intent
+import android.content.SharedPreferences
+import android.os.Bundle
+import android.text.Html
+import android.text.method.LinkMovementMethod
+import android.view.View
+import android.widget.Button
+import android.widget.TextView
+import androidx.preference.PreferenceManager
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.modarchive.Downloader
 import org.helllabs.android.xmp.modarchive.Search
 import org.helllabs.android.xmp.modarchive.model.Module
-import org.helllabs.android.xmp.modarchive.model.Sponsor
+import org.helllabs.android.xmp.modarchive.request.ModArchiveRequest
 import org.helllabs.android.xmp.modarchive.request.ModuleRequest
 import org.helllabs.android.xmp.modarchive.response.HardErrorResponse
 import org.helllabs.android.xmp.modarchive.response.ModArchiveResponse
@@ -20,17 +24,10 @@ import org.helllabs.android.xmp.player.PlayerActivity
 import org.helllabs.android.xmp.preferences.Preferences
 import org.helllabs.android.xmp.util.Log
 import org.helllabs.android.xmp.util.Message
-
-import android.content.Intent
-import android.content.SharedPreferences
-import android.os.Bundle
-import android.preference.PreferenceManager
-import android.text.Html
-import android.text.method.LinkMovementMethod
-import android.view.View
-import android.widget.Button
-import android.widget.TextView
-import org.helllabs.android.xmp.modarchive.request.ModArchiveRequest
+import java.io.File
+import java.io.IOException
+import java.io.UnsupportedEncodingException
+import java.util.*
 
 open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, Downloader.DownloaderListener {
     private var title: TextView? = null
@@ -93,9 +90,7 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, Downlo
         } catch (e: UnsupportedEncodingException) {
             handleQueryError()
         }
-
     }
-
 
     // ModuleRequest callbacks
 
@@ -111,6 +106,7 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, Downlo
             filename!!.text = module.filename
             val size = module.bytes / 1024
             info!!.text = String.format("%s by %s (%d KB)", module.format, module.artist, size)
+            @Suppress("DEPRECATION")
             license!!.text = Html.fromHtml("License: <a href=\"" + module.legalUrl + "\">" + module.license + "</a>")
             license!!.movementMethod = LinkMovementMethod.getInstance()
             licenseDescription!!.text = module.licenseDescription
@@ -122,6 +118,7 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, Downlo
 
         val sponsor = response.sponsor
         if (sponsor != null) {
+            @Suppress("DEPRECATION")
             sponsorText!!.text = Html.fromHtml("Download mirrors provided by <a href=\"" + sponsor.link + "\">" + sponsor.name + "</a>")
             sponsorText!!.movementMethod = LinkMovementMethod.getInstance()
         }
@@ -174,7 +171,7 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, Downlo
             if (mPrefs!!.getBoolean(Preferences.ARTIST_FOLDER, true)) {
                 val parent = file.parentFile
                 val contents = parent!!.listFiles()
-                if (contents != null && contents.size == 0) {
+                if (contents != null && contents.isEmpty()) {
                     try {
                         val mediaPath = File(mPrefs!!.getString(Preferences.MEDIA_PATH, Preferences.DEFAULT_MEDIA_PATH)!!).canonicalPath
                         val parentPath = parent.canonicalPath
@@ -241,7 +238,7 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, Downlo
     }
 
     companion object {
-        private val TAG = "ModuleResult"
-        private val MODARCHIVE_DIRNAME = "TheModArchive"
+        private const val TAG = "ModuleResult"
+        private const val MODARCHIVE_DIRNAME = "TheModArchive"
     }
 }

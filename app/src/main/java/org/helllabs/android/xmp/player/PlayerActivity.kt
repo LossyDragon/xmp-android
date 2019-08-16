@@ -1,12 +1,18 @@
 package org.helllabs.android.xmp.player
 
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
-import java.io.InputStream
-import java.io.OutputStream
-import java.util.ArrayList
-
+import android.app.Activity
+import android.content.*
+import android.content.res.Configuration
+import android.graphics.Typeface
+import android.os.Bundle
+import android.os.Handler
+import android.os.IBinder
+import android.os.RemoteException
+import android.util.TypedValue
+import android.view.*
+import android.widget.*
+import android.widget.SeekBar.OnSeekBarChangeListener
+import androidx.preference.PreferenceManager
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.browser.PlaylistMenu
@@ -21,38 +27,9 @@ import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.util.FileUtils
 import org.helllabs.android.xmp.util.Log
 import org.helllabs.android.xmp.util.Message
-
-import android.app.Activity
-import android.content.BroadcastReceiver
-import android.content.ComponentName
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
-import android.content.ServiceConnection
-import android.content.SharedPreferences
-import android.content.res.Configuration
-import android.graphics.Typeface
-import android.net.Uri
-import android.os.Bundle
-import android.os.Handler
-import android.os.IBinder
-import android.os.RemoteException
-import android.preference.PreferenceManager
-import android.util.TypedValue
-import android.view.Display
-import android.view.Menu
-import android.view.MenuInflater
-import android.view.MenuItem
-import android.view.View
-import android.view.View.OnClickListener
-import android.view.WindowManager
-import android.widget.FrameLayout
-import android.widget.ImageButton
-import android.widget.LinearLayout
-import android.widget.SeekBar
-import android.widget.SeekBar.OnSeekBarChangeListener
-import android.widget.TextView
-import android.widget.ViewFlipper
+import java.io.File
+import java.io.FileOutputStream
+import java.util.*
 
 
 class PlayerActivity : Activity() {
@@ -112,7 +89,7 @@ class PlayerActivity : Activity() {
                     Log.e(TAG, "Can't register player callback")
                 }
 
-                if (fileList != null && !fileList!!.isEmpty()) {
+                if (fileList != null && fileList!!.isNotEmpty()) {
                     // Start new queue
                     playNewMod(fileList, start)
                 } else {
@@ -418,8 +395,8 @@ class PlayerActivity : Activity() {
 
                 flipperPage = (flipperPage + 1) % 2
 
-                infoName[flipperPage]!!.setText(name)
-                infoType[flipperPage]!!.setText(type)
+                infoName[flipperPage]!!.text = name
+                infoType[flipperPage]!!.text = type
 
                 if (skipToPrevious) {
                     titleFlipper!!.setInAnimation(this@PlayerActivity, R.anim.slide_in_left_slow)
@@ -546,14 +523,12 @@ class PlayerActivity : Activity() {
 
         var path: String? = null
         if (intent.data != null) {
-            if (intent.action == Intent.ACTION_VIEW) {
-                path = handleIntentAction(intent)
+            path = if (intent.action == Intent.ACTION_VIEW) {
+                handleIntentAction(intent)
             } else {
-                path = intent.data!!.path
+                intent.data!!.path
             }
         }
-
-        //fileArray = null;
 
         if (path != null) {        // from intent filter
             Log.i(TAG, "Player started from intent filter")
@@ -797,7 +772,7 @@ class PlayerActivity : Activity() {
             canChangeViewer = true
         }
 
-        setResult(Activity.RESULT_OK)
+        setResult(RESULT_OK)
         prefs = PreferenceManager.getDefaultSharedPreferences(this)
 
         val showInfoLine = prefs!!.getBoolean(Preferences.SHOW_INFO_LINE, true)
@@ -831,9 +806,9 @@ class PlayerActivity : Activity() {
         val font = Typeface.createFromAsset(this.assets, "fonts/Michroma.ttf")
 
         for (i in 0..1) {
-            infoName[i]!!.setTypeface(font)
-            infoName[i]!!.setIncludeFontPadding(false)
-            infoType[i]!!.setTypeface(font)
+            infoName[i]!!.typeface = font
+            infoName[i]!!.includeFontPadding = false
+            infoType[i]!!.typeface = font
             infoType[i]!!.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12f)
         }
 
@@ -935,7 +910,7 @@ class PlayerActivity : Activity() {
 	 * Stop screen updates when screen is off
 	 */
     override fun onPause() {
-        // Screen is about to turn off
+        // Screen is pref_about to turn off
         if (ScreenReceiver.wasScreenOn) {
             screenOn = false
         } //else {
@@ -1014,7 +989,7 @@ class PlayerActivity : Activity() {
                 try {
                     if (modPlayer!!.deleteFile()) {
                         Message.toast(activity!!, "File deleted")
-                        setResult(Activity.RESULT_FIRST_USER)
+                        setResult(RESULT_FIRST_USER)
                         modPlayer!!.nextSong()
                     } else {
                         Message.toast(activity!!, "Can\'t delete file")
@@ -1028,14 +1003,15 @@ class PlayerActivity : Activity() {
     }
 
     companion object {
-        private val TAG = "PlayerActivity"
+        private const val TAG = "PlayerActivity"
 
-        val PARM_SHUFFLE = "shuffle"
-        val PARM_LOOP = "loop"
-        val PARM_START = "start"
-        val PARM_KEEPFIRST = "keepFirst"
-        private val FRAME_RATE = 25
-        private var stopUpdate: Boolean = false                // this MUST be static (volatile doesn't work!)
+        const val PARM_SHUFFLE = "shuffle"
+        const val PARM_LOOP = "loop"
+        const val PARM_START = "start"
+        const val PARM_KEEPFIRST = "keepFirst"
+        private const val FRAME_RATE = 25
+        // this MUST be static (volatile doesn't work!)
+        private var stopUpdate: Boolean = false
         private var canChangeViewer: Boolean = false
     }
 }

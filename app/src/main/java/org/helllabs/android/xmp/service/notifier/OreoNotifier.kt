@@ -29,22 +29,22 @@ class OreoNotifier(service: Service) : Notifier(service) {
 
     @TargetApi(26)
     override fun notify(title: String, info: String, index: Int, type: Int) {
-        var title = title
-        var info = info
+        var notifyTitle = title
+        var notifyInfo = info
 
-        if (title != null && title.trim { it <= ' ' }.isEmpty()) {
-            title = "<untitled>"
+        if (notifyTitle.trim { it <= ' ' }.isEmpty()) {
+            notifyTitle = "<untitled>"
         }
 
         val indexText = formatIndex(index)
 
-        if (type == Notifier.TYPE_PAUSE) {
-            info = "(paused)"
+        if (type == TYPE_PAUSE) {
+            notifyInfo = "(paused)"
         }
 
         val builder = Notification.Builder(service)
-                .setContentTitle(title)
-                .setContentText(info)
+                .setContentTitle(notifyTitle)
+                .setContentText(notifyInfo)
                 .setContentInfo(indexText)
                 .setContentIntent(contentIntent)
                 .setSmallIcon(R.drawable.notification_icon)
@@ -57,7 +57,7 @@ class OreoNotifier(service: Service) : Notifier(service) {
                 .addAction(R.drawable.ic_action_previous, "Prev", prevIntent)
                 .addAction(R.drawable.ic_action_stop, "Stop", stopIntent)
 
-        if (type == Notifier.TYPE_PAUSE) {
+        if (type == TYPE_PAUSE) {
             builder.addAction(R.drawable.ic_action_play, "Play", pauseIntent)
             builder.setContentText("(paused)")
         } else {
@@ -66,11 +66,11 @@ class OreoNotifier(service: Service) : Notifier(service) {
 
         builder.addAction(R.drawable.ic_action_next, "Next", nextIntent)
 
-        if (type == Notifier.TYPE_TICKER) {
+        if (type == TYPE_TICKER) {
             if (queueManager.size() > 1) {
-                builder.setTicker("$title ($indexText)")
+                builder.setTicker("$notifyTitle ($indexText)")
             } else {
-                builder.setTicker(title)
+                builder.setTicker(notifyTitle)
             }
         }
 
@@ -78,9 +78,6 @@ class OreoNotifier(service: Service) : Notifier(service) {
     }
 
     companion object {
-
-        private val CHANNEL_ID = "xmp"
+        private const val CHANNEL_ID = "xmp"
     }
-
-
 }

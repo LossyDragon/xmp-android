@@ -1,7 +1,6 @@
 package org.helllabs.android.xmp.browser
 
 
-import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
@@ -11,7 +10,7 @@ import java.io.File
 import java.util.Stack
 
 class FilelistNavigation {
-    private val mPathStack: Stack<ListState>
+    private val mPathStack: Stack<ListState> = Stack()
     /**
      * Get the current directory.
      *
@@ -36,20 +35,16 @@ class FilelistNavigation {
         private val top: Int
 
         init {
-            val layoutManager = recyclerView.getLayoutManager() as LinearLayoutManager
+            val layoutManager = recyclerView.layoutManager as LinearLayoutManager
             this.index = layoutManager.findFirstVisibleItemPosition()
             val view = recyclerView.getChildAt(0)
-            this.top = if (view == null) 0 else view!!.getTop()
+            this.top = view?.top ?: 0
         }
 
         fun restoreState(recyclerView: RecyclerView) {
-            val layoutManager = recyclerView.getLayoutManager() as LinearLayoutManager
-            recyclerView.post(Runnable { layoutManager.scrollToPositionWithOffset(index, top) })
+            val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+            recyclerView.post { layoutManager.scrollToPositionWithOffset(index, top) }
         }
-    }
-
-    init {
-        mPathStack = Stack()
     }
 
     /**
@@ -60,18 +55,18 @@ class FilelistNavigation {
      * @return True if current directory was changed.
      */
     fun changeDirectory(file: File?): Boolean {
-        var file: File? = file ?: return false
+        var dirFile: File? = file ?: return false
 
-        val isDir = file!!.isDirectory
+        val isDir = dirFile!!.isDirectory
 
         if (isDir) {
-            if (file.name == "..") {
-                file = file.parentFile!!.parentFile
-                if (file == null) {
-                    file = File("/")
+            if (dirFile.name == "..") {
+                dirFile = dirFile.parentFile!!.parentFile
+                if (dirFile == null) {
+                    dirFile = File("/")
                 }
             }
-            currentDir = file
+            currentDir = dirFile
         }
 
         return isDir
@@ -126,7 +121,6 @@ class FilelistNavigation {
     }
 
     companion object {
-
-        private val TAG = "FilelistNavigation"
+        private const val TAG = "FilelistNavigation"
     }
 }
