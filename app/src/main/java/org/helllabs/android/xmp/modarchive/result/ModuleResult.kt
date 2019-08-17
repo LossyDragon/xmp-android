@@ -9,6 +9,8 @@ import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import androidx.preference.PreferenceManager
+import kotlinx.android.synthetic.main.result_module.*
+import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.modarchive.Downloader
@@ -80,12 +82,24 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, Downlo
         val id = intent.getLongExtra(Search.MODULE_ID, -1)
         Log.d(TAG, "request module ID $id")
         makeRequest(id.toString())
+
+        //Button actions
+        module_play.setOnClickListener {
+            onPlay()
+        }
+
+        module_delete.setOnClickListener {
+            onDelete()
+        }
+
+        module_download.setOnClickListener {
+            onDownload()
+        }
     }
 
     protected open fun makeRequest(query: String) {
-        val key = getString(R.string.modarchive_apikey)
         try {
-            val request = ModuleRequest(key, ModArchiveRequest.MODULE, query)
+            val request = ModuleRequest(BuildConfig.ApiKey, ModArchiveRequest.MODULE, query)
             request.setOnResponseListener(this).send()
         } catch (e: UnsupportedEncodingException) {
             handleQueryError()
@@ -93,7 +107,6 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, Downlo
     }
 
     // ModuleRequest callbacks
-
     override fun onResponse(response: ModArchiveResponse) {
 
         val moduleList = response as ModuleResponse
@@ -147,8 +160,7 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, Downlo
     }
 
     // Button click handlers
-
-    fun downloadClick(view: View) {
+    fun onDownload() {
         val modDir = getDownloadPath(module)
         val url = module!!.url
 
@@ -156,7 +168,7 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, Downlo
         downloader!!.download(url!!, modDir, module!!.bytes)
     }
 
-    fun deleteClick(view: View) {
+    fun onDelete() {
         val file = localFile(module)
 
         Message.yesNoDialog(this, "Delete file", "Are you sure you want to delete " + module!!.filename + "?", Runnable {
@@ -192,7 +204,7 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, Downlo
         })
     }
 
-    fun playClick(view: View) {
+    fun onPlay() {
         val path = localFile(module).path
         val modList = ArrayList<String>()
 

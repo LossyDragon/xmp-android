@@ -3,7 +3,6 @@ package org.helllabs.android.xmp.browser.playlist
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
-import android.app.ProgressDialog
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
@@ -88,12 +87,13 @@ object PlaylistUtils {
 
     fun filesToPlaylist(activity: Activity, fileList: List<String>, playlistName: String) {
 
-        val progressDialog = ProgressDialog.show(activity, "Please wait", "Scanning module files...", true)
+        Message.toast(activity.applicationContext, "Please wait\nScanning module files...")
 
         object : Thread() {
             override fun run() {
                 addFiles(activity, fileList, playlistName)
-                progressDialog.dismiss()
+                Message.toast(activity.applicationContext, "Scan finished")
+
             }
         }.start()
     }

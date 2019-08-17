@@ -19,7 +19,7 @@ class LegacyNotifier(service: Service) : Notifier(service) {
 
         val indexText = formatIndex(index)
 
-        val builder = NotificationCompat.Builder(service)
+        val builder = NotificationCompat.Builder(service, NOTIFY_ID.toString())
                 .setContentTitle(notifyTitle)
                 .setContentText(info)
                 .setContentInfo(indexText)

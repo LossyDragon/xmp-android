@@ -19,6 +19,7 @@ import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import kotlinx.android.synthetic.main.playlist_menu.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.browser.playlist.Playlist
 import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter
@@ -69,6 +70,12 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
         swipeRefresh.setColorSchemeResources(R.color.refresh_color)
 
         val recyclerView = findViewById<RecyclerView>(R.id.plist_menu_list)
+
+        add_button.setOnClickListener {
+            PlaylistUtils.newPlaylistDialog(this, Runnable {
+                updateList()
+            })
+        }
 
         recyclerView.addOnItemTouchListener(object : RecyclerView.OnItemTouchListener {
             override fun onInterceptTouchEvent(rv: RecyclerView, e: MotionEvent): Boolean {
@@ -129,7 +136,10 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
 
     private fun getStoragePermissions() {
         val hasPermission = ContextCompat.checkSelfPermission(this,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+                Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(this,
+                        Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+
         if (hasPermission) {
             setupDataDir()
             updateList()
@@ -213,7 +223,7 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
 
     // Playlist context menu
 
-    override fun onCreateContextMenu(menu: ContextMenu, view: View, menuInfo: ContextMenu.ContextMenuInfo) {
+    override fun onCreateContextMenu(menu: ContextMenu, view: View, menuInfo: ContextMenu.ContextMenuInfo?) {
         menu.setHeaderTitle("Playlist options")
 
         if (playlistAdapter!!.position == 0) {
@@ -378,10 +388,6 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
             }
         }
         return super.onOptionsItemSelected(item)
-    }
-
-    fun fabClick(view: View) {
-        PlaylistUtils.newPlaylistDialog(this, Runnable { updateList() })
     }
 
     companion object {

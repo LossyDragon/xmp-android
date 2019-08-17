@@ -3,7 +3,8 @@
 	<string name="app_name">Xmp Mod Player</string>
 	<string name="app_description">A modplayer that plays over 90 mainstream and obscure module formats, including Protracker (MOD), Scream Tracker 3 (S3M), Fast Tracker II (XM) and Impulse Tracker (IT).</string>
 	     
-    <string name="changelog_text">• Improve XM and STM compatibility\n• Improve Android Oreo compatibility\n
+    <string name="changelog_text">• Migrate to AndroidX\n• Migrate to Kotlin\n• -More To Come!-
+\nVersion 4.12.0:\n• Improve XM and STM compatibility\n• Improve Android Oreo compatibility\n
 \nVersion 4.11.0:\n• Fix MDL c5spd and sample decoder\n• Fix MASI loader subchunks\n• Fix sample loop corner case\n• Fix set pan in multichannel MODs\n• Fix global volume on module loop\n• Fix IT right pan limit\n• Fix memory leak in XMs with 256 patterns\n
 \nVersion 4.10.0:\n• Fix IT sample loop length\n• Fix IT sample sustain loop\n• Fix IT voice leak caused by disabled envelope\n• Fix XM arpeggio in FT2 compatible mode\n• Fix XM envelope position set\n• Fix 669 periods and tempo\n• Fix bidirectional sample loop interpolation\n• Fix mixer click removal\n• Add Amiga 500 mixer option\n
 \nVersion 4.9.0:\n• Fix IT fine volslide + row delay\n• Fix IT old instrument volume\n• Fix IT panbrello speed\n• Fix IT random pan left bias\n• Fix IT default pan in sample mode\n• Fix XM/MOD set finetune effect\n• Fix S3M set pan effect\n
@@ -196,5 +197,15 @@
 
     <string name="notif_channel_desc">Current module and player controls</string>
     <string name="notif_channel_name">Xmp</string>
+    <string name="search_error_frown">:(</string>
+    <string name="desc_new_playlist">New playlist</string>
+    <string name="desc_plist_drag">Playlist drag handle</string>
+    <string name="desc_plist_image">Playlist image</string>
+    <string name="module_result_sponsor">sponsor</string>
+    <string name="module_result_instruments">instruments</string>
+    <string name="module_result_license_description">license description</string>
+    <string name="module_result_license">license</string>
+    <string name="module_result_info">info</string>
+    <string name="module_result_filename">filename</string>
 
 </resources>

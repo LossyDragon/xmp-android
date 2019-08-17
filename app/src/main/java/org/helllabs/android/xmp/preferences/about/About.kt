@@ -1,14 +1,12 @@
 package org.helllabs.android.xmp.preferences.about
 
-import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.Xmp
-
 
 import android.os.Bundle
-import android.view.View
-import android.widget.TextView
+import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.pref_about.*
+import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.Xmp
 
 class About : AppCompatActivity() {
 
@@ -17,13 +15,20 @@ class About : AppCompatActivity() {
 
         setContentView(R.layout.pref_about)
 
-        supportActionBar!!.setHomeAsUpIndicator(R.drawable.ic_close)
+        supportActionBar?.apply {
+            setDisplayShowHomeEnabled(true)
+            setDisplayHomeAsUpEnabled(true)
+            setHomeAsUpIndicator(R.drawable.ic_close)
+        }
 
         version_name.text = getString(R.string.about_version, AppInfo.getVersion(this))
-        xmp_version.text = getString(R.string.about_xmp, Xmp.version)
+        xmp_version.text = getString(R.string.about_xmp, Xmp.getVersion())
+    }
 
-        (findViewById<View>(R.id.version_name) as TextView).text = getString(R.string.about_version, AppInfo.getVersion(this))
-
-        (findViewById<View>(R.id.xmp_version) as TextView).text = getString(R.string.about_xmp, Xmp.version)
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == android.R.id.home) {
+            onBackPressed()
+        }
+        return super.onOptionsItemSelected(item)
     }
 }

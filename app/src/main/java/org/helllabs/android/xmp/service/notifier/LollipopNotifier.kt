@@ -3,17 +3,12 @@ package org.helllabs.android.xmp.service.notifier
 import org.helllabs.android.xmp.R
 
 import android.annotation.TargetApi
-import android.app.Notification
 import android.app.Service
-
-//import android.media.session.MediaSession;
+import androidx.core.app.NotificationCompat
+import androidx.media.app.NotificationCompat as NotiCompatMedia
 
 @TargetApi(21)
-class LollipopNotifier
-//private final MediaSession.Token token;
-
-(service: Service /*, final MediaSession.Token token*/)//this.token = token;
-    : Notifier(service) {
+class LollipopNotifier(service: Service) : Notifier(service) {
 
     @TargetApi(21)
     override fun notify(title: String, info: String, index: Int, type: Int) {
@@ -30,7 +25,7 @@ class LollipopNotifier
             notifyInfo = "(paused)"
         }
 
-        val builder = Notification.Builder(service)
+        val builder = NotificationCompat.Builder(service, NOTIFY_ID.toString())
                 .setContentTitle(notifyTitle)
                 .setContentText(notifyInfo)
                 .setContentInfo(indexText)
@@ -39,8 +34,8 @@ class LollipopNotifier
                 .setLargeIcon(icon)
                 .setOngoing(true)
                 .setWhen(0)
-                .setStyle(Notification.MediaStyle().setShowActionsInCompactView(2))
-                .setVisibility(Notification.VISIBILITY_PUBLIC)
+                .setStyle(NotiCompatMedia.MediaStyle().setShowActionsInCompactView(2))
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .addAction(R.drawable.ic_action_previous, "Prev", prevIntent)
                 .addAction(R.drawable.ic_action_stop, "Stop", stopIntent)
 

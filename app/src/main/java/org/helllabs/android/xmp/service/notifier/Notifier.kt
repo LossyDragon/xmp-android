@@ -61,12 +61,12 @@ abstract class Notifier(protected val service: Service) {
 
         const val NOTIFY_ID = R.layout.player
 
-        val TYPE_TICKER = 1
-        val TYPE_PAUSE = 2
+        const val TYPE_TICKER = 1
+        const val TYPE_PAUSE = 2
 
-        val ACTION_STOP = "org.helllabs.android.xmp.STOP"
-        val ACTION_PAUSE = "org.helllabs.android.xmp.PAUSE"
-        val ACTION_PREV = "org.helllabs.android.xmp.PREV"
-        val ACTION_NEXT = "org.helllabs.android.xmp.NEXT"
+        const val ACTION_STOP = "org.helllabs.android.xmp.STOP"
+        const val ACTION_PAUSE = "org.helllabs.android.xmp.PAUSE"
+        const val ACTION_PREV = "org.helllabs.android.xmp.PREV"
+        const val ACTION_NEXT = "org.helllabs.android.xmp.NEXT"
     }
 }

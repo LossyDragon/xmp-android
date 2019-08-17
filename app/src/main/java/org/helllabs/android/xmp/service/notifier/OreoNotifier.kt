@@ -1,11 +1,12 @@
 package org.helllabs.android.xmp.service.notifier
 
 import android.annotation.TargetApi
-import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
 import android.os.Build
+import androidx.core.app.NotificationCompat
+import androidx.media.app.NotificationCompat as NotiCompatMedia
 
 import org.helllabs.android.xmp.R
 
@@ -42,7 +43,7 @@ class OreoNotifier(service: Service) : Notifier(service) {
             notifyInfo = "(paused)"
         }
 
-        val builder = Notification.Builder(service)
+        val builder = NotificationCompat.Builder(service, CHANNEL_ID)
                 .setContentTitle(notifyTitle)
                 .setContentText(notifyInfo)
                 .setContentInfo(indexText)
@@ -52,8 +53,8 @@ class OreoNotifier(service: Service) : Notifier(service) {
                 .setOngoing(true)
                 .setWhen(0)
                 .setChannelId(CHANNEL_ID)
-                .setStyle(Notification.MediaStyle().setShowActionsInCompactView(2))
-                .setVisibility(Notification.VISIBILITY_PUBLIC)
+                .setStyle(NotiCompatMedia.MediaStyle().setShowActionsInCompactView(2))
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .addAction(R.drawable.ic_action_previous, "Prev", prevIntent)
                 .addAction(R.drawable.ic_action_stop, "Stop", stopIntent)
 

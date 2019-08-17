@@ -60,9 +60,9 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
     private var receiverHelper: ReceiverHelper? = null
 
     private val binder = object : ModInterface.Stub() {
-        override fun getModName(): String = Xmp.modName
+        override fun getModName(): String = Xmp.getModName()
 
-        override fun getModType(): String = Xmp.modType
+        override fun getModType(): String = Xmp.getModType()
 
         override fun isPaused(): Boolean = isPlayerPaused
 
@@ -74,7 +74,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
 
         override fun getFileName(): String = playerFileName!!
 
-        override fun getInstruments(): Array<String> = Xmp.instruments
+        override fun getInstruments(): Array<String> = Xmp.getInstruments()
 
         override fun play(fileList: MutableList<String>?, start: Int, shuffle: Boolean, loopList: Boolean, keepFirst: Boolean) {
 
@@ -205,7 +205,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
 
         override fun mute(chn: Int, status: Int): Int = Xmp.mute(chn, status)
 
-        override fun hasComment(): Boolean = Xmp.comment.isEmpty()
+        override fun hasComment(): Boolean = Xmp.getComment().isEmpty()
 
         // File management
         override fun deleteFile(): Boolean {
@@ -260,7 +260,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
             Log.e(TAG, "error initializing audio")
         }
 
-        volume = Xmp.volume
+        volume = Xmp.getVolume()
 
         isAlive = false
         isLoaded = false
@@ -318,11 +318,11 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
 
     private fun updateNotification() {
         if (queue != null) {    // It seems that queue can be null if we're called from PhoneStateListener
-            var name = Xmp.modName
+            var name = Xmp.getModName()
             if (name.isEmpty()) {
                 name = FileUtils.basename(queue!!.filename)
             }
-            notifier!!.notify(name, Xmp.modType, queue!!.index, if (isPlayerPaused) Notifier.TYPE_PAUSE else 0)
+            notifier!!.notify(name, Xmp.getModType(), queue!!.index, if (isPlayerPaused) Notifier.TYPE_PAUSE else 0)
         }
     }
 
@@ -455,11 +455,11 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
 
                 cmd = CMD_NONE
 
-                var name = Xmp.modName
+                var name = Xmp.getModName()
                 if (name.isEmpty()) {
                     name = FileUtils.basename(playerFileName)
                 }
-                notifier!!.notify(name, Xmp.modType, queue!!.index, Notifier.TYPE_TICKER)
+                notifier!!.notify(name, Xmp.getModType(), queue!!.index, Notifier.TYPE_TICKER)
                 isLoaded = true
 
                 // Unmute all channels
@@ -526,7 +526,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
 
                 do {
                     Xmp.getModVars(vars)
-                    remoteControl!!.setMetadata(Xmp.modName, Xmp.modType, vars[0].toLong())
+                    remoteControl!!.setMetadata(Xmp.getModName(), Xmp.getModType(), vars[0].toLong())
 
                     while (cmd == CMD_NONE) {
                         discardBuffer = false
@@ -703,7 +703,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                 Log.w(TAG, "AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK")
                 // Lower volume
                 synchronized(audioManager!!) {
-                    volume = Xmp.volume
+                    volume = Xmp.getVolume()
                     Xmp.setVolume(DUCK_VOLUME)
                     ducking = true
                 }

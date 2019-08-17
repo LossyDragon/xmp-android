@@ -1,43 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:cardview="http://schemas.android.com/apk/res-auto"
-          android:id="@+id/plist_container"
-          android:layout_width="fill_parent"
-          android:layout_height="wrap_content"
-          cardview:cardBackgroundColor="@color/cardview_dark_background"
-          android:layout_marginLeft="9dp"
-          android:layout_marginRight="9dp"
-          android:layout_marginTop="10dp"
-          android:layout_marginBottom="0dp"
-          cardview:contentPadding="10dp"
-          cardview:cardCornerRadius="0dp"
-          android:foreground="?android:attr/selectableItemBackground" >
+    android:id="@+id/plist_container"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginLeft="9dp"
+    android:layout_marginTop="10dp"
+    android:layout_marginRight="9dp"
+    android:layout_marginBottom="0dp"
+    android:foreground="?android:attr/selectableItemBackground"
+    cardview:cardBackgroundColor="@color/cardview_dark_background"
+    cardview:cardCornerRadius="0dp"
+    cardview:contentPadding="10dp">
 
     <LinearLayout
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content" >
+        android:layout_height="wrap_content">
 
         <ImageView
             android:id="@+id/plist_image"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:padding="8dp"
-            android:layout_marginRight="8dp"
-            android:layout_gravity="center_vertical" />
+            android:layout_gravity="center_vertical"
+            android:layout_marginEnd="8dp"
+            android:contentDescription="@string/desc_plist_image"
+            android:padding="8dp" />
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:orientation="vertical" >
+            android:orientation="vertical">
 
             <TextView
                 android:id="@+id/plist_title"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:singleLine="true"
                 android:ellipsize="end"
+                android:singleLine="true"
                 android:textSize="19sp" />
 
             <TextView

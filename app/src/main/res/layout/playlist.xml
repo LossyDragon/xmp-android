@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="fill_parent"
-              android:layout_height="fill_parent"
-              android:layout_weight="1.0"
-              android:gravity="top"
-              android:orientation="vertical">
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:layout_weight="1.0"
+    android:gravity="top"
+    android:orientation="vertical">
 
     <LinearLayout
         android:id="@+id/current_list"
@@ -19,18 +19,18 @@
             android:id="@+id/current_list_name"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="2dp"
+            android:layout_marginStart="2dp"
             android:layout_marginTop="8dp"
             android:textSize="16sp"
-            android:textStyle="bold"/>
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/current_list_description"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
+            android:layout_marginStart="2dp"
             android:layout_marginBottom="8dp"
-            android:layout_marginLeft="2dp"
-            android:textSize="13sp"/>
+            android:textSize="13sp" />
 
     </LinearLayout>
 
@@ -53,7 +53,7 @@
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/plist_list"
                     android:layout_width="fill_parent"
-                    android:layout_height="fill_parent"/>
+                    android:layout_height="fill_parent" />
 
             </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
@@ -61,7 +61,7 @@
                 android:id="@+id/fast_scroller"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:layout_gravity="end"/>
+                android:layout_gravity="end" />
 
         </FrameLayout>
 
@@ -70,7 +70,7 @@
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:gravity="top"
-            android:text="@string/msg_empty_playlist"/>
+            android:text="@string/msg_empty_playlist" />
     </LinearLayout>
 
     <LinearLayout
@@ -85,7 +85,7 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_weight="0.34"
-            android:contentDescription="@string/button_play_all"/>
+            android:contentDescription="@string/button_play_all" />
 
         <ImageButton
             android:id="@+id/toggle_loop"
@@ -93,7 +93,7 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_weight="0.33"
-            android:contentDescription="@string/button_toggle_loop"/>
+            android:contentDescription="@string/button_toggle_loop" />
 
         <ImageButton
             android:id="@+id/toggle_shuffle"
@@ -101,7 +101,7 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_weight="0.33"
-            android:contentDescription="@string/button_toggle_shuffle"/>
+            android:contentDescription="@string/button_toggle_shuffle" />
     </LinearLayout>
 
 </LinearLayout>

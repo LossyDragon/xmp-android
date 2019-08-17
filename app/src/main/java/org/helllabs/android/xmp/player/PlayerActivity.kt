@@ -13,6 +13,7 @@ import android.view.*
 import android.widget.*
 import android.widget.SeekBar.OnSeekBarChangeListener
 import androidx.preference.PreferenceManager
+import kotlinx.android.synthetic.main.player.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.browser.PlaylistMenu
@@ -600,11 +601,6 @@ class PlayerActivity : Activity() {
         return outFile.path
     }
 
-    //private void setFont(final TextView name, final String path, final int res) {
-    //    final Typeface typeface = Typeface.createFromAsset(this.getAssets(), path);
-    //    name.setTypeface(typeface);
-    //}
-
     private fun changeViewer() {
         currentViewer++
         currentViewer %= 3
@@ -646,8 +642,7 @@ class PlayerActivity : Activity() {
 
 
     // Click listeners
-
-    fun loopButtonListener(view: View) {
+    private fun loopButtonListener() {
         synchronized(playerLock) {
             if (modPlayer != null) {
                 try {
@@ -664,9 +659,9 @@ class PlayerActivity : Activity() {
         }
     }
 
-    fun playButtonListener(view: View) {
+    private fun playButtonListener() {
         //Debug.startMethodTracing("xmp");
-        synchronized(this) {
+        synchronized(playerLock) {
             Log.d(TAG, "Play/pause button pressed (paused=$paused)")
             if (modPlayer != null) {
                 try {
@@ -685,7 +680,7 @@ class PlayerActivity : Activity() {
         }
     }
 
-    fun stopButtonListener(view: View) {
+    private fun stopButtonListener() {
         //Debug.stopMethodTracing();
 
         synchronized(playerLock) {
@@ -701,15 +696,9 @@ class PlayerActivity : Activity() {
         }
 
         paused = false
-
-        //		if (progressThread != null && progressThread.isAlive()) {
-        //			try {
-        //				progressThread.join();
-        //			} catch (InterruptedException e) { }
-        //		}
     }
 
-    fun backButtonListener(view: View) {
+    fun backButtonListener() {
         synchronized(playerLock) {
             Log.d(TAG, "Back button pressed")
             if (modPlayer != null) {
@@ -732,7 +721,7 @@ class PlayerActivity : Activity() {
         }
     }
 
-    fun forwardButtonListener(view: View) {
+    fun forwardButtonListener() {
         synchronized(playerLock) {
             Log.d(TAG, "Next button pressed")
             if (modPlayer != null) {
@@ -748,7 +737,6 @@ class PlayerActivity : Activity() {
     }
 
     // Life cycle
-
     public override fun onCreate(icicle: Bundle?) {
         super.onCreate(icicle)
         setContentView(R.layout.player_main)
@@ -818,9 +806,27 @@ class PlayerActivity : Activity() {
         }
 
         playButton = findViewById<View>(R.id.play) as ImageButton
-        loopButton = findViewById<View>(R.id.loop) as ImageButton
+        playButton!!.setOnClickListener {
+            playButtonListener()
+        }
 
+        loopButton = findViewById<View>(R.id.loop) as ImageButton
         loopButton!!.setImageResource(R.drawable.loop_off)
+        loopButton!!.setOnClickListener {
+            loopButtonListener()
+        }
+
+        stop.setOnClickListener {
+            stopButtonListener()
+        }
+
+        back.setOnClickListener {
+            backButtonListener()
+        }
+
+        forward.setOnClickListener {
+            forwardButtonListener()
+        }
 
         elapsedTime!!.setOnClickListener { showElapsed = showElapsed xor true }
 

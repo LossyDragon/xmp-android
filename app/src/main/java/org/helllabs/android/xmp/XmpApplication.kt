@@ -1,9 +1,9 @@
 package org.helllabs.android.xmp
 
+import android.app.Application
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.Volley
 
-import android.app.Application
 
 class XmpApplication : Application() {
 
@@ -25,11 +25,11 @@ class XmpApplication : Application() {
     }
 
     fun clearFileList() {
-        fileList = null    // NOPMD
+        fileList = null
     }
 
     companion object {
-        @get:Synchronized // NOPMD
+        @get:Synchronized
         var instance: XmpApplication? = null
             private set
     }

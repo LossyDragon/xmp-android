@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<merge xmlns:android="http://schemas.android.com/apk/res/android" >
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
 
     <ProgressBar
         android:id="@+id/result_spinner"
@@ -13,15 +13,14 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="top"
-        android:orientation="vertical" >
+        android:orientation="vertical">
 
         <ListView
             android:id="@+id/result_list"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" >
-        </ListView>
+            android:layout_height="match_parent" />
 
-        <include layout="@layout/error_message"/>
+        <include layout="@layout/error_message" />
     </LinearLayout>
 
 </merge>

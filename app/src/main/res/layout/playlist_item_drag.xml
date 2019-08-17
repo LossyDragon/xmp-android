@@ -3,38 +3,38 @@
     android:id="@+id/plist_container"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
+    android:background="?android:attr/selectableItemBackground"
     android:baselineAligned="false"
-    android:background="?android:attr/selectableItemBackground" >
+    android:orientation="horizontal">
 
     <FrameLayout
         android:id="@+id/plist_handle"
         android:layout_width="56dp"
         android:layout_height="match_parent"
-        android:layout_marginRight="8dp"
-        >
+        android:layout_marginEnd="8dp">
 
-    <ImageView
-        android:id="@+id/plist_image"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center" />
+        <ImageView
+            android:id="@+id/plist_image"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:contentDescription="@string/desc_plist_drag" />
     </FrameLayout>
 
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
         android:layout_marginTop="6dp"
         android:layout_marginBottom="6dp"
-        android:orientation="vertical" >
+        android:layout_weight="1"
+        android:orientation="vertical">
 
         <TextView
             android:id="@+id/plist_title"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:singleLine="true"
             android:ellipsize="end"
+            android:singleLine="true"
             android:textSize="19sp" />
 
         <TextView

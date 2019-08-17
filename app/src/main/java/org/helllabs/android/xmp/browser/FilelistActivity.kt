@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.h6ah4i.android.widget.advrecyclerview.decoration.SimpleListDividerDecorator
 import com.pluscubed.recyclerfastscroll.RecyclerFastScroller
+import kotlinx.android.synthetic.main.modlist.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter
 import org.helllabs.android.xmp.browser.playlist.PlaylistItem
@@ -186,6 +187,10 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         isShuffleMode = readShuffleModePref()
         isLoopMode = readLoopModePref()
 
+        up_button.setOnClickListener {
+            parentDir()
+        }
+
         setupButtons()
     }
 
@@ -194,10 +199,6 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
             updateModlist()
             mNavigation!!.restoreListPosition(recyclerView!!)
         }
-    }
-
-    fun upButtonClick(view: View) {
-        parentDir()
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
@@ -214,13 +215,8 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
     override fun onDestroy() {
         super.onDestroy()
 
-        var saveModes = false
-        if (isShuffleMode != readShuffleModePref()) {
-            saveModes = true
-        }
-        if (isLoopMode != readLoopModePref()) {
-            saveModes = true
-        }
+
+        val saveModes = isShuffleMode != readShuffleModePref() || isLoopMode != readLoopModePref()
 
         if (saveModes) {
             Log.i(TAG, "Save new file list preferences")
@@ -319,7 +315,7 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
 
     // Playlist context menu
 
-    override fun onCreateContextMenu(menu: ContextMenu, view: View, menuInfo: ContextMenu.ContextMenuInfo) {
+    override fun onCreateContextMenu(menu: ContextMenu, view: View, menuInfo: ContextMenu.ContextMenuInfo?) {
 
         if (view == curPath) {
             isPathMenu = true
