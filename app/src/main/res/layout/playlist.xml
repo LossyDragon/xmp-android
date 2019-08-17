@@ -53,7 +53,8 @@
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/plist_list"
                     android:layout_width="fill_parent"
-                    android:layout_height="fill_parent" />
+                    android:layout_height="fill_parent"
+                    android:layoutAnimation="@anim/item_animation" />
 
             </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 

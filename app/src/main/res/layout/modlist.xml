@@ -62,7 +62,8 @@
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/modlist_listview"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent" />
+                        android:layout_height="match_parent"
+                        android:layoutAnimation="@anim/item_animation" />
 
                 </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 

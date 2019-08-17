@@ -3,4 +3,5 @@
     android:id="@android:id/list"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layoutAnimation="@anim/item_animation"
     tools:listitem="@android:layout/simple_list_item_1" />

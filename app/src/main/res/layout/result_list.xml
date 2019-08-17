@@ -18,9 +18,11 @@
         <ListView
             android:id="@+id/result_list"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+            android:layoutAnimation="@anim/item_animation" />
 
         <include layout="@layout/error_message" />
+
     </LinearLayout>
 
 </merge>

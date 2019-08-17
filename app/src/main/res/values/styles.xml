@@ -4,7 +4,7 @@
         Base application theme, dependent on API level. This theme is replaced
         by AppBaseTheme from res/values-vXX/styles.xml on newer devices.
     -->
-    <style name="AppBaseTheme" parent="@style/Theme.AppCompat">
+    <style name="AppBaseTheme" parent="@style/Theme.MaterialComponents.DayNight">
         <!--
             Theme customizations available in newer API levels can go in
             res/values-vXX/styles.xml, while customizations related to
@@ -22,6 +22,7 @@
         <item name="android:windowBackground">@color/black</item>
         <item name="android:buttonStyle">@style/ButtonTheme</item>
         <item name="android:checkboxStyle">@style/CheckboxTheme</item>
+        <item name="colorSurface">@color/primary</item>
         <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryDark">@color/primary_dark</item>
         <item name="colorAccent">@color/accent</item>
@@ -32,9 +33,7 @@
         <item name="windowNoTitle">true</item>
     </style>
 
-    <style name="AppTheme.Preferences" parent="AppTheme.NoActionBar">
-
-    </style>
+    <style name="AppTheme.Preferences" parent="AppTheme"/>
     
     <style name="ButtonTheme" parent="AppTheme">
         <item name="android:background">@android:drawable/btn_default</item>
@@ -70,10 +69,6 @@
         <item name="android:textSize">16sp</item>
         <item name="android:background">@drawable/section_background</item>
         <item name="android:textColor">@color/white</item>
-    </style>
-
-    <style name="PreferencesTheme" parent="ThemeOverlay.AppCompat.Dark">
-        <item name="android:windowBackground">@color/black</item>
     </style>
 
 </resources>

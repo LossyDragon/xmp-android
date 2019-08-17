@@ -1,19 +1,17 @@
 package org.helllabs.android.xmp.modarchive
 
-import java.util.Locale
-
-import org.helllabs.android.xmp.R
-
 import android.content.Intent
 import android.graphics.Typeface
 import android.os.Bundle
 import android.view.KeyEvent
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import kotlinx.android.synthetic.main.search_error.*
+import org.helllabs.android.xmp.R
+import java.util.*
+
 
 class SearchError : AppCompatActivity(), Runnable {
 
-    private var msg: TextView? = null
     private var frameBlink: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -21,11 +19,7 @@ class SearchError : AppCompatActivity(), Runnable {
 
         setContentView(R.layout.search_error)
 
-        title = "Search error"
-
         val error = intent.getSerializableExtra(Search.ERROR) as Throwable
-        msg = findViewById<TextView>(R.id.error_message)
-        //msg.getPaint().setAntiAlias(false);
 
         var message: String? = error.message
         if (message == null) {
@@ -40,21 +34,20 @@ class SearchError : AppCompatActivity(), Runnable {
             message = if (message.trim { it <= ' ' }.isEmpty()) {
                 UNKNOWN_ERROR
             } else {
-                message.substring(0, 1).toUpperCase(Locale.US) + message.substring(1) + ".  Press back button to continue."
+                message.substring(0, 1)
+                        .toUpperCase(Locale.US) + message.substring(1) + PRESS_BACK
             }
         }
 
-        msg!!.text = message
-
-        val typeface = Typeface.createFromAsset(assets, "fonts/TopazPlus_a500_v1.0.ttf")
-        msg!!.typeface = typeface
-
-        msg!!.postDelayed(this, PERIOD.toLong())
+        error_message.apply {
+            text = message
+            typeface = Typeface.createFromAsset(assets, "fonts/TopazPlus_a500_v1.0.ttf")
+            postDelayed(this@SearchError, PERIOD.toLong())
+        }
     }
 
-
     override fun onDestroy() {
-        msg!!.removeCallbacks(this)
+        error_message.removeCallbacks(this)
         super.onDestroy()
     }
 
@@ -74,14 +67,21 @@ class SearchError : AppCompatActivity(), Runnable {
 
     override fun run() {
         // Guru frame blink
-        @Suppress("DEPRECATION")
-        msg!!.setBackgroundDrawable(resources.getDrawable(if (frameBlink) R.drawable.guru_frame else R.drawable.guru_frame_2))
+        val blink = if (frameBlink) R.drawable.guru_frame else R.drawable.guru_frame_2
+
+        error_message.apply {
+            @Suppress("DEPRECATION")
+            setBackgroundDrawable(resources.getDrawable(blink))
+            postDelayed(this@SearchError, PERIOD.toLong())
+        }
+
         frameBlink = frameBlink xor true
-        msg!!.postDelayed(this, PERIOD.toLong())
     }
 
     companion object {
         private const val PERIOD = 1337
-        private const val UNKNOWN_ERROR = "Software Failure.   Press back to continue.\n\nGuru Meditation #35068035.48454C50"
+        private const val PRESS_BACK = ".  Press back button to continue."
+        private const val UNKNOWN_ERROR =
+                "Software Failure$PRESS_BACK\n\nGuru Meditation #35068035.48454C50"
     }
 }

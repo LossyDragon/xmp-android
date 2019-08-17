@@ -2,11 +2,14 @@ package org.helllabs.android.xmp.modarchive.model
 
 class Artist {
     var alias: String? = null
-        set(alias) = if (alias == null || alias.isEmpty()) {
-            field = Artist.UNKNOWN
-        } else {
-            field = alias
+        set(alias) {
+            field = if (alias == null || alias.isEmpty()) {
+                UNKNOWN
+            } else {
+                alias
+            }
         }
+
     var id: Long = 0
 
     override fun toString(): String {
@@ -14,6 +17,6 @@ class Artist {
     }
 
     companion object {
-        val UNKNOWN = "unknown"
+        const val UNKNOWN = "unknown"
     }
 }

@@ -1,5 +1,6 @@
 package org.helllabs.android.xmp.modarchive.adapter
 
+import android.annotation.SuppressLint
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.modarchive.model.Module
 
@@ -12,6 +13,7 @@ import android.widget.TextView
 
 class ModuleArrayAdapter(context: Context, resource: Int, items: List<Module>) : ArrayAdapter<Module>(context, resource, items) {
 
+    @SuppressLint("InflateParams")
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         var view = convertView
         if (view == null) {
@@ -28,8 +30,8 @@ class ModuleArrayAdapter(context: Context, resource: Int, items: List<Module>) :
 
             fmt.text = module.format
             line1.text = module.songTitle
-            line2.text = "by " + module.artist!!
-            size.text = (module.bytes / 1024).toString() + " KB"
+            line2.text = String.format(context.getString(R.string.module_by), module.artist)
+            size.text = String.format(context.getString(R.string.module_size), (module.bytes / 1024).toString())
         }
 
         return view!!

@@ -117,7 +117,7 @@
         android:paddingEnd="2dp">
 
         <SeekBar
-            android:id="@+id/seek"
+            android:id="@+id/player_seek"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="0.95"
@@ -126,7 +126,7 @@
             android:paddingBottom="10dp" />
 
         <ImageButton
-            android:id="@+id/loop"
+            android:id="@+id/player_loop"
             style="@style/ButtonTheme"
             android:layout_width="wrap_content"
             android:layout_height="32dip"
@@ -143,7 +143,7 @@
         android:orientation="horizontal">
 
         <ImageButton
-            android:id="@+id/back"
+            android:id="@+id/player_back"
             style="@style/ButtonTheme"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -152,7 +152,7 @@
             android:src="@drawable/back" />
 
         <ImageButton
-            android:id="@+id/stop"
+            android:id="@+id/player_stop"
             style="@style/ButtonTheme"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -161,7 +161,7 @@
             android:src="@drawable/stop" />
 
         <ImageButton
-            android:id="@+id/play"
+            android:id="@+id/player_play"
             style="@style/ButtonTheme"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -170,7 +170,7 @@
             android:src="@drawable/pause" />
 
         <ImageButton
-            android:id="@+id/forward"
+            android:id="@+id/player_forward"
             style="@style/ButtonTheme"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

@@ -9,18 +9,15 @@ import android.os.IBinder
 import android.os.RemoteException
 import android.view.Menu
 import android.view.MenuItem
-import android.view.MotionEvent
 import android.view.View
 import android.view.View.OnClickListener
 import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceManager
-import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter
-import org.helllabs.android.xmp.browser.playlist.PlaylistUtils
 import org.helllabs.android.xmp.modarchive.Search
 import org.helllabs.android.xmp.player.PlayerActivity
 import org.helllabs.android.xmp.preferences.Preferences
@@ -71,9 +68,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         isShuffleMode = shuffleMode
     }
 
-
     // Connection
-
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             mModPlayer = ModInterface.Stub.asInterface(service)
@@ -87,7 +82,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         }
 
         override fun onServiceDisconnected(className: ComponentName) {
-            mModPlayer = null    // NOPMD
+            mModPlayer = null
         }
     }
 
@@ -115,35 +110,14 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
 
     protected abstract fun update()
 
-    protected fun setSwipeRefresh(recyclerView: RecyclerView) {
-        val swipeRefresh = findViewById<SwipeRefreshLayout>(R.id.swipeContainer)
-        swipeRefresh.setOnRefreshListener {
-            update()
-            swipeRefresh.isRefreshing = false
+    protected fun setSwipeRefresh(swipeContainer: SwipeRefreshLayout) {
+        swipeContainer.apply {
+            setColorSchemeResources(R.color.refresh_color)
+            setOnRefreshListener {
+                update()
+                this.isRefreshing = false
+            }
         }
-        swipeRefresh.setColorSchemeResources(R.color.refresh_color)
-
-        recyclerView.addOnItemTouchListener(object : RecyclerView.OnItemTouchListener {
-            override fun onInterceptTouchEvent(rv: RecyclerView, e: MotionEvent): Boolean {
-                if (e.action == MotionEvent.ACTION_DOWN) {
-                    var enable = false
-                    if (recyclerView.childCount > 0) {
-                        enable = !recyclerView.canScrollVertically(-1)
-                    }
-                    swipeRefresh.isEnabled = enable
-                }
-
-                return false
-            }
-
-            override fun onTouchEvent(rv: RecyclerView, e: MotionEvent) {
-                // do nothing
-            }
-
-            override fun onRequestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
-                // do nothing
-            }
-        })
     }
 
     protected fun setupButtons() {
@@ -280,7 +254,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     // Menu
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         val inflater = menuInflater
-        inflater.inflate(R.menu.options_menu, menu)
+        inflater.inflate(R.menu.menu_options, menu)
 
         // Calling super after populating the menu is necessary here to ensure that the
         // action bar helpers have a chance to handle this event.
@@ -295,9 +269,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
                 startActivity(intent)
                 return true
             }
-            R.id.menu_new_playlist -> PlaylistUtils.newPlaylistDialog(this)
             R.id.menu_prefs -> startActivityForResult(Intent(this, Preferences::class.java), SETTINGS_REQUEST)
-            R.id.menu_refresh -> update()
             R.id.menu_download -> startActivityForResult(Intent(this, Search::class.java), SEARCH_REQUEST)
         }
         return super.onOptionsItemSelected(item)

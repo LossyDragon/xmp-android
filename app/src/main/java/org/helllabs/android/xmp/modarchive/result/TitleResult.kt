@@ -55,8 +55,7 @@ class TitleResult : Result(), ModArchiveRequest.OnResponseListener, AdapterView.
     }
 
     override fun onSoftError(response: SoftErrorResponse) {
-        val errorMessage = findViewById<View>(R.id.error_message) as TextView
-        errorMessage.text = response.message
+        error_message.text = response.message
         result_list!!.visibility = View.GONE
         crossfade()
     }

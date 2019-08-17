@@ -9,6 +9,7 @@ import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import androidx.preference.PreferenceManager
+import kotlinx.android.synthetic.main.error_message.*
 import kotlinx.android.synthetic.main.result_module.*
 import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.R
@@ -32,20 +33,9 @@ import java.io.UnsupportedEncodingException
 import java.util.*
 
 open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, Downloader.DownloaderListener {
-    private var title: TextView? = null
-    private var filename: TextView? = null
-    private var info: TextView? = null
-    private var instruments: TextView? = null
-    private var license: TextView? = null
-    private var licenseDescription: TextView? = null
-    private var sponsorText: TextView? = null
+
     private var module: Module? = null
     private var downloader: Downloader? = null
-    private var downloadButton: Button? = null
-    private var deleteButton: Button? = null
-    private var playButton: Button? = null
-    private var errorMessage: TextView? = null
-    private var dataView: View? = null
 
     private var mPrefs: SharedPreferences? = null
 
@@ -56,25 +46,9 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, Downlo
 
         mPrefs = PreferenceManager.getDefaultSharedPreferences(this)
 
-        title = findViewById<View>(R.id.module_title) as TextView
-        filename = findViewById<View>(R.id.module_filename) as TextView
-        info = findViewById<View>(R.id.module_info) as TextView
-        instruments = findViewById<View>(R.id.module_instruments) as TextView
-        license = findViewById<View>(R.id.module_license) as TextView
-        licenseDescription = findViewById<View>(R.id.module_license_description) as TextView
-        sponsorText = findViewById<View>(R.id.module_sponsor) as TextView
-
-        downloadButton = findViewById<View>(R.id.module_download) as Button
-        downloadButton!!.isEnabled = false
-
-        deleteButton = findViewById<View>(R.id.module_delete) as Button
-        deleteButton!!.isEnabled = false
-
-        playButton = findViewById<View>(R.id.module_play) as Button
-        playButton!!.isEnabled = false
-
-        errorMessage = findViewById<View>(R.id.error_message) as TextView
-        dataView = findViewById(R.id.result_data)
+        module_download.isEnabled = false
+        module_delete.isEnabled = false
+        module_play.isEnabled = false
 
         downloader = Downloader(this)
         downloader!!.setDownloaderListener(this)
@@ -111,19 +85,19 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, Downlo
 
         val moduleList = response as ModuleResponse
         if (moduleList.isEmpty) {
-            dataView!!.visibility = View.GONE
+            result_data.visibility = View.GONE
         } else {
             val module = moduleList[0]
             Log.i(TAG, "Response: title=" + module.songTitle!!)
-            title!!.text = module.songTitle
-            filename!!.text = module.filename
+            module_title.text = module.songTitle
+            module_filename.text = module.filename
             val size = module.bytes / 1024
-            info!!.text = String.format("%s by %s (%d KB)", module.format, module.artist, size)
+            module_info.text = String.format("%s by %s (%d KB)", module.format, module.artist, size)
             @Suppress("DEPRECATION")
-            license!!.text = Html.fromHtml("License: <a href=\"" + module.legalUrl + "\">" + module.license + "</a>")
-            license!!.movementMethod = LinkMovementMethod.getInstance()
-            licenseDescription!!.text = module.licenseDescription
-            instruments!!.text = module.instruments
+            module_license.text = Html.fromHtml("License: <a href=\"" + module.legalUrl + "\">" + module.license + "</a>")
+            module_license.movementMethod = LinkMovementMethod.getInstance()
+            module_license_description.text = module.licenseDescription
+            module_instruments.text = module.instruments
             this.module = module
 
             updateButtons(module)
@@ -132,16 +106,16 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, Downlo
         val sponsor = response.sponsor
         if (sponsor != null) {
             @Suppress("DEPRECATION")
-            sponsorText!!.text = Html.fromHtml("Download mirrors provided by <a href=\"" + sponsor.link + "\">" + sponsor.name + "</a>")
-            sponsorText!!.movementMethod = LinkMovementMethod.getInstance()
+            module_sponsor.text = Html.fromHtml("Download mirrors provided by <a href=\"" + sponsor.link + "\">" + sponsor.name + "</a>")
+            module_sponsor.movementMethod = LinkMovementMethod.getInstance()
         }
 
         crossfade()
     }
 
     override fun onSoftError(response: SoftErrorResponse) {
-        errorMessage!!.text = response.message
-        dataView!!.visibility = View.GONE
+        error_message.text = response.message
+        result_data.visibility = View.GONE
         crossfade()
     }
 
@@ -160,7 +134,7 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, Downlo
     }
 
     // Button click handlers
-    fun onDownload() {
+    private fun onDownload() {
         val modDir = getDownloadPath(module)
         val url = module!!.url
 
@@ -168,7 +142,7 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, Downlo
         downloader!!.download(url!!, modDir, module!!.bytes)
     }
 
-    fun onDelete() {
+    private fun onDelete() {
         val file = localFile(module)
 
         Message.yesNoDialog(this, "Delete file", "Are you sure you want to delete " + module!!.filename + "?", Runnable {
@@ -204,7 +178,7 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, Downlo
         })
     }
 
-    fun onPlay() {
+    private fun onPlay() {
         val path = localFile(module).path
         val modList = ArrayList<String>()
 
@@ -237,9 +211,9 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, Downlo
 
     private fun updateButtons(module: Module?) {
         val exists = localFile(module).exists()
-        downloadButton!!.isEnabled = true
-        deleteButton!!.isEnabled = exists
-        playButton!!.isEnabled = exists
+        module_download.isEnabled = true
+        module_delete.isEnabled = exists
+        module_play.isEnabled = exists
     }
 
     private fun localFile(module: Module?): File {

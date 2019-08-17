@@ -207,5 +207,7 @@
     <string name="module_result_license">license</string>
     <string name="module_result_info">info</string>
     <string name="module_result_filename">filename</string>
+    <string name="module_by">by %s</string>
+    <string name="module_size">%s KB</string>
 
 </resources>

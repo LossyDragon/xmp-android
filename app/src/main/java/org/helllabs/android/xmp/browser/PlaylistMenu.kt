@@ -9,16 +9,15 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
-import android.view.*
-import android.widget.TextView
+import android.view.ContextMenu
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.Toolbar
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import kotlinx.android.synthetic.main.playlist_menu.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.browser.playlist.Playlist
@@ -48,68 +47,42 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
         super.onCreate(icicle)
         setContentView(R.layout.playlist_menu)
 
+        // Init prefs
+        prefs = PreferenceManager.getDefaultSharedPreferences(this)
+
         Log.i(TAG, "start application")
 
-        val toolbar = findViewById<Toolbar>(R.id.toolbar)
-
         setSupportActionBar(toolbar)
-        //getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        supportActionBar?.elevation = 0f // or other
 
-        title = ""
+        title = ""  // Custom toolbar has a TextView as a button
 
-        val title = findViewById<TextView>(R.id.toolbar_title)
-        title.setOnClickListener { startPlayerActivity() }
+        toolbar_title.setOnClickListener { startPlayerActivity() }
 
         // Swipe refresh
-        val swipeRefresh = findViewById<SwipeRefreshLayout>(R.id.swipeContainer)
-        swipeRefresh.setOnRefreshListener {
-            updateList()
-            swipeRefresh.isRefreshing = false
+        swipeContainer.apply {
+            setColorSchemeResources(R.color.refresh_color)
+            setOnRefreshListener {
+                updateList()
+                this.isRefreshing = false
+            }
         }
-        swipeRefresh.setColorSchemeResources(R.color.refresh_color)
 
-        val recyclerView = findViewById<RecyclerView>(R.id.plist_menu_list)
-
+        // Add playlist
         add_button.setOnClickListener {
             PlaylistUtils.newPlaylistDialog(this, Runnable {
                 updateList()
             })
         }
 
-        recyclerView.addOnItemTouchListener(object : RecyclerView.OnItemTouchListener {
-            override fun onInterceptTouchEvent(rv: RecyclerView, e: MotionEvent): Boolean {
-                if (e.action == MotionEvent.ACTION_DOWN) {
-                    var enable = false
-                    if (recyclerView.childCount > 0) {
-                        enable = !recyclerView.canScrollVertically(-1)
-                    }
-                    swipeRefresh.isEnabled = enable
-                }
-
-                return false
-            }
-
-            override fun onTouchEvent(rv: RecyclerView, e: MotionEvent) {
-                // do nothing
-            }
-
-            override fun onRequestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
-                // do nothing
-            }
-        })
-
-
-        val layoutManager = LinearLayoutManager(this)
-        layoutManager.orientation = LinearLayoutManager.VERTICAL
-        recyclerView.layoutManager = layoutManager
-
         playlistAdapter = PlaylistAdapter(this@PlaylistMenu, ArrayList(), false, PlaylistAdapter.LAYOUT_CARD)
         playlistAdapter!!.setOnItemClickListener(this)
-        recyclerView.adapter = playlistAdapter
 
-        registerForContextMenu(recyclerView)
-        prefs = PreferenceManager.getDefaultSharedPreferences(this)
+        plist_menu_list.apply {
+            layoutManager = LinearLayoutManager(this@PlaylistMenu)
+            adapter = playlistAdapter
+            registerForContextMenu(this)
+        }
+
 
         if (!checkStorage()) {
             Message.fatalError(this, getString(R.string.error_storage))
@@ -135,10 +108,9 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
     }
 
     private fun getStoragePermissions() {
-        val hasPermission = ContextCompat.checkSelfPermission(this,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
+        val hasPermission =
                 ContextCompat.checkSelfPermission(this,
-                        Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
 
         if (hasPermission) {
             setupDataDir()
@@ -222,7 +194,6 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
 
 
     // Playlist context menu
-
     override fun onCreateContextMenu(menu: ContextMenu, view: View, menuInfo: ContextMenu.ContextMenuInfo?) {
         menu.setHeaderTitle("Playlist options")
 
@@ -370,7 +341,7 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
     // Menu
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         val inflater = menuInflater
-        inflater.inflate(R.menu.options_menu, menu)
+        inflater.inflate(R.menu.menu_options, menu)
 
         // Calling super after populating the menu is necessary here to ensure that the
         // action bar helpers have a chance to handle this event.
@@ -380,21 +351,17 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             android.R.id.home -> startPlayerActivity()
-            R.id.menu_new_playlist -> PlaylistUtils.newPlaylistDialog(this, Runnable { updateList() })
             R.id.menu_prefs -> startActivityForResult(Intent(this, Preferences::class.java), SETTINGS_REQUEST)
-            R.id.menu_refresh -> updateList()
             R.id.menu_download -> startActivity(Intent(this, Search::class.java))
-            else -> {
-            }
         }
         return super.onOptionsItemSelected(item)
     }
 
     companion object {
         private const val TAG = "PlaylistMenu"
+
         private const val SETTINGS_REQUEST = 45
         private const val PLAYLIST_REQUEST = 46
-
         private const val REQUEST_WRITE_STORAGE = 112
 
         private fun checkStorage(): Boolean {

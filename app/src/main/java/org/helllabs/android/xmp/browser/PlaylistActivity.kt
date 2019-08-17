@@ -17,6 +17,7 @@ import com.h6ah4i.android.widget.advrecyclerview.decoration.SimpleListDividerDec
 import com.h6ah4i.android.widget.advrecyclerview.draggable.RecyclerViewDragDropManager
 import com.h6ah4i.android.widget.advrecyclerview.utils.WrapperAdapterUtils
 import com.pluscubed.recyclerfastscroll.RecyclerFastScroller
+import kotlinx.android.synthetic.main.playlist.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.browser.playlist.Playlist
 import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter
@@ -26,8 +27,9 @@ import java.io.IOException
 
 
 class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickListener {
+
     private var mPlaylist: Playlist? = null
-    private var mRecyclerView: RecyclerView? = null
+    //private var mRecyclerView: RecyclerView? = null
     private var mWrappedAdapter: RecyclerView.Adapter<*>? = null
     private var mRecyclerViewDragDropManager: RecyclerViewDragDropManager? = null
 
@@ -64,13 +66,6 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
             Log.e(TAG, "Can't read playlist " + name!!)
         }
 
-        mRecyclerView = findViewById<RecyclerView>(R.id.plist_list)
-        setSwipeRefresh(mRecyclerView!!)
-
-        // layout manager
-        val layoutManager = LinearLayoutManager(this)
-        layoutManager.orientation = LinearLayoutManager.VERTICAL
-
         // drag & drop manager
         mRecyclerViewDragDropManager = RecyclerViewDragDropManager()
         @Suppress("DEPRECATION")
@@ -80,37 +75,31 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         mPlaylistAdapter = PlaylistAdapter(this, mPlaylist!!, useFilename, PlaylistAdapter.LAYOUT_DRAG)
         mWrappedAdapter = mRecyclerViewDragDropManager!!.createWrappedAdapter(mPlaylistAdapter!!)
 
-        val animator = RefactoredDefaultItemAnimator()
+        setSwipeRefresh(swipeContainer)
 
-        mRecyclerView!!.layoutManager = layoutManager
-        mRecyclerView!!.adapter = mWrappedAdapter
-        mRecyclerView!!.itemAnimator = animator
+        plist_list.apply {
+            layoutManager = LinearLayoutManager(this@PlaylistActivity)
+            adapter = mWrappedAdapter
+            itemAnimator = RefactoredDefaultItemAnimator()
+            @Suppress("DEPRECATION")
+            addItemDecoration(SimpleListDividerDecorator(resources.getDrawable(R.drawable.list_divider), true))
+            // Lollipop or later has native drop shadow feature. ItemShadowDecorator is not required.
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+                @Suppress("DEPRECATION")
+                addItemDecoration(ItemShadowDecorator(resources.getDrawable(R.drawable.material_shadow_z1) as NinePatchDrawable))
+            }
+        }
 
         // fast scroll
-        val fastScroller = findViewById<RecyclerFastScroller>(R.id.fast_scroller)
-        fastScroller.attachRecyclerView(mRecyclerView)
+        fast_scroller.attachRecyclerView(plist_list)
 
-        // additional decorations
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            // Lollipop or later has native drop shadow feature. ItemShadowDecorator is not required.
-        } else {
-            @Suppress("DEPRECATION")
-            mRecyclerView!!.addItemDecoration(ItemShadowDecorator(resources.getDrawable(R.drawable.material_shadow_z1) as NinePatchDrawable))
-        }
-        @Suppress("DEPRECATION")
-        mRecyclerView!!.addItemDecoration(SimpleListDividerDecorator(resources.getDrawable(R.drawable.list_divider), true))
-
-        mRecyclerViewDragDropManager!!.attachRecyclerView(mRecyclerView!!)
+        mRecyclerViewDragDropManager!!.attachRecyclerView(plist_list)
 
         mPlaylistAdapter!!.setOnItemClickListener(this)
 
-        val curListName = findViewById<TextView>(R.id.current_list_name)
-        val curListDesc = findViewById<TextView>(R.id.current_list_description)
-
-        curListName.text = name
-        curListDesc.text = mPlaylist!!.comment
-        registerForContextMenu(mRecyclerView)
+        current_list_name.text = name
+        current_list_description.text = mPlaylist!!.comment
+        registerForContextMenu(plist_list)
 
         setupButtons()
     }
@@ -135,10 +124,9 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
             mRecyclerViewDragDropManager = null
         }
 
-        if (mRecyclerView != null) {
-            mRecyclerView!!.itemAnimator = null
-            mRecyclerView!!.adapter = null
-            mRecyclerView = null
+        if (plist_list != null) {
+            plist_list.itemAnimator = null
+            plist_list.adapter = null
         }
 
         if (mWrappedAdapter != null) {

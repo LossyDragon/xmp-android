@@ -1,7 +1,12 @@
 package org.helllabs.android.xmp.modarchive.result
 
-import java.io.UnsupportedEncodingException
-
+import android.content.Intent
+import android.os.Bundle
+import android.view.View
+import android.widget.AdapterView
+import kotlinx.android.synthetic.main.error_message.*
+import kotlinx.android.synthetic.main.result_list.*
+import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.modarchive.Search
 import org.helllabs.android.xmp.modarchive.adapter.ArtistArrayAdapter
@@ -11,19 +16,10 @@ import org.helllabs.android.xmp.modarchive.response.ArtistResponse
 import org.helllabs.android.xmp.modarchive.response.HardErrorResponse
 import org.helllabs.android.xmp.modarchive.response.ModArchiveResponse
 import org.helllabs.android.xmp.modarchive.response.SoftErrorResponse
-
-import android.content.Intent
-import android.os.Bundle
-import android.view.View
-import android.widget.AdapterView
-import android.widget.ListView
-import android.widget.TextView
-import org.helllabs.android.xmp.BuildConfig
+import java.io.UnsupportedEncodingException
 
 class ArtistResult : Result(), ModArchiveRequest.OnResponseListener, AdapterView.OnItemClickListener {
 
-    private var list: ListView? = null
-    private var errorMessage: TextView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,10 +28,8 @@ class ArtistResult : Result(), ModArchiveRequest.OnResponseListener, AdapterView
 
         setTitle(R.string.search_artist_title)
 
-        list = findViewById<View>(R.id.result_list) as ListView
-        list!!.onItemClickListener = this
+        result_list!!.onItemClickListener = this
 
-        errorMessage = findViewById<View>(R.id.error_message) as TextView
 
         val searchText = intent.getStringExtra(Search.SEARCH_TEXT)!!
         val key = BuildConfig.ApiKey
@@ -52,20 +46,19 @@ class ArtistResult : Result(), ModArchiveRequest.OnResponseListener, AdapterView
     override fun onResponse(response: ModArchiveResponse) {
         val artistList = response as ArtistResponse
         val adapter = ArtistArrayAdapter(this, android.R.layout.simple_list_item_1, artistList.list)
-        list!!.adapter = adapter
+        result_list.adapter = adapter
 
         if (artistList.isEmpty) {
-            errorMessage!!.setText(R.string.search_no_result)
-            list!!.visibility = View.GONE
+            error_message.setText(R.string.search_no_result)
+            result_list.visibility = View.GONE
         }
 
         crossfade()
     }
 
     override fun onSoftError(response: SoftErrorResponse) {
-        val errorMessage = findViewById<View>(R.id.error_message) as TextView
-        errorMessage.text = response.message
-        list!!.visibility = View.GONE
+        error_message.text = response.message
+        result_list.visibility = View.GONE
         crossfade()
     }
 

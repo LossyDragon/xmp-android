@@ -32,7 +32,8 @@
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/plist_menu_list"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" />
+                android:layout_height="match_parent"
+                android:layoutAnimation="@anim/item_animation" />
 
         </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 

@@ -2,7 +2,6 @@ package org.helllabs.android.xmp.modarchive.request
 
 import java.io.ByteArrayInputStream
 import java.io.IOException
-import java.io.InputStream
 import java.io.UnsupportedEncodingException
 
 import org.helllabs.android.xmp.modarchive.model.Artist
@@ -16,17 +15,9 @@ import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import org.xmlpull.v1.XmlPullParserFactory
 
-class ArtistRequest : ModArchiveRequest {
-
-    constructor(key: String, request: String) : super(key, request) {}
-
-    @Throws(UnsupportedEncodingException::class)
-    constructor(key: String, request: String, parameter: String) : super(key, request, parameter) {
-    }
-
-    @Throws(UnsupportedEncodingException::class)
-    constructor(key: String, request: String, parameter: Long) : this(key, request, parameter.toString()) {
-    }
+class ArtistRequest
+@Throws(UnsupportedEncodingException::class)
+constructor(key: String, request: String, parameter: String) : ModArchiveRequest(key, request, parameter) {
 
     override fun xmlParse(result: String): ModArchiveResponse {
         val artistList = ArtistResponse()
@@ -89,8 +80,6 @@ class ArtistRequest : ModArchiveRequest {
     }
 
     companion object {
-
-        private val TAG = "ArtistListRequest"
+        private const val TAG = "ArtistListRequest"
     }
-
 }
