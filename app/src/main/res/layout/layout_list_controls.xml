@@ -1,0 +1,46 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/media_button_layout"
+    android:layout_width="match_parent"
+    android:layout_height="64dp"
+    android:layout_gravity="bottom"
+    android:background="@drawable/bottom_sheet"
+    android:orientation="horizontal">
+
+    <ImageButton
+        android:id="@+id/control_button_play"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="center_vertical"
+        android:layout_weight="1"
+        android:background="?selectableItemBackgroundBorderless"
+        android:contentDescription="@string/button_play_all"
+        android:scaleType="center"
+        android:scaleX="1.2"
+        android:scaleY="1.2"
+        android:src="@drawable/ic_play" />
+
+    <ImageButton
+        android:id="@+id/control_button_loop"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="center_vertical"
+        android:layout_weight="1"
+        android:background="?selectableItemBackgroundBorderless"
+        android:contentDescription="@string/button_toggle_loop"
+        android:scaleX="1.2"
+        android:scaleY="1.2"
+        android:src="@drawable/ic_repeat_off" />
+
+    <ImageButton
+        android:id="@+id/control_button_shuffle"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="center_vertical"
+        android:layout_weight="1"
+        android:background="?selectableItemBackgroundBorderless"
+        android:contentDescription="@string/button_toggle_shuffle"
+        android:scaleX="1.2"
+        android:scaleY="1.2"
+        android:src="@drawable/ic_shuffle_off" />
+
+</LinearLayout>

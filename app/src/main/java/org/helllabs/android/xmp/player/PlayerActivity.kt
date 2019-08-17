@@ -4,15 +4,18 @@ import android.app.Activity
 import android.content.*
 import android.content.res.Configuration
 import android.graphics.Typeface
-import android.os.Bundle
-import android.os.Handler
-import android.os.IBinder
-import android.os.RemoteException
+import android.os.*
 import android.util.TypedValue
-import android.view.*
-import android.widget.*
+import android.view.Display
+import android.view.Menu
+import android.view.MenuItem
+import android.view.WindowManager
+import android.widget.LinearLayout
+import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
+import android.widget.TextView
 import androidx.preference.PreferenceManager
+import kotlinx.android.synthetic.main.layout_player_controls.*
 import kotlinx.android.synthetic.main.player.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.XmpApplication
@@ -214,7 +217,7 @@ class PlayerActivity : Activity() {
             if (!p) {
                 // update seekbar
                 if (!seeking && playTime >= 0) {
-                    player_seek.progress = playTime
+                    control_player_seek.progress = playTime
                 }
 
                 // get current frame info
@@ -256,7 +259,7 @@ class PlayerActivity : Activity() {
                     Util.to02X(c, info!!.values[1])
                     s.append(c)
 
-                    info_status.text = s
+                    control_player_info.text = s
 
                     oldSpd = info!!.values[5]
                     oldBpm = info!!.values[6]
@@ -280,7 +283,7 @@ class PlayerActivity : Activity() {
                         Util.to02d(c, t % 60)
                         s.append(c)
 
-                        elapsed_time.text = s
+                        control_player_time.text = s
                     } else {
                         t = totalTime - t
 
@@ -291,7 +294,7 @@ class PlayerActivity : Activity() {
                         Util.to02d(c, t % 60)
                         s.append(c)
 
-                        elapsed_time.text = s
+                        control_player_time.text = s
                     }
 
                     oldTime = info!!.time
@@ -322,8 +325,8 @@ class PlayerActivity : Activity() {
     private val showNewSequenceRunnable = Runnable {
         val time = modVars[0]
         totalTime = time / 1000
-        player_seek.progress = 0
-        player_seek.max = time / 100
+        control_player_seek.progress = 0
+        control_player_seek.max = time / 100
         Message.toast(this, "New sequence duration: " + String.format("%d:%02d", time / 60000, time / 1000 % 60))
 
         val sequence = modVars[7]
@@ -380,11 +383,11 @@ class PlayerActivity : Activity() {
                 }
                 sidebar!!.selectSequence(0)
 
-                player_loop.setImageResource(if (loop) R.drawable.loop_on else R.drawable.loop_off)
+                control_player_loop.setImageResource(if (loop) R.drawable.ic_repeat_on else R.drawable.ic_repeat_off)
 
                 totalTime = time / 1000
-                player_seek.max = time / 100
-                player_seek.progress = playTime
+                control_player_seek.max = time / 100
+                control_player_seek.progress = playTime
 
                 flipperPage = (flipperPage + 1) % 2
 
@@ -488,12 +491,12 @@ class PlayerActivity : Activity() {
 
     private fun pause() {
         paused = true
-        player_play.setImageResource(R.drawable.play)
+        control_player_play.setImageResource(R.drawable.ic_play)
     }
 
     private fun unpause() {
         paused = false
-        player_play.setImageResource(R.drawable.pause)
+        control_player_play.setImageResource(R.drawable.ic_pause)
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -634,9 +637,9 @@ class PlayerActivity : Activity() {
             if (modPlayer != null) {
                 try {
                     if (modPlayer!!.toggleLoop()) {
-                        player_loop.setImageResource(R.drawable.loop_on)
+                        control_player_loop.setImageResource(R.drawable.ic_repeat_on)
                     } else {
-                        player_loop.setImageResource(R.drawable.loop_off)
+                        control_player_loop.setImageResource(R.drawable.ic_repeat_off)
                     }
                 } catch (e: RemoteException) {
                     Log.e(TAG, "Can't get loop status")
@@ -777,36 +780,37 @@ class PlayerActivity : Activity() {
         }
 
         if (!showInfoLine) {
-            info_status.visibility = LinearLayout.GONE
-            elapsed_time.visibility = LinearLayout.GONE
+            control_player_info.visibility = LinearLayout.GONE
+            control_player_time.visibility = LinearLayout.GONE
         }
 
-        player_play!!.setOnClickListener {
+        control_player_play!!.setOnClickListener {
             playButtonListener()
         }
 
-        player_loop!!.setImageResource(R.drawable.loop_off)
-        player_loop!!.setOnClickListener {
-            loopButtonListener()
+        control_player_loop.apply {
+            setImageResource(R.drawable.ic_repeat_off)
+            setOnClickListener {
+                loopButtonListener()
+            }
         }
 
-        player_stop.setOnClickListener {
+        control_player_stop.setOnClickListener {
             stopButtonListener()
         }
 
-        player_back.setOnClickListener {
+        control_player_back.setOnClickListener {
             backButtonListener()
         }
 
-        player_forward.setOnClickListener {
+        control_player_forward.setOnClickListener {
             forwardButtonListener()
         }
 
-        elapsed_time.setOnClickListener { showElapsed = showElapsed xor true }
+        control_player_time.setOnClickListener { showElapsed = showElapsed xor true }
 
-        player_seek!!.progress = 0
-
-        player_seek!!.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
+        control_player_seek.progress = 0
+        control_player_seek.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
 
             override fun onProgressChanged(s: SeekBar, p: Int, b: Boolean) {
                 // Do nothing
@@ -881,7 +885,7 @@ class PlayerActivity : Activity() {
 
     // Stop screen updates when screen is off
     override fun onPause() {
-        // Screen is pref_about to turn off
+        // Screen is pref_item_about to turn off
         if (ScreenReceiver.wasScreenOn)
             screenOn = false
 
@@ -891,6 +895,12 @@ class PlayerActivity : Activity() {
     override fun onResume() {
         super.onResume()
         screenOn = true
+
+        // Change the nav bar color to the player controls sheet color
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+//            @Suppress("DEPRECATION")
+//            window.navigationBarColor = resources.getColor(R.color.section_background)
+//        }
     }
 
     fun playNewSequence(num: Int) {

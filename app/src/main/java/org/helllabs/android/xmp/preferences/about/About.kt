@@ -4,7 +4,7 @@ package org.helllabs.android.xmp.preferences.about
 import android.os.Bundle
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
-import kotlinx.android.synthetic.main.pref_about.*
+import kotlinx.android.synthetic.main.pref_item_about.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
 
@@ -13,7 +13,7 @@ class About : AppCompatActivity() {
     public override fun onCreate(icicle: Bundle?) {
         super.onCreate(icicle)
 
-        setContentView(R.layout.pref_about)
+        setContentView(R.layout.pref_item_about)
 
         supportActionBar?.apply {
             setDisplayShowHomeEnabled(true)

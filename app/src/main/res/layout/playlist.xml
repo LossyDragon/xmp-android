@@ -74,35 +74,6 @@
             android:text="@string/msg_empty_playlist" />
     </LinearLayout>
 
-    <LinearLayout
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:gravity="bottom"
-        android:orientation="horizontal">
-
-        <ImageButton
-            android:id="@+id/play_all"
-            style="@style/ButtonTheme"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.34"
-            android:contentDescription="@string/button_play_all" />
-
-        <ImageButton
-            android:id="@+id/toggle_loop"
-            style="@style/ButtonTheme"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.33"
-            android:contentDescription="@string/button_toggle_loop" />
-
-        <ImageButton
-            android:id="@+id/toggle_shuffle"
-            style="@style/ButtonTheme"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.33"
-            android:contentDescription="@string/button_toggle_shuffle" />
-    </LinearLayout>
+    <include layout="@layout/layout_list_controls" />
 
 </LinearLayout>

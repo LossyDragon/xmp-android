@@ -94,9 +94,9 @@ class PlaylistAdapter : RecyclerView.Adapter<PlaylistAdapter.ViewHolder>, Dragga
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val layout: Int = when (layoutType) {
-            LAYOUT_CARD -> R.layout.playlist_card
-            LAYOUT_DRAG -> R.layout.playlist_item_drag
-            else -> R.layout.playlist_item
+            LAYOUT_CARD -> R.layout.item_playlist_card
+            LAYOUT_DRAG -> R.layout.item_playlist_drag
+            else -> R.layout.item_playlist
         }
 
         val view = LayoutInflater.from(parent.context).inflate(layout, parent, false)

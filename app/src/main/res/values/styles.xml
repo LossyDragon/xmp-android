@@ -20,12 +20,13 @@
         <!-- All customizations that are NOT specific to a particular API-level can go here. -->
         
         <item name="android:windowBackground">@color/black</item>
-        <item name="android:buttonStyle">@style/ButtonTheme</item>
-        <item name="android:checkboxStyle">@style/CheckboxTheme</item>
         <item name="colorSurface">@color/primary</item>
         <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryDark">@color/primary_dark</item>
         <item name="colorAccent">@color/accent</item>
+
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowTranslucentNavigation">true</item>
     </style>
     
     <style name="AppTheme.NoActionBar" parent="AppTheme">
@@ -34,15 +35,7 @@
     </style>
 
     <style name="AppTheme.Preferences" parent="AppTheme"/>
-    
-    <style name="ButtonTheme" parent="AppTheme">
-        <item name="android:background">@android:drawable/btn_default</item>
-    </style>
 
-    <style name="CheckboxTheme">
-        <item name="android:button">@drawable/checkbox_selector</item>
-    </style>
-    
     <style name="StatusTheme" parent="AppTheme">
         <item name="android:background">@color/primary_dark</item>
     </style>

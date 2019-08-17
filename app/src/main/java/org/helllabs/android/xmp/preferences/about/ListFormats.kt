@@ -4,7 +4,7 @@ import android.os.Bundle
 import android.view.MenuItem
 import android.widget.ArrayAdapter
 import androidx.appcompat.app.AppCompatActivity
-import kotlinx.android.synthetic.main.pref_formats.*
+import kotlinx.android.synthetic.main.pref_item_formats.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
 import java.util.*
@@ -16,7 +16,7 @@ class ListFormats : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setContentView(R.layout.pref_formats)
+        setContentView(R.layout.pref_item_formats)
 
         supportActionBar?.apply {
             setDisplayShowHomeEnabled(true)

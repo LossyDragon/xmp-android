@@ -18,7 +18,7 @@ class ModuleArrayAdapter(context: Context, resource: Int, items: List<Module>) :
         var view = convertView
         if (view == null) {
             val inflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
-            view = inflater.inflate(R.layout.search_list_item, null)
+            view = inflater.inflate(R.layout.item_search, null)
         }
 
         val module = getItem(position)

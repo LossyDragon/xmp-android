@@ -5,6 +5,7 @@ import android.app.AlertDialog
 import android.content.DialogInterface
 import android.os.Bundle
 import android.view.*
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.h6ah4i.android.widget.advrecyclerview.decoration.SimpleListDividerDecorator
 import kotlinx.android.synthetic.main.modlist.*
@@ -136,9 +137,7 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         modlist_listview.apply {
             layoutManager = LinearLayoutManager(this@FilelistActivity)
             adapter = mPlaylistAdapter
-
-            @Suppress("DEPRECATION")
-            addItemDecoration(SimpleListDividerDecorator(resources.getDrawable(R.drawable.list_divider), true))
+            addItemDecoration(DividerItemDecoration(this@FilelistActivity, DividerItemDecoration.VERTICAL))
         }
 
         setSwipeRefresh(swipeContainer)

@@ -6,6 +6,7 @@
     <color name="white">#FFF0F0F0</color>
 
     <color name="section_background">#FF202020</color>
+    <color name="section_background_dark">#101010</color>
     <color name="primary">#1a305d</color>
     <color name="primary_dark">#801a305d</color>
     <color name="accent">#3460ba</color>

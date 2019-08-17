@@ -30,7 +30,7 @@ abstract class Notifier(protected val service: Service) {
         val intent = Intent(service, PlayerActivity::class.java)
         contentIntent = PendingIntent.getActivity(service, 0, intent, 0)
 
-        icon = BitmapFactory.decodeResource(service.resources, R.drawable.icon)
+        icon = BitmapFactory.decodeResource(service.resources, R.mipmap.ic_launcher_foreground)
         prevIntent = makePendingIntent(ACTION_PREV)
         stopIntent = makePendingIntent(ACTION_STOP)
         pauseIntent = makePendingIntent(ACTION_PAUSE)

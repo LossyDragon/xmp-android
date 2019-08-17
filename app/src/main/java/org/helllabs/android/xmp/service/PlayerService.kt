@@ -33,8 +33,6 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
     private var ducking: Boolean = false
     private var audioInitialized: Boolean = false
 
-    //private MediaSessionCompat session;
-
     private var playThread: Thread? = null
     private var prefs: SharedPreferences? = null
     private var watchdog: Watchdog? = null
@@ -85,12 +83,11 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
 
             queue = QueueManager(fileList!!, start, shuffle, loopList, keepFirst)
             notifier!!.setQueue(queue!!)
-            //notifier.clean();
+
             cmd = CMD_NONE
 
-            if (isPaused) {
+            if (isPaused)
                 doPauseAndNotify()
-            }
 
             if (isAlive) {
                 Log.i(TAG, "Use existing player thread")
@@ -102,13 +99,13 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                 playThread = Thread(PlayRunnable())
                 playThread!!.start()
             }
+
             isAlive = true
         }
 
         override fun add(fileList: List<String>?) {
             queue!!.add(fileList!!)
             updateNotification()
-            //notifier.notification("Added to play queue");
         }
 
         override fun stop() {
@@ -153,18 +150,20 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         override fun nextSong() {
             Xmp.stopModule()
             cmd = CMD_NEXT
-            if (isPaused) {
+
+            if (isPaused)
                 doPauseAndNotify()
-            }
+
             discardBuffer = true
         }
 
         override fun prevSong() {
             Xmp.stopModule()
             cmd = CMD_PREV
-            if (isPaused) {
+
+            if (isPaused)
                 doPauseAndNotify()
-            }
+
             discardBuffer = true
         }
 
@@ -186,6 +185,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                 sequenceNumber = seq
                 notifyNewSequence()
             }
+
             return ret
         }
 
@@ -227,7 +227,6 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         }
     }
 
-
     override fun onCreate() {
         super.onCreate()
 
@@ -238,9 +237,9 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         remoteControl = RemoteControl(this, audioManager!!)
 
         hasAudioFocus = requestAudioFocus()
-        if (!hasAudioFocus) {
+
+        if (!hasAudioFocus)
             Log.e(TAG, "Can't get audio focus")
-        }
 
         receiverHelper = ReceiverHelper(this)
         receiverHelper!!.registerReceivers()
@@ -267,9 +266,6 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         isPlayerPaused = false
         allPlayerSequences = prefs!!.getBoolean(Preferences.ALL_SEQUENCES, false)
 
-        //session = new MediaSessionCompat(this, getPackageName());
-        //session.setActive(true);
-
         when {
             Build.VERSION.SDK_INT >= 26 -> notifier = OreoNotifier(this)
             Build.VERSION.SDK_INT >= 21 -> notifier = LollipopNotifier(this)
@@ -284,6 +280,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                 stopSelf()
             }
         })
+
         watchdog!!.start()
     }
 
@@ -297,13 +294,11 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         watchdog!!.stop()
         notifier!!.cancel()
 
-        //session.setActive(false);
-
-        if (audioInitialized) {
+        if (audioInitialized)
             end(if (hasAudioFocus) RESULT_OK else RESULT_NO_AUDIO_FOCUS)
-        } else {
+        else
             end(RESULT_CANT_OPEN_AUDIO)
-        }
+
         super.onDestroy()
     }
 
@@ -317,7 +312,8 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
     }
 
     private fun updateNotification() {
-        if (queue != null) {    // It seems that queue can be null if we're called from PhoneStateListener
+        // It seems that queue can be null if we're called from PhoneStateListener
+        if (queue != null) {
             var name = Xmp.getModName()
             if (name.isEmpty()) {
                 name = FileUtils.basename(queue!!.filename)
@@ -340,9 +336,10 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
 
     fun actionStop() {
         Xmp.stopModule()
-        if (isPlayerPaused) {
+
+        if (isPlayerPaused)
             doPauseAndNotify()
-        }
+
         cmd = CMD_STOP
     }
 
@@ -384,16 +381,6 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         cmd = CMD_NEXT
     }
 
-
-    //	private int playFrame() {
-    //		// Synchronize frame play with data gathering so we don't change playing variables
-    //		// in the middle of e.g. sample data reading, which results in a segfault in C code
-    //
-    //		synchronized (playThread) {
-    //			return Xmp.playBuffer();
-    //		}
-    //	}
-
     private fun notifyNewSequence() {
         val numClients = callbacks.beginBroadcast()
         for (j in 0 until numClients) {
@@ -416,7 +403,8 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
 
             var lastRecognized = 0
             do {
-                playerFileName = queue!!.filename        // Used in reconnection
+                // Used in reconnection
+                playerFileName = queue!!.filename
 
                 // If this file is unrecognized, and we're going backwards, go to previous
                 // If we're at the start of the list, go to the last recognized file
@@ -438,7 +426,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                 Xmp.setPlayer(Xmp.PLAYER_DEFPAN, defpan)
 
                 // Ditto if we can't load the module
-                Log.w(TAG, "Load " + playerFileName!!)
+                Log.i(TAG, "Load " + playerFileName!!)
                 if (Xmp.loadModule(playerFileName!!) < 0) {
                     Log.e(TAG, "Error loading " + playerFileName!!)
                     if (cmd == CMD_PREV) {
@@ -616,10 +604,8 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                     callbacks.finishBroadcast()
                 }
 
-                Log.w(TAG, "Release module")
+                Log.i(TAG, "Release module")
                 Xmp.releaseModule()
-
-                //audio.stop();
 
                 // Used when current files are replaced by a new set
                 if (restart) {
@@ -629,20 +615,20 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                     restart = false
                 } else if (cmd == CMD_PREV) {
                     queue!!.previous()
-                    //returnToPrev = false;
                 }
             } while (cmd != CMD_STOP && queue!!.next())
 
             synchronized(playThread!!) {
-                updateData = false        // stop getChannelData update
+                // stop getChannelData update
+                updateData = false
             }
+
             watchdog!!.stop()
             notifier!!.cancel()
 
             remoteControl!!.setStateStopped()
             audioManager!!.abandonAudioFocus(this@PlayerService)
 
-            //end();
             Log.i(TAG, "Stop service")
             stopSelf()
         }
@@ -663,17 +649,14 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
 
         isAlive = false
         Xmp.stopModule()
-        if (isPlayerPaused) {
+
+        if (isPlayerPaused)
             doPauseAndNotify()
-        }
 
         Xmp.deinit()
-        //audio.release();
     }
 
-
     // for audio focus loss
-
     private fun autoPause(pause: Boolean): Boolean {
         Log.i(TAG, "Auto pause changed to " + pause + ", previously " + receiverHelper!!.isAutoPaused)
         if (pause) {
@@ -721,8 +704,6 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                 Log.w(TAG, "AUDIOFOCUS_LOSS")
                 // Stop playback
                 actionStop()
-            }
-            else -> {
             }
         }
     }

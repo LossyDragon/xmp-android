@@ -9,6 +9,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.TextView
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.h6ah4i.android.widget.advrecyclerview.animator.RefactoredDefaultItemAnimator
@@ -81,8 +82,7 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
             layoutManager = LinearLayoutManager(this@PlaylistActivity)
             adapter = mWrappedAdapter
             itemAnimator = RefactoredDefaultItemAnimator()
-            @Suppress("DEPRECATION")
-            addItemDecoration(SimpleListDividerDecorator(resources.getDrawable(R.drawable.list_divider), true))
+            addItemDecoration(DividerItemDecoration(this@PlaylistActivity, DividerItemDecoration.VERTICAL))
             // Lollipop or later has native drop shadow feature. ItemShadowDecorator is not required.
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
                 @Suppress("DEPRECATION")

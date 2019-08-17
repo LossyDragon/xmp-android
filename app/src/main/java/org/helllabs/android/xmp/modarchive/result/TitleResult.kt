@@ -4,7 +4,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.AdapterView
-import android.widget.TextView
 import kotlinx.android.synthetic.main.result_list.*
 import kotlinx.android.synthetic.main.search_error.*
 import org.helllabs.android.xmp.BuildConfig
@@ -44,7 +43,7 @@ class TitleResult : Result(), ModArchiveRequest.OnResponseListener, AdapterView.
 
     override fun onResponse(response: ModArchiveResponse) {
         val moduleList = response as ModuleResponse
-        val adapter = ModuleArrayAdapter(this, R.layout.search_list_item, moduleList.list)
+        val adapter = ModuleArrayAdapter(this, R.layout.item_search, moduleList.list)
         result_list!!.adapter = adapter
 
         if (moduleList.isEmpty) {

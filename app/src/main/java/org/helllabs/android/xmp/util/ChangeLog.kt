@@ -41,7 +41,7 @@ class ChangeLog(private val context: Context) {
     @SuppressLint("InflateParams")
     private fun showLog() {
         val inflater = LayoutInflater.from(context)
-        val view = inflater.inflate(R.layout.changelog, null)
+        val view = inflater.inflate(R.layout.dialog_changelog, null)
 
         AlertDialog.Builder(context)
                 .setTitle("Changelog")

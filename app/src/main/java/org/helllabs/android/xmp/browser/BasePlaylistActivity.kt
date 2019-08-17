@@ -15,6 +15,7 @@ import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceManager
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import kotlinx.android.synthetic.main.layout_list_controls.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter
@@ -25,7 +26,7 @@ import org.helllabs.android.xmp.service.ModInterface
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.util.InfoCache
 import org.helllabs.android.xmp.util.Log
-import org.helllabs.android.xmp.util.Message
+import org.helllabs.android.xmp.util.Message.toast
 import java.util.*
 
 abstract class BasePlaylistActivity : AppCompatActivity() {
@@ -39,7 +40,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     private val playAllButtonListener = OnClickListener {
         val list = allFiles
         if (list.isEmpty()) {
-            Message.toast(this@BasePlaylistActivity, R.string.error_no_files_to_play)
+            toast(this@BasePlaylistActivity, R.string.error_no_files_to_play)
         } else {
             playModule(list)
         }
@@ -48,23 +49,26 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     private val toggleLoopButtonListener = OnClickListener { view ->
         var loopMode = isLoopMode
         loopMode = loopMode xor true
-        (view as ImageButton).setImageResource(if (loopMode)
-            R.drawable.list_loop_on
-        else
-            R.drawable.list_loop_off)
+        (view as ImageButton).setImageResource(if (loopMode) R.drawable.ic_repeat_on else R.drawable.ic_repeat_off)
+
         if (mShowToasts) {
-            Message.toast(view.getContext(), if (loopMode) R.string.msg_loop_on else R.string.msg_loop_off)
+            toast(view.getContext(), if (loopMode) R.string.msg_loop_on else R.string.msg_loop_off)
         }
+
+        if (mShowToasts)
+            toast(view.context, if (loopMode) R.string.msg_loop_on else R.string.msg_loop_off)
+
         isLoopMode = loopMode
     }
 
     private val toggleShuffleButtonListener = OnClickListener { view ->
         var shuffleMode = isShuffleMode
         shuffleMode = shuffleMode xor true
-        (view as ImageButton).setImageResource(if (shuffleMode) R.drawable.list_shuffle_on else R.drawable.list_shuffle_off)
+        (view as ImageButton).setImageResource(if (shuffleMode) R.drawable.ic_shuffle_on else R.drawable.ic_shuffle_off)
         if (mShowToasts) {
-            Message.toast(view.getContext(), if (shuffleMode) R.string.msg_shuffle_on else R.string.msg_shuffle_off)
+            toast(view.getContext(), if (shuffleMode) R.string.msg_shuffle_on else R.string.msg_shuffle_off)
         }
+
         isShuffleMode = shuffleMode
     }
 
@@ -75,7 +79,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
             try {
                 mModPlayer!!.add(mAddList)
             } catch (e: RemoteException) {
-                Message.toast(this@BasePlaylistActivity, R.string.error_adding_mod)
+                toast(this@BasePlaylistActivity, R.string.error_adding_mod)
             }
 
             unbindService(this)
@@ -106,6 +110,12 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         if (refresh) {
             update()
         }
+
+        // Change the nav bar color to the list controls sheet color
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+//            @Suppress("DEPRECATION")
+//            window.navigationBarColor = resources.getColor(R.color.section_background)
+//        }
     }
 
     protected abstract fun update()
@@ -121,18 +131,14 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     }
 
     protected fun setupButtons() {
-        val playAllButton = findViewById<ImageButton>(R.id.play_all)
-        val toggleLoopButton = findViewById<ImageButton>(R.id.toggle_loop)
-        val toggleShuffleButton = findViewById<ImageButton>(R.id.toggle_shuffle)
+        control_button_play.setImageResource(R.drawable.ic_play)
+        control_button_play.setOnClickListener(playAllButtonListener)
 
-        playAllButton.setImageResource(R.drawable.list_play)
-        playAllButton.setOnClickListener(playAllButtonListener)
+        control_button_loop.setImageResource(if (isLoopMode) R.drawable.ic_repeat_on else R.drawable.ic_repeat_off)
+        control_button_loop.setOnClickListener(toggleLoopButtonListener)
 
-        toggleLoopButton.setImageResource(if (isLoopMode) R.drawable.list_loop_on else R.drawable.list_loop_off)
-        toggleLoopButton.setOnClickListener(toggleLoopButtonListener)
-
-        toggleShuffleButton.setImageResource(if (isShuffleMode) R.drawable.list_shuffle_on else R.drawable.list_shuffle_off)
-        toggleShuffleButton.setOnClickListener(toggleShuffleButtonListener)
+        control_button_shuffle.setImageResource(if (isShuffleMode) R.drawable.ic_shuffle_on else R.drawable.ic_shuffle_off)
+        control_button_shuffle.setOnClickListener(toggleShuffleButtonListener)
     }
 
     open fun onItemClick(adapter: PlaylistAdapter, view: View, position: Int) {
@@ -158,11 +164,11 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
                 // add to queue
                 3 -> {
                     addToQueue(filename)
-                    Message.toast(this, "Added to queue")
+                    toast(this, "Added to queue")
                 }
             }
         } else {
-            Message.toast(this, "Unrecognized file format")
+            toast(this, "Unrecognized file format")
         }
     }
 
@@ -237,7 +243,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         }
 
         if (invalid) {
-            Message.toast(this, R.string.msg_only_valid_files_sent)
+            toast(this, R.string.msg_only_valid_files_sent)
         }
 
         if (realSize > 0) {

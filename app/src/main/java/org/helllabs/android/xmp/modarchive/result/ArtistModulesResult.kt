@@ -43,7 +43,7 @@ class ArtistModulesResult : Result(), ModArchiveRequest.OnResponseListener, Adap
 
     override fun onResponse(response: ModArchiveResponse) {
         val moduleList = response as ModuleResponse
-        val adapter = ModuleArrayAdapter(this, R.layout.search_list_item, moduleList.list)
+        val adapter = ModuleArrayAdapter(this, R.layout.item_search, moduleList.list)
         result_list.adapter = adapter
 
         if (moduleList.isEmpty) {

@@ -16,9 +16,9 @@ class PlaylistItem(val type: Int, val name: String, val comment: String) : Compa
 
     init {
         imageRes = when (type) {
-            TYPE_DIRECTORY -> R.drawable.folder
-            TYPE_PLAYLIST -> R.drawable.list
-            TYPE_FILE -> R.drawable.file
+            TYPE_DIRECTORY -> R.drawable.ic_folder
+            TYPE_PLAYLIST -> R.drawable.ic_list
+            TYPE_FILE -> R.drawable.ic_file
             else -> -1
         }
     }

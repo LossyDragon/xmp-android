@@ -48,24 +48,24 @@ class OreoNotifier(service: Service) : Notifier(service) {
                 .setContentText(notifyInfo)
                 .setContentInfo(indexText)
                 .setContentIntent(contentIntent)
-                .setSmallIcon(R.drawable.notification_icon)
+                .setSmallIcon(R.drawable.ic_notification)
                 .setLargeIcon(icon)
                 .setOngoing(true)
                 .setWhen(0)
                 .setChannelId(CHANNEL_ID)
                 .setStyle(NotiCompatMedia.MediaStyle().setShowActionsInCompactView(2))
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                .addAction(R.drawable.ic_action_previous, "Prev", prevIntent)
-                .addAction(R.drawable.ic_action_stop, "Stop", stopIntent)
+                .addAction(R.drawable.ic_back, "Prev", prevIntent)
+                .addAction(R.drawable.ic_stop, "Stop", stopIntent)
 
         if (type == TYPE_PAUSE) {
-            builder.addAction(R.drawable.ic_action_play, "Play", pauseIntent)
+            builder.addAction(R.drawable.ic_play, "Play", pauseIntent)
             builder.setContentText("(paused)")
         } else {
-            builder.addAction(R.drawable.ic_action_pause, "Pause", pauseIntent)
+            builder.addAction(R.drawable.ic_pause, "Pause", pauseIntent)
         }
 
-        builder.addAction(R.drawable.ic_action_next, "Next", nextIntent)
+        builder.addAction(R.drawable.ic_next, "Next", nextIntent)
 
         if (type == TYPE_TICKER) {
             if (queueManager.size() > 1) {

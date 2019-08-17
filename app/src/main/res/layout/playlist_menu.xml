@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/coordinator"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
@@ -37,18 +38,19 @@
 
         </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
-        <ImageButton
-            android:id="@+id/add_button"
-            android:layout_width="@dimen/round_button_diameter"
-            android:layout_height="@dimen/round_button_diameter"
-            android:layout_gravity="end|bottom"
-            android:layout_marginEnd="@dimen/add_button_margin"
-            android:layout_marginBottom="@dimen/add_button_margin"
-            android:background="@drawable/oval"
-            android:contentDescription="@string/desc_new_playlist"
-            android:elevation="8dp"
-            android:src="@drawable/ic_add_white_24dp"
-            tools:ignore="UnusedAttribute" />
+        <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+            android:id="@+id/playlist_add_button"
+            style="@style/Widget.Design.FloatingActionButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="16dp"
+            android:text="@string/menu_new_playlist"
+            android:textColor="@color/white"
+            app:backgroundTint="@color/primary"
+            app:icon="@drawable/ic_add"
+            app:layout_anchor="@id/plist_menu_list"
+            app:iconTint="@color/white" />
 
     </FrameLayout>
 

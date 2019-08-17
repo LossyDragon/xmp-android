@@ -68,7 +68,7 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
         }
 
         // Add playlist
-        add_button.setOnClickListener {
+        playlist_add_button.setOnClickListener {
             PlaylistUtils.newPlaylistDialog(this, Runnable {
                 updateList()
             })
@@ -82,7 +82,6 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
             adapter = playlistAdapter
             registerForContextMenu(this)
         }
-
 
         if (!checkStorage()) {
             Message.fatalError(this, getString(R.string.error_storage))
@@ -179,12 +178,12 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
 
         playlistAdapter!!.clear()
         val browserItem = PlaylistItem(PlaylistItem.TYPE_SPECIAL, "File browser", "Files in " + mediaPath!!)
-        browserItem.imageRes = R.drawable.browser
+        browserItem.imageRes = R.drawable.ic_browser
         playlistAdapter!!.add(browserItem)
 
         for (name in PlaylistUtils.listNoSuffix()) {
             val item = PlaylistItem(PlaylistItem.TYPE_PLAYLIST, name, Playlist.readComment(this, name))
-            item.imageRes = R.drawable.list
+            item.imageRes = R.drawable.ic_list
             playlistAdapter!!.add(item)
         }
 
