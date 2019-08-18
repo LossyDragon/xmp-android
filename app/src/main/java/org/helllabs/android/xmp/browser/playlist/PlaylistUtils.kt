@@ -10,8 +10,9 @@ import android.widget.EditText
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.preferences.Preferences
-import org.helllabs.android.xmp.util.Message
 import org.helllabs.android.xmp.util.ModInfo
+import org.helllabs.android.xmp.util.error
+import org.helllabs.android.xmp.util.toast
 import java.io.File
 import java.io.IOException
 import java.util.*
@@ -19,10 +20,7 @@ import java.util.*
 
 object PlaylistUtils {
 
-    fun newPlaylistDialog(activity: Activity) {
-        newPlaylistDialog(activity, null)
-    }
-
+    //TODO replace with an activity
     @SuppressLint("InflateParams")
     fun newPlaylistDialog(activity: Activity, runnable: Runnable?) {
         val alert = AlertDialog.Builder(activity)
@@ -74,9 +72,9 @@ object PlaylistUtils {
             if (hasInvalid) {
                 activity.runOnUiThread {
                     if (list.size > 1) {
-                        Message.toast(activity, R.string.msg_only_valid_files_added)
+                        activity.toast(R.string.msg_only_valid_files_added)
                     } else {
-                        Message.error(activity, R.string.unrecognized_format)
+                        activity.error(R.string.unrecognized_format)
                     }
                 }
             }
@@ -87,12 +85,12 @@ object PlaylistUtils {
 
     fun filesToPlaylist(activity: Activity, fileList: List<String>, playlistName: String) {
 
-        Message.toast(activity.applicationContext, "Please wait\nScanning module files...")
+        activity.toast("Please wait\nScanning module files...")
 
         object : Thread() {
             override fun run() {
                 addFiles(activity, fileList, playlistName)
-                Message.toast(activity.applicationContext, "Scan finished")
+                activity.toast("Scan finished")
 
             }
         }.start()
@@ -129,7 +127,7 @@ object PlaylistUtils {
             playlist.commit()
             true
         } catch (e: IOException) {
-            Message.error(activity, activity.getString(R.string.error_create_playlist))
+            activity.error(activity.getString(R.string.error_create_playlist))
             false
         }
     }

@@ -6,12 +6,20 @@
     <color name="white">#FFF0F0F0</color>
 
     <color name="section_background">#FF202020</color>
-    <color name="section_background_dark">#101010</color>
+    <color name="section_background_dark">#FF1A1A1A</color>
+
     <color name="primary">#1a305d</color>
-    <color name="primary_dark">#801a305d</color>
+    <color name="primary_dark">#1a305d</color>
     <color name="accent">#3460ba</color>
+    <color name="surface">@color/white</color>
 
     <color name="pressed_color">#606060</color>
     <color name="drag_handle_color">#202020</color>
     <color name="refresh_color">#229e3c</color>
+
+
+    <color name="windowBackground">@color/white</color>
+    <color name="iconTint">@color/black</color>
+    <color name="textTint">@color/black</color>
+
 </resources>

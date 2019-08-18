@@ -2,7 +2,7 @@ package org.helllabs.android.xmp.util
 
 
 object Log {
-    private val TAG = "Xmp"
+    private const val TAG = "Xmp"
 
     fun d(tag: String, message: String) {
         android.util.Log.d(TAG, "[$tag] $message")

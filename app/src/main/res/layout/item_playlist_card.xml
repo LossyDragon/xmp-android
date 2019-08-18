@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:cardview="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/plist_container"
-    android:layout_width="fill_parent"
+    style="@style/Widget.MaterialComponents.CardView"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginLeft="9dp"
     android:layout_marginTop="10dp"
     android:layout_marginRight="9dp"
-    android:layout_marginBottom="0dp"
     android:foreground="?android:attr/selectableItemBackground"
-    cardview:cardBackgroundColor="@color/cardview_dark_background"
-    cardview:cardCornerRadius="0dp"
+    cardview:cardElevation="4dp"
+    cardview:cardCornerRadius="3dp"
     cardview:contentPadding="10dp">
 
     <LinearLayout
@@ -24,7 +25,9 @@
             android:layout_gravity="center_vertical"
             android:layout_marginEnd="8dp"
             android:contentDescription="@string/desc_plist_image"
-            android:padding="8dp" />
+            android:padding="8dp"
+            tools:src="@drawable/ic_file"
+            android:tint="@color/iconTint"/>
 
         <LinearLayout
             android:layout_width="0dp"
@@ -38,15 +41,17 @@
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
                 android:singleLine="true"
-                android:textSize="19sp" />
+                android:textSize="19sp"
+                tools:text="plist_title" />
 
             <TextView
                 android:id="@+id/plist_info"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:textSize="13sp" />
+                android:textSize="13sp"
+                tools:text="plist_info\nplist_info" />
 
         </LinearLayout>
     </LinearLayout>
 
-</androidx.cardview.widget.CardView>
+</com.google.android.material.card.MaterialCardView>

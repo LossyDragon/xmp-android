@@ -14,13 +14,8 @@ import android.media.AudioManager
 // see http://android-developers.blogspot.com/2010/06/allowing-applications-to-play-nicer.html
 
 internal class MediaButtons(context: Context) {
-    private val audioManager: AudioManager
-    private val mediaButtonsResponder: ComponentName
-
-    init {
-        audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        mediaButtonsResponder = ComponentName(context.packageName, MediaButtonsReceiver::class.java.name)
-    }
+    private val audioManager: AudioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+    private val mediaButtonsResponder: ComponentName = ComponentName(context.packageName, MediaButtonsReceiver::class.java.name)
 
     fun register() {
         try {
@@ -30,14 +25,11 @@ internal class MediaButtons(context: Context) {
             registerMediaButtonEventReceiver!!.invoke(audioManager, mediaButtonsResponder)
         } catch (ite: InvocationTargetException) {
             // unpack original exception when possible
-            val cause = ite.cause
-            if (cause is RuntimeException) {
-                throw cause
-            } else if (cause is Error) {
-                throw cause
-            } else {
-                // unexpected checked exception; wrap and re-throw
-                throw RuntimeException(ite)    // NOPMD
+            when (val cause = ite.cause) {
+                is RuntimeException -> throw cause
+                is Error -> throw cause
+                else -> // unexpected checked exception; wrap and re-throw
+                    throw RuntimeException(ite)
             }
         } catch (ie: IllegalAccessException) {
             Log.e(TAG, "Unexpected $ie")
@@ -53,14 +45,11 @@ internal class MediaButtons(context: Context) {
             unregisterMediaButtonEventReceiver!!.invoke(audioManager, mediaButtonsResponder)
         } catch (ite: InvocationTargetException) {
             // unpack original exception when possible
-            val cause = ite.cause
-            if (cause is RuntimeException) {
-                throw cause
-            } else if (cause is Error) {
-                throw cause
-            } else {
-                // unexpected checked exception; wrap and re-throw
-                throw RuntimeException(ite)    // NOPMD
+            when (val cause = ite.cause) {
+                is RuntimeException -> throw cause
+                is Error -> throw cause
+                else -> // unexpected checked exception; wrap and re-throw
+                    throw RuntimeException(ite)
             }
         } catch (ie: IllegalAccessException) {
             Log.e(TAG, "Unexpected $ie")
@@ -69,7 +58,7 @@ internal class MediaButtons(context: Context) {
     }
 
     companion object {
-        private val TAG = "MediaButtons"
+        private const val TAG = "MediaButtons"
         private var registerMediaButtonEventReceiver: Method? = null
         private var unregisterMediaButtonEventReceiver: Method? = null
 
@@ -79,11 +68,11 @@ internal class MediaButtons(context: Context) {
 
         private fun initializeRegistrationMethods() {
             try {
-                if (registerMediaButtonEventReceiver == null) {        // NOPMD
+                if (registerMediaButtonEventReceiver == null) {
                     registerMediaButtonEventReceiver = AudioManager::class.java
                             .getMethod("registerMediaButtonEventReceiver", ComponentName::class.java)
                 }
-                if (unregisterMediaButtonEventReceiver == null) {    // NOPMD
+                if (unregisterMediaButtonEventReceiver == null) {
                     unregisterMediaButtonEventReceiver = AudioManager::class.java
                             .getMethod("unregisterMediaButtonEventReceiver", ComponentName::class.java)
                 }

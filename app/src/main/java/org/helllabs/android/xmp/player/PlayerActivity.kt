@@ -16,7 +16,7 @@ import android.widget.SeekBar.OnSeekBarChangeListener
 import android.widget.TextView
 import androidx.preference.PreferenceManager
 import kotlinx.android.synthetic.main.layout_player_controls.*
-import kotlinx.android.synthetic.main.player.*
+import kotlinx.android.synthetic.main.layout_player.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.browser.PlaylistMenu
@@ -30,7 +30,8 @@ import org.helllabs.android.xmp.service.PlayerCallback
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.util.FileUtils
 import org.helllabs.android.xmp.util.Log
-import org.helllabs.android.xmp.util.Message
+import org.helllabs.android.xmp.util.toast
+import org.helllabs.android.xmp.util.yesNoDialog
 import java.io.File
 import java.io.FileOutputStream
 import java.util.*
@@ -149,9 +150,9 @@ class PlayerActivity : Activity() {
                 if (result != PlayerService.RESULT_OK) {
                     runOnUiThread {
                         if (result == PlayerService.RESULT_CANT_OPEN_AUDIO) {
-                            Message.toast(this@PlayerActivity, R.string.error_opensl)
+                            toast(R.string.error_opensl)
                         } else if (result == PlayerService.RESULT_NO_AUDIO_FOCUS) {
-                            Message.toast(this@PlayerActivity, R.string.error_audiofocus)
+                            toast(R.string.error_audiofocus)
                         }
                     }
                 }
@@ -327,7 +328,7 @@ class PlayerActivity : Activity() {
         totalTime = time / 1000
         control_player_seek.progress = 0
         control_player_seek.max = time / 100
-        Message.toast(this, "New sequence duration: " + String.format("%d:%02d", time / 60000, time / 1000 % 60))
+        toast("New sequence duration: " + String.format("%d:%02d", time / 60000, time / 1000 % 60))
 
         val sequence = modVars[7]
         sidebar!!.selectSequence(sequence)
@@ -723,7 +724,7 @@ class PlayerActivity : Activity() {
     // Life cycle
     public override fun onCreate(icicle: Bundle?) {
         super.onCreate(icicle)
-        setContentView(R.layout.player_main)
+        setContentView(R.layout.activity_player)
 
         sidebar = Sidebar(this)
 
@@ -949,24 +950,24 @@ class PlayerActivity : Activity() {
     // Menu
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         if (prefs!!.getBoolean(Preferences.ENABLE_DELETE, false)) {
-            menuInflater.inflate(R.menu.menu_player, menu)
+            menuInflater.inflate(R.menu.menu_delete, menu)
         }
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == R.id.menu_delete) {
-            Message.yesNoDialog(this, "Delete", "Are you sure to delete this file?", Runnable {
+            yesNoDialog("Delete", "Are you sure to delete this file?", Runnable {
                 try {
                     if (modPlayer!!.deleteFile()) {
-                        Message.toast(this, "File deleted")
+                        toast("File deleted")
                         setResult(RESULT_FIRST_USER)
                         modPlayer!!.nextSong()
                     } else {
-                        Message.toast(this, "Can\'t delete file")
+                        toast("Can\'t delete file")
                     }
                 } catch (e: RemoteException) {
-                    Message.toast(this, "Can\'t connect service")
+                    toast("Can\'t connect service")
                 }
             })
         }

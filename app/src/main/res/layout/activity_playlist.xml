@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:layout_weight="1.0"
@@ -8,9 +9,9 @@
 
     <LinearLayout
         android:id="@+id/current_list"
-        style="@style/StatusTheme"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
+        android:background="@color/gray"
         android:focusable="true"
         android:longClickable="true"
         android:orientation="vertical">
@@ -21,15 +22,19 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="2dp"
             android:layout_marginTop="8dp"
+            tools:text="current_list_name"
+            android:textColor="?colorOnPrimarySurface"
             android:textSize="16sp"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/current_list_description"
+            tools:text="current_list_description"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="2dp"
             android:layout_marginBottom="8dp"
+            android:textColor="?colorOnPrimarySurface"
             android:textSize="13sp" />
 
     </LinearLayout>
@@ -54,15 +59,11 @@
                     android:id="@+id/plist_list"
                     android:layout_width="fill_parent"
                     android:layout_height="fill_parent"
-                    android:layoutAnimation="@anim/item_animation" />
+                    android:layoutAnimation="@anim/item_animation"
+                    tools:itemCount="10"
+                    tools:listitem="@layout/item_playlist" />
 
             </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
-
-            <com.pluscubed.recyclerfastscroll.RecyclerFastScroller
-                android:id="@+id/fast_scroller"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_gravity="end" />
 
         </FrameLayout>
 

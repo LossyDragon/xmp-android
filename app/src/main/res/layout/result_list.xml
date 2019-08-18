@@ -21,7 +21,7 @@
             android:layout_height="match_parent"
             android:layoutAnimation="@anim/item_animation" />
 
-        <include layout="@layout/error_message" />
+        <include layout="@layout/layout_error" />
 
     </LinearLayout>
 

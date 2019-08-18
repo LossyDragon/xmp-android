@@ -5,7 +5,7 @@ import android.graphics.Typeface
 import android.os.Bundle
 import android.view.KeyEvent
 import androidx.appcompat.app.AppCompatActivity
-import kotlinx.android.synthetic.main.search_error.*
+import kotlinx.android.synthetic.main.activity_search_error.*
 import org.helllabs.android.xmp.R
 import java.util.*
 
@@ -17,7 +17,7 @@ class SearchError : AppCompatActivity(), Runnable {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setContentView(R.layout.search_error)
+        setContentView(R.layout.activity_search_error)
 
         val error = intent.getSerializableExtra(Search.ERROR) as Throwable
 

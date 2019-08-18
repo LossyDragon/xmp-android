@@ -47,5 +47,17 @@
         <item>44100</item>
         <item>48000</item>
     </string-array>
+
+    <string-array name="themeListArray">
+        <item>Light</item>
+        <item>Dark</item>
+        <item>System default</item>
+    </string-array>
+
+    <string-array name="themeEntryArray">
+        <item>light</item>
+        <item>dark</item>
+        <item>default</item>
+    </string-array>
     
 </resources>

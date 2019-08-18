@@ -4,8 +4,7 @@
     app:key="settings"
     app:title="@string/settings">
 
-    <!-- TODO Day Night theme -->
-    <!--<PreferenceCategory app:title="Theme">
+    <PreferenceCategory app:title="Theme">
         <ListPreference
             app:defaultValue="default"
             app:entries="@array/themeListArray"
@@ -13,7 +12,7 @@
             app:key="themePref"
             app:summary="Choose the interface theme for the application"
             app:title="Choose theme" />
-    </PreferenceCategory>-->
+    </PreferenceCategory>
 
     <PreferenceCategory app:title="@string/pref_category_preferences">
         <PreferenceScreen

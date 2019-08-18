@@ -26,7 +26,7 @@ import org.helllabs.android.xmp.service.ModInterface
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.util.InfoCache
 import org.helllabs.android.xmp.util.Log
-import org.helllabs.android.xmp.util.Message.toast
+import org.helllabs.android.xmp.util.toast
 import java.util.*
 
 abstract class BasePlaylistActivity : AppCompatActivity() {
@@ -40,7 +40,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     private val playAllButtonListener = OnClickListener {
         val list = allFiles
         if (list.isEmpty()) {
-            toast(this@BasePlaylistActivity, R.string.error_no_files_to_play)
+            toast(R.string.error_no_files_to_play)
         } else {
             playModule(list)
         }
@@ -52,11 +52,11 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         (view as ImageButton).setImageResource(if (loopMode) R.drawable.ic_repeat_on else R.drawable.ic_repeat_off)
 
         if (mShowToasts) {
-            toast(view.getContext(), if (loopMode) R.string.msg_loop_on else R.string.msg_loop_off)
+            toast(if (loopMode) R.string.msg_loop_on else R.string.msg_loop_off)
         }
 
         if (mShowToasts)
-            toast(view.context, if (loopMode) R.string.msg_loop_on else R.string.msg_loop_off)
+            toast(if (loopMode) R.string.msg_loop_on else R.string.msg_loop_off)
 
         isLoopMode = loopMode
     }
@@ -66,7 +66,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         shuffleMode = shuffleMode xor true
         (view as ImageButton).setImageResource(if (shuffleMode) R.drawable.ic_shuffle_on else R.drawable.ic_shuffle_off)
         if (mShowToasts) {
-            toast(view.getContext(), if (shuffleMode) R.string.msg_shuffle_on else R.string.msg_shuffle_off)
+            toast(if (shuffleMode) R.string.msg_shuffle_on else R.string.msg_shuffle_off)
         }
 
         isShuffleMode = shuffleMode
@@ -79,7 +79,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
             try {
                 mModPlayer!!.add(mAddList)
             } catch (e: RemoteException) {
-                toast(this@BasePlaylistActivity, R.string.error_adding_mod)
+                toast(R.string.error_adding_mod)
             }
 
             unbindService(this)
@@ -164,11 +164,11 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
                 // add to queue
                 3 -> {
                     addToQueue(filename)
-                    toast(this, "Added to queue")
+                    toast("Added to queue")
                 }
             }
         } else {
-            toast(this, "Unrecognized file format")
+            toast("Unrecognized file format")
         }
     }
 
@@ -243,7 +243,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         }
 
         if (invalid) {
-            toast(this, R.string.msg_only_valid_files_sent)
+            toast(R.string.msg_only_valid_files_sent)
         }
 
         if (realSize > 0) {
@@ -259,8 +259,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
 
     // Menu
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        val inflater = menuInflater
-        inflater.inflate(R.menu.menu_options, menu)
+        menuInflater.inflate(R.menu.menu_options, menu)
 
         // Calling super after populating the menu is necessary here to ensure that the
         // action bar helpers have a chance to handle this event.

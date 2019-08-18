@@ -45,7 +45,7 @@ class Preferences : AppCompatActivity() {
         val DEFAULT_MEDIA_PATH = "$SD_DIR/mod"
         const val ALL_SEQUENCES = "all_sequences"
         const val AMIGA_MIXER = "amiga_mixer"
-        //const val APP_THEME = "themePref"
+        const val APP_THEME = "themePref"
         const val ARTIST_FOLDER = "artist_folder"
         const val BACK_BUTTON_NAVIGATION = "back_button_navigation"
         const val BLUETOOTH_PAUSE = "bluetooth_pause"

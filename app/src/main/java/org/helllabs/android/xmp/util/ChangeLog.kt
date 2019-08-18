@@ -1,58 +1,28 @@
 package org.helllabs.android.xmp.util
 
-import android.annotation.SuppressLint
-import android.app.AlertDialog
-import android.content.Context
-import android.content.pm.PackageManager.NameNotFoundException
-import android.view.LayoutInflater
+import android.app.Activity
 import androidx.preference.PreferenceManager
+import com.afollestad.materialdialogs.MaterialDialog
+import com.afollestad.materialdialogs.customview.customView
+import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.preferences.Preferences
 
-class ChangeLog(private val context: Context) {
+fun Activity.showChangeLog() {
 
-    fun show(): Int {
-        try {
-            val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+    val prefs = PreferenceManager.getDefaultSharedPreferences(this)
+    val lastViewed = prefs.getInt(Preferences.CHANGELOG_VERSION, 0)
+    val versionCode = BuildConfig.VERSION_CODE
 
-            //Older API's like this deprecated value
-            @Suppress("DEPRECATION")
-            val versionCode = packageInfo.versionCode
-
-            val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-            val lastViewed = prefs.getInt(Preferences.CHANGELOG_VERSION, 0)
-
-            return if (lastViewed < versionCode) {
+    if (lastViewed < versionCode) {
+        MaterialDialog(this).show {
+            title(text = "Changelog")
+            customView(R.layout.dialog_changelog)
+            positiveButton(text = "Dismiss") {
                 val editor = prefs.edit()
                 editor.putInt(Preferences.CHANGELOG_VERSION, versionCode)
                 editor.apply()
-                showLog()
-                0
-            } else {
-                -1
             }
-        } catch (e: NameNotFoundException) {
-            Log.w(TAG, "Unable to get version code")
-            return -1
         }
-
-    }
-
-    @SuppressLint("InflateParams")
-    private fun showLog() {
-        val inflater = LayoutInflater.from(context)
-        val view = inflater.inflate(R.layout.dialog_changelog, null)
-
-        AlertDialog.Builder(context)
-                .setTitle("Changelog")
-                .setIcon(android.R.drawable.ic_menu_info_details)
-                .setView(view)
-                .setNegativeButton("Dismiss") { _, _ ->
-                    // Do nothing
-                }.show()
-    }
-
-    companion object {
-        private const val TAG = "ChangeLog"
     }
 }

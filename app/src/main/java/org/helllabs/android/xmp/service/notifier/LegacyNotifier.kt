@@ -37,7 +37,7 @@ class LegacyNotifier(service: Service) : Notifier(service) {
             builder.addAction(R.drawable.ic_pause, "Pause", pauseIntent)
         }
 
-        builder.addAction(R.drawable.ic_next, "Next", nextIntent)
+        builder.addAction(R.drawable.ic_forward, "Next", nextIntent)
 
         if (type == TYPE_TICKER) {
             if (queueManager.size() > 1) {

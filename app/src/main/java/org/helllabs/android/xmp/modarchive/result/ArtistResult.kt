@@ -4,7 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.AdapterView
-import kotlinx.android.synthetic.main.error_message.*
+import kotlinx.android.synthetic.main.layout_error.*
 import kotlinx.android.synthetic.main.result_list.*
 import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.R

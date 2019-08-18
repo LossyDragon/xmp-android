@@ -8,17 +8,14 @@ import android.view.ContextMenu.ContextMenuInfo
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.TextView
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.h6ah4i.android.widget.advrecyclerview.animator.RefactoredDefaultItemAnimator
 import com.h6ah4i.android.widget.advrecyclerview.decoration.ItemShadowDecorator
-import com.h6ah4i.android.widget.advrecyclerview.decoration.SimpleListDividerDecorator
 import com.h6ah4i.android.widget.advrecyclerview.draggable.RecyclerViewDragDropManager
 import com.h6ah4i.android.widget.advrecyclerview.utils.WrapperAdapterUtils
-import com.pluscubed.recyclerfastscroll.RecyclerFastScroller
-import kotlinx.android.synthetic.main.playlist.*
+import kotlinx.android.synthetic.main.activity_playlist.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.browser.playlist.Playlist
 import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter
@@ -52,7 +49,7 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.playlist)
+        setContentView(R.layout.activity_playlist)
 
         val extras = intent.extras ?: return
 
@@ -89,9 +86,6 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
                 addItemDecoration(ItemShadowDecorator(resources.getDrawable(R.drawable.material_shadow_z1) as NinePatchDrawable))
             }
         }
-
-        // fast scroll
-        fast_scroller.attachRecyclerView(plist_list)
 
         mRecyclerViewDragDropManager!!.attachRecyclerView(plist_list)
 

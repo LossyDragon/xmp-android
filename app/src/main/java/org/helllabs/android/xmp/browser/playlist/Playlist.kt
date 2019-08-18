@@ -14,12 +14,12 @@ import org.helllabs.android.xmp.preferences.Preferences
 import org.helllabs.android.xmp.util.FileUtils
 import org.helllabs.android.xmp.util.InfoCache
 import org.helllabs.android.xmp.util.Log
-import org.helllabs.android.xmp.util.Message
 
 import android.app.Activity
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.preference.PreferenceManager
+import org.helllabs.android.xmp.util.error
 
 class Playlist @Throws(IOException::class)
 constructor(context: Context, val name: String) {
@@ -304,7 +304,7 @@ constructor(context: Context, val name: String) {
             try {
                 FileUtils.writeToFile(File(Preferences.DATA_DIR, name + PLAYLIST_SUFFIX), lines.toTypedArray())
             } catch (e: IOException) {
-                Message.error(activity, activity.getString(R.string.error_write_to_playlist))
+                activity.error(activity.getString(R.string.error_write_to_playlist))
             }
         }
 
@@ -321,7 +321,7 @@ constructor(context: Context, val name: String) {
             try {
                 comment = FileUtils.readFromFile(CommentFile(name))
             } catch (e: IOException) {
-                Message.error(activity, activity.getString(R.string.error_read_comment))
+                activity.error(activity.getString(R.string.error_read_comment))
             }
 
             if (comment == null || comment.trim { it <= ' ' }.isEmpty()) {

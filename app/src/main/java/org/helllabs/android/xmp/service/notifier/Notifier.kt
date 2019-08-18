@@ -59,7 +59,7 @@ abstract class Notifier(protected val service: Service) {
 
     companion object {
 
-        const val NOTIFY_ID = R.layout.player
+        const val NOTIFY_ID = R.layout.layout_player
 
         const val TYPE_TICKER = 1
         const val TYPE_PAUSE = 2

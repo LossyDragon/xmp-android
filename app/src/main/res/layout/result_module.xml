@@ -1,29 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_weight="1.0"
-    android:gravity="top"
-    android:orientation="vertical">
+    android:layout_marginStart="6dp"
+    android:layout_marginEnd="6dp"
+    tools:context=".modarchive.result.ModuleResult">
+
+    <ProgressBar
+        android:id="@+id/result_spinner"
+        style="?android:progressBarStyleLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1.0">
-
-        <ProgressBar
-            android:id="@+id/result_spinner"
-            style="?android:progressBarStyleLarge"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center" />
+        android:layout_weight="1.0"
+        app:layout_constraintBottom_toTopOf="@+id/result_layout_buttons"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
         <LinearLayout
             android:id="@+id/result_content"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="top"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            tools:ignore="UselessParent">
 
             <ScrollView
                 android:id="@+id/result_data"
@@ -33,6 +43,7 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:gravity="center"
                     android:orientation="vertical">
 
                     <TextView
@@ -47,39 +58,40 @@
                         android:id="@+id/module_filename"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/module_result_filename" />
+                        tools:text="filename" />
 
                     <TextView
                         android:id="@+id/module_info"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
-                        android:text="@string/module_result_info" />
+                        tools:text="info" />
 
                     <TextView
                         android:id="@+id/module_license"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
-                        android:text="@string/module_result_license" />
+                        tools:text="license" />
 
                     <TextView
                         android:id="@+id/module_license_description"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/module_result_license_description"
+                        android:gravity="center"
                         android:textColor="@android:color/tertiary_text_dark"
                         android:textSize="12sp"
-                        android:textStyle="italic" />
+                        android:textStyle="italic"
+                        tools:text="license description" />
 
                     <TextView
                         android:id="@+id/module_instruments"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
-                        android:text="@string/module_result_instruments"
                         android:textSize="12sp"
-                        android:typeface="monospace" />
+                        android:typeface="monospace"
+                        tools:text="instruments" />
 
                     <TextView
                         android:id="@+id/module_sponsor"
@@ -87,45 +99,39 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
                         android:layout_marginBottom="20dp"
-                        android:text="@string/module_result_sponsor"
                         android:textColor="@android:color/tertiary_text_dark"
-                        android:textSize="12sp" />
+                        android:textSize="12sp"
+                        tools:text="sponsor" />
                 </LinearLayout>
             </ScrollView>
 
-            <include layout="@layout/error_message" />
+            <include layout="@layout/layout_error" />
+
         </LinearLayout>
     </FrameLayout>
 
     <LinearLayout
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:gravity="bottom"
-        android:orientation="horizontal">
+        android:id="@+id/result_layout_buttons"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent">
 
-        <Button
-            android:id="@+id/module_download"
-            style="@android:style/Widget.Button"
-            android:layout_width="0dp"
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/module_button_play"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="0.5"
-            android:text="@string/result_download" />
+            android:textColor="@color/white"
+            tools:text="@string/result_play" />
 
-        <Button
-            android:id="@+id/module_delete"
-            style="@android:style/Widget.Button"
-            android:layout_width="0dp"
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/module_button_random"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="0.5"
-            android:text="@string/result_delete" />
+            android:text="@string/search_random_title"
+            android:textColor="@color/white" />
 
-        <Button
-            android:id="@+id/module_play"
-            style="@android:style/Widget.Button"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.5"
-            android:text="@string/result_play" />
     </LinearLayout>
 
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

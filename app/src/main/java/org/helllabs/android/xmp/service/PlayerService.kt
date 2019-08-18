@@ -3,9 +3,8 @@ package org.helllabs.android.xmp.service
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.preferences.Preferences
 import org.helllabs.android.xmp.service.notifier.LegacyNotifier
-import org.helllabs.android.xmp.service.notifier.LollipopNotifier
 import org.helllabs.android.xmp.service.notifier.Notifier
-import org.helllabs.android.xmp.service.notifier.OreoNotifier
+import org.helllabs.android.xmp.service.notifier.ModernNotifier
 import org.helllabs.android.xmp.service.utils.QueueManager
 import org.helllabs.android.xmp.service.utils.RemoteControl
 import org.helllabs.android.xmp.service.utils.Watchdog
@@ -90,12 +89,12 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                 doPauseAndNotify()
 
             if (isAlive) {
-                Log.i(TAG, "Use existing player thread")
+                Log.i(TAG, "Use existing layout_player thread")
                 restart = true
                 startIndex = if (keepFirst) 0 else start
                 nextSong()
             } else {
-                Log.i(TAG, "Start player thread")
+                Log.i(TAG, "Start layout_player thread")
                 playThread = Thread(PlayRunnable())
                 playThread!!.start()
             }
@@ -266,10 +265,10 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         isPlayerPaused = false
         allPlayerSequences = prefs!!.getBoolean(Preferences.ALL_SEQUENCES, false)
 
-        when {
-            Build.VERSION.SDK_INT >= 26 -> notifier = OreoNotifier(this)
-            Build.VERSION.SDK_INT >= 21 -> notifier = LollipopNotifier(this)
-            else -> notifier = LegacyNotifier(this)
+        notifier = if (Build.VERSION.SDK_INT >= 21) {
+            ModernNotifier(this)
+        } else {
+            LegacyNotifier(this)
         }
 
         watchdog = Watchdog(10)

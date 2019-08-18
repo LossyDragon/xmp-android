@@ -42,6 +42,6 @@ abstract class Result : AppCompatActivity() {
     }
 
     protected fun handleQueryError() {
-        handleError(Throwable("Bad search string. "))    // NOPMD
+        handleError(Throwable("Bad search string. "))
     }
 }

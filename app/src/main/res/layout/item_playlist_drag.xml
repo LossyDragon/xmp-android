@@ -20,6 +20,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
+            android:tint="@color/iconTint"
             android:contentDescription="@string/desc_plist_drag"
             tools:src="@drawable/ic_grabber" />
     </FrameLayout>

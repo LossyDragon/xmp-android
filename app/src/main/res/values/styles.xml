@@ -1,51 +1,48 @@
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!--
-        Base application theme, dependent on API level. This theme is replaced
-        by AppBaseTheme from res/values-vXX/styles.xml on newer devices.
-    -->
     <style name="AppBaseTheme" parent="@style/Theme.MaterialComponents.DayNight">
-        <!--
-            Theme customizations available in newer API levels can go in
-            res/values-vXX/styles.xml, while customizations related to
-            backward-compatibility can go here.
-        -->
 
-        <item name="colorPrimary">@color/primary</item>
         <!-- <item name="colorAccent">@color/material_green_A200</item> -->
     </style>
 
     <!-- Application theme. -->
     <style name="AppTheme" parent="AppBaseTheme">
         <!-- All customizations that are NOT specific to a particular API-level can go here. -->
-        
-        <item name="android:windowBackground">@color/black</item>
-        <item name="colorSurface">@color/primary</item>
+        <item name="colorSurface">@color/surface</item>
         <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryDark">@color/primary_dark</item>
         <item name="colorAccent">@color/accent</item>
 
+        <item name="android:windowBackground">@color/windowBackground</item>
+        <item name="android:textColor">?colorOnBackground</item>
+
         <item name="android:windowTranslucentStatus">true</item>
         <item name="android:windowTranslucentNavigation">true</item>
     </style>
-    
+
     <style name="AppTheme.NoActionBar" parent="AppTheme">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
 
-    <style name="AppTheme.Preferences" parent="AppTheme"/>
+    <style name="AppTheme.ColoredSurface" parent="AppTheme">
+        <item name="colorSurface">@color/primary</item>
+    </style>
+
+    <style name="AppTheme.Preferences" parent="AppTheme">
+        <item name="colorSurface">@color/primary</item>
+    </style>
 
     <style name="StatusTheme" parent="AppTheme">
         <item name="android:background">@color/primary_dark</item>
     </style>
-    
+
     <style name="SidebarTheme" parent="AppTheme">
         <item name="android:padding">4dp</item>
         <item name="android:background">@color/gray</item>
         <item name="android:textColor">@color/lightgray</item>
     </style>
-    
+
     <style name="SidebarDetailsTheme" parent="AppTheme">
         <item name="android:paddingLeft">4dp</item>
         <item name="android:paddingRight">4dp</item>
@@ -57,7 +54,7 @@
         <item name="android:textSize">15sp</item>
         <item name="android:textColor">@color/lightgray</item>
     </style>
-    
+
     <style name="SidebarSectionTheme" parent="AppTheme">
         <item name="android:textSize">16sp</item>
         <item name="android:background">@drawable/section_background</item>

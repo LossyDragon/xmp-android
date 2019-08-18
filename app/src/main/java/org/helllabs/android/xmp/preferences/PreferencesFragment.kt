@@ -2,12 +2,14 @@ package org.helllabs.android.xmp.preferences
 
 import android.os.Bundle
 import android.view.MenuItem
+import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceScreen
 import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.service.PlayerService
-import org.helllabs.android.xmp.util.Message
+import org.helllabs.android.xmp.util.toast
 import java.io.File
 
 class PreferencesFragment : PreferenceFragmentCompat() {
@@ -21,19 +23,18 @@ class PreferencesFragment : PreferenceFragmentCompat() {
         val clearCache: Preference? = findPreference("clear_cache")
         clearCache?.onPreferenceClickListener = Preference.OnPreferenceClickListener {
             if (deleteCache(Preferences.CACHE_DIR)) {
-                Message.toast(context!!, getString(R.string.cache_clear))
+                context!!.toast(getString(R.string.cache_clear))
             } else {
-                Message.toast(context!!, getString(R.string.cache_clear_error))
+                context!!.toast(getString(R.string.cache_clear_error))
             }
             true
         }
 
-        //TODO Day Night Theme
-//        val appTheme: ListPreference? = findPreference("themePref")
-//        appTheme?.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _, newValue ->
-//            setTheme(newValue.toString())
-//            true
-//        }
+        val appTheme: ListPreference? = findPreference("themePref")
+        appTheme?.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _, newValue ->
+            setTheme(newValue.toString())
+            true
+        }
     }
 
     override fun onCreatePreferences(bundle: Bundle?, rootKey: String?) {
@@ -72,10 +73,9 @@ class PreferencesFragment : PreferenceFragmentCompat() {
 
     companion object {
 
-        //TODO Day Night theme
-//        fun setTheme(theme: String) {
-//            XmpApplication.applyTheme(theme)
-//        }
+        fun setTheme(theme: String) {
+            XmpApplication.applyTheme(theme)
+        }
 
         fun deleteCache(file: File): Boolean {
             return deleteCache(file, true)

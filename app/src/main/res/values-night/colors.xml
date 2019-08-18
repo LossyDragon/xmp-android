@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+
+<!-- TODO DayNight Colors -->
+    <color name="windowBackground">@color/black</color>
+    <color name="iconTint">@color/white</color>
+    <color name="textTint">@color/white</color>
+
+    <color name="surface">@color/gray</color>
+
+</resources>

@@ -21,10 +21,10 @@ class Sidebar(private val activity: PlayerActivity) {
     init {
 
         val contentView = activity.findViewById<View>(R.id.content_view) as LinearLayout
-        activity.layoutInflater.inflate(R.layout.player, contentView, true)
+        activity.layoutInflater.inflate(R.layout.layout_player, contentView, true)
 
         val sidebarView = activity.findViewById<View>(R.id.sidebar_view) as LinearLayout
-        activity.layoutInflater.inflate(R.layout.player_sidebar, sidebarView, true)
+        activity.layoutInflater.inflate(R.layout.layout_player_sidebar, sidebarView, true)
 
         numPatText = activity.findViewById(R.id.sidebar_num_pat)
         numInsText = activity.findViewById(R.id.sidebar_num_ins)
@@ -61,7 +61,7 @@ class Sidebar(private val activity: PlayerActivity) {
         //final RadioButton button = new RadioButton(activity);
         // Can't get it styled this way, see http://stackoverflow.com/questions/3142067/android-set-style-in-code
 
-        val button = activity.layoutInflater.inflate(R.layout.sequence_item, null) as RadioButton
+        val button = activity.layoutInflater.inflate(R.layout.item_sequence, null) as RadioButton
 
         val text = if (num == 0) "main song" else "subsong $num"
         button.text = String.format("%2d:%02d (%s)", duration / 60000, duration / 1000 % 60, text)

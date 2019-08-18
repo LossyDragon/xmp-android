@@ -15,7 +15,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="6dp"
         android:gravity="center"
-        android:includeFontPadding="true"
+        android:includeFontPadding="false"
         android:paddingTop="5dp"
         android:textColor="@color/white"
         android:textStyle="bold"
@@ -82,7 +82,7 @@
             android:contentDescription="@string/button_prev"
             android:scaleX="1.2"
             android:scaleY="1.2"
-            android:src="@drawable/ic_back" />
+            android:src="@drawable/ic_previous" />
 
         <ImageButton
             android:id="@+id/control_player_play"
@@ -106,7 +106,7 @@
             android:contentDescription="@string/button_next"
             android:scaleX="1.2"
             android:scaleY="1.2"
-            android:src="@drawable/ic_next" />
+            android:src="@drawable/ic_forward" />
 
         <ImageButton
             android:id="@+id/control_player_loop"

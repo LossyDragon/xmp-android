@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.AdapterView
 import kotlinx.android.synthetic.main.result_list.*
-import kotlinx.android.synthetic.main.search_error.*
+import kotlinx.android.synthetic.main.activity_search_error.*
 import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.modarchive.Search
