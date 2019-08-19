@@ -24,10 +24,12 @@ import org.helllabs.android.xmp.util.error
 class Playlist @Throws(IOException::class)
 constructor(context: Context, val name: String) {
     var comment: String? = null
+
     private var mListChanged: Boolean = false
     private var mCommentChanged: Boolean = false
     var isShuffleMode: Boolean = false
     var isLoopMode: Boolean = false
+
     private val mList: MutableList<PlaylistItem>
     private val mPrefs: SharedPreferences
 
@@ -218,6 +220,11 @@ constructor(context: Context, val name: String) {
 
     fun setListChanged(listChanged: Boolean) {
         mListChanged = listChanged
+    }
+
+    fun writeMovedList(playlistItem: MutableList<PlaylistItem>) {
+        mList.clear()
+        mList.addAll(playlistItem)
     }
 
     companion object {

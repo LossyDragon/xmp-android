@@ -208,7 +208,6 @@ class PlaylistAdapter : RecyclerView.Adapter<PlaylistAdapter.ViewHolder>, Dragga
     }
 
     // Advanced RecyclerView
-
     override fun onMoveItem(fromPosition: Int, toPosition: Int) {
         //Log.d(TAG, "onMoveItem(fromPosition = " + fromPosition + ", toPosition = " + toPosition + ")");
 
@@ -249,7 +248,7 @@ class PlaylistAdapter : RecyclerView.Adapter<PlaylistAdapter.ViewHolder>, Dragga
     }
 
     override fun onItemDragFinished(fromPosition: Int, toPosition: Int, result: Boolean) {
-        //TODO, update new list info
+        playlist?.writeMovedList(playlistItem = items)
     }
 
     companion object {
