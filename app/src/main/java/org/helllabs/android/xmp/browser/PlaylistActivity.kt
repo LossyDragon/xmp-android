@@ -1,7 +1,5 @@
 package org.helllabs.android.xmp.browser
 
-import android.graphics.drawable.NinePatchDrawable
-import android.os.Build
 import android.os.Bundle
 import android.view.ContextMenu
 import android.view.ContextMenu.ContextMenuInfo
@@ -12,7 +10,6 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.h6ah4i.android.widget.advrecyclerview.animator.RefactoredDefaultItemAnimator
-import com.h6ah4i.android.widget.advrecyclerview.decoration.ItemShadowDecorator
 import com.h6ah4i.android.widget.advrecyclerview.draggable.RecyclerViewDragDropManager
 import com.h6ah4i.android.widget.advrecyclerview.utils.WrapperAdapterUtils
 import kotlinx.android.synthetic.main.activity_playlist.*
@@ -66,8 +63,6 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
 
         // drag & drop manager
         mRecyclerViewDragDropManager = RecyclerViewDragDropManager()
-        @Suppress("DEPRECATION")
-        mRecyclerViewDragDropManager!!.setDraggingItemShadowDrawable(resources.getDrawable(R.drawable.material_shadow_z3) as NinePatchDrawable)
 
         // adapter
         mPlaylistAdapter = PlaylistAdapter(this, mPlaylist!!, useFilename, PlaylistAdapter.LAYOUT_DRAG)
@@ -80,11 +75,6 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
             adapter = mWrappedAdapter
             itemAnimator = RefactoredDefaultItemAnimator()
             addItemDecoration(DividerItemDecoration(this@PlaylistActivity, DividerItemDecoration.VERTICAL))
-            // Lollipop or later has native drop shadow feature. ItemShadowDecorator is not required.
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-                @Suppress("DEPRECATION")
-                addItemDecoration(ItemShadowDecorator(resources.getDrawable(R.drawable.material_shadow_z1) as NinePatchDrawable))
-            }
         }
 
         mRecyclerViewDragDropManager!!.attachRecyclerView(plist_list)
@@ -137,7 +127,7 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
     }
 
     // Playlist context menu
-    override fun onCreateContextMenu(menu: ContextMenu, view: View, menuInfo: ContextMenuInfo) {
+    override fun onCreateContextMenu(menu: ContextMenu, view: View, menuInfo: ContextMenuInfo?) {
 
         val mode = Integer.parseInt(mPrefs.getString(Preferences.PLAYLIST_MODE, "1")!!)
 

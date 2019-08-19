@@ -1,22 +1,13 @@
 package org.helllabs.android.xmp.browser
 
-import java.io.File
-
 import android.content.Context
-import android.content.res.AssetManager
-
 import org.helllabs.android.xmp.util.Log
-
-import java.io.FileNotFoundException
-import java.io.IOException
-import java.io.InputStream
-import java.io.OutputStream
-import java.io.FileOutputStream
+import java.io.*
 
 
 object Examples {
 
-    private val TAG = "Examples"
+    private const val TAG = "Examples"
 
     fun install(context: Context, path: String, examples: Boolean): Int {
         val dir = File(path)

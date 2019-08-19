@@ -1,15 +1,12 @@
 package org.helllabs.android.xmp.browser
 
 import android.Manifest
-import android.app.Activity
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
-import android.text.Editable
-import android.text.TextWatcher
 import android.view.ContextMenu
 import android.view.Menu
 import android.view.MenuItem
@@ -19,13 +16,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.afollestad.materialdialogs.MaterialDialog
-import com.afollestad.materialdialogs.WhichButton
-import com.afollestad.materialdialogs.actions.setActionButtonEnabled
-import com.afollestad.materialdialogs.customview.customView
-import com.afollestad.materialdialogs.customview.getCustomView
 import kotlinx.android.synthetic.main.activity_playlist_menu.*
-import kotlinx.android.synthetic.main.dialog_input.view.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.browser.playlist.Playlist
 import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter
@@ -37,14 +28,11 @@ import org.helllabs.android.xmp.preferences.Preferences
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.util.*
 import java.io.File
-import java.io.IOException
 import java.util.*
-
 
 class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
     private var prefs: SharedPreferences? = null
     private var mediaPath: String? = null
-    private var deletePosition: Int = 0
     private var playlistAdapter: PlaylistAdapter? = null
 
     override fun onCreate(icicle: Bundle?) {
@@ -73,9 +61,10 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
 
         // Add playlist
         playlist_add_button.setOnClickListener {
-            PlaylistUtils.newPlaylistDialog(this, Runnable {
-                updateList()
-            })
+            startActivityForResult(
+                    Intent(this@PlaylistMenu, PlaylistAddEdit::class.java),
+                    MOD_ADD_REQUEST
+            )
         }
 
         playlistAdapter = PlaylistAdapter(this@PlaylistMenu, ArrayList(), false, PlaylistAdapter.LAYOUT_CARD)
@@ -205,9 +194,7 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
             //menu.add(Menu.NONE, 1, 1, "Add to playlist");
         } else {
             // Playlists
-            menu.add(Menu.NONE, 0, 0, "Rename")
-            menu.add(Menu.NONE, 1, 1, "Edit comment")
-            menu.add(Menu.NONE, 2, 2, "Delete playlist")
+            menu.add(Menu.NONE, 0, 0, "Edit Playlist")
         }
     }
 
@@ -217,145 +204,70 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
 
         if (position == 0) {            // First item of list
             if (index == 0) {           // First item of context menu
-                changeDir()
+                showChangeDir(prefs!!, Runnable { updateList() })
                 return true
             }
         } else {
-            when (index) {
-                // Rename
-                0 -> {
-                    renameList(this, position - 1)
-                    updateList()
-                    return true
-                }
-                // Edit comment
-                1 -> {
-                    editComment(this, position - 1)
-                    updateList()
-                    return true
-                }
-                // Delete
-                2 -> {
-                    deletePosition = position - 1
-                    yesNoDialog("Delete", "Are you sure to delete playlist " +
-                            PlaylistUtils.listNoSuffix()[deletePosition] + "?", Runnable {
-                        Playlist.delete(this@PlaylistMenu, PlaylistUtils.listNoSuffix()[deletePosition])
-                        updateList()
-                    })
-
-                    return true
-                }
-                else -> {
-                }
+            if (index == 0) {
+                val playlist = playlistAdapter!!.getItem(position )
+                val intent = Intent(this@PlaylistMenu, PlaylistAddEdit::class.java)
+                intent.putExtra(PlaylistAddEdit.EXTRA_ID, playlist.id)
+                intent.putExtra(PlaylistAddEdit.EXTRA_NAME, playlist.name)
+                intent.putExtra(PlaylistAddEdit.EXTRA_COMMENT, playlist.comment)
+                intent.putExtra(PlaylistAddEdit.EXTRA_TYPE, playlist.type)
+                startActivityForResult(intent, MOD_EDIT_REQUEST)
+                return true
             }
         }
 
         return true
     }
 
-    private fun renameList(activity: Activity, index: Int) {
-        val name = PlaylistUtils.listNoSuffix()[index]
-        val alert = InputDialog(activity)
-        alert.setTitle("Rename playlist")
-        alert.setMessage("Enter the new playlist name:")
-        alert.input.setText(name)
-
-        alert.setPositiveButton(R.string.ok) { _, _ ->
-            val value = alert.input.text.toString()
-
-            if (!Playlist.rename(activity, name, value)) {
-                error(getString(R.string.error_rename_playlist))
-            }
-
-            updateList()
-        }
-
-        alert.setNegativeButton(R.string.cancel) { _, _ ->
-            // Canceled.
-        }
-
-        alert.show()
-    }
-
-    private fun changeDir() {
-        //TODO could throw this into an object class and use a Runnable.
-        val mediaPath = prefs!!.getString(Preferences.MEDIA_PATH, Preferences.DEFAULT_MEDIA_PATH)!!
-
-        val dialog = MaterialDialog(this).customView(R.layout.dialog_input)
-        val customView = dialog.getCustomView()
-
-        //TextWatcher
-        customView.dialog_input_text.addTextChangedListener(object : TextWatcher {
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                if (s.isNullOrEmpty()) {
-                    dialog.setActionButtonEnabled(WhichButton.POSITIVE, false)
-                } else {
-                    dialog.setActionButtonEnabled(WhichButton.POSITIVE, true)
-                }
-            }
-
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
-            override fun afterTextChanged(s: Editable?) {}
-        })
-
-        dialog.show {
-            title(text = "Change directory")
-            setActionButtonEnabled(WhichButton.POSITIVE, false)
-            cancelOnTouchOutside(true)
-            customView.dialog_input_message.text = "Enter the mod directory:"
-            customView.dialog_input_text.setText(mediaPath)
-            positiveButton(R.string.ok) {
-                val value = getCustomView().dialog_input_text.text.toString()
-                if (value != mediaPath) {
-                    val editor = prefs!!.edit()
-                    editor.putString(Preferences.MEDIA_PATH, value)
-                    editor.apply()
-                }
-            }
-            negativeButton(R.string.cancel)
-        }
-
-
-    }
-
-    //TODO replace with an activity
-    private fun editComment(activity: Activity, index: Int) {
-        val name = PlaylistUtils.listNoSuffix()[index]
-        val alert = InputDialog(activity)
-        alert.setTitle("Edit comment")
-        alert.setMessage("Enter the new comment for $name:")
-        alert.input.setText(Playlist.readComment(activity, name))
-
-        alert.setPositiveButton(R.string.ok) { _, _ ->
-            val value = alert.input.text.toString().replace("\n", " ")
-            val file = File(Preferences.DATA_DIR, name + Playlist.COMMENT_SUFFIX)
-            try {
-                file.delete()
-                file.createNewFile()
-                FileUtils.writeToFile(file, value)
-            } catch (e: IOException) {
-                error(getString(R.string.error_edit_comment))
-            }
-
-            updateList()
-        }
-
-        alert.setNegativeButton(R.string.cancel) { _, _ ->
-            // Canceled.
-        }
-
-        alert.show()
-    }
-
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         when (requestCode) {
-            SETTINGS_REQUEST -> if (resultCode == RESULT_OK) {
-                updateList()
+            MOD_ADD_REQUEST -> {
+                val name = data!!.getStringExtra(PlaylistAddEdit.EXTRA_NAME)!!
+                val comment = data.getStringExtra(PlaylistAddEdit.EXTRA_COMMENT)!!
+
+                if (!PlaylistUtils.createEmptyPlaylist(this, name, comment)) {
+                    Log.w(TAG, "Failed to create new Playlist")
+                    error(text = "Failed to create new Playlist")
+                }
+
             }
-            PLAYLIST_REQUEST -> updateList()
-            else -> {
+            MOD_EDIT_REQUEST -> {
+                val id = data?.getIntExtra(PlaylistAddEdit.EXTRA_ID, -1)
+
+                //Something went wrong.
+                if (id == -1 || id == null) {
+                    error(text = "Cannot edit playlist")
+                    return
+                }
+
+                //Delete playlist.
+                if (id == -2) {
+                    val name = data.getStringExtra(PlaylistAddEdit.EXTRA_NAME)!!
+                    Playlist.delete(this@PlaylistMenu, name)
+                    updateList()
+                    return
+                }
+
+                //Everything is OK, edit playlist.
+                editPlaylistFromFile(
+                        data.getStringExtra(PlaylistAddEdit.EXTRA_NAME)!!,
+                        data.getStringExtra(PlaylistAddEdit.EXTRA_COMMENT)!!,
+                        data.getStringExtra(PlaylistAddEdit.EXTRA_OLD_NAME)!!
+                )
+
+            }
+            SETTINGS_REQUEST -> {
+                if (resultCode == RESULT_OK) {
+                    updateList()
+                }
+            }
+            PLAYLIST_REQUEST -> {
+                updateList()
             }
         }
     }
@@ -379,12 +291,26 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
         return super.onOptionsItemSelected(item)
     }
 
+    private fun editPlaylistFromFile(name: String, info: String, oldName: String) {
+        if (!Playlist.rename(this, oldName, name))
+            error(R.string.error_rename_playlist)
+
+        val file = File(Preferences.DATA_DIR, name + Playlist.COMMENT_SUFFIX)
+        if (!Playlist.editComment(file, info))
+            error(R.string.error_edit_comment)
+
+        updateList()
+    }
+
     companion object {
         private const val TAG = "PlaylistMenu"
 
         private const val SETTINGS_REQUEST = 45
         private const val PLAYLIST_REQUEST = 46
         private const val REQUEST_WRITE_STORAGE = 112
+
+        const val MOD_ADD_REQUEST = 1
+        const val MOD_EDIT_REQUEST = 2
 
         private fun checkStorage(): Boolean {
             val state = Environment.getExternalStorageState()

@@ -13,6 +13,7 @@ import com.h6ah4i.android.widget.advrecyclerview.draggable.DraggableItemAdapter
 import com.h6ah4i.android.widget.advrecyclerview.draggable.ItemDraggableRange
 import com.h6ah4i.android.widget.advrecyclerview.utils.AbstractDraggableItemViewHolder
 import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.util.Log
 import java.io.File
 import java.util.*
 
@@ -27,9 +28,6 @@ class PlaylistAdapter : RecyclerView.Adapter<PlaylistAdapter.ViewHolder>, Dragga
     var position: Int = 0
     private var onItemClickListener: OnItemClickListener? = null
     private val layoutType: Int
-
-//    val itemCount: Int
-//        get() = items.size
 
     val filenameList: List<String>
         get() {
@@ -182,6 +180,7 @@ class PlaylistAdapter : RecyclerView.Adapter<PlaylistAdapter.ViewHolder>, Dragga
 
     fun clear() {
         items.clear()
+        Log.i(TAG, "Playlist list cleared")
     }
 
     fun add(item: PlaylistItem) {
@@ -258,7 +257,7 @@ class PlaylistAdapter : RecyclerView.Adapter<PlaylistAdapter.ViewHolder>, Dragga
         const val LAYOUT_CARD = 1
         const val LAYOUT_DRAG = 2
 
-        private val TAG = "PlaylistAdapter"
+        private const val TAG = "PlaylistAdapter"
 
         private fun hitTest(v: View, x: Int, y: Int): Boolean {
             val tx = (v.translationX + 0.5f).toInt()

@@ -113,8 +113,9 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, FetchO
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == R.menu.menu_delete)
+        if (item.itemId == R.id.menu_delete) {
             deleteClick()
+        }
 
         return super.onOptionsItemSelected(item)
     }
@@ -271,7 +272,7 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, FetchO
                     if (file.delete()) {
                         updateButtons(module)
                     } else {
-                        toast("Error")
+                        toast(text = "Error")
                     }
 
                     // Delete parent directory if empty
@@ -286,7 +287,7 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, FetchO
                                 if (parentPath.startsWith(mediaPath) && parentPath != mediaPath) {
                                     Log.i(TAG, "Remove empty directory " + parent.path)
                                     if (!parent.delete()) {
-                                        toast("Error removing directory")
+                                        toast(text = "Error removing directory")
                                         Log.e(TAG, "error removing directory")
                                     }
                                 }
@@ -297,6 +298,8 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, FetchO
                         }
                     }
                 })
+
+        updateButtons(module)
     }
 
     private fun getDownloadPath(module: Module?): String {
@@ -345,7 +348,8 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, FetchO
 
     private fun modDownloader(mod: String, url: String, file: String) {
 
-        val pathFile = File(file).mkdirs()
+        val pathFile = File(file)
+        pathFile.mkdirs()
 
         if (fetch == null)
             fetch = Fetch.getDefaultInstance()

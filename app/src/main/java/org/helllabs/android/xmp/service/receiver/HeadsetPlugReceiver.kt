@@ -33,10 +33,10 @@ class HeadsetPlugReceiver : BroadcastReceiver() {
     }
 
     companion object {
-        private val TAG = "HeadsetPluginReceiver"
-        val HEADSET_UNPLUGGED = 0
-        val HEADSET_PLUGGED = 1
-        val NO_STATE = -1
+        private const val TAG = "HeadsetPluginReceiver"
+        const val HEADSET_UNPLUGGED = 0
+        const val HEADSET_PLUGGED = 1
+        const val NO_STATE = -1
         var state = NO_STATE
     }
 

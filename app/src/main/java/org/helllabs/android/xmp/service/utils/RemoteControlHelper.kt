@@ -26,7 +26,7 @@ import java.lang.reflect.Method
  * run on ICS devices.  On previous devices, all methods are no-ops.
  */
 object RemoteControlHelper {
-    private val TAG = "RemoteControlHelper"
+    private const val TAG = "RemoteControlHelper"
 
     private var sHasRemoteControlAPIs = false
 
@@ -70,18 +70,18 @@ object RemoteControlHelper {
     }
 
 
-    fun unregisterRemoteControlClient(audioManager: AudioManager,
-                                      remoteControlClient: RemoteControlClientCompat) {
-        if (!sHasRemoteControlAPIs) {
-            return
-        }
-
-        try {
-            sUnregisterRemoteControlClientMethod!!.invoke(audioManager,
-                    remoteControlClient.actualRemoteControlClientObject)
-        } catch (e: Exception) {
-            Log.e(TAG, e.message, e)
-        }
-
-    }
+//    fun unregisterRemoteControlClient(audioManager: AudioManager,
+//                                      remoteControlClient: RemoteControlClientCompat) {
+//        if (!sHasRemoteControlAPIs) {
+//            return
+//        }
+//
+//        try {
+//            sUnregisterRemoteControlClientMethod!!.invoke(audioManager,
+//                    remoteControlClient.actualRemoteControlClientObject)
+//        } catch (e: Exception) {
+//            Log.e(TAG, e.message, e)
+//        }
+//
+//    }
 }

@@ -23,9 +23,9 @@ class PreferencesFragment : PreferenceFragmentCompat() {
         val clearCache: Preference? = findPreference("clear_cache")
         clearCache?.onPreferenceClickListener = Preference.OnPreferenceClickListener {
             if (deleteCache(Preferences.CACHE_DIR)) {
-                context!!.toast(getString(R.string.cache_clear))
+                context!!.toast(R.string.cache_clear)
             } else {
-                context!!.toast(getString(R.string.cache_clear_error))
+                context!!.toast(R.string.cache_clear_error)
             }
             true
         }

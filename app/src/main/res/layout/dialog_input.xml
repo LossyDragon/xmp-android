@@ -13,7 +13,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="18dp"
-        tools:text="Dialog Message"
+        android:text="@string/dialog_input_message"
         android:textColor="@color/white"
         android:textSize="14sp" />
 

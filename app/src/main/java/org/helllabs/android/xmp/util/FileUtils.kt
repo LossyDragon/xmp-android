@@ -34,11 +34,11 @@ object FileUtils {
         return line
     }
 
-    @Throws(IOException::class)
-    fun removeLineFromFile(file: File, num: Int): Boolean {
-        val nums = intArrayOf(num)
-        return removeLineFromFile(file, nums)
-    }
+//    @Throws(IOException::class)
+//    fun removeLineFromFile(file: File, num: Int): Boolean {
+//        val nums = intArrayOf(num)
+//        return removeLineFromFile(file, nums)
+//    }
 
     @Throws(IOException::class)
     fun removeLineFromFile(file: File, num: IntArray): Boolean {
@@ -83,7 +83,7 @@ object FileUtils {
     }
 
     fun basename(pathname: String?): String {
-        return if (pathname != null && !pathname.isEmpty()) {
+        return if (pathname != null && pathname.isNotEmpty()) {
             File(pathname).name
         } else {
             ""

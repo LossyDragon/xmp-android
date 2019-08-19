@@ -13,7 +13,7 @@ import org.helllabs.android.xmp.util.Log
 
 
 @TargetApi(19)
-class RemoteControl(context: Context, private val audioManager: AudioManager) {
+class RemoteControl(context: Context, audioManager: AudioManager) {
     private val remoteControlReceiver: ComponentName = ComponentName(context.packageName, RemoteControlReceiver::class.java.name)
     private var remoteControlClient: RemoteControlClientCompat? = null
 
@@ -41,11 +41,11 @@ class RemoteControl(context: Context, private val audioManager: AudioManager) {
         }
     }
 
-    fun unregisterReceiver() {
-        Log.w(TAG, "Unregister remote control client")
-        audioManager.unregisterMediaButtonEventReceiver(remoteControlReceiver)
-        RemoteControlHelper.unregisterRemoteControlClient(audioManager, remoteControlClient!!)
-    }
+//    fun unregisterReceiver() {
+//        Log.w(TAG, "Unregister remote control client")
+//        audioManager.unregisterMediaButtonEventReceiver(remoteControlReceiver)
+//        RemoteControlHelper.unregisterRemoteControlClient(audioManager, remoteControlClient!!)
+//    }
 
     @TargetApi(14)
     fun setStatePlaying() {

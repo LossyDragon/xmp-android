@@ -151,7 +151,7 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
                     setTextColor(currentTextColor)
                 } else {
                     @Suppress("DEPRECATION")
-                    setTextColor(resources.getColor(R.color.pressed_color))
+                    setTextColor(R.color.pressed_color)
                 }
                 view.performClick()
                 false
@@ -363,7 +363,7 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         val editor = mPrefs.edit()
         editor.putString(Preferences.MEDIA_PATH, mNavigation!!.currentDir!!.path)
         editor.apply()
-        toast("Set as default module path")
+        toast(text = "Set as default module path")
     }
 
     private fun deleteDirectory(position: Int) {
@@ -375,9 +375,9 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
                     FileUtils.basename(deleteName) + "\" and all its contents?", Runnable {
                 if (InfoCache.deleteRecursive(deleteName)) {
                     updateModlist()
-                    toast(getString(R.string.msg_dir_deleted))
+                    toast(R.string.msg_dir_deleted)
                 } else {
-                    toast(getString(R.string.msg_cant_delete_dir))
+                    toast(R.string.msg_cant_delete_dir)
                 }
             })
         } else {
@@ -390,9 +390,9 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         yesNoDialog("Delete", "Are you sure you want to delete " + FileUtils.basename(deleteName) + "?", Runnable {
             if (InfoCache.delete(deleteName)) {
                 updateModlist()
-                toast(getString(R.string.msg_file_deleted))
+                toast(R.string.msg_file_deleted)
             } else {
-                toast(getString(R.string.msg_cant_delete))
+                toast(R.string.msg_cant_delete)
             }
         })
     }

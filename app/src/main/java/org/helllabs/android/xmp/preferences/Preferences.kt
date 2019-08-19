@@ -36,7 +36,7 @@ class Preferences : AppCompatActivity() {
     }
 
     companion object {
-        //TODO - SAF absolutely sucks. Keep until that `pile` is better documented.
+        //SAF absolutely sucks. Keep until that `pile` is better documented.
         @Suppress("DEPRECATION")
         private val SD_DIR: File = Environment.getExternalStorageDirectory()
         val DATA_DIR: File = File(SD_DIR, "Xmp for Android")

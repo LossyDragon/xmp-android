@@ -1,12 +1,6 @@
 package org.helllabs.android.xmp.browser.playlist
 
-import android.annotation.SuppressLint
 import android.app.Activity
-import android.app.AlertDialog
-import android.content.Context
-import android.view.LayoutInflater
-import android.view.View
-import android.widget.EditText
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.preferences.Preferences
@@ -19,34 +13,6 @@ import java.util.*
 
 
 object PlaylistUtils {
-
-    //TODO replace with an activity
-    @SuppressLint("InflateParams")
-    fun newPlaylistDialog(activity: Activity, runnable: Runnable?) {
-        val alert = AlertDialog.Builder(activity)
-        alert.setTitle("New playlist")
-        val inflater = activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
-        val layout = inflater.inflate(R.layout.newlist, null)
-
-        alert.setView(layout)
-
-        alert.setPositiveButton(R.string.ok) { _, _ ->
-            val e1 = layout.findViewById<View>(R.id.new_playlist_name) as EditText
-            val e2 = layout.findViewById<View>(R.id.new_playlist_comment) as EditText
-            val name = e1.text.toString()
-            val comment = e2.text.toString()
-
-            if (createEmptyPlaylist(activity, name, comment) && runnable != null) {
-                runnable.run()
-            }
-        }
-
-        alert.setNegativeButton(R.string.cancel) { _, _ ->
-            // Canceled.
-        }
-
-        alert.show()
-    }
 
     /*
 	 * Send files to the specified playlist
@@ -85,12 +51,12 @@ object PlaylistUtils {
 
     fun filesToPlaylist(activity: Activity, fileList: List<String>, playlistName: String) {
 
-        activity.toast("Please wait\nScanning module files...")
+        activity.toast(text = "Please wait\nScanning module files...")
 
         object : Thread() {
             override fun run() {
                 addFiles(activity, fileList, playlistName)
-                activity.toast("Scan finished")
+                activity.toast(text = "Scan finished")
 
             }
         }.start()
@@ -127,7 +93,7 @@ object PlaylistUtils {
             playlist.commit()
             true
         } catch (e: IOException) {
-            activity.error(activity.getString(R.string.error_create_playlist))
+            activity.error(R.string.error_create_playlist)
             false
         }
     }

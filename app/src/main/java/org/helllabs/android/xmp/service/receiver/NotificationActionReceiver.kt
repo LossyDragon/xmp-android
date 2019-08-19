@@ -23,12 +23,12 @@ class NotificationActionReceiver : BroadcastReceiver() {
     }
 
     companion object {
-        private val TAG = "NotificationActionReceiver"
-        val NO_KEY = -1
-        val STOP = 1
-        val PAUSE = 2
-        val NEXT = 3
-        val PREV = 4
+        private const val TAG = "NotificationActionReceiver"
+        const val NO_KEY = -1
+        const val STOP = 1
+        const val PAUSE = 2
+        const val NEXT = 3
+        const val PREV = 4
         var keyCode = NO_KEY
     }
 

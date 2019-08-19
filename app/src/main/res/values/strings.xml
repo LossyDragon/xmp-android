@@ -178,7 +178,7 @@
     <string name="search_artist_no_mods">This artist has no modules.</string>
     <string name="search_title_or_filename">Title or file name</string>
     <string name="search_artist">Artist</string>
-    <string name="search_random_pick">Random pick</string>
+    <string name="search_random_pick">Random</string>
 
     <string name="result_title">Title</string>
     <string name="result_download">Download</string>
@@ -209,5 +209,15 @@
     <string name="module_result_filename">filename</string>
     <string name="module_by">by %s</string>
     <string name="module_size">%s KB</string>
+    <string name="dialog_input_message">Enter the mod directory:</string>
+    <string name="button_playlist_add">Add new Playlist</string>
+    <string name="button_playlist_update">Update Playlist</string>
+    <string name="new_playlist">New Playlist</string>
+    <string name="button_playlist_delete">Delete %s</string>
+    <string name="error_playlist_name">Name cannot be blank to save</string>
+    <string name="dialog_delete_playlist">Delete Playlist</string>
+    <string name="dialog_delete_playlist_message">Are you sure you want to delete %s</string>
+    <string name="hint_playlist_name">Playlist Name</string>
+    <string name="hint_playlist_comment">Playlist description (Optional)</string>
 
 </resources>

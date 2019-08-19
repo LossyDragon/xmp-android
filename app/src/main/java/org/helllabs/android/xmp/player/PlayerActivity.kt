@@ -328,7 +328,7 @@ class PlayerActivity : Activity() {
         totalTime = time / 1000
         control_player_seek.progress = 0
         control_player_seek.max = time / 100
-        toast("New sequence duration: " + String.format("%d:%02d", time / 60000, time / 1000 % 60))
+        toast(text = "New sequence duration: " + String.format("%d:%02d", time / 60000, time / 1000 % 60))
 
         val sequence = modVars[7]
         sidebar!!.selectSequence(sequence)
@@ -960,14 +960,14 @@ class PlayerActivity : Activity() {
             yesNoDialog("Delete", "Are you sure to delete this file?", Runnable {
                 try {
                     if (modPlayer!!.deleteFile()) {
-                        toast("File deleted")
+                        toast(text = "File deleted")
                         setResult(RESULT_FIRST_USER)
                         modPlayer!!.nextSong()
                     } else {
-                        toast("Can\'t delete file")
+                        toast(text = "Can\'t delete file")
                     }
                 } catch (e: RemoteException) {
-                    toast("Can\'t connect service")
+                    toast(text = "Can\'t connect service")
                 }
             })
         }

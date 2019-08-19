@@ -1,14 +1,11 @@
 package org.helllabs.android.xmp.service.receiver
 
-import org.helllabs.android.xmp.util.Log
-
 import android.bluetooth.BluetoothA2dp
-import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothProfile
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.os.Build
+import org.helllabs.android.xmp.util.Log
 
 class BluetoothConnectionReceiver : BroadcastReceiver() {
 
@@ -39,10 +36,10 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
     }
 
     companion object {
-        private val TAG = "BluetoothConnectionReceiver"
-        val DISCONNECTED = 0
-        val CONNECTED = 1
-        val NO_STATE = -1
+        private const val TAG = "BluetoothConnectionReceiver"
+        const val DISCONNECTED = 0
+        const val CONNECTED = 1
+        const val NO_STATE = -1
         var state = NO_STATE
     }
 

@@ -164,11 +164,11 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
                 // add to queue
                 3 -> {
                     addToQueue(filename)
-                    toast("Added to queue")
+                    toast(text = "Added to queue")
                 }
             }
         } else {
-            toast("Unrecognized file format")
+            toast(text = "Unrecognized file format")
         }
     }
 

@@ -32,7 +32,8 @@
         android:requestLegacyExternalStorage="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:theme="@style/AppTheme"
-        tools:ignore="AllowBackup,UnusedAttribute">
+        tools:ignore="AllowBackup,UnusedAttribute"
+        android:extractNativeLibs="false">
 
         <activity
             android:name=".browser.PlaylistMenu"
@@ -151,6 +152,11 @@
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:theme="@style/AppTheme.ColoredSurface" />
 
+        <activity
+            android:name=".browser.PlaylistAddEdit"
+            android:parentActivityName=".browser.PlaylistMenu"
+            android:theme="@style/AppTheme" />
+
         <!-- ModArchive activity_search & download -->
         <activity
             android:name=".modarchive.Search"
@@ -235,10 +241,6 @@
         </activity>
 
         <service android:name=".service.PlayerService" />
-
-        <service
-            android:name="com.telly.groundy.GroundyService"
-            android:exported="false" />
 
         <receiver
             android:name=".service.receiver.MediaButtonsReceiver"

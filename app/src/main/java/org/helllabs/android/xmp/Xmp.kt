@@ -74,9 +74,9 @@ object Xmp {
     external fun time(): Int
 
     /*Not used, but still in JNI*/
-    external fun nextPosition(): Int
-    external fun prevPosition(): Int
-    external fun setPosition(num: Int): Int
-    external fun getLoopCount(): Int
-    external fun restartModule(): Int
+//    external fun nextPosition(): Int
+//    external fun prevPosition(): Int
+//    external fun setPosition(num: Int): Int
+//    external fun getLoopCount(): Int
+//    external fun restartModule(): Int
 }
