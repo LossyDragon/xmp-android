@@ -20,7 +20,7 @@ abstract class Viewer(context: Context) : SurfaceView(context), SurfaceHolder.Ca
     protected var canvasHeight: Int = 0
     protected var canvasWidth: Int = 0
     protected lateinit var modVars: IntArray
-    protected open lateinit var modPlayer: ModInterface
+    protected open var modPlayer: ModInterface? = null
     protected lateinit var isMuted: BooleanArray
     protected var viewerRotation: Int = 0
     protected val screenSize: Int

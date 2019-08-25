@@ -10,8 +10,8 @@
     android:layout_marginTop="10dp"
     android:layout_marginRight="9dp"
     android:foreground="?android:attr/selectableItemBackground"
-    cardview:cardElevation="4dp"
     cardview:cardCornerRadius="3dp"
+    cardview:cardElevation="4dp"
     cardview:contentPadding="10dp">
 
     <LinearLayout
@@ -26,8 +26,8 @@
             android:layout_marginEnd="8dp"
             android:contentDescription="@string/desc_plist_image"
             android:padding="8dp"
-            tools:src="@drawable/ic_file"
-            android:tint="@color/iconTint"/>
+            android:tint="@color/iconTint"
+            tools:src="@drawable/ic_file" />
 
         <LinearLayout
             android:layout_width="0dp"

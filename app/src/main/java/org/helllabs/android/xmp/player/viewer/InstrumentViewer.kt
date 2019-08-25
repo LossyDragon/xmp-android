@@ -66,7 +66,7 @@ class InstrumentViewer(context: Context) : Viewer(context) {
             canvas = surfaceHolder.lockCanvas(null)
             if (canvas != null) {
                 synchronized(surfaceHolder) {
-                    doDraw(canvas, modPlayer, info)
+                    doDraw(canvas, modPlayer!!, info)
                 }
             }
         } finally {

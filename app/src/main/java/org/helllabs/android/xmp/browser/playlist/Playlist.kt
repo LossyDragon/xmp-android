@@ -164,7 +164,7 @@ constructor(context: Context, val name: String) {
             try {
                 FileUtils.removeLineFromFile(file, array)
             } catch (e: FileNotFoundException) {
-                Log.e(TAG, "Playlist file " + file.path + " not found")
+                Log.w(TAG, "Playlist file " + file.path + " not found")
             } catch (e: IOException) {
                 Log.e(TAG, "I/O error removing invalid lines from " + file.path)
             }

@@ -83,8 +83,7 @@ static int opensl_open(int sr, int num)
 	if (r != SL_RESULT_SUCCESS) 
 		goto err;
 
-	r = (*engine_obj)->GetInterface(engine_obj, SL_IID_ENGINE,
-				&engine_engine);
+	r = (*engine_obj)->GetInterface(engine_obj, SL_IID_ENGINE, &engine_engine);
 	if (r != SL_RESULT_SUCCESS) 
 		goto err1;
 
@@ -96,8 +95,7 @@ static int opensl_open(int sr, int num)
 		SL_BOOLEAN_FALSE
 	};
 
-	r = (*engine_engine)->CreateOutputMix(engine_engine,
-				&output_mix_obj, 1, ids, req);
+	r = (*engine_engine)->CreateOutputMix(engine_engine, &output_mix_obj, 1, ids, req);
 	if (r != SL_RESULT_SUCCESS) 
 		goto err1;
 	

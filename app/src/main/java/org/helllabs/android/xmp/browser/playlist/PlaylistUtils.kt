@@ -56,8 +56,6 @@ object PlaylistUtils {
         object : Thread() {
             override fun run() {
                 addFiles(activity, fileList, playlistName)
-                activity.toast(text = "Scan finished")
-
             }
         }.start()
     }

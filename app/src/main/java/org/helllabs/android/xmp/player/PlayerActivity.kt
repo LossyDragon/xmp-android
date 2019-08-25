@@ -305,7 +305,7 @@ class PlayerActivity : Activity() {
 
             // always call viewer update (for scrolls during pause)
             synchronized(viewer_layout!!) {
-                viewer!!.update(info!!, p)
+                viewer?.update(info!!, p)
             }
         }
     }
@@ -563,7 +563,10 @@ class PlayerActivity : Activity() {
         val service = Intent(this, PlayerService::class.java)
         if (!reconnect) {
             Log.i(TAG, "Start service")
-            startService(service)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                startForegroundService(service)
+            else
+                startService(service)
         }
 
         if (!bindService(service, connection, 0)) {
@@ -847,7 +850,7 @@ class PlayerActivity : Activity() {
                     // Write our all sequences button status to shared prefs
                     val allSeq = modPlayer!!.allSequences
                     if (allSeq != prefs!!.getBoolean(Preferences.ALL_SEQUENCES, false)) {
-                        Log.w(TAG, "Write all sequences preference")
+                        Log.i(TAG, "Write all sequences preference")
                         val editor = prefs!!.edit()
                         editor.putBoolean(Preferences.ALL_SEQUENCES, allSeq)
                         editor.apply()

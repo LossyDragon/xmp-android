@@ -1,9 +1,8 @@
 package org.helllabs.android.xmp.service.notifier
 
-import org.helllabs.android.xmp.R
-
 import android.app.Service
 import androidx.core.app.NotificationCompat
+import org.helllabs.android.xmp.R
 
 
 class LegacyNotifier(service: Service) : Notifier(service) {
@@ -31,7 +30,7 @@ class LegacyNotifier(service: Service) : Notifier(service) {
                 .addAction(R.drawable.ic_stop, "Stop", stopIntent)
 
         if (type == TYPE_PAUSE) {
-            builder.addAction(R.drawable.ic_play, "Play", pauseIntent)
+            builder.addAction(R.drawable.ic_play, "Play", playIntent)
             builder.setContentText("(paused)")
         } else {
             builder.addAction(R.drawable.ic_pause, "Pause", pauseIntent)

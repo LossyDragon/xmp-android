@@ -1,60 +1,80 @@
 package org.helllabs.android.xmp.service
 
+import android.app.Service
+import android.content.Context
+import android.content.Intent
+import android.content.Intent.ACTION_MEDIA_BUTTON
+import android.content.IntentFilter
+import android.content.SharedPreferences
+import android.media.AudioManager
+import android.media.AudioManager.*
+import android.os.*
+import android.support.v4.media.session.MediaSessionCompat
+import android.view.KeyEvent
+import androidx.media.session.MediaButtonReceiver
+import androidx.preference.PreferenceManager
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.preferences.Preferences
 import org.helllabs.android.xmp.service.notifier.LegacyNotifier
-import org.helllabs.android.xmp.service.notifier.Notifier
 import org.helllabs.android.xmp.service.notifier.ModernNotifier
+import org.helllabs.android.xmp.service.notifier.Notifier
+import org.helllabs.android.xmp.service.receiver.HeadsetPlugReceiver
+import org.helllabs.android.xmp.service.receiver.RemoteControlReceiver
+import org.helllabs.android.xmp.service.utils.OreoAudioFocusHandler
 import org.helllabs.android.xmp.service.utils.QueueManager
-import org.helllabs.android.xmp.service.utils.RemoteControl
 import org.helllabs.android.xmp.service.utils.Watchdog
 import org.helllabs.android.xmp.util.FileUtils
 import org.helllabs.android.xmp.util.InfoCache
 import org.helllabs.android.xmp.util.Log
 
-import android.app.Service
-import android.content.Context
-import android.content.Intent
-import android.content.SharedPreferences
-import android.media.AudioManager
-import android.media.AudioManager.OnAudioFocusChangeListener
-import android.os.Build
-import android.os.IBinder
-import android.os.RemoteCallbackList
-import android.os.RemoteException
-import androidx.preference.PreferenceManager
 
 class PlayerService : Service(), OnAudioFocusChangeListener {
 
+    /* Media Stuff */
+    private var mediaSession: MediaSessionCompat? = null
     private var audioManager: AudioManager? = null
-    private var remoteControl: RemoteControl? = null
-    private var hasAudioFocus: Boolean = false
-    private var ducking: Boolean = false
-    private var audioInitialized: Boolean = false
-
-    private var playThread: Thread? = null
-    private var prefs: SharedPreferences? = null
-    private var watchdog: Watchdog? = null
-    private var sampleRate: Int = 0
+    private var oreoFocusHandler: OreoAudioFocusHandler? = null
+    private var audioInitialized = false
+    private var isDucking = false
     private var volume: Int = 0
-    private var notifier: Notifier? = null
-    private var cmd: Int = 0
-    private var restart: Boolean = false
-    private var canRelease: Boolean = false
     var isPlayerPaused: Boolean = false
         private set
-    private var previousPaused: Boolean = false        // save previous pause state
+
+    /* Headset Controls stuff */
+    private var hookCount = 0
+    private val hookHandler = Handler()
+    private val hookRunnable = Runnable {
+        when (hookCount) {
+            1 -> actionSmartKeyPlayPause()
+            2 -> actionNext()
+            else -> actionPrev()
+        }
+        hookCount = 0
+    }
+
+    /* XMP Stuff */
+    private val callbacks = RemoteCallbackList<PlayerCallback>()
+    private var allPlayerSequences: Boolean = false
+    private var canRelease: Boolean = false
+    private var cmd: Int = 0
     private var discardBuffer: Boolean = false      // don't play current buffer if changing module while paused
     private var looped: Boolean = false
-    private var allPlayerSequences: Boolean = false
+    private var playerFileName: String? = null      // currently playing file
+    private var playThread: Thread? = null
+    private var queue: QueueManager? = null
+    private var restart: Boolean = false
+    private var sampleRate: Int = 0
+    private var sequenceNumber: Int = 0
     private var startIndex: Int = 0
     private var updateData: Boolean = false
-    private var playerFileName: String? = null            // currently playing file
-    private var queue: QueueManager? = null
-    private val callbacks = RemoteCallbackList<PlayerCallback>()
-    private var sequenceNumber: Int = 0
+    private var watchdog: Watchdog? = null
 
-    private var receiverHelper: ReceiverHelper? = null
+    /* Other Stuff */
+    private var prefs: SharedPreferences? = null
+    private var notifier: Notifier? = null
+
+    private lateinit var remoteControlReceiver: RemoteControlReceiver
+    private lateinit var headsetPlugReceiver: HeadsetPlugReceiver
 
     private val binder = object : ModInterface.Stub() {
         override fun getModName(): String = Xmp.getModName()
@@ -75,7 +95,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
 
         override fun play(fileList: MutableList<String>?, start: Int, shuffle: Boolean, loopList: Boolean, keepFirst: Boolean) {
 
-            if (!audioInitialized || !hasAudioFocus) {
+            if (!audioInitialized) {
                 stopSelf()
                 return
             }
@@ -86,7 +106,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
             cmd = CMD_NONE
 
             if (isPaused)
-                doPauseAndNotify()
+                actionPlay()
 
             if (isAlive) {
                 Log.i(TAG, "Use existing layout_player thread")
@@ -107,18 +127,11 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
             updateNotification()
         }
 
-        override fun stop() {
-            actionStop()
-        }
+        override fun stop() = actionStop()
 
-        override fun pause() {
-            doPauseAndNotify()
-            receiverHelper!!.isHeadsetPaused = false
-        }
+        override fun pause() = if (isPaused) actionPlay() else actionPause()
 
-        override fun getInfo(values: IntArray?) {
-            Xmp.getInfo(values!!)
-        }
+        override fun getInfo(values: IntArray?) = Xmp.getInfo(values!!)
 
         override fun seek(seconds: Int) {
             Xmp.seek(seconds)
@@ -126,9 +139,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
 
         override fun time(): Int = Xmp.time()
 
-        override fun getModVars(vars: IntArray?) {
-            Xmp.getModVars(vars!!)
-        }
+        override fun getModVars(vars: IntArray?) = Xmp.getModVars(vars!!)
 
         override fun getChannelData(volumes: IntArray?, finalvols: IntArray?, pans: IntArray?, instruments: IntArray?, keys: IntArray?, periods: IntArray?) {
             if (updateData) {
@@ -151,7 +162,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
             cmd = CMD_NEXT
 
             if (isPaused)
-                doPauseAndNotify()
+                actionPlay()
 
             discardBuffer = true
         }
@@ -161,7 +172,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
             cmd = CMD_PREV
 
             if (isPaused)
-                doPauseAndNotify()
+                actionPlay()
 
             discardBuffer = true
         }
@@ -192,9 +203,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
             canRelease = true
         }
 
-        override fun getSeqVars(vars: IntArray) {
-            Xmp.getSeqVars(vars)
-        }
+        override fun getSeqVars(vars: IntArray) = Xmp.getSeqVars(vars)
 
         override fun getPatternRow(pat: Int, row: Int, rowNotes: ByteArray?, rowInstruments: ByteArray?) {
             if (isAlive) {
@@ -231,17 +240,47 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
 
         Log.i(TAG, "Create service")
 
+        // Init Prefs
         prefs = PreferenceManager.getDefaultSharedPreferences(this)
-        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        remoteControl = RemoteControl(this, audioManager!!)
 
-        hasAudioFocus = requestAudioFocus()
+        // Init Audio Manager
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            oreoFocusHandler = OreoAudioFocusHandler(applicationContext)
+            oreoFocusHandler?.requestAudioFocus(this)
+        } else {
+            audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            @Suppress("DEPRECATION")
+            audioManager?.requestAudioFocus(this, STREAM_MUSIC, AUDIOFOCUS_GAIN)
+        }
 
-        if (!hasAudioFocus)
-            Log.e(TAG, "Can't get audio focus")
+        // Init Media Session
+        mediaSession = MediaSessionCompat(this, TAG)
+        mediaSession!!.setCallback(object : MediaSessionCompat.Callback() {
+            override fun onMediaButtonEvent(mediaButtonEvent: Intent): Boolean {
+                mediaSessionButtons(mediaButtonEvent)
+                return super.onMediaButtonEvent(mediaButtonEvent)
+            }
+        })
+        mediaSession!!.isActive = true
 
-        receiverHelper = ReceiverHelper(this)
-        receiverHelper!!.registerReceivers()
+        headsetPlugReceiver = HeadsetPlugReceiver()
+        val headsetPlugFilter = IntentFilter().apply {
+            addAction(ACTION_AUDIO_BECOMING_NOISY)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                addAction(ACTION_HEADSET_PLUG)
+            } else {
+                addAction(Intent.ACTION_HEADSET_PLUG)
+            }
+        }
+
+        remoteControlReceiver = RemoteControlReceiver()
+        val mediaControlsFilter = IntentFilter().apply {
+            addAction(ACTION_MEDIA_BUTTON)
+            priority = 1000
+        }
+
+        registerReceiver(headsetPlugReceiver, headsetPlugFilter)
+        registerReceiver(remoteControlReceiver, mediaControlsFilter)
 
         var bufferMs = prefs!!.getInt(Preferences.BUFFER_MS, DEFAULT_BUFFER_MS)
         if (bufferMs < MIN_BUFFER_MS) {
@@ -274,8 +313,8 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         watchdog = Watchdog(10)
         watchdog!!.setOnTimeoutListener(object : Watchdog.OnTimeoutListener {
             override fun onTimeout() {
-                Log.e(TAG, "Stopped by watchdog")
-                audioManager!!.abandonAudioFocus(this@PlayerService)
+                Log.w(TAG, "Stopped by watchdog")
+                abandonAudioFocus()
                 stopSelf()
             }
         })
@@ -284,17 +323,35 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
+
+        when (intent.action) {
+            XMP_PLAYER_NEXT -> actionNext()
+            XMP_PLAYER_PREV -> actionPrev()
+            XMP_PLAYER_STOP -> actionStop()
+            XMP_PLAYER_PLAY -> actionPlay()
+            XMP_PLAYER_PAUSE -> actionPause()
+            XMP_PLAYER_HOOK -> actionSmartKeyPlayPause()
+        }
+
+        MediaButtonReceiver.handleIntent(mediaSession, intent)
+
         return START_NOT_STICKY
     }
 
     override fun onDestroy() {
-        receiverHelper!!.unregisterReceivers()
+
+        mediaSession?.isActive = false
 
         watchdog!!.stop()
         notifier!!.cancel()
 
+        abandonAudioFocus()
+
+        unregisterReceiver(headsetPlugReceiver)
+        unregisterReceiver(remoteControlReceiver)
+
         if (audioInitialized)
-            end(if (hasAudioFocus) RESULT_OK else RESULT_NO_AUDIO_FOCUS)
+            end(RESULT_OK)
         else
             end(RESULT_CANT_OPEN_AUDIO)
 
@@ -305,11 +362,6 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         return binder
     }
 
-    private fun requestAudioFocus(): Boolean {
-        return audioManager!!.requestAudioFocus(this, AudioManager.STREAM_MUSIC,
-                AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
-    }
-
     private fun updateNotification() {
         // It seems that queue can be null if we're called from PhoneStateListener
         if (queue != null) {
@@ -317,48 +369,47 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
             if (name.isEmpty()) {
                 name = FileUtils.basename(queue!!.filename)
             }
-            notifier!!.notify(name, Xmp.getModType(), queue!!.index, if (isPlayerPaused) Notifier.TYPE_PAUSE else 0)
+            notifier!!.notify(
+                    name,
+                    Xmp.getModType(),
+                    queue!!.index,
+                    if (isPlayerPaused) Notifier.TYPE_PAUSE else 0
+            )
         }
     }
 
-    private fun doPauseAndNotify() {
-        isPlayerPaused = isPlayerPaused xor true
-        updateNotification()
-        if (isPlayerPaused) {
-            Xmp.stopAudio()
-            remoteControl!!.setStatePaused()
+    private fun actionSmartKeyPlayPause() {
+        isPlayerPaused = if (isPlayerPaused) {
+            actionPlay()
+            false
         } else {
-            remoteControl!!.setStatePlaying()
-            Xmp.restartAudio()
+            actionPause()
+            true
         }
+    }
+
+    private fun actionPlay() {
+        if (isPlayerPaused)
+            notifyPause()
+        isPlayerPaused = false
+        updateNotification()
+        Xmp.restartAudio()
+    }
+
+    private fun actionPause() {
+        isPlayerPaused = true
+        updateNotification()
+        notifyPause()
+        Xmp.stopAudio()
     }
 
     fun actionStop() {
         Xmp.stopModule()
-
-        if (isPlayerPaused)
-            doPauseAndNotify()
-
         cmd = CMD_STOP
+        abandonXmpService()
     }
 
-    fun actionPlayPause() {
-        doPauseAndNotify()
-
-        // Notify clients that we paused
-        val numClients = callbacks.beginBroadcast()
-        for (i in 0 until numClients) {
-            try {
-                callbacks.getBroadcastItem(i).pauseCallback()
-            } catch (e: RemoteException) {
-                Log.e(TAG, "Error notifying pause to client")
-            }
-
-        }
-        callbacks.finishBroadcast()
-    }
-
-    fun actionPrev() {
+    private fun actionPrev() {
         if (Xmp.time() > 2000) {
             Xmp.seek(0)
         } else {
@@ -366,18 +417,31 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
             cmd = CMD_PREV
         }
         if (isPlayerPaused) {
-            doPauseAndNotify()
+            actionPlay()
             discardBuffer = true
         }
     }
 
-    fun actionNext() {
+    private fun actionNext() {
         Xmp.stopModule()
         if (isPlayerPaused) {
-            doPauseAndNotify()
+            actionPlay()
             discardBuffer = true
         }
         cmd = CMD_NEXT
+    }
+
+    // Notify clients that we paused
+    private fun notifyPause() {
+        val numClients = callbacks.beginBroadcast()
+        for (i in 0 until numClients) {
+            try {
+                callbacks.getBroadcastItem(i).pauseCallback()
+            } catch (e: RemoteException) {
+                Log.e(TAG, "Error notifying pause to client")
+            }
+        }
+        callbacks.finishBroadcast()
     }
 
     private fun notifyNewSequence() {
@@ -398,7 +462,6 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
             cmd = CMD_NONE
 
             val vars = IntArray(8)
-            remoteControl!!.setStatePlaying()
 
             var lastRecognized = 0
             do {
@@ -471,11 +534,11 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
 
                 Xmp.startPlayer(sampleRate)
 
-                synchronized(audioManager!!) {
-                    if (ducking) {
-                        Xmp.setPlayer(Xmp.PLAYER_VOLUME, DUCK_VOLUME)
-                    }
-                }
+//                synchronized(audioManager!!) {
+//                    if (isDucking) {
+//                        Xmp.setPlayer(Xmp.PLAYER_VOLUME, DUCK_VOLUME)
+//                    }
+//                }
 
                 var numClients = callbacks.beginBroadcast()
                 for (j in 0 until numClients) {
@@ -513,7 +576,9 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
 
                 do {
                     Xmp.getModVars(vars)
-                    remoteControl!!.setMetadata(Xmp.getModName(), Xmp.getModType(), vars[0].toLong())
+
+                    //TODO - MetaData necessary for mod trackers?
+                    //remoteControl!!.setMetadata(Xmp.getModName(), Xmp.getModType(), vars[0].toLong())
 
                     while (cmd == CMD_NONE) {
                         discardBuffer = false
@@ -527,7 +592,6 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                             }
 
                             watchdog!!.refresh()
-                            receiverHelper!!.checkReceivers()
                         }
 
                         if (discardBuffer) {
@@ -551,7 +615,6 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                         }
 
                         watchdog!!.refresh()
-                        receiverHelper!!.checkReceivers()
                     }
 
                     // Subsong explorer
@@ -560,7 +623,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                     if (allPlayerSequences && cmd == CMD_NONE) {
                         sequenceNumber++
 
-                        Log.w(TAG, "Play sequence $sequenceNumber")
+                        Log.i(TAG, "Play sequence $sequenceNumber")
                         if (Xmp.setSequence(sequenceNumber)) {
                             playNewSequence = true
                             notifyNewSequence()
@@ -579,7 +642,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
 
                     for (j in 0 until numClients) {
                         try {
-                            Log.w(TAG, "Call end of module callback")
+                            Log.i(TAG, "Call end of module callback")
                             callbacks.getBroadcastItem(j).endModCallback()
                         } catch (e: RemoteException) {
                             Log.e(TAG, "Error notifying end of module to client")
@@ -617,20 +680,26 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                 }
             } while (cmd != CMD_STOP && queue!!.next())
 
-            synchronized(playThread!!) {
-                // stop getChannelData update
-                updateData = false
-            }
-
-            watchdog!!.stop()
-            notifier!!.cancel()
-
-            remoteControl!!.setStateStopped()
-            audioManager!!.abandonAudioFocus(this@PlayerService)
-
-            Log.i(TAG, "Stop service")
-            stopSelf()
+            abandonXmpService()
         }
+    }
+
+    private fun abandonXmpService() {
+        abandonAudioFocus()
+
+        synchronized(playThread!!) {
+            // stop getChannelData update
+            updateData = false
+        }
+
+        watchdog!!.stop()
+        notifier!!.cancel()
+
+        playThread?.interrupt()
+
+        Log.i(TAG, "Stop service")
+        stopForeground(true)
+        stopSelf()
     }
 
     private fun end(result: Int) {
@@ -648,67 +717,93 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
 
         isAlive = false
         Xmp.stopModule()
-
-        if (isPlayerPaused)
-            doPauseAndNotify()
-
         Xmp.deinit()
+
+        abandonXmpService()
     }
 
-    // for audio focus loss
-    private fun autoPause(pause: Boolean): Boolean {
-        Log.i(TAG, "Auto pause changed to " + pause + ", previously " + receiverHelper!!.isAutoPaused)
-        if (pause) {
-            previousPaused = isPlayerPaused
-            receiverHelper!!.isAutoPaused = true
-            isPlayerPaused = false                // set to complement, flip on doPause()
-            doPauseAndNotify()
+    private fun audioFocusGain() {
+        if (isDucking) {
+            audioFocusUnDuck()
         } else {
-            if (receiverHelper!!.isAutoPaused && !receiverHelper!!.isHeadsetPaused) {
-                receiverHelper!!.isAutoPaused = false
-                isPlayerPaused = !previousPaused    // set to complement, flip on doPause()
-                doPauseAndNotify()
-            }
+            notifyPause()
+            actionPlay()
         }
+    }
 
-        return receiverHelper!!.isAutoPaused
+    private fun audioFocusLost() {
+        actionPause()
+    }
+
+    private fun audioFocusDuck() {
+        volume = Xmp.getVolume()
+        Xmp.setVolume(DUCK_VOLUME)
+    }
+
+    private fun audioFocusUnDuck() {
+        isDucking = false
+        Xmp.setVolume(volume)
+    }
+
+    private fun abandonAudioFocus() {
+        oreoFocusHandler?.abandonAudioFocus()
+        @Suppress("DEPRECATION")
+        audioManager?.abandonAudioFocus(this)
     }
 
     override fun onAudioFocusChange(focusChange: Int) {
         when (focusChange) {
-            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
-                Log.w(TAG, "AUDIOFOCUS_LOSS_TRANSIENT")
-                // Pause playback
-                autoPause(true)
+            AUDIOFOCUS_GAIN -> {
+                audioFocusGain()
             }
-            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
-                Log.w(TAG, "AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK")
-                // Lower volume
-                synchronized(audioManager!!) {
-                    volume = Xmp.getVolume()
-                    Xmp.setVolume(DUCK_VOLUME)
-                    ducking = true
+            AUDIOFOCUS_LOSS,
+            AUDIOFOCUS_LOSS_TRANSIENT -> {
+                audioFocusLost()
+            }
+            AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
+                audioFocusDuck()
+                isDucking = true
+            }
+        }
+    }
+
+    //So... new API's use MediaSession instead of a Broadcast receiver.
+    //Note: Don't Log anything in here, it slows it down and hooks don't work right
+    private fun mediaSessionButtons(mediaButtonEvent: Intent) {
+        if (mediaButtonEvent.action == ACTION_MEDIA_BUTTON) {
+            val event = mediaButtonEvent.getParcelableExtra(Intent.EXTRA_KEY_EVENT) as KeyEvent
+            if (event.action == KeyEvent.ACTION_UP) {
+                when (event.keyCode) {
+                    //This should handle single button headsets.
+                    KeyEvent.KEYCODE_HEADSETHOOK,
+                    KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> {
+                        hookCount++
+                        hookHandler.removeCallbacks(hookRunnable)
+                        if (hookCount >= 3)
+                            hookHandler.post(hookRunnable)
+                        else
+                            hookHandler.postDelayed(hookRunnable, 500)
+
+                    }
+                    //These [Below] should handle multi-button headsets, etc.
+                    KeyEvent.KEYCODE_MEDIA_PLAY -> actionPlay()
+                    KeyEvent.KEYCODE_MEDIA_PAUSE -> actionPause()
+                    KeyEvent.KEYCODE_MEDIA_PREVIOUS -> actionNext()
+                    KeyEvent.KEYCODE_MEDIA_NEXT -> actionNext()
                 }
-            }
-            AudioManager.AUDIOFOCUS_GAIN -> {
-                Log.w(TAG, "AUDIOFOCUS_GAIN")
-                // Resume playback/raise volume
-                autoPause(false)
-                synchronized(audioManager!!) {
-                    Xmp.setVolume(volume)
-                    ducking = false
-                }
-            }
-            AudioManager.AUDIOFOCUS_LOSS -> {
-                Log.w(TAG, "AUDIOFOCUS_LOSS")
-                // Stop playback
-                actionStop()
             }
         }
     }
 
     companion object {
         private const val TAG = "PlayerService"
+
+        const val XMP_PLAYER_NEXT = "XMP_NEXT"
+        const val XMP_PLAYER_PREV = "XMP_PREV"
+        const val XMP_PLAYER_STOP = "XMP_STOP"
+        const val XMP_PLAYER_PLAY = "XMP_PLAY"
+        const val XMP_PLAYER_PAUSE = "XMP_PAUSE"
+        const val XMP_PLAYER_HOOK = "XMP_HOOK"
 
         const val RESULT_OK = 0
         const val RESULT_CANT_OPEN_AUDIO = 1
@@ -727,5 +822,6 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
 
         var isAlive: Boolean = false
         var isLoaded: Boolean = false
+
     }
 }

@@ -202,21 +202,6 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         return super.onKeyDown(keyCode, event)
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-
-
-        val saveModes = isShuffleMode != readShuffleModePref() || isLoopMode != readLoopModePref()
-
-        if (saveModes) {
-            Log.i(TAG, "Save new file list preferences")
-            val editor = mPrefs.edit()
-            editor.putBoolean(OPTIONS_SHUFFLE_MODE, isShuffleMode)
-            editor.putBoolean(OPTIONS_LOOP_MODE, isLoopMode)
-            editor.apply()
-        }
-    }
-
     public override fun update() {
         updateModlist()
     }
@@ -416,10 +401,5 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
 
     companion object {
         private const val TAG = "BasePlaylistActivity"
-        private const val OPTIONS_SHUFFLE_MODE = "options_shuffleMode"
-        private const val OPTIONS_LOOP_MODE = "options_loopMode"
-        private const val DEFAULT_SHUFFLE_MODE = true
-        private const val DEFAULT_LOOP_MODE = false
-
     }
 }

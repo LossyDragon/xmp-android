@@ -40,7 +40,6 @@ class Sidebar(private val activity: PlayerActivity) {
 
         seqGroup = activity.findViewById<View>(R.id.sidebar_sequences) as RadioGroup
         seqGroupListener = RadioGroup.OnCheckedChangeListener { _, checkedId ->
-            Log.e(TAG, "Selection changed to sequence $checkedId")
             activity.playNewSequence(checkedId)
         }
         seqGroup.setOnCheckedChangeListener(seqGroupListener)

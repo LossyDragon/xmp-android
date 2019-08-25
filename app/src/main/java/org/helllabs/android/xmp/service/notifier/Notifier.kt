@@ -1,17 +1,16 @@
 package org.helllabs.android.xmp.service.notifier
 
-import java.util.Locale
-
-import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.player.PlayerActivity
-import org.helllabs.android.xmp.service.receiver.NotificationActionReceiver
-import org.helllabs.android.xmp.service.utils.QueueManager
-
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.player.PlayerActivity
+import org.helllabs.android.xmp.service.PlayerService
+import org.helllabs.android.xmp.service.receiver.NotificationActionReceiver
+import org.helllabs.android.xmp.service.utils.QueueManager
+import java.util.*
 
 
 abstract class Notifier(protected val service: Service) {
@@ -24,6 +23,7 @@ abstract class Notifier(protected val service: Service) {
     protected val stopIntent: PendingIntent
     protected val pauseIntent: PendingIntent
     protected val nextIntent: PendingIntent
+    protected val playIntent: PendingIntent
 
 
     init {
@@ -31,10 +31,11 @@ abstract class Notifier(protected val service: Service) {
         contentIntent = PendingIntent.getActivity(service, 0, intent, 0)
 
         icon = BitmapFactory.decodeResource(service.resources, R.mipmap.ic_launcher_foreground)
-        prevIntent = makePendingIntent(ACTION_PREV)
-        stopIntent = makePendingIntent(ACTION_STOP)
-        pauseIntent = makePendingIntent(ACTION_PAUSE)
-        nextIntent = makePendingIntent(ACTION_NEXT)
+        prevIntent = makePendingIntent(PlayerService.XMP_PLAYER_PREV)
+        stopIntent = makePendingIntent(PlayerService.XMP_PLAYER_STOP)
+        playIntent = makePendingIntent(PlayerService.XMP_PLAYER_PLAY)
+        pauseIntent = makePendingIntent(PlayerService.XMP_PLAYER_PAUSE)
+        nextIntent = makePendingIntent(PlayerService.XMP_PLAYER_NEXT)
     }
 
     protected fun formatIndex(index: Int): String {
@@ -58,15 +59,9 @@ abstract class Notifier(protected val service: Service) {
     }
 
     companion object {
-
         const val NOTIFY_ID = R.layout.layout_player
 
         const val TYPE_TICKER = 1
         const val TYPE_PAUSE = 2
-
-        const val ACTION_STOP = "org.helllabs.android.xmp.STOP"
-        const val ACTION_PAUSE = "org.helllabs.android.xmp.PAUSE"
-        const val ACTION_PREV = "org.helllabs.android.xmp.PREV"
-        const val ACTION_NEXT = "org.helllabs.android.xmp.NEXT"
     }
 }

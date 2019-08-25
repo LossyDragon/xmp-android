@@ -1,35 +1,24 @@
 package org.helllabs.android.xmp.service.receiver
 
-import org.helllabs.android.xmp.service.notifier.Notifier
-import org.helllabs.android.xmp.util.Log
-
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import org.helllabs.android.xmp.service.PlayerService
 
-
+// Intents for the Action buttons on notification shade
 class NotificationActionReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
-        val action = intent.action
-        Log.i(TAG, "Action " + action!!)
-
-        when (action) {
-            Notifier.ACTION_STOP -> keyCode = STOP
-            Notifier.ACTION_PAUSE -> keyCode = PAUSE
-            Notifier.ACTION_NEXT -> keyCode = NEXT
-            Notifier.ACTION_PREV -> keyCode = PREV
+        when (val action = intent.action) {
+            PlayerService.XMP_PLAYER_STOP,
+            PlayerService.XMP_PLAYER_PREV,
+            PlayerService.XMP_PLAYER_NEXT,
+            PlayerService.XMP_PLAYER_PLAY,
+            PlayerService.XMP_PLAYER_PAUSE -> context.sendBroadcast(action)
         }
     }
 
-    companion object {
-        private const val TAG = "NotificationActionReceiver"
-        const val NO_KEY = -1
-        const val STOP = 1
-        const val PAUSE = 2
-        const val NEXT = 3
-        const val PREV = 4
-        var keyCode = NO_KEY
-    }
-
+//    companion object {
+//        private val TAG = NotificationActionReceiver::class.java.simpleName
+//    }
 }

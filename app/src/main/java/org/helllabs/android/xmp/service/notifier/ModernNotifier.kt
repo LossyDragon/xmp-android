@@ -6,11 +6,9 @@ import android.app.NotificationManager
 import android.app.Service
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import org.helllabs.android.xmp.R
 import androidx.media.app.NotificationCompat as NotiCompatMedia
 
-import org.helllabs.android.xmp.R
-
-@TargetApi(26)
 class ModernNotifier(service: Service) : Notifier(service) {
 
     init {
@@ -43,6 +41,7 @@ class ModernNotifier(service: Service) : Notifier(service) {
             notifyInfo = "(paused)"
         }
 
+        //TODO setShowWhen() / setWhen() play time
         val builder = NotificationCompat.Builder(service, CHANNEL_ID)
                 .setContentTitle(notifyTitle)
                 .setContentText(notifyInfo)
@@ -51,22 +50,23 @@ class ModernNotifier(service: Service) : Notifier(service) {
                 .setSmallIcon(R.drawable.ic_notification)
                 .setLargeIcon(icon)
                 .setOngoing(true)
+                //.setShowWhen(true)
                 .setWhen(0)
+                .setUsesChronometer(true)
                 .setChannelId(CHANNEL_ID)
                 .setStyle(NotiCompatMedia.MediaStyle().setShowActionsInCompactView(1, 2, 3))
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
 
-
         //Action Builders
-        builder.addAction(R.drawable.ic_previous, "Prev", prevIntent)           // 0
+        builder.addAction(R.drawable.ic_previous, "Prev", prevIntent)       // 0
         builder.addAction(R.drawable.ic_stop, "Stop", stopIntent)           // 1
         if (type == TYPE_PAUSE) {
-            builder.addAction(R.drawable.ic_play, "Play", pauseIntent)      // 2a
+            builder.addAction(R.drawable.ic_play, "Play", playIntent)       // 2a
             builder.setContentText("(paused)")
         } else {
             builder.addAction(R.drawable.ic_pause, "Pause", pauseIntent)    // 2b
         }
-        builder.addAction(R.drawable.ic_forward, "Next", nextIntent)           // 3
+        builder.addAction(R.drawable.ic_forward, "Next", nextIntent)        // 3
 
         if (type == TYPE_TICKER) {
             if (queueManager.size() > 1) {

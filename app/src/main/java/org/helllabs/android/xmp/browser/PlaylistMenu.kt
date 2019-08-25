@@ -16,6 +16,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.activity_playlist_menu.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.browser.playlist.Playlist
@@ -74,6 +75,15 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
             layoutManager = LinearLayoutManager(this@PlaylistMenu)
             adapter = playlistAdapter
             registerForContextMenu(this)
+            addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                    if (dy > 0 && playlist_add_button.visibility == View.VISIBLE) {
+                        playlist_add_button.hide(true)
+                    } else if (dy < 0 && playlist_add_button.visibility != View.VISIBLE) {
+                        playlist_add_button.show(true)
+                    }
+                }
+            })
         }
 
         if (!checkStorage()) {
@@ -209,7 +219,7 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
             }
         } else {
             if (index == 0) {
-                val playlist = playlistAdapter!!.getItem(position )
+                val playlist = playlistAdapter!!.getItem(position)
                 val intent = Intent(this@PlaylistMenu, PlaylistAddEdit::class.java)
                 intent.putExtra(PlaylistAddEdit.EXTRA_ID, playlist.id)
                 intent.putExtra(PlaylistAddEdit.EXTRA_NAME, playlist.name)
@@ -231,7 +241,7 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
                 val comment = data.getStringExtra(PlaylistAddEdit.EXTRA_COMMENT)!!
 
                 if (!PlaylistUtils.createEmptyPlaylist(this, name, comment)) {
-                    Log.w(TAG, "Failed to create new Playlist")
+                    Log.e(TAG, "Failed to create new Playlist")
                     error(text = "Failed to create new Playlist")
                 }
 

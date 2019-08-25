@@ -37,7 +37,7 @@ fun Activity.error(@StringRes resId: Int? = null, text: String? = null) {
     }
 }
 
-fun Context.toast(@StringRes resId: Int? = null, text: String? = null) {
+fun Activity.toast(@StringRes resId: Int? = null, text: String? = null) {
     Toast.makeText(this, resId?.let { getString(it) } ?: text, Toast.LENGTH_SHORT).show()
 }
 

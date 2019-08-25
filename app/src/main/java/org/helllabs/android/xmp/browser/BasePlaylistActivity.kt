@@ -50,15 +50,12 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         var loopMode = isLoopMode
         loopMode = loopMode xor true
         (view as ImageButton).setImageResource(if (loopMode) R.drawable.ic_repeat_on else R.drawable.ic_repeat_off)
-
         if (mShowToasts) {
             toast(if (loopMode) R.string.msg_loop_on else R.string.msg_loop_off)
         }
 
-        if (mShowToasts)
-            toast(if (loopMode) R.string.msg_loop_on else R.string.msg_loop_off)
-
         isLoopMode = loopMode
+        saveButtonConfig()
     }
 
     private val toggleShuffleButtonListener = OnClickListener { view ->
@@ -70,6 +67,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         }
 
         isShuffleMode = shuffleMode
+        saveButtonConfig()
     }
 
     // Connection
@@ -110,12 +108,11 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         if (refresh) {
             update()
         }
+    }
 
-        // Change the nav bar color to the list controls sheet color
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-//            @Suppress("DEPRECATION")
-//            window.navigationBarColor = resources.getColor(R.color.section_background)
-//        }
+    override fun onDestroy() {
+        super.onDestroy()
+        saveButtonConfig()
     }
 
     protected abstract fun update()
@@ -128,6 +125,14 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
                 this.isRefreshing = false
             }
         }
+    }
+
+    private fun saveButtonConfig() {
+        Log.i(TAG, "Saving button preferences")
+        val editor = mPrefs.edit()
+        editor.putBoolean(OPTIONS_SHUFFLE_MODE, isShuffleMode)
+        editor.putBoolean(OPTIONS_LOOP_MODE, isLoopMode)
+        editor.apply()
     }
 
     protected fun setupButtons() {
@@ -285,5 +290,10 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         private const val SETTINGS_REQUEST = 45
         private const val PLAY_MOD_REQUEST = 669
         private const val SEARCH_REQUEST = 47
+
+        const val OPTIONS_SHUFFLE_MODE = "options_shuffleMode"
+        const val OPTIONS_LOOP_MODE = "options_loopMode"
+        const val DEFAULT_SHUFFLE_MODE = true
+        const val DEFAULT_LOOP_MODE = false
     }
 }

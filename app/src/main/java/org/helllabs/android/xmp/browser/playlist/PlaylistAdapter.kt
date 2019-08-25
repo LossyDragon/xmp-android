@@ -20,14 +20,16 @@ import java.util.*
 
 class PlaylistAdapter : RecyclerView.Adapter<PlaylistAdapter.ViewHolder>, DraggableItemAdapter<PlaylistAdapter.ViewHolder> {
 
+    val items: MutableList<PlaylistItem>
+    var position: Int = 0
+
     private val typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
     private val playlist: Playlist?
-    val items: MutableList<PlaylistItem>
     private val context: Context
     private var useFilename: Boolean = false
-    var position: Int = 0
-    private var onItemClickListener: OnItemClickListener? = null
     private val layoutType: Int
+
+    private var onItemClickListener: OnItemClickListener? = null
 
     val filenameList: List<String>
         get() {
@@ -56,9 +58,15 @@ class PlaylistAdapter : RecyclerView.Adapter<PlaylistAdapter.ViewHolder>, Dragga
         fun onItemClick(adapter: PlaylistAdapter, view: View, position: Int)
     }
 
+    fun setOnItemClickListener(listener: OnItemClickListener) {
+        onItemClickListener = listener
+    }
+
     override fun getItemCount(): Int = items.size
 
-    class ViewHolder(itemView: View, private val adapter: PlaylistAdapter) : AbstractDraggableItemViewHolder(itemView), View.OnClickListener {
+    class ViewHolder(itemView: View, private val adapter: PlaylistAdapter) :
+            AbstractDraggableItemViewHolder(itemView), View.OnClickListener {
+
         val container: View
         val handle: View?
         val titleText: TextView
@@ -84,10 +92,6 @@ class PlaylistAdapter : RecyclerView.Adapter<PlaylistAdapter.ViewHolder>, Dragga
                 onItemClickListener!!.onItemClick(adapter, view, adapterPosition)
             }
         }
-    }
-
-    fun setOnItemClickListener(listener: OnItemClickListener) {
-        onItemClickListener = listener
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -130,7 +134,8 @@ class PlaylistAdapter : RecyclerView.Adapter<PlaylistAdapter.ViewHolder>, Dragga
             //holder.image.setAlpha(0.5f);
         }
 
-        // See http://stackoverflow.com/questions/26466877/how-to-create-context-menu-for-recyclerview
+        //TODO, maybe have the choice of context menu option, or standard onLongClick
+        //See http://stackoverflow.com/questions/26466877/how-to-create-context-menu-for-recyclerview
         holder.itemView.setOnLongClickListener {
             this@PlaylistAdapter.position = holder.adapterPosition
             false

@@ -31,7 +31,7 @@ class ChannelViewer(context: Context) : Viewer(context) {
     private val bufferXY: FloatArray
     private var holdKey: IntArray? = null
     private var channelNumber: Array<String?>? = null
-    override lateinit var modPlayer: ModInterface
+    override var modPlayer: ModInterface? = null
     private var cols = 1
     private val scopeWidth: Int
     private val scopeHeight: Int
@@ -182,7 +182,7 @@ class ChannelViewer(context: Context) : Viewer(context) {
 
         if (n >= 0) {
             try {
-                modPlayer.mute(n, if (isMuted[n]) 0 else 1)
+                modPlayer?.mute(n, if (isMuted[n]) 0 else 1)
                 isMuted[n] = isMuted[n] xor true
             } catch (e: RemoteException) {
                 Log.e(TAG, "Can't mute channel $n")
@@ -212,7 +212,7 @@ class ChannelViewer(context: Context) : Viewer(context) {
             if (count == 1 && !isMuted[n]) {
                 try {
                     for (i in 0 until chn) {
-                        modPlayer.mute(i, 0)
+                        modPlayer?.mute(i, 0)
                         isMuted[i] = false
                     }
                 } catch (e: RemoteException) {
@@ -222,7 +222,7 @@ class ChannelViewer(context: Context) : Viewer(context) {
             } else {
                 try {
                     for (i in 0 until chn) {
-                        modPlayer.mute(i, if (i != n) 1 else 0)
+                        modPlayer?.mute(i, if (i != n) 1 else 0)
                         isMuted[i] = i != n
                     }
                 } catch (e: RemoteException) {
