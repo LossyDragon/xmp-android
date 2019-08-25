@@ -42,10 +42,6 @@ abstract class Notifier(protected val service: Service) {
         return String.format(Locale.US, "%d/%d", index + 1, queueManager.size())
     }
 
-    fun cancel() {
-        service.stopForeground(true)
-    }
-
     private fun makePendingIntent(action: String): PendingIntent {
         val intent = Intent(service, NotificationActionReceiver::class.java)
         intent.action = action

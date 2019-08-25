@@ -41,18 +41,17 @@ class ModernNotifier(service: Service) : Notifier(service) {
             notifyInfo = "(paused)"
         }
 
-        //TODO setShowWhen() / setWhen() play time
         val builder = NotificationCompat.Builder(service, CHANNEL_ID)
                 .setContentTitle(notifyTitle)
                 .setContentText(notifyInfo)
                 .setContentInfo(indexText)
                 .setContentIntent(contentIntent)
                 .setSmallIcon(R.drawable.ic_notification)
+                .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setLargeIcon(icon)
                 .setOngoing(true)
-                //.setShowWhen(true)
+                .setShowWhen(true)
                 .setWhen(0)
-                .setUsesChronometer(true)
                 .setChannelId(CHANNEL_ID)
                 .setStyle(NotiCompatMedia.MediaStyle().setShowActionsInCompactView(1, 2, 3))
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)

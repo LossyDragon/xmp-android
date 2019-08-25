@@ -7,6 +7,8 @@ import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.os.Build
 
+//https://developer.android.com/guide/topics/media-apps/audio-focus#audio-focus-8-0
+
 @TargetApi(Build.VERSION_CODES.O)
 class OreoAudioFocusHandler constructor(val context: Context) {
     private var audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
@@ -16,17 +18,16 @@ class OreoAudioFocusHandler constructor(val context: Context) {
         audioManager.abandonAudioFocusRequest(audioFocusRequest)
     }
 
-    fun requestAudioFocus(audioFocusChangeListener: AudioManager.OnAudioFocusChangeListener) {
-        val audioAttributes = AudioAttributes.Builder().apply {
-            setUsage(AudioAttributes.USAGE_MEDIA)
-            setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-        }.build()
-
+    fun requestAudioFocus(audioFocusChangeListener: AudioManager.OnAudioFocusChangeListener): Int {
         audioFocusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN).apply {
             setOnAudioFocusChangeListener(audioFocusChangeListener)
-            setAudioAttributes(audioAttributes)
+            setAudioAttributes(AudioAttributes.Builder().run {
+                setUsage(AudioAttributes.USAGE_MEDIA)
+                setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                        .build()
+            })
         }.build()
 
-        audioManager.requestAudioFocus(audioFocusRequest)
+        return audioManager.requestAudioFocus(audioFocusRequest)
     }
 }

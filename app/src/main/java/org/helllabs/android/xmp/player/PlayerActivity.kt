@@ -298,6 +298,8 @@ class PlayerActivity : Activity() {
                         control_player_time.text = s
                     }
 
+                    modPlayer!!.currentPlayTime(t)
+
                     oldTime = info!!.time
                     oldShowElapsed = showElapsed
                 }

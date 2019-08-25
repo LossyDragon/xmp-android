@@ -244,6 +244,11 @@
         <receiver android:name=".service.receiver.HeadsetPlugReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.ACTION_HEADSET_PLUG" />
+            </intent-filter>
+        </receiver>
+
+        <receiver android:name=".service.receiver.NoisyReceiver">
+            <intent-filter>
                 <action android:name="android.media.AUDIO_BECOMING_NOISY" />
             </intent-filter>
         </receiver>
