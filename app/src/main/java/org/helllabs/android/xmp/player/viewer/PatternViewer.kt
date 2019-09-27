@@ -1,16 +1,11 @@
 package org.helllabs.android.xmp.player.viewer
 
-import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.player.Util
-import org.helllabs.android.xmp.service.ModInterface
-
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.Rect
-import android.graphics.Typeface
+import android.graphics.*
 import android.os.RemoteException
+import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.player.to02X
+import org.helllabs.android.xmp.service.ModInterface
 
 
 // http://developer.android.com/guide/topics/graphics/2d-graphics.html
@@ -36,7 +31,6 @@ class PatternViewer(context: Context) : Viewer(context) {
     private val rect = Rect()
 
     init {
-
         notePaint.setARGB(255, 140, 140, 160)
         notePaint.typeface = Typeface.MONOSPACE
         notePaint.textSize = fontSize.toFloat()
@@ -81,7 +75,7 @@ class PatternViewer(context: Context) : Viewer(context) {
 
         val c = CharArray(2)
         for (i in 0..255) {
-            Util.to02X(c, i)
+            to02X(c, i)
             hexByte[i] = String(c)
         }
     }
@@ -191,7 +185,7 @@ class PatternViewer(context: Context) : Viewer(context) {
 
                     modPlayer.getPatternRow(pat, lineInPattern, rowNotes, rowInstruments)
                 } catch (e: RemoteException) {
-                    // fail silenty
+                    // fail silently
                 }
 
                 x = (3 + j * 6) * fontWidth - posX.toInt()
@@ -227,6 +221,8 @@ class PatternViewer(context: Context) : Viewer(context) {
     }
 
     companion object {
+        private val TAG = PatternViewer::class.java.simpleName
+
         private const val MAX_NOTES = 120
 
         private val NOTES = arrayOf("C ", "C#", "D ", "D#", "E ", "F ", "F#", "G ", "G#", "A ", "A#", "B ")

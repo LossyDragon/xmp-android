@@ -41,7 +41,7 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         }
 
     override val allFiles: List<String>
-        get() = mPlaylistAdapter!!.filenameList
+        get() = mPlaylistAdapter.filenameList
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -66,7 +66,7 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
 
         // adapter
         mPlaylistAdapter = PlaylistAdapter(this, mPlaylist!!, useFilename, PlaylistAdapter.LAYOUT_DRAG)
-        mWrappedAdapter = mRecyclerViewDragDropManager!!.createWrappedAdapter(mPlaylistAdapter!!)
+        mWrappedAdapter = mRecyclerViewDragDropManager!!.createWrappedAdapter(mPlaylistAdapter)
 
         setSwipeRefresh(swipeContainer)
 
@@ -79,7 +79,7 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
 
         mRecyclerViewDragDropManager!!.attachRecyclerView(plist_list)
 
-        mPlaylistAdapter!!.setOnItemClickListener(this)
+        mPlaylistAdapter.setOnItemClickListener(this)
 
         current_list_name.text = name
         current_list_description.text = mPlaylist!!.comment
@@ -91,7 +91,7 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
     override fun onResume() {
         super.onResume()
 
-        mPlaylistAdapter!!.setUseFilename(mPrefs.getBoolean(Preferences.USE_FILENAME, false))
+        mPlaylistAdapter.setUseFilename(mPrefs.getBoolean(Preferences.USE_FILENAME, false))
         update()
     }
 
@@ -117,19 +117,19 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
             WrapperAdapterUtils.releaseAll(mWrappedAdapter)
             mWrappedAdapter = null
         }
-        mPlaylistAdapter = null
+        mPlaylistAdapter.clear()
 
         super.onDestroy()
     }
 
     public override fun update() {
-        mPlaylistAdapter!!.notifyDataSetChanged()
+        mPlaylistAdapter.notifyDataSetChanged()
     }
 
     // Playlist context menu
     override fun onCreateContextMenu(menu: ContextMenu, view: View, menuInfo: ContextMenuInfo?) {
 
-        val mode = Integer.parseInt(mPrefs.getString(Preferences.PLAYLIST_MODE, "1")!!)
+        val mode = mPrefs.getInt(Preferences.PLAYLIST_MODE, 1)
 
         menu.setHeaderTitle("Edit playlist")
         menu.add(Menu.NONE, 0, 0, "Remove from playlist")
@@ -145,23 +145,25 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
 
     override fun onContextItemSelected(item: MenuItem): Boolean {
         val itemId = item.itemId
-        val position = mPlaylistAdapter!!.position
+        val position = mPlaylistAdapter.position
 
         when (itemId) {
             // Remove from playlist
             0 -> {
-                mPlaylist!!.remove(position)
-                mPlaylist!!.commit()
+                mPlaylist!!.run {
+                    remove(position)
+                    commit()
+                }
                 update()
             }
             // Add to play queue
-            1 -> addToQueue(mPlaylistAdapter!!.getFilename(position))
+            1 -> addToQueue(mPlaylistAdapter.getFilename(position))
             // Add all to play queue
-            2 -> addToQueue(mPlaylistAdapter!!.filenameList)
+            2 -> addToQueue(mPlaylistAdapter.filenameList)
             // Play only this module
-            3 -> playModule(mPlaylistAdapter!!.getFilename(position))
+            3 -> playModule(mod = mPlaylistAdapter.getFilename(position))
             // Play all starting here
-            4 -> playModule(mPlaylistAdapter!!.filenameList, position)
+            4 -> playModule(modList = mPlaylistAdapter.filenameList, start = position)
         }
 
         return true

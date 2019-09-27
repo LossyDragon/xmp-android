@@ -1,6 +1,5 @@
 package org.helllabs.android.xmp.player.viewer
 
-import org.helllabs.android.xmp.player.ScreenSizeHelper
 import org.helllabs.android.xmp.service.ModInterface
 import org.helllabs.android.xmp.util.Log
 
@@ -12,6 +11,7 @@ import android.view.MotionEvent
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.view.View
+import org.helllabs.android.xmp.player.getScreenSize
 import kotlin.math.abs
 
 
@@ -133,7 +133,7 @@ abstract class Viewer(context: Context) : SurfaceView(context), SurfaceHolder.Ca
 
         setupTouch()
 
-        screenSize = ScreenSizeHelper().getScreenSize(context)
+        screenSize = context.getScreenSize()
     }
 
     private fun setupHolder() {
@@ -172,8 +172,6 @@ abstract class Viewer(context: Context) : SurfaceView(context), SurfaceHolder.Ca
     }
 
     open fun setup(modPlayer: ModInterface, modVars: IntArray) {
-        Log.i(TAG, "Viewer setup")
-
         val chn = modVars[3]
         this.modVars = modVars
         this.modPlayer = modPlayer

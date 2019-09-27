@@ -43,7 +43,7 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
      */
     private val addRecursiveToPlaylistChoice = object : PlaylistChoice {
         override fun execute(fileSelection: Int, playlistSelection: Int) {
-            PlaylistUtils.filesToPlaylist(this@FilelistActivity, recursiveList(mPlaylistAdapter!!.getFile(fileSelection)),
+            PlaylistUtils.filesToPlaylist(this@FilelistActivity, recursiveList(mPlaylistAdapter.getFile(fileSelection)),
                     PlaylistUtils.getPlaylistName(playlistSelection))
         }
     }
@@ -53,7 +53,7 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
      */
     private val addFileToPlaylistChoice = object : PlaylistChoice {
         override fun execute(fileSelection: Int, playlistSelection: Int) {
-            PlaylistUtils.filesToPlaylist(this@FilelistActivity, mPlaylistAdapter!!.getFilename(fileSelection),
+            PlaylistUtils.filesToPlaylist(this@FilelistActivity, mPlaylistAdapter.getFilename(fileSelection),
                     PlaylistUtils.getPlaylistName(playlistSelection))
         }
 
@@ -64,7 +64,7 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
      */
     private val addFileListToPlaylistChoice = object : PlaylistChoice {
         override fun execute(fileSelection: Int, playlistSelection: Int) {
-            PlaylistUtils.filesToPlaylist(this@FilelistActivity, mPlaylistAdapter!!.filenameList,
+            PlaylistUtils.filesToPlaylist(this@FilelistActivity, mPlaylistAdapter.filenameList,
                     PlaylistUtils.getPlaylistName(playlistSelection))
         }
     }
@@ -80,7 +80,7 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
     }
 
     override fun onItemClick(adapter: PlaylistAdapter, view: View, position: Int) {
-        val file = mPlaylistAdapter!!.getFile(position)
+        val file = mPlaylistAdapter.getFile(position)
 
         if (mNavigation!!.changeDirectory(file)) {
             mNavigation!!.saveListPosition(modlist_listview)
@@ -127,7 +127,7 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
 
         // Adapter
         mPlaylistAdapter = PlaylistAdapter(this, ArrayList(), false, PlaylistAdapter.LAYOUT_LIST)
-        mPlaylistAdapter!!.setOnItemClickListener(this)
+        mPlaylistAdapter.setOnItemClickListener(this)
 
         modlist_listview.apply {
             layoutManager = LinearLayoutManager(this@FilelistActivity)
@@ -209,7 +209,7 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
     private fun updateModlist() {
         val modDir = mNavigation!!.currentDir ?: return
 
-        mPlaylistAdapter!!.clear()
+        mPlaylistAdapter.clear()
 
         current_path!!.text = modDir.path
 
@@ -231,8 +231,8 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         }
         list.sort()
         PlaylistUtils.renumberIds(list)
-        mPlaylistAdapter!!.addList(list)
-        mPlaylistAdapter!!.notifyDataSetChanged()
+        mPlaylistAdapter.addList(list)
+        mPlaylistAdapter.notifyDataSetChanged()
 
         mCrossfade!!.crossfade()
     }
@@ -283,9 +283,9 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
 
         isPathMenu = false
 
-        val position = mPlaylistAdapter!!.position
+        val position = mPlaylistAdapter.position
 
-        if (mPlaylistAdapter!!.getFile(position)!!.isDirectory) {
+        if (mPlaylistAdapter.getFile(position)!!.isDirectory) {
             // For directory
             menu.setHeaderTitle("This directory")
             menu.add(Menu.NONE, 0, 0, "Add to playlist")
@@ -294,7 +294,7 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
             menu.add(Menu.NONE, 3, 3, "Delete directory")
         } else {
             // For files
-            val mode = Integer.parseInt(mPrefs.getString(Preferences.PLAYLIST_MODE, "1")!!)
+            val mode = mPrefs.getInt(Preferences.PLAYLIST_MODE, 1)
 
             menu.setHeaderTitle("This file")
             menu.add(Menu.NONE, 0, 0, "Add to playlist")
@@ -312,31 +312,31 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
             when (item.itemId) {
                 0 -> choosePlaylist(0, addFileListToPlaylistChoice)     // Add all to playlist
                 1 -> choosePlaylist(0, addCurrentRecursiveChoice)       // Add all to queue // Recursive add to playlist
-                2 -> addToQueue(mPlaylistAdapter!!.filenameList)                // Add all to queue
+                2 -> addToQueue(mPlaylistAdapter.filenameList)                // Add all to queue
                 3 -> setDefaultPath()                                           // Set as default path
-                4 -> clearCachedEntries(mPlaylistAdapter!!.filenameList)        // Clear cache
+                4 -> clearCachedEntries(mPlaylistAdapter.filenameList)        // Clear cache
             }
 
             return true
         }
 
-        val position = mPlaylistAdapter!!.position
+        val position = mPlaylistAdapter.position
 
-        if (mPlaylistAdapter!!.getFile(position)!!.isDirectory) {
+        if (mPlaylistAdapter.getFile(position)!!.isDirectory) {
             // Directories
             when (item.itemId) {
                 0 -> choosePlaylist(position, addRecursiveToPlaylistChoice)             // Add to playlist (recursive)
-                1 -> addToQueue(recursiveList(mPlaylistAdapter!!.getFile(position)))    // Add to play queue (recursive)
-                2 -> playModule(recursiveList(mPlaylistAdapter!!.getFile(position)))    // Play now (recursive)
+                1 -> addToQueue(recursiveList(mPlaylistAdapter.getFile(position)))    // Add to play queue (recursive)
+                2 -> playModule(modList = recursiveList(mPlaylistAdapter.getFile(position)))    // Play now (recursive)
                 3 -> deleteDirectory(position)                                          // delete directory
             }
         } else {
             // Files
             when (item.itemId) {
                 0 -> choosePlaylist(position, addFileToPlaylistChoice)      //   Add to playlist
-                1 -> addToQueue(mPlaylistAdapter!!.getFilename(position))   //   Add to queue
-                2 -> playModule(mPlaylistAdapter!!.getFilename(position))   //   Play this module
-                3 -> playModule(mPlaylistAdapter!!.filenameList, position)  //   Play all starting here
+                1 -> addToQueue(mPlaylistAdapter.getFilename(position))   //   Add to queue
+                2 -> playModule(mod = mPlaylistAdapter.getFilename(position))  //   Play this module
+                3 -> playModule(modList = mPlaylistAdapter.filenameList, start = position)  //   Play all starting here
                 4 -> deleteFile(position)                                   //   Delete file
             }
         }
@@ -352,7 +352,7 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
     }
 
     private fun deleteDirectory(position: Int) {
-        val deleteName = mPlaylistAdapter!!.getFilename(position)
+        val deleteName = mPlaylistAdapter.getFilename(position)
         val mediaPath = mPrefs.getString(Preferences.MEDIA_PATH, Preferences.DEFAULT_MEDIA_PATH)
 
         if (deleteName.startsWith(mediaPath!!) && deleteName != mediaPath) {
@@ -371,7 +371,7 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
     }
 
     private fun deleteFile(position: Int) {
-        val deleteName = mPlaylistAdapter!!.getFilename(position)
+        val deleteName = mPlaylistAdapter.getFilename(position)
         yesNoDialog("Delete", "Are you sure you want to delete " + FileUtils.basename(deleteName) + "?", Runnable {
             if (InfoCache.delete(deleteName)) {
                 updateModlist()
@@ -389,10 +389,10 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
             return list
 
         file.walkTopDown().forEach {
-            println("Walking ${it.path}")
+            //println("Walking ${it.path}")
             if (!it.isDirectory) {
                 list.add(it.path)
-                println("added ${it.path}")
+                //..println("added ${it.path}")
             }
         }
 

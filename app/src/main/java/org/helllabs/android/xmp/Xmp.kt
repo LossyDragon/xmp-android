@@ -17,7 +17,7 @@ object Xmp {
     const val PLAYER_INTERP = 2        // Interpolation type
     const val PLAYER_DSP = 3            // DSP effect flags
     const val PLAYER_CFLAGS = 5      // Current module flags
-    const val PLAYER_VOLUME = 7        // Player volume (for audio focus duck)
+    //const val PLAYER_VOLUME = 7        // Player volume (for audio focus duck)
     const val PLAYER_DEFPAN = 10        // Default pan separation
 
     // Interpolation types

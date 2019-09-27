@@ -1,7 +1,6 @@
 package org.helllabs.android.xmp.util
 
 import android.app.Activity
-import android.content.Context
 import android.content.SharedPreferences
 import android.text.Editable
 import android.text.TextWatcher

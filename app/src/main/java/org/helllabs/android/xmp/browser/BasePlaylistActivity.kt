@@ -33,16 +33,17 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     private var mShowToasts: Boolean = false
     private var mModPlayer: ModInterface? = null
     private var mAddList: MutableList<String>? = null
-    protected lateinit var mPrefs: SharedPreferences
-    protected var mPlaylistAdapter: PlaylistAdapter? = null
     private var refresh: Boolean = false
+
+    protected lateinit var mPrefs: SharedPreferences
+    protected lateinit var mPlaylistAdapter: PlaylistAdapter
 
     private val playAllButtonListener = OnClickListener {
         val list = allFiles
         if (list.isEmpty()) {
             toast(R.string.error_no_files_to_play)
         } else {
-            playModule(list)
+            playModule(modList = list)
         }
     }
 
@@ -70,7 +71,6 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         saveButtonConfig()
     }
 
-    // Connection
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             mModPlayer = ModInterface.Stub.asInterface(service)
@@ -105,9 +105,8 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (refresh) {
+        if (refresh)
             update()
-        }
     }
 
     override fun onDestroy() {
@@ -122,34 +121,41 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
             setColorSchemeResources(R.color.refresh_color)
             setOnRefreshListener {
                 update()
-                this.isRefreshing = false
+                isRefreshing = false
             }
         }
     }
 
     private fun saveButtonConfig() {
         Log.i(TAG, "Saving button preferences")
-        val editor = mPrefs.edit()
-        editor.putBoolean(OPTIONS_SHUFFLE_MODE, isShuffleMode)
-        editor.putBoolean(OPTIONS_LOOP_MODE, isLoopMode)
-        editor.apply()
+        mPrefs.edit().run {
+            putBoolean(OPTIONS_SHUFFLE_MODE, isShuffleMode)
+            putBoolean(OPTIONS_LOOP_MODE, isLoopMode)
+            apply()
+        }
     }
 
     protected fun setupButtons() {
-        control_button_play.setImageResource(R.drawable.ic_play)
-        control_button_play.setOnClickListener(playAllButtonListener)
+        control_button_play.apply {
+            setImageResource(R.drawable.ic_play)
+            setOnClickListener(playAllButtonListener)
+        }
 
-        control_button_loop.setImageResource(if (isLoopMode) R.drawable.ic_repeat_on else R.drawable.ic_repeat_off)
-        control_button_loop.setOnClickListener(toggleLoopButtonListener)
+        control_button_loop.apply {
+            setImageResource(if (isLoopMode) R.drawable.ic_repeat_on else R.drawable.ic_repeat_off)
+            setOnClickListener(toggleLoopButtonListener)
+        }
 
-        control_button_shuffle.setImageResource(if (isShuffleMode) R.drawable.ic_shuffle_on else R.drawable.ic_shuffle_off)
-        control_button_shuffle.setOnClickListener(toggleShuffleButtonListener)
+        control_button_shuffle.apply {
+            setImageResource(if (isShuffleMode) R.drawable.ic_shuffle_on else R.drawable.ic_shuffle_off)
+            setOnClickListener(toggleShuffleButtonListener)
+        }
     }
 
     open fun onItemClick(adapter: PlaylistAdapter, view: View, position: Int) {
         val filename = adapter.getItem(position).file!!.path
 
-        val mode = Integer.parseInt(mPrefs.getString(Preferences.PLAYLIST_MODE, "1")!!)
+        val mode = mPrefs.getInt(Preferences.PLAYLIST_MODE, 1)
 
         /*
          * Test module again if invalid, in case a new file format is added to the
@@ -161,11 +167,11 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
                 1 -> {
                     val count = position - adapter.directoryCount
                     if (count >= 0) {
-                        playModule(adapter.filenameList, count, isShuffleMode)
+                        playModule(modList = adapter.filenameList, start = count, keepFirst = isShuffleMode)
                     }
                 }
                 // play this one
-                2 -> playModule(filename)
+                2 -> playModule(mod = filename)
                 // add to queue
                 3 -> {
                     addToQueue(filename)
@@ -177,30 +183,23 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         }
     }
 
+    // Play this module or all modules in list
+    protected fun playModule(mod: String? = null,
+                             modList: List<String>? = null,
+                             start: Int = 0,
+                             keepFirst: Boolean = false) {
 
-    // Play this module
-    protected fun playModule(mod: String) {
-        val modList = ArrayList<String>()
-        modList.add(mod)
-        playModule(modList, 0, false)
-    }
+        XmpApplication.instance!!.fileList = if (!mod.isNullOrEmpty())
+            mutableListOf(mod)
+        else
+            modList!!.toMutableList()
 
-    // Play all modules in list and honor default shuffle mode
-    protected fun playModule(modList: List<String>) {
-        playModule(modList, 0, false)
-    }
-
-    protected fun playModule(modList: List<String>, start: Int) {
-        playModule(modList, start, false)
-    }
-
-    private fun playModule(modList: List<String>, start: Int, keepFirst: Boolean) {
-        val intent = Intent(this, PlayerActivity::class.java)
-        (application as XmpApplication).fileList = modList.toMutableList()
-        intent.putExtra(PlayerActivity.PARM_SHUFFLE, isShuffleMode)
-        intent.putExtra(PlayerActivity.PARM_LOOP, isLoopMode)
-        intent.putExtra(PlayerActivity.PARM_START, start)
-        intent.putExtra(PlayerActivity.PARM_KEEPFIRST, keepFirst)
+        val intent = Intent(this, PlayerActivity::class.java).apply {
+            putExtra(PlayerActivity.PARM_SHUFFLE, isShuffleMode)
+            putExtra(PlayerActivity.PARM_LOOP, isLoopMode)
+            putExtra(PlayerActivity.PARM_START, start)
+            putExtra(PlayerActivity.PARM_KEEPFIRST, keepFirst)
+        }
         Log.i(TAG, "Start Player activity")
         startActivityForResult(intent, PLAY_MOD_REQUEST)
     }
@@ -257,7 +256,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
                 mAddList = realList
                 bindService(service, connection, 0)
             } else {
-                playModule(realList)
+                playModule(modList = realList)
             }
         }
     }

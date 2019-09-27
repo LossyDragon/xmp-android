@@ -43,10 +43,6 @@ class XmpApplication : Application() {
         applyTheme(themePref!!)
     }
 
-    fun clearFileList() {
-        fileList = null
-    }
-
     companion object {
         private const val LIGHT_MODE = "light"
         private const val DARK_MODE = "dark"

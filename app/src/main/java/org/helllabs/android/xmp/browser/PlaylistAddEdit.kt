@@ -18,14 +18,15 @@ class PlaylistAddEdit : AppCompatActivity() {
         supportActionBar?.setHomeAsUpIndicator(R.drawable.ic_close)
 
         if (intent.hasExtra(EXTRA_ID)) {
+            title = intent.getStringExtra(EXTRA_NAME)
+
             playlist_add_edit_name_editText.setText(intent.getStringExtra(EXTRA_NAME))
             playlist_add_edit_comment_editText.setText(intent.getStringExtra(EXTRA_COMMENT))
-
-            title = playlist_add_edit_name_editText.text.toString()
-
             button_add_edit_playlist.text = getString(R.string.button_playlist_update)
-            button_delete_playlist.visibility = View.VISIBLE
-            button_delete_playlist.text = String.format(getString(R.string.button_playlist_delete), title)
+            button_delete_playlist.apply {
+                visibility = View.VISIBLE
+                text = String.format(getString(R.string.button_playlist_delete), title)
+            }
 
         } else {
             title = getString(R.string.new_playlist)
@@ -52,8 +53,10 @@ class PlaylistAddEdit : AppCompatActivity() {
 
         //Check if name is empty.
         if (name.trim().isBlank()) {
-            playlist_add_edit_name_layout.isErrorEnabled = true
-            playlist_add_edit_name_layout.error = getString(R.string.error_playlist_name)
+            playlist_add_edit_name_layout.apply {
+                isErrorEnabled = true
+                error = getString(R.string.error_playlist_name)
+            }
             playlist_add_edit_name_editText.requestFocus()
             return
         }

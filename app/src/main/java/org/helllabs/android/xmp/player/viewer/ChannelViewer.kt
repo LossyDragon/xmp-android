@@ -8,7 +8,7 @@ import android.os.RemoteException
 import android.view.Surface
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
-import org.helllabs.android.xmp.player.Util
+import org.helllabs.android.xmp.player.to2d
 import org.helllabs.android.xmp.service.ModInterface
 import org.helllabs.android.xmp.util.Log
 
@@ -43,7 +43,6 @@ class ChannelViewer(context: Context) : Viewer(context) {
     private val keyRow = IntArray(Xmp.MAX_CHANNELS)
 
     init {
-
         val font2Size = resources.getDimensionPixelSize(R.dimen.channelview_channel_font_size)
 
         scopePaint = Paint()
@@ -113,7 +112,7 @@ class ChannelViewer(context: Context) : Viewer(context) {
         // This is much faster than String.format
         val c = CharArray(2)
         for (i in 0 until chn) {
-            Util.to2d(c, i + 1)
+            to2d(c, i + 1)
             channelNumber!![i] = String(c)
         }
     }

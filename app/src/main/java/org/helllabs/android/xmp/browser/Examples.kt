@@ -3,6 +3,7 @@ package org.helllabs.android.xmp.browser
 import android.content.Context
 import org.helllabs.android.xmp.util.Log
 import java.io.*
+import java.lang.Exception
 
 
 object Examples {
@@ -42,20 +43,22 @@ object Examples {
         return 0
     }
 
-    private fun copyAsset(`in`: InputStream, dst: String) {
-
-        Log.i(TAG, "copying asset")
-
+    private fun copyAsset(inputStream: InputStream, destination: String) {
         try {
-            val out = FileOutputStream(File(dst))
+            Log.i(TAG, "copying asset")
+            val file = File(destination)
+            val out = FileOutputStream(file)
 
-            `in`.copyTo(out, 1024)
-
-            `in`.close()
+            inputStream.copyTo(out, 1024)
+            inputStream.close()
             out.close()
-
-        } catch (ignored: FileNotFoundException) {
-        } catch (ignored: IOException) {
+        } catch (e: Exception) {
+            when (e) {
+                is FileNotFoundException ->
+                    Log.e(TAG, "copyAsset FileNotFoundException")
+                is IOException ->
+                    Log.e(TAG, "copyAsset IOException")
+            }
         }
     }
 }

@@ -29,7 +29,6 @@ import org.helllabs.android.xmp.preferences.Preferences
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.util.*
 import java.io.File
-import java.util.*
 
 class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
     private var prefs: SharedPreferences? = null
@@ -39,17 +38,15 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
     override fun onCreate(icicle: Bundle?) {
         super.onCreate(icicle)
         setContentView(R.layout.activity_playlist_menu)
+        setSupportActionBar(toolbar)
 
         // Init prefs
         prefs = PreferenceManager.getDefaultSharedPreferences(this)
 
         Log.i(TAG, "start application")
 
-        setSupportActionBar(toolbar)
-
-        title = ""  // Custom toolbar has a TextView as a button
-
-        toolbar_title.setOnClickListener { startPlayerActivity() }
+//        title = ""  // Custom toolbar has a TextView as a button
+//        toolbar_title.setOnClickListener { startPlayerActivity() }
 
         // Swipe refresh
         swipeContainer.apply {
@@ -68,7 +65,7 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
             )
         }
 
-        playlistAdapter = PlaylistAdapter(this@PlaylistMenu, ArrayList(), false, PlaylistAdapter.LAYOUT_CARD)
+        playlistAdapter = PlaylistAdapter(this@PlaylistMenu, mutableListOf(), false, PlaylistAdapter.LAYOUT_CARD)
         playlistAdapter!!.setOnItemClickListener(this)
 
         plist_menu_list.apply {
@@ -78,9 +75,9 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     if (dy > 0 && playlist_add_button.visibility == View.VISIBLE) {
-                        playlist_add_button.hide(true)
+                        playlist_add_button.hide()
                     } else if (dy < 0 && playlist_add_button.visibility != View.VISIBLE) {
-                        playlist_add_button.show(true)
+                        playlist_add_button.show()
                     }
                 }
             })

@@ -22,7 +22,6 @@ class InstrumentViewer(context: Context) : Viewer(context) {
     private val rect = Rect()
 
     init {
-
         for (i in 0..7) {
             val `val` = 120 + 10 * i
             insPaint[i] = Paint()

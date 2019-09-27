@@ -237,9 +237,10 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, FetchO
 
             modList.add(path)
 
-            val intent = Intent(this, PlayerActivity::class.java)
-            (application as XmpApplication).fileList = modList
-            intent.putExtra(PlayerActivity.PARM_START, 0)
+            val intent = Intent(this, PlayerActivity::class.java).apply {
+                putExtra(PlayerActivity.PARM_START, 0)
+            }
+            XmpApplication.instance!!.fileList = modList
             Log.i(TAG, "Play $path")
             startActivity(intent)
 

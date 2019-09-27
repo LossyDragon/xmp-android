@@ -213,9 +213,9 @@ class PlayerActivity : Activity() {
         private val s = StringBuilder()
 
         override fun run() {
-            val p = paused
+            val isPaused = paused
 
-            if (!p) {
+            if (!isPaused) {
                 // update seekbar
                 if (!seeking && playTime >= 0) {
                     control_player_seek.progress = playTime
@@ -245,19 +245,19 @@ class PlayerActivity : Activity() {
                     s.delete(0, s.length)
 
                     s.append("Speed:")
-                    Util.to02X(c, info!!.values[5])
+                    to02X(c, info!!.values[5])
                     s.append(c)
 
                     s.append(" BPM:")
-                    Util.to02X(c, info!!.values[6])
+                    to02X(c, info!!.values[6])
                     s.append(c)
 
                     s.append(" Pos:")
-                    Util.to02X(c, info!!.values[0])
+                    to02X(c, info!!.values[0])
                     s.append(c)
 
                     s.append(" Pat:")
-                    Util.to02X(c, info!!.values[1])
+                    to02X(c, info!!.values[1])
                     s.append(c)
 
                     control_player_info.text = s
@@ -278,10 +278,10 @@ class PlayerActivity : Activity() {
                     s.delete(0, s.length)
 
                     if (showElapsed) {
-                        Util.to2d(c, t / 60)
+                        to2d(c, t / 60)
                         s.append(c)
                         s.append(':')
-                        Util.to02d(c, t % 60)
+                        to02d(c, t % 60)
                         s.append(c)
 
                         control_player_time.text = s
@@ -289,10 +289,10 @@ class PlayerActivity : Activity() {
                         t = totalTime - t
 
                         s.append('-')
-                        Util.to2d(c, t / 60)
+                        to2d(c, t / 60)
                         s.append(c)
                         s.append(':')
-                        Util.to02d(c, t % 60)
+                        to02d(c, t % 60)
                         s.append(c)
 
                         control_player_time.text = s
@@ -303,11 +303,11 @@ class PlayerActivity : Activity() {
                     oldTime = info!!.time
                     oldShowElapsed = showElapsed
                 }
-            } // !p
+            }
 
             // always call viewer update (for scrolls during pause)
             synchronized(viewer_layout!!) {
-                viewer?.update(info!!, p)
+                viewer?.update(info!!, isPaused)
             }
         }
     }
@@ -332,8 +332,7 @@ class PlayerActivity : Activity() {
         control_player_seek.max = time / 100
         toast(text = "New sequence duration: " + String.format("%d:%02d", time / 60000, time / 1000 % 60))
 
-        val sequence = modVars[7]
-        sidebar!!.selectSequence(sequence)
+        sidebar!!.selectSequence(modVars[7])
     }
 
     private val showNewModRunnable = Runnable {
@@ -550,13 +549,12 @@ class PlayerActivity : Activity() {
             val extras = intent.extras
             if (extras != null) {
                 //fileArray = extras.getStringArray("files");
-                val app = application as XmpApplication
-                fileList = app.fileList
+                fileList = XmpApplication.instance!!.fileList
                 shuffleMode = extras.getBoolean(PARM_SHUFFLE)
                 loopListMode = extras.getBoolean(PARM_LOOP)
                 keepFirst = extras.getBoolean(PARM_KEEPFIRST)
                 start = extras.getInt(PARM_START)
-                app.clearFileList()
+                XmpApplication.instance!!.fileList = null
             } else {
                 reconnect = true
             }
