@@ -18,10 +18,10 @@ import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.preferences.Preferences
 
 
-fun Activity.fatalError(message: String) {
+fun Activity.fatalError(@StringRes resId: Int? = null, text: String? = null) {
     MaterialDialog(this).show {
         title(R.string.error)
-        message(text = message)
+        message(text = resId?.let { getString(it) } ?: text)
         positiveButton(R.string.dismiss) {
             finish()
         }

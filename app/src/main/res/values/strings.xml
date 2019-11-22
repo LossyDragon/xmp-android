@@ -119,7 +119,7 @@
     <string name="error_edit_comment">Can\'t edit comment.</string>
     <string name="error_exist_dir">Directory does not exist.</string>
     <string name="error_write_to_playlist">Can\'t write to this playlist.</string>
-    <string name="error_read_comment">Can\'t read comment.</string>
+    <string name="error_read_comment">Can\'t read comment for playlist %s</string>
     <string name="error_storage">Can\'t access external storage.</string>
     <string name="error_adding_mod">Error adding module</string>
     <string name="error_dir_not_under_moddir">Directory not under mod dir</string>

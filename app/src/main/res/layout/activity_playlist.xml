@@ -22,58 +22,73 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="2dp"
             android:layout_marginTop="8dp"
-            tools:text="current_list_name"
             android:textColor="?colorOnPrimarySurface"
             android:textSize="16sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            tools:text="current_list_name" />
 
         <TextView
             android:id="@+id/current_list_description"
-            tools:text="current_list_description"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="2dp"
             android:layout_marginBottom="8dp"
             android:textColor="?colorOnPrimarySurface"
-            android:textSize="13sp" />
+            android:textSize="13sp"
+            tools:text="current_list_description" />
 
     </LinearLayout>
 
-    <LinearLayout
-        android:layout_width="fill_parent"
+    <FrameLayout
+        android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1.0"
-        android:gravity="top"
-        android:orientation="vertical">
+        android:layout_weight="1">
 
-        <FrameLayout
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/swipeContainer"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-                android:id="@+id/swipeContainer"
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/plist_list"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="match_parent"
+                android:layoutAnimation="@anim/item_animation"
+                tools:itemCount="10"
+                tools:listitem="@layout/item_playlist" />
 
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/plist_list"
-                    android:layout_width="fill_parent"
-                    android:layout_height="fill_parent"
-                    android:layoutAnimation="@anim/item_animation"
-                    tools:itemCount="10"
-                    tools:listitem="@layout/item_playlist" />
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
-            </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
-        </FrameLayout>
+        <!-- Empty statement -->
+        <LinearLayout
+            android:id="@+id/plist_empty"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:orientation="vertical"
+            tools:ignore="UseCompoundDrawables">
+            <!-- Cannot use CompoundDrawables -->
 
-        <TextView
-            android:id="@+id/empty"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:gravity="top"
-            android:text="@string/msg_empty_playlist" />
-    </LinearLayout>
+            <ImageView
+                android:layout_width="128dp"
+                android:layout_height="125dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_folder"
+                android:tint="@color/iconTint"
+                tools:ignore="ContentDescription" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="@string/msg_empty_playlist"
+                android:textColor="?colorOnSurface"
+                android:textSize="24sp" />
+
+        </LinearLayout>
+
+    </FrameLayout>
 
     <include layout="@layout/layout_list_controls" />
 

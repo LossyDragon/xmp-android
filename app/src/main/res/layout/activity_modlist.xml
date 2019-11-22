@@ -7,6 +7,7 @@
     android:gravity="top"
     android:orientation="vertical">
 
+    <!-- Directory Status -->
     <LinearLayout
         android:id="@+id/status_area"
         style="@style/StatusTheme"
@@ -44,50 +45,50 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1.0">
+        android:layout_weight="1">
 
-        <LinearLayout
-            android:id="@+id/modlist_content"
+        <!-- Directory View -->
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/swipeContainer"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="top"
-            android:orientation="vertical">
+            android:layout_height="match_parent">
 
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-                    android:id="@+id/swipeContainer"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent">
-
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/modlist_listview"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layoutAnimation="@anim/item_animation"
-                        tools:listitem="@layout/item_playlist" />
-
-                </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
-
-            </FrameLayout>
-
-            <TextView
-                android:id="@+id/empty"
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/modlist_listview"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:gravity="top"
-                android:text="@string/msg_no_modules" />
+                android:layoutAnimation="@anim/item_animation"
+                tools:listitem="@layout/item_playlist" />
 
-        </LinearLayout>
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
-        <ProgressBar
-            android:id="@+id/modlist_spinner"
-            style="?android:progressBarStyleLarge"
+        <!-- Empty statement -->
+        <LinearLayout
+            android:id="@+id/modlist_empty"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center" />
+            android:layout_gravity="center"
+            android:orientation="vertical"
+            tools:ignore="UseCompoundDrawables">
+            <!-- Cannot use CompoundDrawables -->
+
+            <ImageView
+                android:layout_width="128dp"
+                android:layout_height="125dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_folder"
+                android:tint="@color/iconTint"
+                tools:ignore="ContentDescription" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="@string/msg_no_modules"
+                android:textColor="?colorOnSurface"
+                android:textSize="24sp" />
+
+        </LinearLayout>
     </FrameLayout>
 
     <include layout="@layout/layout_list_controls" />

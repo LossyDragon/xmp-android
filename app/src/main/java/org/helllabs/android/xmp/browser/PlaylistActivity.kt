@@ -1,14 +1,14 @@
 package org.helllabs.android.xmp.browser
 
 import android.os.Bundle
-import android.view.ContextMenu
-import android.view.ContextMenu.ContextMenuInfo
-import android.view.Menu
-import android.view.MenuItem
 import android.view.View
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.afollestad.materialdialogs.LayoutMode
+import com.afollestad.materialdialogs.MaterialDialog
+import com.afollestad.materialdialogs.bottomsheets.BottomSheet
+import com.afollestad.materialdialogs.list.listItems
 import com.h6ah4i.android.widget.advrecyclerview.animator.RefactoredDefaultItemAnimator
 import com.h6ah4i.android.widget.advrecyclerview.draggable.RecyclerViewDragDropManager
 import com.h6ah4i.android.widget.advrecyclerview.utils.WrapperAdapterUtils
@@ -21,10 +21,9 @@ import org.helllabs.android.xmp.util.Log
 import java.io.IOException
 
 
-class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickListener {
+class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickListener, PlaylistAdapter.OnItemLongClickListener {
 
     private var mPlaylist: Playlist? = null
-    //private var mRecyclerView: RecyclerView? = null
     private var mWrappedAdapter: RecyclerView.Adapter<*>? = null
     private var mRecyclerViewDragDropManager: RecyclerViewDragDropManager? = null
 
@@ -53,7 +52,7 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         setTitle(R.string.browser_playlist_title)
 
         val name = extras.getString("name")
-        val useFilename = mPrefs.getBoolean(Preferences.USE_FILENAME, false)
+        val useFilename = prefs.getBoolean(Preferences.USE_FILENAME, false)
 
         try {
             mPlaylist = Playlist(this, name!!)
@@ -80,10 +79,10 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         mRecyclerViewDragDropManager!!.attachRecyclerView(plist_list)
 
         mPlaylistAdapter.setOnItemClickListener(this)
+        mPlaylistAdapter.setOnItemLongClickListener(this)
 
         current_list_name.text = name
         current_list_description.text = mPlaylist!!.comment
-        registerForContextMenu(plist_list)
 
         setupButtons()
     }
@@ -91,7 +90,7 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
     override fun onResume() {
         super.onResume()
 
-        mPlaylistAdapter.setUseFilename(mPrefs.getBoolean(Preferences.USE_FILENAME, false))
+        mPlaylistAdapter.setUseFilename(prefs.getBoolean(Preferences.USE_FILENAME, false))
         update()
     }
 
@@ -103,15 +102,11 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
     }
 
     override fun onDestroy() {
-        if (mRecyclerViewDragDropManager != null) {
-            mRecyclerViewDragDropManager!!.release()
-            mRecyclerViewDragDropManager = null
-        }
+        mRecyclerViewDragDropManager?.release()
+        mRecyclerViewDragDropManager = null
 
-        if (plist_list != null) {
-            plist_list.itemAnimator = null
-            plist_list.adapter = null
-        }
+        plist_list?.itemAnimator = null
+        plist_list?.adapter = null
 
         if (mWrappedAdapter != null) {
             WrapperAdapterUtils.releaseAll(mWrappedAdapter)
@@ -124,52 +119,37 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
 
     public override fun update() {
         mPlaylistAdapter.notifyDataSetChanged()
-    }
 
-    // Playlist context menu
-    override fun onCreateContextMenu(menu: ContextMenu, view: View, menuInfo: ContextMenuInfo?) {
-
-        val mode = mPrefs.getInt(Preferences.PLAYLIST_MODE, 1)
-
-        menu.setHeaderTitle("Edit playlist")
-        menu.add(Menu.NONE, 0, 0, "Remove from playlist")
-        menu.add(Menu.NONE, 1, 1, "Add to play queue")
-        menu.add(Menu.NONE, 2, 2, "Add all to play queue")
-        if (mode != 2) {
-            menu.add(Menu.NONE, 3, 3, "Play this module")
-        }
-        if (mode != 1) {
-            menu.add(Menu.NONE, 4, 4, "Play all starting here")
+        if (mPlaylistAdapter.items.isEmpty()) {
+            plist_empty.visibility = View.VISIBLE
+            plist_list.visibility = View.GONE
+        } else {
+            plist_empty.visibility = View.GONE
+            plist_list.visibility = View.VISIBLE
         }
     }
 
-    override fun onContextItemSelected(item: MenuItem): Boolean {
-        val itemId = item.itemId
-        val position = mPlaylistAdapter.position
-
-        when (itemId) {
-            // Remove from playlist
-            0 -> {
-                mPlaylist!!.run {
-                    remove(position)
-                    commit()
+    override fun onLongItemClick(adapter: PlaylistAdapter, view: View, position: Int) {
+        val option = listOf("Remove from playlist", "Add to play queue", "Add all to play queue", "Play this module", "Play all starting here")
+        MaterialDialog(this, BottomSheet(LayoutMode.WRAP_CONTENT)).show {
+            title(text = "Edit playlist")
+            listItems(items = option) { _, index, _ ->
+                when (index) {
+                    0 -> {
+                        mPlaylist!!.remove(position)
+                        mPlaylist!!.commit()
+                        update()
+                    }
+                    1 -> addToQueue(mPlaylistAdapter.getFilename(position))
+                    2 -> addToQueue(mPlaylistAdapter.filenameList)
+                    3 -> playModule(mod = mPlaylistAdapter.getFilename(position))
+                    4 -> playModule(modList = mPlaylistAdapter.filenameList, start = position)
                 }
-                update()
             }
-            // Add to play queue
-            1 -> addToQueue(mPlaylistAdapter.getFilename(position))
-            // Add all to play queue
-            2 -> addToQueue(mPlaylistAdapter.filenameList)
-            // Play only this module
-            3 -> playModule(mod = mPlaylistAdapter.getFilename(position))
-            // Play all starting here
-            4 -> playModule(modList = mPlaylistAdapter.filenameList, start = position)
         }
-
-        return true
     }
 
     companion object {
-        private const val TAG = "PlaylistActivity"
+        private val TAG = PlaylistActivity::class.java.simpleName
     }
 }

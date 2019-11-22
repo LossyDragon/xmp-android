@@ -7,6 +7,7 @@ import org.helllabs.android.xmp.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 
 
 class Sidebar(private val activity: PlayerActivity) {
@@ -18,13 +19,14 @@ class Sidebar(private val activity: PlayerActivity) {
     private val seqGroup: RadioGroup
     private val seqGroupListener: RadioGroup.OnCheckedChangeListener
 
-    init {
+    private var sheet: BottomSheetBehavior<*>
 
+    init {
         val contentView = activity.findViewById<View>(R.id.content_view) as LinearLayout
         activity.layoutInflater.inflate(R.layout.layout_player, contentView, true)
 
         val sidebarView = activity.findViewById<View>(R.id.sidebar_view) as LinearLayout
-        activity.layoutInflater.inflate(R.layout.layout_player_sidebar, sidebarView, true)
+        activity.layoutInflater.inflate(R.layout.layout_player_controls, sidebarView, true)
 
         numPatText = activity.findViewById(R.id.sidebar_num_pat)
         numInsText = activity.findViewById(R.id.sidebar_num_ins)
@@ -43,6 +45,33 @@ class Sidebar(private val activity: PlayerActivity) {
             activity.playNewSequence(checkedId)
         }
         seqGroup.setOnCheckedChangeListener(seqGroupListener)
+
+        //Sidebar is now a BottomSheet
+        //TODO: Limit height if there are lots of sub songs
+        val what = activity.findViewById<View>(R.id.player_sheet) as LinearLayout
+        sheet = BottomSheetBehavior.from(what)
+        sheet.addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
+            override fun onSlide(bottomSheet: View, slideOffset: Float) {
+                //Not used
+            }
+
+            override fun onStateChanged(bottomSheet: View, newState: Int) {
+                when (newState) {
+                    BottomSheetBehavior.STATE_HIDDEN -> {
+                    }
+                    BottomSheetBehavior.STATE_EXPANDED -> {
+                    }
+                    BottomSheetBehavior.STATE_COLLAPSED -> {
+                    }
+                    BottomSheetBehavior.STATE_HALF_EXPANDED -> {
+                    }
+                    BottomSheetBehavior.STATE_DRAGGING -> {
+                    }
+                    BottomSheetBehavior.STATE_SETTLING -> {
+                    }
+                }
+            }
+        })
     }
 
     fun setDetails(numPat: Int, numIns: Int, numSmp: Int, numChn: Int, allSequences: Boolean) {
@@ -59,7 +88,6 @@ class Sidebar(private val activity: PlayerActivity) {
     fun addSequence(num: Int, duration: Int) {
         //final RadioButton button = new RadioButton(activity);
         // Can't get it styled this way, see http://stackoverflow.com/questions/3142067/android-set-style-in-code
-
         val button = activity.layoutInflater.inflate(R.layout.item_sequence, null) as RadioButton
 
         val text = if (num == 0) "main song" else "subsong $num"
@@ -69,16 +97,12 @@ class Sidebar(private val activity: PlayerActivity) {
     }
 
     fun selectSequence(num: Int) {
-
         seqGroup.setOnCheckedChangeListener(null)
 
         Log.i(TAG, "Select sequence $num")
         seqGroup.check(-1)        // force redraw
         seqGroup.check(num)
-
         seqGroup.setOnCheckedChangeListener(seqGroupListener)
-
-
     }
 
     companion object {

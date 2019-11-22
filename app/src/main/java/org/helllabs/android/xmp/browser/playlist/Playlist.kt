@@ -11,15 +11,12 @@ import java.util.ArrayList
 
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.preferences.Preferences
-import org.helllabs.android.xmp.util.FileUtils
-import org.helllabs.android.xmp.util.InfoCache
-import org.helllabs.android.xmp.util.Log
 
 import android.app.Activity
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.preference.PreferenceManager
-import org.helllabs.android.xmp.util.error
+import org.helllabs.android.xmp.util.*
 
 class Playlist @Throws(IOException::class)
 constructor(context: Context, val name: String) {
@@ -345,10 +342,12 @@ constructor(context: Context, val name: String) {
          */
         fun readComment(activity: Activity, name: String): String {
             var comment: String? = null
+            val file = CommentFile(name)
             try {
-                comment = FileUtils.readFromFile(CommentFile(name))
+                comment = FileUtils.readFromFile(file)
             } catch (e: IOException) {
-                activity.error(R.string.error_read_comment)
+                val error = String.format(activity.getString(R.string.error_read_comment), file.name)
+                activity.error(text = error)
             }
 
             if (comment == null || comment.trim { it <= ' ' }.isEmpty()) {

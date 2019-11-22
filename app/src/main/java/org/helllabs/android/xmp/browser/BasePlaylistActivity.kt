@@ -3,7 +3,6 @@ package org.helllabs.android.xmp.browser
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.os.IBinder
 import android.os.RemoteException
@@ -13,7 +12,6 @@ import android.view.View
 import android.view.View.OnClickListener
 import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
-import androidx.preference.PreferenceManager
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import kotlinx.android.synthetic.main.layout_list_controls.*
 import org.helllabs.android.xmp.R
@@ -35,7 +33,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     private var mAddList: MutableList<String>? = null
     private var refresh: Boolean = false
 
-    protected lateinit var mPrefs: SharedPreferences
+    protected var prefs = XmpApplication.instance!!.sharedPrefs
     protected lateinit var mPlaylistAdapter: PlaylistAdapter
 
     private val playAllButtonListener = OnClickListener {
@@ -96,8 +94,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mPrefs = PreferenceManager.getDefaultSharedPreferences(this)
-        mShowToasts = mPrefs.getBoolean(Preferences.SHOW_TOAST, true)
+        mShowToasts = prefs.getBoolean(Preferences.SHOW_TOAST, true)
 
         // Action bar icon navigation
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
@@ -128,7 +125,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
 
     private fun saveButtonConfig() {
         Log.i(TAG, "Saving button preferences")
-        mPrefs.edit().run {
+        prefs.edit().run {
             putBoolean(OPTIONS_SHUFFLE_MODE, isShuffleMode)
             putBoolean(OPTIONS_LOOP_MODE, isLoopMode)
             apply()
@@ -155,7 +152,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     open fun onItemClick(adapter: PlaylistAdapter, view: View, position: Int) {
         val filename = adapter.getItem(position).file!!.path
 
-        val mode = mPrefs.getInt(Preferences.PLAYLIST_MODE, 1)
+        val mode = prefs.getInt(Preferences.PLAYLIST_MODE, 1)
 
         /*
          * Test module again if invalid, in case a new file format is added to the
@@ -210,7 +207,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         when (requestCode) {
             SETTINGS_REQUEST -> {
                 update()
-                mShowToasts = mPrefs.getBoolean(Preferences.SHOW_TOAST, true)
+                mShowToasts = prefs.getBoolean(Preferences.SHOW_TOAST, true)
             }
             PLAY_MOD_REQUEST -> if (resultCode != RESULT_OK) {
                 update()

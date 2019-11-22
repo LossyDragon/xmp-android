@@ -30,6 +30,7 @@ class PlaylistAdapter : RecyclerView.Adapter<PlaylistAdapter.ViewHolder>, Dragga
     private val layoutType: Int
 
     private var onItemClickListener: OnItemClickListener? = null
+    private var onItemLongClickListener: OnItemLongClickListener? = null
 
     val filenameList: List<String>
         get() {
@@ -58,14 +59,22 @@ class PlaylistAdapter : RecyclerView.Adapter<PlaylistAdapter.ViewHolder>, Dragga
         fun onItemClick(adapter: PlaylistAdapter, view: View, position: Int)
     }
 
+    interface OnItemLongClickListener {
+        fun onLongItemClick(adapter: PlaylistAdapter, view: View, position: Int)
+    }
+
     fun setOnItemClickListener(listener: OnItemClickListener) {
         onItemClickListener = listener
+    }
+
+    fun setOnItemLongClickListener(listener: OnItemLongClickListener) {
+        onItemLongClickListener = listener
     }
 
     override fun getItemCount(): Int = items.size
 
     class ViewHolder(itemView: View, private val adapter: PlaylistAdapter) :
-            AbstractDraggableItemViewHolder(itemView), View.OnClickListener {
+            AbstractDraggableItemViewHolder(itemView), View.OnClickListener, View.OnLongClickListener {
 
         val container: View
         val handle: View?
@@ -73,9 +82,11 @@ class PlaylistAdapter : RecyclerView.Adapter<PlaylistAdapter.ViewHolder>, Dragga
         val infoText: TextView
         val image: ImageView
         private var onItemClickListener: OnItemClickListener? = null
+        private var onItemLongClickListener: OnItemLongClickListener? = null
 
         init {
             itemView.setOnClickListener(this)
+            itemView.setOnLongClickListener(this)
             container = itemView.findViewById(R.id.plist_container)
             handle = itemView.findViewById<View>(R.id.plist_handle) as FrameLayout?
             titleText = itemView.findViewById<View>(R.id.plist_title) as TextView
@@ -87,10 +98,21 @@ class PlaylistAdapter : RecyclerView.Adapter<PlaylistAdapter.ViewHolder>, Dragga
             onItemClickListener = listener
         }
 
+        fun setOnItemLongClickListener(listener: OnItemLongClickListener?) {
+            onItemLongClickListener = listener
+        }
+
         override fun onClick(view: View) {
             if (onItemClickListener != null) {
                 onItemClickListener!!.onItemClick(adapter, view, adapterPosition)
             }
+        }
+
+        override fun onLongClick(view: View): Boolean {
+           if (onItemLongClickListener != null) {
+               onItemLongClickListener!!.onLongItemClick(adapter, view, adapterPosition)
+           }
+            return true
         }
     }
 
@@ -104,6 +126,7 @@ class PlaylistAdapter : RecyclerView.Adapter<PlaylistAdapter.ViewHolder>, Dragga
         val view = LayoutInflater.from(parent.context).inflate(layout, parent, false)
         val holder = ViewHolder(view, this)
         holder.setOnItemClickListener(onItemClickListener)
+        holder.setOnItemLongClickListener(onItemLongClickListener)
         return holder
     }
 
@@ -136,10 +159,10 @@ class PlaylistAdapter : RecyclerView.Adapter<PlaylistAdapter.ViewHolder>, Dragga
 
         //TODO, maybe have the choice of context menu option, or standard onLongClick
         //See http://stackoverflow.com/questions/26466877/how-to-create-context-menu-for-recyclerview
-        holder.itemView.setOnLongClickListener {
-            this@PlaylistAdapter.position = holder.adapterPosition
-            false
-        }
+//        holder.itemView.setOnLongClickListener {
+//            this@PlaylistAdapter.position = holder.adapterPosition
+//            false
+//        }
     }
 
     constructor(context: Context, items: MutableList<PlaylistItem>, useFilename: Boolean, layoutType: Int) {
@@ -183,6 +206,7 @@ class PlaylistAdapter : RecyclerView.Adapter<PlaylistAdapter.ViewHolder>, Dragga
 //        return items
 //    }
 
+    //TODO, something breaks onLongClick. This adapter should be modernized with lifecycling
     fun clear() {
         items.clear()
         Log.i(TAG, "Playlist list cleared")

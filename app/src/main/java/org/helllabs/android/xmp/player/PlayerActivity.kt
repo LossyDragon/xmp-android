@@ -1,6 +1,5 @@
 package org.helllabs.android.xmp.player
 
-import android.app.Activity
 import android.content.*
 import android.content.res.Configuration
 import android.graphics.Typeface
@@ -14,9 +13,10 @@ import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceManager
-import kotlinx.android.synthetic.main.layout_player_controls.*
 import kotlinx.android.synthetic.main.layout_player.*
+import kotlinx.android.synthetic.main.layout_player_controls.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.browser.PlaylistMenu
@@ -37,7 +37,7 @@ import java.io.FileOutputStream
 import java.util.*
 
 
-class PlayerActivity : Activity() {
+class PlayerActivity : AppCompatActivity() {
 
     /* actual mod player */
     private var modPlayer: ModInterface? = null
@@ -509,6 +509,7 @@ class PlayerActivity : Activity() {
     }
 
     override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
         var reconnect = false
         var fromHistory = false
 
@@ -899,12 +900,6 @@ class PlayerActivity : Activity() {
     override fun onResume() {
         super.onResume()
         screenOn = true
-
-        // Change the nav bar color to the player controls sheet color
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-//            @Suppress("DEPRECATION")
-//            window.navigationBarColor = resources.getColor(R.color.section_background)
-//        }
     }
 
     fun playNewSequence(num: Int) {
@@ -978,7 +973,7 @@ class PlayerActivity : Activity() {
     }
 
     companion object {
-        private const val TAG = "PlayerActivity"
+        private val TAG = PlayerActivity::class.java.simpleName
 
         const val PARM_SHUFFLE = "shuffle"
         const val PARM_LOOP = "loop"
