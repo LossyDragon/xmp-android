@@ -11,6 +11,15 @@ import org.helllabs.android.xmp.preferences.Preferences
 import org.helllabs.android.xmp.util.THEME_DEFAULT
 import org.helllabs.android.xmp.util.applyTheme
 
+//TODO: Perform migration functions between cmatsuoka's version to this
+// 1: Preferences migrations
+// 2. Playlists shouldn't be touched, but verify
+// 3. Cache (same as above)
+
+//TODO: 'Completely' reorganize strings and arrays for multi language support
+//TODO: Find hardcode strings and bring to strings.xml
+//TODO: Bring changelog into HTML format. Move out of strings.xml
+//TODO: Phase out Crossfader
 
 class XmpApplication : Application() {
 

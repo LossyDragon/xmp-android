@@ -10,7 +10,7 @@ import android.widget.*
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 
 
-class Sidebar(private val activity: PlayerActivity) {
+class Sheet(private val activity: PlayerActivity) {
     private val numPatText: TextView
     private val numInsText: TextView
     private val numSmpText: TextView
@@ -20,12 +20,13 @@ class Sidebar(private val activity: PlayerActivity) {
     private val seqGroupListener: RadioGroup.OnCheckedChangeListener
 
     private var sheet: BottomSheetBehavior<*>
+    var isDragLocked: Boolean = false
 
     init {
-        val contentView = activity.findViewById<View>(R.id.content_view) as LinearLayout
+        val contentView: LinearLayout = activity.findViewById(R.id.content_view)
         activity.layoutInflater.inflate(R.layout.layout_player, contentView, true)
 
-        val sidebarView = activity.findViewById<View>(R.id.sidebar_view) as LinearLayout
+        val sidebarView: LinearLayout = activity.findViewById(R.id.sidebar_view)
         activity.layoutInflater.inflate(R.layout.layout_player_controls, sidebarView, true)
 
         numPatText = activity.findViewById(R.id.sidebar_num_pat)
@@ -33,45 +34,37 @@ class Sidebar(private val activity: PlayerActivity) {
         numSmpText = activity.findViewById(R.id.sidebar_num_smp)
         numChnText = activity.findViewById(R.id.sidebar_num_chn)
         allSequencesSwitch = activity.findViewById(R.id.sidebar_allseqs_switch)
+        seqGroup = activity.findViewById(R.id.sidebar_sequences)
 
+        allSequencesSwitch.isChecked = activity.allSequences
         allSequencesSwitch.setOnClickListener {
             allSequencesSwitch.isChecked = activity.toggleAllSequences()
         }
 
-        allSequencesSwitch.isChecked = activity.allSequences
-
-        seqGroup = activity.findViewById<View>(R.id.sidebar_sequences) as RadioGroup
         seqGroupListener = RadioGroup.OnCheckedChangeListener { _, checkedId ->
             activity.playNewSequence(checkedId)
         }
         seqGroup.setOnCheckedChangeListener(seqGroupListener)
 
-        //Sidebar is now a BottomSheet
-        //TODO: Limit height if there are lots of sub songs
-        val what = activity.findViewById<View>(R.id.player_sheet) as LinearLayout
-        sheet = BottomSheetBehavior.from(what)
+        //TODO: Give indication the bottom sheet is present.
+        sheet = BottomSheetBehavior.from(activity.findViewById<LinearLayout>(R.id.player_sheet))
         sheet.addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
             override fun onSlide(bottomSheet: View, slideOffset: Float) {
                 //Not used
             }
 
             override fun onStateChanged(bottomSheet: View, newState: Int) {
-                when (newState) {
-                    BottomSheetBehavior.STATE_HIDDEN -> {
-                    }
-                    BottomSheetBehavior.STATE_EXPANDED -> {
-                    }
-                    BottomSheetBehavior.STATE_COLLAPSED -> {
-                    }
-                    BottomSheetBehavior.STATE_HALF_EXPANDED -> {
-                    }
-                    BottomSheetBehavior.STATE_DRAGGING -> {
-                    }
-                    BottomSheetBehavior.STATE_SETTLING -> {
-                    }
-                }
+                if (newState == BottomSheetBehavior.STATE_DRAGGING && isDragLocked)
+                    sheet.state = BottomSheetBehavior.STATE_COLLAPSED
             }
         })
+    }
+
+    fun setDragLock(boolean: Boolean) {
+        isDragLocked = boolean
+
+        if (isDragLocked && sheet.state != BottomSheetBehavior.STATE_COLLAPSED)
+            sheet.state = BottomSheetBehavior.STATE_COLLAPSED
     }
 
     fun setDetails(numPat: Int, numIns: Int, numSmp: Int, numChn: Int, allSequences: Boolean) {
@@ -84,6 +77,7 @@ class Sidebar(private val activity: PlayerActivity) {
 
     fun clearSequences() = seqGroup.removeAllViews()
 
+
     @SuppressLint("InflateParams")
     fun addSequence(num: Int, duration: Int) {
         //final RadioButton button = new RadioButton(activity);
@@ -93,7 +87,8 @@ class Sidebar(private val activity: PlayerActivity) {
         val text = if (num == 0) "main song" else "subsong $num"
         button.text = String.format("%2d:%02d (%s)", duration / 60000, duration / 1000 % 60, text)
         button.id = num
-        seqGroup.addView(button, num, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+        val layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        seqGroup.addView(button, num, layoutParams)
     }
 
     fun selectSequence(num: Int) {
@@ -106,6 +101,6 @@ class Sidebar(private val activity: PlayerActivity) {
     }
 
     companion object {
-        private const val TAG = "Sidebar"
+        private val TAG = Sheet::class.java.simpleName
     }
 }

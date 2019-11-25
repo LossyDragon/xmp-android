@@ -10,18 +10,32 @@
     app:behavior_peekHeight="105dp"
     app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
 
-    <TextView
-        android:id="@+id/control_player_info"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="6dp"
-        android:gravity="center"
-        android:includeFontPadding="false"
-        android:paddingTop="5dp"
-        android:textColor="@color/white"
-        android:textStyle="bold"
-        android:typeface="monospace"
-        tools:text="Speed:9999 BPM:9999 Pos:9999 Pat:9999" />
+        android:orientation="horizontal">
+
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/control_player_lock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="6dp"
+            android:background="?selectableItemBackground"
+            app:srcCompat="@drawable/ic_unlock" />
+
+        <TextView
+            android:id="@+id/control_player_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            android:typeface="monospace"
+            tools:text="Speed:9999 BPM:9999 Pos:9999 Pat:9999" />
+    </LinearLayout>
+
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -71,7 +85,7 @@
             android:scaleType="center"
             android:scaleX="1.2"
             android:scaleY="1.2"
-            android:src="@drawable/ic_stop" />
+            app:srcCompat="@drawable/ic_stop" />
 
         <ImageButton
             android:id="@+id/control_player_back"
@@ -83,7 +97,7 @@
             android:contentDescription="@string/button_prev"
             android:scaleX="1.2"
             android:scaleY="1.2"
-            android:src="@drawable/ic_previous" />
+            app:srcCompat="@drawable/ic_previous" />
 
         <ImageButton
             android:id="@+id/control_player_play"
@@ -95,7 +109,7 @@
             android:contentDescription="@string/button_play_pause"
             android:scaleX="1.2"
             android:scaleY="1.2"
-            android:src="@drawable/ic_pause" />
+            app:srcCompat="@drawable/ic_pause" />
 
         <ImageButton
             android:id="@+id/control_player_forward"
@@ -107,7 +121,7 @@
             android:contentDescription="@string/button_next"
             android:scaleX="1.2"
             android:scaleY="1.2"
-            android:src="@drawable/ic_forward" />
+            app:srcCompat="@drawable/ic_forward" />
 
         <ImageButton
             android:id="@+id/control_player_loop"
@@ -120,7 +134,7 @@
             android:scaleType="centerInside"
             android:scaleX="1.2"
             android:scaleY="1.2"
-            android:src="@drawable/ic_repeat_off" />
+            app:srcCompat="@drawable/ic_repeat_off" />
     </LinearLayout>
 
     <LinearLayout

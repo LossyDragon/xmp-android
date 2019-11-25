@@ -1,46 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<string-array name="playlist_mode_array">
-		<item>Start playing at selection</item>
-		<item>Play selected file</item>
-		<item>Enqueue selected file</item>
-	</string-array>
-    
-    <string-array name="playlist_mode_values">
+
+    <string-array name="playlist_mode_array">
+        <item>Start playing at selection</item>
+        <item>Play selected file</item>
+        <item>Enqueue selected file</item>
+    </string-array>
+
+    <integer-array name="playlist_mode_values">
         <item>1</item>
         <item>2</item>
         <item>3</item>
-	</string-array>
-	
+    </integer-array>
+
     <string-array name="vol_boost_array">
         <item>Normal</item>
         <item>2x</item>
         <item>4x</item>
     </string-array>
-    
+
     <string-array name="vol_boost_values">
         <item>1</item>
         <item>2</item>
         <item>3</item>
-	</string-array>
-	
+    </string-array>
+
     <string-array name="interp_type_array">
         <item>Linear</item>
         <item>Cubic spline</item>
     </string-array>
-    
+
     <string-array name="interp_type_values">
         <item>1</item>
         <item>2</item>
-	</string-array>
-    
-	<string-array name="sampling_rate_array">
+    </string-array>
+
+    <string-array name="sampling_rate_array">
         <item>8kHz</item>
         <item>22kHz</item>
         <item>44.1kHz</item>
         <item>48kHz</item>
     </string-array>
-    
+
     <string-array name="sampling_rate_values">
         <item>8000</item>
         <item>22050</item>
@@ -59,5 +60,36 @@
         <item>dark</item>
         <item>default</item>
     </string-array>
-    
+
+    <string-array name="dialog_playlist">
+        <item>Remove from playlist</item>
+        <item>Add to play queue</item>
+        <item>Add all to play queue</item>
+        <item>Play this module</item>
+        <item>Play all starting here</item>
+    </string-array>
+
+    <string-array name="dialog_file">
+        <item>Add to playlist</item>
+        <item>Add to play queue</item>
+        <item>Play this file</item>
+        <item>Play all starting here</item>
+        <item>Delete file</item>
+    </string-array>
+
+    <string-array name="dialog_directory">
+        <item>Add to playlist</item>
+        <item>Add to play queue</item>
+        <item>Play contents</item>
+        <item>Delete directory</item>
+    </string-array>
+
+    <string-array name="dialog_all_files">
+        <item>Add to playlist</item>
+        <item>Recursive add to playlist</item>
+        <item>Add to play queue</item>
+        <item>Set as default path</item>
+        <item>Clear cache</item>
+    </string-array>
+
 </resources>

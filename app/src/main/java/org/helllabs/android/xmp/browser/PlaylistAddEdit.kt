@@ -18,7 +18,7 @@ class PlaylistAddEdit : AppCompatActivity() {
         supportActionBar?.setHomeAsUpIndicator(R.drawable.ic_close)
 
         if (intent.hasExtra(EXTRA_ID)) {
-            title = intent.getStringExtra(EXTRA_NAME)
+            title = "Edit Playlist: " + intent.getStringExtra(EXTRA_NAME)
 
             playlist_add_edit_name_editText.setText(intent.getStringExtra(EXTRA_NAME))
             playlist_add_edit_comment_editText.setText(intent.getStringExtra(EXTRA_COMMENT))

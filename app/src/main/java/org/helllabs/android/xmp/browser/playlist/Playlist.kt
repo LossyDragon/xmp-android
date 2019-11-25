@@ -27,8 +27,8 @@ constructor(context: Context, val name: String) {
     var isShuffleMode: Boolean = false
     var isLoopMode: Boolean = false
 
-    private val mList: MutableList<PlaylistItem>
-    private val mPrefs: SharedPreferences
+    private val mList: MutableList<PlaylistItem> = mutableListOf()
+    private val mPrefs: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
 
     val list: List<PlaylistItem>
         get() = mList
@@ -46,8 +46,6 @@ constructor(context: Context, val name: String) {
     }
 
     init {
-        mList = ArrayList()
-        mPrefs = PreferenceManager.getDefaultSharedPreferences(context)
 
         val file = ListFile(name)
         if (file.exists()) {
@@ -145,7 +143,7 @@ constructor(context: Context, val name: String) {
             }
 
             reader.close()
-            PlaylistUtils.renumberIds(mList)
+            renumberIds(mList)
         } catch (e: IOException) {
             Log.e(TAG, "Error reading playlist " + file.path)
             return false

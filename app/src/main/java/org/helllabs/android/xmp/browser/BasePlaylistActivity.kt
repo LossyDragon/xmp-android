@@ -30,7 +30,7 @@ import java.util.*
 abstract class BasePlaylistActivity : AppCompatActivity() {
     private var mShowToasts: Boolean = false
     private var mModPlayer: ModInterface? = null
-    private var mAddList: MutableList<String>? = null
+    private var mAddList: MutableList<String> = mutableListOf()
     private var refresh: Boolean = false
 
     protected var prefs = XmpApplication.instance!!.sharedPrefs
@@ -124,10 +124,10 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     }
 
     private fun saveButtonConfig() {
-        Log.i(TAG, "Saving button preferences")
+        Log.d(TAG, "Saving button preferences")
         prefs.edit().run {
-            putBoolean(OPTIONS_SHUFFLE_MODE, isShuffleMode)
-            putBoolean(OPTIONS_LOOP_MODE, isLoopMode)
+            putBoolean(Preferences.OPTIONS_SHUFFLE_MODE, isShuffleMode)
+            putBoolean(Preferences.OPTIONS_LOOP_MODE, isLoopMode)
             apply()
         }
     }
@@ -172,13 +172,15 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
                 // add to queue
                 3 -> {
                     addToQueue(filename)
-                    toast(text = "Added to queue")
+                    toast(text = String.format(getString(R.string.msg_added_queue), filename))
                 }
             }
         } else {
-            toast(text = "Unrecognized file format")
+            toast(text = String.format(getString(R.string.msg_unreconized_format, filename)))
         }
     }
+
+    //TODO: if shuffle is `Enabled`, play all starting here does not work right.
 
     // Play this module or all modules in list
     protected fun playModule(mod: String? = null,
@@ -186,10 +188,11 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
                              start: Int = 0,
                              keepFirst: Boolean = false) {
 
-        XmpApplication.instance!!.fileList = if (!mod.isNullOrEmpty())
-            mutableListOf(mod)
-        else
-            modList!!.toMutableList()
+        XmpApplication.instance!!.fileList =
+                if (!mod.isNullOrEmpty())
+                    mutableListOf(mod)
+                else
+                    modList!!.toMutableList()
 
         val intent = Intent(this, PlayerActivity::class.java).apply {
             putExtra(PlayerActivity.PARM_SHUFFLE, isShuffleMode)
@@ -197,6 +200,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
             putExtra(PlayerActivity.PARM_START, start)
             putExtra(PlayerActivity.PARM_KEEPFIRST, keepFirst)
         }
+
         Log.i(TAG, "Start Player activity")
         startActivityForResult(intent, PLAY_MOD_REQUEST)
     }
@@ -220,8 +224,8 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         if (InfoCache.testModule(filename)) {
             if (PlayerService.isAlive) {
                 val service = Intent(this, PlayerService::class.java)
-                mAddList = ArrayList()
-                mAddList!!.add(filename)
+                mAddList.clear()
+                mAddList.add(filename)
                 bindService(service, connection, 0)
             } else {
                 playModule(filename)
@@ -250,7 +254,8 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         if (realSize > 0) {
             if (PlayerService.isAlive) {
                 val service = Intent(this, PlayerService::class.java)
-                mAddList = realList
+                mAddList.clear()
+                mAddList.addAll(realList)
                 bindService(service, connection, 0)
             } else {
                 playModule(modList = realList)
@@ -282,13 +287,11 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     }
 
     companion object {
-        private const val TAG = "PlaylistActivity"
+        private val TAG = BasePlaylistActivity::class.java.simpleName
         private const val SETTINGS_REQUEST = 45
         private const val PLAY_MOD_REQUEST = 669
         private const val SEARCH_REQUEST = 47
 
-        const val OPTIONS_SHUFFLE_MODE = "options_shuffleMode"
-        const val OPTIONS_LOOP_MODE = "options_loopMode"
         const val DEFAULT_SHUFFLE_MODE = true
         const val DEFAULT_LOOP_MODE = false
     }

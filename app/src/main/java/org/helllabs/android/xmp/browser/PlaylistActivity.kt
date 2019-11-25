@@ -51,7 +51,7 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
 
         setTitle(R.string.browser_playlist_title)
 
-        val name = extras.getString("name")
+        val name = extras.getString(PLAYLIST_NAME)
         val useFilename = prefs.getBoolean(Preferences.USE_FILENAME, false)
 
         try {
@@ -130,10 +130,9 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
     }
 
     override fun onLongItemClick(adapter: PlaylistAdapter, view: View, position: Int) {
-        val option = listOf("Remove from playlist", "Add to play queue", "Add all to play queue", "Play this module", "Play all starting here")
         MaterialDialog(this, BottomSheet(LayoutMode.WRAP_CONTENT)).show {
-            title(text = "Edit playlist")
-            listItems(items = option) { _, index, _ ->
+            title(R.string.title_edit_playlist)
+            listItems(R.array.dialog_playlist) { _, index, _ ->
                 when (index) {
                     0 -> {
                         mPlaylist!!.remove(position)
@@ -151,5 +150,7 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
 
     companion object {
         private val TAG = PlaylistActivity::class.java.simpleName
+
+        const val PLAYLIST_NAME = "name"
     }
 }

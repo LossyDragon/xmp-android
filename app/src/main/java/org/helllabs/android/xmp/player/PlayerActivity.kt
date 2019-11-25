@@ -71,7 +71,7 @@ class PlayerActivity : AppCompatActivity() {
     private var patternViewer: Viewer? = null
     private var playTime: Int = 0
     private val playerLock = Any()        // for sync
-    private var sidebar: Sidebar? = null
+    private var sheet: Sheet? = null
 
     private val connection = object : ServiceConnection {
 
@@ -332,7 +332,7 @@ class PlayerActivity : AppCompatActivity() {
         control_player_seek.max = time / 100
         toast(text = "New sequence duration: " + String.format("%d:%02d", time / 60000, time / 1000 % 60))
 
-        sidebar!!.selectSequence(modVars[7])
+        sheet!!.selectSequence(modVars[7])
     }
 
     private val showNewModRunnable = Runnable {
@@ -378,12 +378,12 @@ class PlayerActivity : AppCompatActivity() {
                 val smp = modVars[5]
                 val numSeq = modVars[6]
 
-                sidebar!!.setDetails(pat, ins, smp, chn, allSeq)
-                sidebar!!.clearSequences()
+                sheet!!.setDetails(pat, ins, smp, chn, allSeq)
+                sheet!!.clearSequences()
                 for (i in 0 until numSeq) {
-                    sidebar!!.addSequence(i, seqVars[i])
+                    sheet!!.addSequence(i, seqVars[i])
                 }
-                sidebar!!.selectSequence(0)
+                sheet!!.selectSequence(0)
 
                 control_player_loop.setImageResource(if (loop) R.drawable.ic_repeat_on else R.drawable.ic_repeat_off)
 
@@ -637,6 +637,22 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     // Click listeners
+    private fun lockButtonListener() {
+        synchronized(playerLock) {
+            if (modPlayer != null) {
+                var dragLock = prefs!!.getBoolean(Preferences.PLAYER_DRAG_LOCK, false)
+                dragLock = dragLock xor true
+                control_player_lock.setImageResource(if (dragLock) R.drawable.ic_lock else R.drawable.ic_unlock)
+
+                val editor = prefs!!.edit()
+                editor.putBoolean(Preferences.PLAYER_DRAG_LOCK, dragLock)
+                editor.apply()
+
+                sheet!!.setDragLock(dragLock)
+            }
+        }
+    }
+
     private fun loopButtonListener() {
         synchronized(playerLock) {
             if (modPlayer != null) {
@@ -730,7 +746,7 @@ class PlayerActivity : AppCompatActivity() {
         super.onCreate(icicle)
         setContentView(R.layout.activity_player)
 
-        sidebar = Sidebar(this)
+        sheet = Sheet(this)
 
         display = (getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay
 
@@ -798,6 +814,13 @@ class PlayerActivity : AppCompatActivity() {
             setOnClickListener {
                 loopButtonListener()
             }
+        }
+
+        val lock = prefs!!.getBoolean(Preferences.PLAYER_DRAG_LOCK, false)
+        control_player_lock.setImageResource(if (lock) R.drawable.ic_lock else R.drawable.ic_unlock)
+        sheet!!.setDragLock(lock)
+        control_player_lock.setOnClickListener {
+            lockButtonListener()
         }
 
         control_player_stop.setOnClickListener {
