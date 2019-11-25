@@ -33,7 +33,7 @@ static pthread_mutex_t _lock;
 #define bufferDiv 1000
 
 #define SAMPLE_RATE_8 8000
-#define SAMPLE_RATE_2205 2205
+#define SAMPLE_RATE_2205 22050
 #define SAMPLE_RATE_441 44100
 #define SAMPLE_RATE_480 48000
 
