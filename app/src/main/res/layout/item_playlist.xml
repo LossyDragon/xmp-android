@@ -5,7 +5,8 @@
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     android:background="?android:attr/selectableItemBackground"
-    android:orientation="horizontal">
+    android:orientation="horizontal"
+    tools:ignore="Overdraw">
 
     <ImageView
         android:id="@+id/plist_image"
@@ -13,8 +14,8 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
         android:layout_margin="8dp"
-        android:tint="@color/iconTint"
         android:contentDescription="@string/desc_plist_image"
+        android:tint="@color/iconTint"
         tools:src="@drawable/ic_file" />
 
     <LinearLayout

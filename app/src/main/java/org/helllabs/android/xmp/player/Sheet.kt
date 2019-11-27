@@ -84,7 +84,10 @@ class Sheet(private val activity: PlayerActivity) {
         // Can't get it styled this way, see http://stackoverflow.com/questions/3142067/android-set-style-in-code
         val button = activity.layoutInflater.inflate(R.layout.item_sequence, null) as RadioButton
 
-        val text = if (num == 0) "main song" else "subsong $num"
+        val main = activity.getString(R.string.sheet_main_song)
+        val sub = activity.getString(R.string.sheet_sub_song)
+
+        val text = if (num == 0) main else sub + num
         button.text = String.format("%2d:%02d (%s)", duration / 60000, duration / 1000 % 60, text)
         button.id = num
         val layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)

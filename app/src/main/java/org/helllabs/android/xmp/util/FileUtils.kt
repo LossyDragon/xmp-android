@@ -34,12 +34,6 @@ object FileUtils {
         return line
     }
 
-//    @Throws(IOException::class)
-//    fun removeLineFromFile(file: File, num: Int): Boolean {
-//        val nums = intArrayOf(num)
-//        return removeLineFromFile(file, nums)
-//    }
-
     @Throws(IOException::class)
     fun removeLineFromFile(file: File, num: IntArray): Boolean {
 

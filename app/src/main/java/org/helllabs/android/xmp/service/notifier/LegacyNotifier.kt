@@ -7,13 +7,13 @@ import org.helllabs.android.xmp.R
 
 class LegacyNotifier(service: Service) : Notifier(service) {
 
-    private val `when`: Long = System.currentTimeMillis()
+    private val sinceWhen: Long = System.currentTimeMillis()
 
     override fun notify(title: String, info: String, index: Int, type: Int) {
         var notifyTitle = title
 
         if (notifyTitle.trim { it <= ' ' }.isEmpty()) {
-            notifyTitle = "<untitled>"
+            notifyTitle = "<" + service.getString(R.string.notif_untitled) + ">"
         }
 
         val indexText = formatIndex(index)
@@ -26,17 +26,17 @@ class LegacyNotifier(service: Service) : Notifier(service) {
                 .setSmallIcon(R.drawable.ic_notification)
                 .setLargeIcon(icon)
                 .setOngoing(true)
-                .setWhen(`when`)
-                .addAction(R.drawable.ic_stop, "Stop", stopIntent)
+                .setWhen(sinceWhen)
+                .addAction(R.drawable.ic_stop, service.getString(R.string.notif_stop), stopIntent)
 
         if (type == TYPE_PAUSE) {
-            builder.addAction(R.drawable.ic_play, "Play", playIntent)
-            builder.setContentText("(paused)")
+            builder.addAction(R.drawable.ic_play, service.getString(R.string.notif_play), playIntent)
+            builder.setContentText(service.getString(R.string.notif_paused))
         } else {
-            builder.addAction(R.drawable.ic_pause, "Pause", pauseIntent)
+            builder.addAction(R.drawable.ic_pause, service.getString(R.string.notif_pause), pauseIntent)
         }
 
-        builder.addAction(R.drawable.ic_forward, "Next", nextIntent)
+        builder.addAction(R.drawable.ic_forward, service.getString(R.string.notif_next), nextIntent)
 
         if (type == TYPE_TICKER) {
             if (queueManager.size() > 1) {

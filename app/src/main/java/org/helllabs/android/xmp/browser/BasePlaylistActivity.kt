@@ -98,6 +98,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
 
         // Action bar icon navigation
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
+        supportActionBar!!.setHomeAsUpIndicator(R.drawable.ic_back)
     }
 
     override fun onResume() {
@@ -152,6 +153,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     open fun onItemClick(adapter: PlaylistAdapter, view: View, position: Int) {
         val filename = adapter.getItem(position).file!!.path
 
+        //It's a string because of "ListPreference" :U
         val mode = prefs.getString(Preferences.PLAYLIST_MODE, "1")!!.toInt()
 
         /*

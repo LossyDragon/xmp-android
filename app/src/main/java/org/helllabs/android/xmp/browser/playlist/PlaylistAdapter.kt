@@ -199,10 +199,6 @@ class PlaylistAdapter :
                 image.visibility = View.GONE
             }
 
-            @Suppress("DEPRECATION")
-            if (layoutType == LAYOUT_DRAG)
-                handle?.setBackgroundColor(itemView.resources.getColor(R.color.drag_handle_color))
-
             itemView.setOnClickListener {
                 clickListener!!.onItemClick(adapter, it, adapterPosition)
             }

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
@@ -7,37 +8,53 @@
     android:gravity="top"
     android:orientation="vertical">
 
-    <LinearLayout
-        android:id="@+id/current_list"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/gray"
-        android:focusable="true"
-        android:longClickable="true"
-        android:orientation="vertical">
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
-        <TextView
-            android:id="@+id/current_list_name"
-            android:layout_width="fill_parent"
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="2dp"
-            android:layout_marginTop="8dp"
-            android:textColor="?colorOnPrimarySurface"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            tools:text="current_list_name" />
+            app:titleTextColor="@color/white"
+            app:subtitleTextColor="@color/white"
+            android:background="?attr/colorPrimary"
+            android:minHeight="?attr/actionBarSize" />
 
-        <TextView
-            android:id="@+id/current_list_description"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="2dp"
-            android:layout_marginBottom="8dp"
-            android:textColor="?colorOnPrimarySurface"
-            android:textSize="13sp"
-            tools:text="current_list_description" />
+    </com.google.android.material.appbar.AppBarLayout>
 
-    </LinearLayout>
+
+<!--    <LinearLayout-->
+<!--        android:id="@+id/current_list"-->
+<!--        style="@style/StatusTheme"-->
+<!--        android:layout_width="fill_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:focusable="true"-->
+<!--        android:longClickable="true"-->
+<!--        android:orientation="vertical">-->
+
+<!--        <TextView-->
+<!--            android:id="@+id/current_list_name"-->
+<!--            android:layout_width="fill_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_marginStart="2dp"-->
+<!--            android:layout_marginTop="8dp"-->
+<!--            android:textColor="?colorOnPrimarySurface"-->
+<!--            android:textSize="16sp"-->
+<!--            android:textStyle="bold"-->
+<!--            tools:text="current_list_name" />-->
+
+<!--        <TextView-->
+<!--            android:id="@+id/current_list_description"-->
+<!--            android:layout_width="fill_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_marginStart="2dp"-->
+<!--            android:layout_marginBottom="8dp"-->
+<!--            android:textColor="?colorOnPrimarySurface"-->
+<!--            android:textSize="13sp"-->
+<!--            tools:text="current_list_description" />-->
+
+<!--    </LinearLayout>-->
 
     <FrameLayout
         android:layout_width="match_parent"
@@ -70,12 +87,12 @@
             tools:ignore="UseCompoundDrawables">
             <!-- Cannot use CompoundDrawables -->
 
-            <ImageView
+            <androidx.appcompat.widget.AppCompatImageView
                 android:layout_width="128dp"
                 android:layout_height="125dp"
                 android:layout_gravity="center"
-                android:src="@drawable/ic_folder"
                 android:tint="@color/iconTint"
+                app:srcCompat="@drawable/ic_folder"
                 tools:ignore="ContentDescription" />
 
             <TextView

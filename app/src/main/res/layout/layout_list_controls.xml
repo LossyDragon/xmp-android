@@ -1,4 +1,5 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/media_button_layout"
     android:layout_width="match_parent"
     android:layout_height="64dp"
@@ -17,7 +18,7 @@
         android:scaleType="center"
         android:scaleX="1.2"
         android:scaleY="1.2"
-        android:src="@drawable/ic_play" />
+        app:srcCompat="@drawable/ic_play" />
 
     <ImageButton
         android:id="@+id/control_button_loop"
@@ -29,7 +30,7 @@
         android:contentDescription="@string/button_toggle_loop"
         android:scaleX="1.2"
         android:scaleY="1.2"
-        android:src="@drawable/ic_repeat_off" />
+        app:srcCompat="@drawable/ic_repeat_off" />
 
     <ImageButton
         android:id="@+id/control_button_shuffle"
@@ -41,6 +42,6 @@
         android:contentDescription="@string/button_toggle_shuffle"
         android:scaleX="1.2"
         android:scaleY="1.2"
-        android:src="@drawable/ic_shuffle_off" />
+        app:srcCompat="@drawable/ic_shuffle_off" />
 
 </LinearLayout>

@@ -7,18 +7,17 @@
     android:background="@drawable/bottom_sheet"
     android:orientation="vertical"
     app:behavior_hideable="false"
-    app:behavior_peekHeight="105dp"
+    app:behavior_peekHeight="115dp"
     app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:layout_height="wrap_content">
 
         <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/control_player_lock"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
             android:layout_margin="6dp"
             android:background="?selectableItemBackground"
             app:srcCompat="@drawable/ic_unlock" />
@@ -27,45 +26,41 @@
             android:id="@+id/control_player_info"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
+            android:layout_centerVertical="true"
             android:gravity="center"
             android:includeFontPadding="false"
             android:textColor="@color/white"
             android:textStyle="bold"
             android:typeface="monospace"
             tools:text="Speed:9999 BPM:9999 Pos:9999 Pat:9999" />
-    </LinearLayout>
-
+    </RelativeLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="4dp"
-        android:layout_marginBottom="4dp"
         android:orientation="horizontal">
 
         <SeekBar
             android:id="@+id/control_player_seek"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
+            android:layout_gravity="center"
             android:layout_weight="1"
             tools:progress="50" />
 
         <TextView
             android:id="@+id/control_player_time"
-            android:layout_width="wrap_content"
+            android:layout_width="75dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_marginEnd="12dp"
+            android:layout_margin="5dp"
+            android:gravity="center"
             android:includeFontPadding="false"
             android:textColor="@color/white"
             android:textScaleX="0.9"
             android:textStyle="bold"
             android:typeface="monospace"
             tools:ignore="RtlSymmetry"
-            tools:text="000:00" />
+            tools:text="-00:00" />
 
     </LinearLayout>
 
@@ -137,101 +132,6 @@
             app:srcCompat="@drawable/ic_repeat_off" />
     </LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/player_controls"
-        style="@style/SidebarTheme"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
-
-        <TextView
-            style="@style/SidebarSectionTheme"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/sidebar_details" />
-
-        <GridLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:columnCount="2">
-
-            <TextView
-                style="@style/SidebarDetailsTheme"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/sidebar_patterns" />
-
-            <TextView
-                android:id="@+id/sidebar_num_pat"
-                style="@style/SidebarDetailsTheme"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                tools:text="00" />
-
-            <TextView
-                style="@style/SidebarDetailsTheme"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/sidebar_instruments" />
-
-            <TextView
-                android:id="@+id/sidebar_num_ins"
-                style="@style/SidebarDetailsTheme"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                tools:text="00" />
-
-            <TextView
-                style="@style/SidebarDetailsTheme"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/sidebar_samples" />
-
-            <TextView
-                android:id="@+id/sidebar_num_smp"
-                style="@style/SidebarDetailsTheme"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                tools:text="00" />
-
-            <TextView
-                style="@style/SidebarDetailsTheme"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/sidebar_channels" />
-
-            <TextView
-                android:id="@+id/sidebar_num_chn"
-                style="@style/SidebarDetailsTheme"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                tools:text="00" />
-        </GridLayout>
-
-        <Switch
-            android:id="@+id/sidebar_allseqs_switch"
-            style="@style/SidebarSectionTheme"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:text="@string/sidebar_button_allseqs" />
-
-        <ScrollView
-            android:layout_width="fill_parent"
-            android:layout_height="match_parent">
-
-            <RadioGroup
-                android:id="@+id/sidebar_sequences"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical" />
-
-        </ScrollView>
-
-    </LinearLayout>
+    <include layout="@layout/layout_bottom_sheet" />
 
 </LinearLayout>

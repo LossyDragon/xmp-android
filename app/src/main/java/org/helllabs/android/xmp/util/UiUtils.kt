@@ -12,6 +12,7 @@ import com.afollestad.materialdialogs.WhichButton
 import com.afollestad.materialdialogs.actions.setActionButtonEnabled
 import com.afollestad.materialdialogs.customview.customView
 import com.afollestad.materialdialogs.customview.getCustomView
+import kotlinx.android.synthetic.main.dialog_changelog.view.*
 import kotlinx.android.synthetic.main.dialog_input.view.*
 import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.R
@@ -40,14 +41,13 @@ fun Activity.toast(@StringRes resId: Int? = null, text: String? = null) {
     Toast.makeText(this, resId?.let { getString(it) } ?: text, Toast.LENGTH_SHORT).show()
 }
 
-fun Activity.yesNoDialog(title: String, message: String, runnable: Runnable) {
+
+fun Activity.yesNoDialog(title: String, message: String, callback: (result: Boolean) -> Unit) {
     MaterialDialog(this).show {
         title(text = title)
         message(text = message)
-        positiveButton(R.string.yes) {
-            runnable.run()
-        }
-        negativeButton(R.string.no)
+        positiveButton(R.string.yes) { callback(true) }
+        negativeButton(R.string.no) { callback(false) }
     }
 }
 
@@ -56,15 +56,19 @@ fun Activity.showChangeLog() {
     val lastViewed = prefs.getInt(Preferences.CHANGELOG_VERSION, 0)
     val versionCode = BuildConfig.VERSION_CODE
     if (lastViewed < versionCode) {
-        MaterialDialog(this).show {
-            title(text = "Changelog")
-            customView(R.layout.dialog_changelog)
-            positiveButton(text = "Dismiss") {
-                val editor = prefs.edit()
-                editor.putInt(Preferences.CHANGELOG_VERSION, versionCode)
-                editor.apply()
-            }
-        }
+        val dialog = MaterialDialog(this)
+                .title(R.string.changelog)
+                .customView(R.layout.dialog_changelog)
+                .positiveButton(R.string.dismiss) {
+                    val editor = prefs.edit()
+                    editor.putInt(Preferences.CHANGELOG_VERSION, versionCode)
+                    editor.apply()
+                }
+
+        val view = dialog.getCustomView()
+        view.text_version.text = String.format(getString(R.string.title_changelog), BuildConfig.VERSION_NAME)
+        view.text_changelog.text = getChangelog()
+        dialog.show()
     }
 }
 
@@ -85,7 +89,7 @@ fun Activity.showChangeDir(prefs: SharedPreferences, runnable: Runnable) {
     })
 
     dialog.show {
-        title(text = "Change directory")
+        title(R.string.title_change_directory)
         setActionButtonEnabled(WhichButton.POSITIVE, false)
         cancelOnTouchOutside(true)
         customView.dialog_input_text.setText(mediaPath)

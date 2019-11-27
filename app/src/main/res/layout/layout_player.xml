@@ -81,7 +81,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginTop="?actionBarSize"
-        android:layout_marginBottom="105dp"
+        android:layout_marginBottom="115dp"
         android:layout_weight="0.5" />
 
     <include layout="@layout/layout_player_controls" />

@@ -47,6 +47,7 @@ object InfoCache {
         return file.delete()
     }
 
+    //TODO recursive
     fun deleteRecursive(filename: String): Boolean {
         val file = File(filename)
         return if (file.isDirectory) {

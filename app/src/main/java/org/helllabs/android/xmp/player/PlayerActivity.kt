@@ -330,7 +330,8 @@ class PlayerActivity : AppCompatActivity() {
         totalTime = time / 1000
         control_player_seek.progress = 0
         control_player_seek.max = time / 100
-        toast(text = "New sequence duration: " + String.format("%d:%02d", time / 60000, time / 1000 % 60))
+
+        toast(text = String.format(getString(R.string.msg_new_sequence), time / 60000, time / 1000 % 60))
 
         sheet!!.selectSequence(modVars[7])
     }
@@ -397,11 +398,11 @@ class PlayerActivity : AppCompatActivity() {
                 infoType[flipperPage]!!.text = type
 
                 if (skipToPrevious) {
-                    title_flipper.setInAnimation(this@PlayerActivity, R.anim.slide_in_left_slow)
-                    title_flipper.setOutAnimation(this@PlayerActivity, R.anim.slide_out_right_slow)
+                    title_flipper.setInAnimation(this, R.anim.slide_in_left_slow)
+                    title_flipper.setOutAnimation(this, R.anim.slide_out_right_slow)
                 } else {
-                    title_flipper.setInAnimation(this@PlayerActivity, R.anim.slide_in_right_slow)
-                    title_flipper.setOutAnimation(this@PlayerActivity, R.anim.slide_out_left_slow)
+                    title_flipper.setInAnimation(this, R.anim.slide_in_right_slow)
+                    title_flipper.setOutAnimation(this, R.anim.slide_out_left_slow)
                 }
                 skipToPrevious = false
 
@@ -513,7 +514,7 @@ class PlayerActivity : AppCompatActivity() {
         var reconnect = false
         var fromHistory = false
 
-        Log.i(TAG, "New intent")
+        Log.d(TAG, "New intent")
 
         if (intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY != 0) {
             Log.i(TAG, "Player started from history")
@@ -657,11 +658,8 @@ class PlayerActivity : AppCompatActivity() {
         synchronized(playerLock) {
             if (modPlayer != null) {
                 try {
-                    if (modPlayer!!.toggleLoop()) {
-                        control_player_loop.setImageResource(R.drawable.ic_repeat_on)
-                    } else {
-                        control_player_loop.setImageResource(R.drawable.ic_repeat_off)
-                    }
+                    val toggle = modPlayer!!.toggleLoop()
+                    control_player_loop.setImageResource(if (toggle) R.drawable.ic_repeat_on else R.drawable.ic_repeat_off)
                 } catch (e: RemoteException) {
                     Log.e(TAG, "Can't get loop status")
                 }
@@ -672,7 +670,6 @@ class PlayerActivity : AppCompatActivity() {
     private fun playButtonListener() {
         //Debug.startMethodTracing("xmp");
         synchronized(playerLock) {
-            Log.d(TAG, "Play/pause button pressed (paused=$paused)")
             if (modPlayer != null) {
                 try {
                     modPlayer!!.pause()
@@ -686,6 +683,7 @@ class PlayerActivity : AppCompatActivity() {
                     Log.e(TAG, "Can't pause/unpause module")
                 }
             }
+            Log.d(TAG, "Play/pause button pressed (isPaused=$paused)")
         }
     }
 
@@ -742,8 +740,8 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     // Life cycle
-    public override fun onCreate(icicle: Bundle?) {
-        super.onCreate(icicle)
+    public override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_player)
 
         sheet = Sheet(this)
@@ -978,19 +976,23 @@ class PlayerActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == R.id.menu_delete) {
-            yesNoDialog("Delete", "Are you sure to delete this file?", Runnable {
-                try {
-                    if (modPlayer!!.deleteFile()) {
-                        toast(text = "File deleted")
-                        setResult(RESULT_FIRST_USER)
-                        modPlayer!!.nextSong()
-                    } else {
-                        toast(text = "Can\'t delete file")
+            val title = getString(R.string.menu_delete)
+            val message = String.format(getString(R.string.msg_delete_file), modPlayer!!.fileName)
+            yesNoDialog(title, message) { result ->
+                if (result) {
+                    try {
+                        if (modPlayer!!.deleteFile()) {
+                            toast(R.string.msg_file_deleted)
+                            setResult(RESULT_FIRST_USER)
+                            modPlayer!!.nextSong()
+                        } else {
+                            toast(R.string.msg_cant_delete)
+                        }
+                    } catch (e: RemoteException) {
+                        toast(R.string.msg_cant_connect_service)
                     }
-                } catch (e: RemoteException) {
-                    toast(text = "Can\'t connect service")
                 }
-            })
+            }
         }
         return true
     }
@@ -1003,7 +1005,6 @@ class PlayerActivity : AppCompatActivity() {
         const val PARM_START = "start"
         const val PARM_KEEPFIRST = "keepFirst"
         private const val FRAME_RATE = 25
-        // this MUST be static (volatile doesn't work!)
         private var stopUpdate: Boolean = false
         private var canChangeViewer: Boolean = false
     }

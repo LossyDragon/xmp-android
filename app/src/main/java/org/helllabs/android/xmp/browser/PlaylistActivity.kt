@@ -26,6 +26,7 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
     private var mPlaylist: Playlist? = null
     private var mWrappedAdapter: RecyclerView.Adapter<*>? = null
     private var mRecyclerViewDragDropManager: RecyclerViewDragDropManager? = null
+    private var name: String? = null
 
     override var isShuffleMode: Boolean
         get() = mPlaylist!!.isShuffleMode
@@ -44,14 +45,13 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_playlist)
+        setSupportActionBar(toolbar)
+        super.onCreate(savedInstanceState)
 
         val extras = intent.extras ?: return
+        name = extras.getString(PLAYLIST_NAME)
 
-        setTitle(R.string.browser_playlist_title)
-
-        val name = extras.getString(PLAYLIST_NAME)
         val useFilename = prefs.getBoolean(Preferences.USE_FILENAME, false)
 
         try {
@@ -81,8 +81,11 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         mPlaylistAdapter.setOnItemClickListener(this)
         mPlaylistAdapter.setOnItemLongClickListener(this)
 
-        current_list_name.text = name
-        current_list_description.text = mPlaylist!!.comment
+//        current_list_name.text = name
+//        current_list_description.text = mPlaylist!!.comment
+
+        supportActionBar!!.title = getString(R.string.title_playlist) + ": " + name
+        supportActionBar!!.subtitle = mPlaylist!!.comment
 
         setupButtons()
     }
@@ -131,7 +134,7 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
 
     override fun onLongItemClick(adapter: PlaylistAdapter, view: View, position: Int) {
         MaterialDialog(this, BottomSheet(LayoutMode.WRAP_CONTENT)).show {
-            title(R.string.title_edit_playlist)
+            title(text = String.format(getString(R.string.title_playlist_name), name))
             listItems(R.array.dialog_playlist) { _, index, _ ->
                 when (index) {
                     0 -> {

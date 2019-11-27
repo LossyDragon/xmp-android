@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/plist_container"
     android:layout_width="fill_parent"
@@ -8,22 +9,15 @@
     android:baselineAligned="false"
     android:orientation="horizontal">
 
-    <FrameLayout
-        android:id="@+id/plist_handle"
-        android:layout_width="56dp"
-        android:layout_height="match_parent"
-        android:layout_marginEnd="8dp"
-        tools:background="@color/section_background">
-
-        <ImageView
-            android:id="@+id/plist_image"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:tint="@color/iconTint"
-            android:contentDescription="@string/desc_plist_drag"
-            tools:src="@drawable/ic_grabber" />
-    </FrameLayout>
+    <ImageView
+        android:id="@+id/plist_image"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_margin="8dp"
+        android:contentDescription="@string/desc_plist_image"
+        android:tint="@color/iconTint"
+        tools:src="@drawable/ic_file" />
 
     <LinearLayout
         android:layout_width="0dp"
@@ -46,8 +40,26 @@
             android:id="@+id/plist_info"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:singleLine="true"
             android:textSize="13sp"
             tools:text="plist_info" />
     </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/plist_handle"
+        android:layout_width="56dp"
+        android:layout_height="match_parent"
+        android:background="?selectableItemBackground">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:contentDescription="@string/desc_plist_drag"
+            android:tint="@color/iconTint"
+            app:srcCompat="@drawable/ic_drag" />
+
+    </FrameLayout>
 
 </LinearLayout>

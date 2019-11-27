@@ -124,18 +124,17 @@
 
                 <SeekBarPreference
                     android:defaultValue="100"
-                    android:dialogMessage="@string/preferences_pan_separation_dialog"
                     android:key="stereo_mix"
                     android:max="100"
                     android:persistent="true"
-                    android:summary="@string/preferences_pan_separation_dialog"
+                    android:summary="@string/pref_pan_separation_summary"
                     android:title="@string/pref_pan_separation_title"
                     app:min="0"
                     app:showSeekBarValue="true" />
 
                 <SeekBarPreference
                     android:defaultValue="50"
-                    android:dialogMessage="@string/preferences_default_pan_dialog"
+                    android:dialogMessage="@string/pref_default_pan_dialog"
                     android:key="default_pan"
                     android:max="100"
                     android:persistent="true"
@@ -241,6 +240,20 @@
             app:summary="@string/pref_about_summary"
             app:title="@string/pref_about_title">
             <intent android:action="org.helllabs.android.xmp.ABOUT" />
+        </Preference>
+        <Preference
+            app:summary="@string/pref_site_summary"
+            app:title="@string/pref_site_title">
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:data="http://xmp.sourceforge.net/" />
+        </Preference>
+        <Preference
+            app:summary="@string/pref_support_summary"
+            app:title="@string/pref_support_title">
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:data="https://github.com/cmatsuoka/xmp-android/issues" />
         </Preference>
     </PreferenceCategory>
 

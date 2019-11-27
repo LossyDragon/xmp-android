@@ -105,7 +105,7 @@ class ModuleRequest : ModArchiveRequest {
     }
 
     companion object {
-        private const val TAG = "ModuleRequest"
+        private val TAG = ModuleRequest::class.java.simpleName
         private val UNSUPPORTED = arrayOf("AHX", "HVL", "MO3")
     }
 }

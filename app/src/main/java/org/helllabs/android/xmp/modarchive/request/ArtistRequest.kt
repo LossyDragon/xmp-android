@@ -26,32 +26,32 @@ constructor(key: String, request: String, parameter: String) : ModArchiveRequest
 
         try {
             val xmlFactoryObject = XmlPullParserFactory.newInstance()
-            val myparser = xmlFactoryObject.newPullParser()
+            val myParser = xmlFactoryObject.newPullParser()
             val stream = ByteArrayInputStream(result.toByteArray())
-            myparser.setInput(stream, null)
+            myParser.setInput(stream, null)
 
-            var event = myparser.eventType
+            var event = myParser.eventType
             var text = ""
             while (event != XmlPullParser.END_DOCUMENT) {
                 when (event) {
                     XmlPullParser.START_TAG -> {
-                        val start = myparser.name
+                        val start = myParser.name
                         if (start == "item") {
-                            artist = Artist() // NOPMD
+                            artist = Artist()
                         } else if (start == "sponsor") {
-                            sponsor = Sponsor()    // NOPMD
+                            sponsor = Sponsor()
                         }
                     }
-                    XmlPullParser.TEXT -> text = myparser.text.trim { it <= ' ' }
+                    XmlPullParser.TEXT -> text = myParser.text.trim { it <= ' ' }
                     XmlPullParser.END_TAG -> {
-                        val end = myparser.name
+                        val end = myParser.name
                         if (sponsor != null) {
                             when (end) {
                                 "text" -> sponsor.name = text
                                 "link" -> sponsor.link = text
                                 "sponsor" -> {
                                     artistList.sponsor = sponsor
-                                    sponsor = null    // NOPMD
+                                    sponsor = null
                                 }
                             }
                         } else {
@@ -66,7 +66,7 @@ constructor(key: String, request: String, parameter: String) : ModArchiveRequest
                     else -> {
                     }
                 }
-                event = myparser.next()
+                event = myParser.next()
             }
         } catch (e: XmlPullParserException) {
             Log.e(TAG, "XmlPullParserException: " + e.message)
@@ -80,6 +80,6 @@ constructor(key: String, request: String, parameter: String) : ModArchiveRequest
     }
 
     companion object {
-        private const val TAG = "ArtistListRequest"
+        private val TAG = ArtistRequest::class.java.simpleName
     }
 }

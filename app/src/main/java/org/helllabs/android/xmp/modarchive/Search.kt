@@ -29,6 +29,9 @@ class Search : AppCompatActivity(), TextView.OnEditorActionListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_search)
 
+        setSupportActionBar(toolbar)
+        supportActionBar!!.setDisplayHomeAsUpEnabled(true)
+        supportActionBar!!.setHomeAsUpIndicator(R.drawable.ic_close)
         setTitle(R.string.search_title)
 
         search_edit_text!!.setOnEditorActionListener(this)

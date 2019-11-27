@@ -6,6 +6,7 @@
     android:layout_height="match_parent"
     android:layout_marginStart="6dp"
     android:layout_marginEnd="6dp"
+    android:layout_marginBottom="6dp"
     tools:context=".modarchive.result.ModuleResult">
 
     <ProgressBar
@@ -51,8 +52,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
-                        android:text="@string/result_title"
-                        android:textAppearance="?android:attr/textAppearanceMedium" />
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        tools:text="title" />
 
                     <TextView
                         android:id="@+id/module_filename"
@@ -123,7 +124,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="@color/white"
-            tools:text="@string/result_play" />
+            tools:text="@string/search_result_play" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/module_button_random"

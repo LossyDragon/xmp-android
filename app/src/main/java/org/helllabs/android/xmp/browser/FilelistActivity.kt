@@ -1,7 +1,10 @@
 package org.helllabs.android.xmp.browser
 
 import android.os.Bundle
-import android.view.*
+import android.view.KeyEvent
+import android.view.MenuItem
+import android.view.MotionEvent
+import android.view.View
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.afollestad.materialdialogs.LayoutMode
@@ -78,12 +81,12 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        setContentView(R.layout.activity_modlist)
+        setSupportActionBar(toolbar)
+        setTitle(R.string.title_file_browser)
         super.onCreate(savedInstanceState)
 
         val mediaPath = prefs.getString(Preferences.MEDIA_PATH, Preferences.DEFAULT_MEDIA_PATH)
-
-        setContentView(R.layout.activity_modlist)
-        setTitle(R.string.browser_filelist_title)
 
         // Adapter
         mPlaylistAdapter = PlaylistAdapter(this, ArrayList(), false, PlaylistAdapter.LAYOUT_LIST)
@@ -319,7 +322,7 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         val editor = prefs.edit()
         editor.putString(Preferences.MEDIA_PATH, mNavigation!!.currentDir!!.path)
         editor.apply()
-        toast(R.string.toast_default_path)
+        toast(R.string.msg_default_path)
     }
 
     private fun deleteDirectory(position: Int) {
@@ -327,14 +330,20 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         val mediaPath = prefs.getString(Preferences.MEDIA_PATH, Preferences.DEFAULT_MEDIA_PATH)
 
         if (deleteName.startsWith(mediaPath!!) && deleteName != mediaPath) {
-            yesNoDialog(getString(R.string.title_delete_directory), String.format(getString(R.string.msg_delete_file, FileUtils.basename(deleteName))), Runnable {
-                if (InfoCache.deleteRecursive(deleteName)) {
-                    updateModlist()
-                    toast(R.string.msg_dir_deleted)
-                } else {
-                    toast(R.string.msg_cant_delete_dir)
+            val title = getString(R.string.title_delete_directory)
+            val message = String.format(getString(R.string.msg_delete_file, FileUtils.basename(deleteName)))
+
+            yesNoDialog(title, message) { result ->
+                if (result) {
+                    if (InfoCache.deleteRecursive(deleteName)) {
+                        updateModlist()
+                        toast(R.string.msg_dir_deleted)
+                    } else {
+                        toast(R.string.msg_cant_delete_dir)
+                    }
                 }
-            })
+            }
+
         } else {
             toast(R.string.error_dir_not_under_moddir)
         }
@@ -342,14 +351,19 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
 
     private fun deleteFile(position: Int) {
         val deleteName = mPlaylistAdapter.getFilename(position)
-        yesNoDialog(getString(R.string.title_delete_file), String.format(getString(R.string.msg_delete_file, FileUtils.basename(deleteName))), Runnable {
-            if (InfoCache.delete(deleteName)) {
-                updateModlist()
-                toast(R.string.msg_file_deleted)
-            } else {
-                toast(R.string.msg_cant_delete)
+        val title = getString(R.string.title_delete_file)
+        val message = String.format(getString(R.string.msg_delete_file, FileUtils.basename(deleteName)))
+
+        yesNoDialog(title, message) { result ->
+            if (result) {
+                if (InfoCache.delete(deleteName)) {
+                    updateModlist()
+                    toast(R.string.msg_file_deleted)
+                } else {
+                    toast(R.string.msg_cant_delete)
+                }
             }
-        })
+        }
     }
 
     private fun recursiveList(file: File?): List<String> {

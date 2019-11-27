@@ -66,9 +66,6 @@ dependencies {
     implementation "com.afollestad.material-dialogs:core:$materialDialogs"
     implementation "com.afollestad.material-dialogs:bottomsheets:$materialDialogs"
 
-//    implementation "com.afollestad.material-dialogs:lifecycle:$materialDialogs"
-//    implementation 'com.fnp:material-preferences:0.1.4'
-
     implementation 'com.github.razir.progressbutton:progressbutton:1.0.3'
 
     implementation "androidx.tonyodev.fetch2:xfetch2:3.1.4"

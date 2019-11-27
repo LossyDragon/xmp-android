@@ -10,7 +10,6 @@ import android.text.method.LinkMovementMethod
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.Toast
 import androidx.preference.PreferenceManager
 import com.github.razir.progressbutton.DrawableButton
 import com.github.razir.progressbutton.attachTextChangeAnimator
@@ -139,7 +138,7 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, FetchO
 
         when (status) {
             Status.CANCELLED -> {
-                Toast.makeText(this, R.string.download_cancelled, Toast.LENGTH_LONG).show()
+                toast(R.string.msg_download_cancelled)
                 updateButtons(module)
                 module_button_random.isEnabled = true
             }
@@ -237,9 +236,9 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, FetchO
 
             modList.add(path)
 
-            val intent = Intent(this, PlayerActivity::class.java).apply {
-                putExtra(PlayerActivity.PARM_START, 0)
-            }
+            val intent = Intent(this, PlayerActivity::class.java)
+            intent.putExtra(PlayerActivity.PARM_START, 0)
+
             XmpApplication.instance!!.fileList = modList
             Log.i(TAG, "Play $path")
             startActivity(intent)
@@ -252,7 +251,7 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, FetchO
             shouldPlay = true
 
             module_button_play.showProgress {
-                buttonText = "Downloading..."
+                buttonText = getString(R.string.button_downloading)
                 progressColor = Color.WHITE
                 gravity = DrawableButton.GRAVITY_TEXT_START
             }
@@ -264,43 +263,40 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, FetchO
 
     private fun deleteClick() {
         val file = localFile(module)
+        val title = getString(R.string.title_delete_file)
+        val message = String.format(getString(R.string.msg_delete_file), module!!.filename)
+        yesNoDialog(title, message) { result ->
+            if (result) {
+                Log.i(TAG, "Delete " + file.path)
+                if (file.delete()) {
+                    updateButtons(module)
+                } else {
+                    toast(R.string.error)
+                }
+                if (mPrefs!!.getBoolean(Preferences.ARTIST_FOLDER, true)) {
+                    val parent = file.parentFile!!
+                    val contents = parent.listFiles()
+                    if (contents != null && contents.isEmpty()) {
+                        try {
+                            val mediaPath = File(mPrefs!!.getString(Preferences.MEDIA_PATH, Preferences.DEFAULT_MEDIA_PATH)!!).canonicalPath
+                            val parentPath = parent.canonicalPath
 
-        yesNoDialog(
-                "Delete file",
-                "Are you sure you want to delete " + module!!.filename + "?",
-                Runnable {
-                    Log.i(TAG, "Delete " + file.path)
-                    if (file.delete()) {
-                        updateButtons(module)
-                    } else {
-                        toast(text = "Error")
-                    }
-
-                    // Delete parent directory if empty
-                    if (mPrefs!!.getBoolean(Preferences.ARTIST_FOLDER, true)) {
-                        val parent = file.parentFile!!
-                        val contents = parent.listFiles()
-                        if (contents != null && contents.isEmpty()) {
-                            try {
-                                val mediaPath = File(mPrefs!!.getString(Preferences.MEDIA_PATH, Preferences.DEFAULT_MEDIA_PATH)!!).canonicalPath
-                                val parentPath = parent.canonicalPath
-
-                                if (parentPath.startsWith(mediaPath) && parentPath != mediaPath) {
-                                    Log.i(TAG, "Remove empty directory " + parent.path)
-                                    if (!parent.delete()) {
-                                        toast(text = "Error removing directory")
-                                        Log.e(TAG, "error removing directory")
-                                    }
+                            if (parentPath.startsWith(mediaPath) && parentPath != mediaPath) {
+                                Log.i(TAG, "Remove empty directory " + parent.path)
+                                if (!parent.delete()) {
+                                    toast(R.string.msg_error_remove_directory)
+                                    Log.e(TAG, "error removing directory")
                                 }
-                            } catch (e: IOException) {
-                                Log.e(TAG, e.message.toString())
                             }
-
+                        } catch (e: IOException) {
+                            Log.e(TAG, e.message.toString())
                         }
-                    }
-                })
 
-        updateButtons(module)
+                    }
+                }
+                updateButtons(module)
+            }
+        }
     }
 
     private fun getDownloadPath(module: Module?): String {
@@ -310,7 +306,7 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, FetchO
 
         if (mPrefs!!.getBoolean(Preferences.MODARCHIVE_FOLDER, true)) {
             sb.append(File.separatorChar)
-            sb.append(MODARCHIVE_DIRNAME)
+            sb.append(getString(R.string.dirname_theModArchive))
         }
 
         if (mPrefs!!.getBoolean(Preferences.ARTIST_FOLDER, true)) {
@@ -326,11 +322,11 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, FetchO
         if (localFile(module).exists()) {
             // module exists, update button to reflect existance and enable Menu Delete
             deleteMenu.findItem(R.id.menu_delete).isEnabled = true
-            module_button_play.text = getString(R.string.result_play)
+            module_button_play.text = getString(R.string.button_play)
         } else if (!localFile(module).exists() || module == null) {
             // module does not exist, update button to download and disable Menu Delete
             deleteMenu.findItem(R.id.menu_delete).isEnabled = false
-            module_button_play.text = getString(R.string.result_download)
+            module_button_play.text = getString(R.string.button_download)
         }
     }
 
@@ -339,9 +335,11 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, FetchO
         if (localFile(url, path).exists()) {
             yesNoDialog(
                     "File exists!",
-                    "This module already exists. Do you want to overwrite?",
-                    Runnable { modDownloader(mod, url, path) }
-            )
+                    "This module already exists. Do you want to overwrite?") { result ->
+                if (result) {
+                    modDownloader(mod, url, path)
+                }
+            }
         } else {
             modDownloader(mod, url, path)
         }
@@ -378,7 +376,6 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, FetchO
     }
 
     companion object {
-        private const val TAG = "ModuleResult"
-        private const val MODARCHIVE_DIRNAME = "TheModArchive"
+        private val TAG = ModuleResult::class.java.simpleName
     }
 }

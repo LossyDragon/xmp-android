@@ -16,7 +16,7 @@ abstract class Result : AppCompatActivity() {
 
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setTitle(R.string.search_result_title)
+        setTitle(R.string.title_search_result)
         crossfader = Crossfader(this)
     }
 

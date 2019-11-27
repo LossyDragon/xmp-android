@@ -15,17 +15,22 @@ class PlaylistAddEdit : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_edit_playlist)
 
-        supportActionBar?.setHomeAsUpIndicator(R.drawable.ic_close)
+        setSupportActionBar(toolbar)
+        supportActionBar!!.setDisplayHomeAsUpEnabled(true)
+        supportActionBar!!.setHomeAsUpIndicator(R.drawable.ic_close)
+
+        val name = intent.getStringExtra(EXTRA_NAME)
+        val comment = intent.getStringExtra(EXTRA_COMMENT)
 
         if (intent.hasExtra(EXTRA_ID)) {
-            title = "Edit Playlist: " + intent.getStringExtra(EXTRA_NAME)
+            title = String.format(getString(R.string.title_edit_playlist), name)
 
-            playlist_add_edit_name_editText.setText(intent.getStringExtra(EXTRA_NAME))
-            playlist_add_edit_comment_editText.setText(intent.getStringExtra(EXTRA_COMMENT))
+            playlist_add_edit_name_editText.setText(name)
+            playlist_add_edit_comment_editText.setText(comment)
             button_add_edit_playlist.text = getString(R.string.button_playlist_update)
             button_delete_playlist.apply {
                 visibility = View.VISIBLE
-                text = String.format(getString(R.string.button_playlist_delete), title)
+                text = String.format(getString(R.string.button_playlist_delete), name)
             }
 
         } else {
@@ -63,7 +68,7 @@ class PlaylistAddEdit : AppCompatActivity() {
 
         val playlistData = Intent().apply {
             putExtra(EXTRA_NAME, name)
-            putExtra(EXTRA_OLD_NAME, title)
+            putExtra(EXTRA_OLD_NAME, intent.getStringExtra(EXTRA_NAME))
             putExtra(EXTRA_COMMENT, comment)
 
             if (intent.getIntExtra(EXTRA_ID, -1) != -1)

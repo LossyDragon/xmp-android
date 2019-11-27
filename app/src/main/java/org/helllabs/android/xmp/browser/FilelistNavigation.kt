@@ -121,6 +121,6 @@ class FilelistNavigation {
     }
 
     companion object {
-        private const val TAG = "FilelistNavigation"
+        private val TAG = FilelistNavigation::class.java.simpleName
     }
 }

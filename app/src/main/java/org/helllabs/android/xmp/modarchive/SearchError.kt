@@ -18,12 +18,13 @@ class SearchError : AppCompatActivity(), Runnable {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_search_error)
+        setSupportActionBar(toolbar)
 
         val error = intent.getSerializableExtra(Search.ERROR) as Throwable
 
         var message: String? = error.message
         if (message == null) {
-            message = UNKNOWN_ERROR
+            message = getString(R.string.search_error_unknown)
         } else {
             // Remove java exception stuff
             val idx = message.indexOf("Exception: ")
@@ -32,10 +33,10 @@ class SearchError : AppCompatActivity(), Runnable {
             }
 
             message = if (message.trim { it <= ' ' }.isEmpty()) {
-                UNKNOWN_ERROR
+                getString(R.string.search_error_unknown)
             } else {
                 message.substring(0, 1)
-                        .toUpperCase(Locale.US) + message.substring(1) + PRESS_BACK
+                        .toUpperCase(Locale.US) + message.substring(1) + getString(R.string.search_error_back)
             }
         }
 
@@ -80,8 +81,5 @@ class SearchError : AppCompatActivity(), Runnable {
 
     companion object {
         private const val PERIOD = 1337
-        private const val PRESS_BACK = ".  Press back button to continue."
-        private const val UNKNOWN_ERROR =
-                "Software Failure$PRESS_BACK\n\nGuru Meditation #35068035.48454C50"
     }
 }

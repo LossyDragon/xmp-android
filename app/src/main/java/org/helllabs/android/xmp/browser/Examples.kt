@@ -8,7 +8,7 @@ import java.lang.Exception
 
 object Examples {
 
-    private const val TAG = "Examples"
+    private val TAG = Examples::class.java.simpleName
 
     fun install(context: Context, path: String, examples: Boolean): Int {
         val dir = File(path)

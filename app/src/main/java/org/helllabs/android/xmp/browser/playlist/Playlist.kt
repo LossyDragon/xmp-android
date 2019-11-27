@@ -134,7 +134,7 @@ constructor(context: Context, val name: String) {
                 if (InfoCache.fileExists(filename)) {
                     val item = PlaylistItem(PlaylistItem.TYPE_FILE, title, comment)
                     item.file = File(filename)
-                    item.imageRes = R.drawable.ic_grabber
+                    //item.imageRes = R.drawable.ic_drag
                     mList.add(item)
                 } else {
                     invalidList.add(lineNum)
@@ -223,7 +223,7 @@ constructor(context: Context, val name: String) {
     }
 
     companion object {
-        private const val TAG = "Playlist"
+        private val TAG = Playlist::class.java.simpleName
         const val COMMENT_SUFFIX = ".comment"
         const val PLAYLIST_SUFFIX = ".playlist"
         private const val OPTIONS_PREFIX = "options_"
@@ -278,6 +278,7 @@ constructor(context: Context, val name: String) {
             }
 
             if (error) {
+                Log.e(TAG, "rename() failed.")
                 return false
             }
 

@@ -224,6 +224,6 @@ abstract class Viewer(context: Context) : SurfaceView(context), SurfaceHolder.Ca
     }
 
     companion object {
-        private const val TAG = "Viewer"
+        private val TAG = Viewer::class.java.simpleName
     }
 }

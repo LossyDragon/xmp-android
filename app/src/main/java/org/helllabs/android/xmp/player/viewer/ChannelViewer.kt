@@ -396,6 +396,6 @@ class ChannelViewer(context: Context) : Viewer(context) {
     }
 
     companion object {
-        private const val TAG = "ChannelViewer"
+        private val TAG = ChannelViewer::class.java.simpleName
     }
 }

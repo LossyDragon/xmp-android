@@ -57,7 +57,8 @@ abstract class ModArchiveRequest(private val mKey: String, private val mRequest:
     protected abstract fun xmlParse(result: String): ModArchiveResponse
 
     companion object {
-        private const val TAG = "ModArchiveRequest"
+        private val TAG = ModArchiveRequest::class.java.simpleName
+
         private const val SERVER = "http://api.modarchive.org"
 
         const val ARTIST = "search_artist&query="

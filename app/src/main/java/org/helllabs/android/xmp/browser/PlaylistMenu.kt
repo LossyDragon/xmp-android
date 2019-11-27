@@ -18,6 +18,7 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.activity_playlist_menu.*
+import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.browser.playlist.*
@@ -97,6 +98,13 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener, P
     override fun onResume() {
         super.onResume()
         updateList()
+
+        //Show changelog on Version_Code updates.
+        val lastViewed = prefs.getInt(Preferences.CHANGELOG_VERSION, 0)
+        val versionCode = BuildConfig.VERSION_CODE
+        if (lastViewed < versionCode && lastViewed != 0) {
+            showChangeLog()
+        }
     }
 
     private fun getStoragePermissions() {
@@ -271,6 +279,8 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener, P
     }
 
     private fun editPlaylistFromFile(name: String, info: String, oldName: String) {
+        println("OldName: $oldName")
+        println("NewName: $name")
         if (!Playlist.rename(this, oldName, name))
             error(R.string.error_rename_playlist)
 

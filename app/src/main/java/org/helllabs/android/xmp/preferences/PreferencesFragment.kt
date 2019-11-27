@@ -20,15 +20,15 @@ class PreferencesFragment : PreferenceFragmentCompat() {
         val soundScreen: PreferenceScreen? = findPreference("sound_screen")
         if (PlayerService.isAlive) {
             soundScreen?.isEnabled = false
-            soundScreen?.title = getString(R.string.pref_category_sound) + " (Disabled when playing)"
+            soundScreen?.title = getString(R.string.pref_category_sound) + getString(R.string.pref_disabled)
         }
 
         val clearCache: Preference? = findPreference("clear_cache")
         clearCache?.onPreferenceClickListener = Preference.OnPreferenceClickListener {
             if (deleteCache(Preferences.CACHE_DIR)) {
-                activity!!.toast(R.string.cache_clear)
+                activity!!.toast(R.string.msg_cache_clear)
             } else {
-                activity!!.toast(R.string.cache_clear_error)
+                activity!!.toast(R.string.msg_cache_clear_error)
             }
             true
         }

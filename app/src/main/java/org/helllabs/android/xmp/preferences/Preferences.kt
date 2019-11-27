@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.os.Environment
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
+import kotlinx.android.synthetic.main.pref_layout.*
 import org.helllabs.android.xmp.R
 import java.io.File
 
@@ -15,10 +16,9 @@ class Preferences : AppCompatActivity() {
 
         setContentView(R.layout.pref_layout)
 
-        supportActionBar?.apply {
-            setDisplayShowHomeEnabled(true)
-            setDisplayHomeAsUpEnabled(true)
-        }
+        setSupportActionBar(toolbar)
+        supportActionBar!!.setDisplayHomeAsUpEnabled(true)
+        supportActionBar!!.setHomeAsUpIndicator(R.drawable.ic_back)
 
         supportFragmentManager
                 .beginTransaction()

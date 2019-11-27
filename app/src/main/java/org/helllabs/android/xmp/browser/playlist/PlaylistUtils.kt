@@ -19,10 +19,10 @@ fun addFiles(activity: Activity, fileList: List<String>, playlistName: String) {
     val modInfo = ModInfo()
     var hasInvalid = false
 
-    for (filename in fileList) {
-        if (Xmp.testModule(filename, modInfo)) {
+    fileList.forEach {
+        if (Xmp.testModule(it, modInfo)) {
             val item = PlaylistItem(PlaylistItem.TYPE_FILE, modInfo.name, modInfo.type)
-            item.file = File(filename)
+            item.file = File(it)
             list.add(item)
         } else {
             hasInvalid = true
@@ -51,20 +51,19 @@ fun filesToPlaylist(activity: Activity, fileList: List<String>, playlistName: St
 }
 
 fun filesToPlaylist(activity: Activity, filename: String, playlistName: String) {
-    val fileList = ArrayList<String>()
+    val fileList = arrayListOf<String>()
     fileList.add(filename)
     addFiles(activity, fileList, playlistName)
 }
 
 fun list(): Array<String> {
-    val ret = Preferences.DATA_DIR.list(PlaylistFilter())
-    return ret ?: emptyArray()
+    return Preferences.DATA_DIR.list(PlaylistFilter()) ?: emptyArray()
 }
 
 fun listNoSuffix(): Array<String> {
     val pList = list()
-    for (i in pList.indices) {
-        pList[i] = pList[i].substring(0, pList[i].lastIndexOf(Playlist.PLAYLIST_SUFFIX))
+    pList.forEachIndexed { index, _ ->
+        pList[index] = pList[index].substring(0, pList[index].lastIndexOf(Playlist.PLAYLIST_SUFFIX))
     }
     return pList
 }
@@ -88,8 +87,8 @@ fun createEmptyPlaylist(activity: Activity, name: String, comment: String): Bool
 
 // Stable IDs for used by Advanced RecyclerView
 fun renumberIds(list: List<PlaylistItem>) {
-    for ((index, item) in list.withIndex()) {
-        item.id = index
+    list.forEachIndexed { index, playlistItem ->
+        playlistItem.id = index
     }
 }
 

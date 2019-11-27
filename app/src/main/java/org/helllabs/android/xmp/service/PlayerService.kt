@@ -463,7 +463,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
 
         // Init Prefs
         prefs = PreferenceManager.getDefaultSharedPreferences(this)
-        sampleRate = Integer.parseInt(prefs!!.getString(Preferences.SAMPLING_RATE, "44100")!!)
+        sampleRate = prefs!!.getString(Preferences.SAMPLING_RATE, "44100")!!.toInt()
 
         // Init Media Session
         mediaSession = MediaSessionCompat(this, TAG)
@@ -789,7 +789,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
     }
 
     companion object {
-        private const val TAG = "PlayerService"
+        private val TAG = PlayerService::class.java.simpleName
 
         const val XMP_PLAYER_NEXT = "XMP_NEXT"
         const val XMP_PLAYER_PREV = "XMP_PREV"

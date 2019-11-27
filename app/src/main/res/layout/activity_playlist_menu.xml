@@ -15,6 +15,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            app:titleTextColor="@color/white"
             android:background="?attr/colorPrimary"
             android:minHeight="?attr/actionBarSize" />
 
@@ -41,7 +42,7 @@
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
         android:elevation="10dp"
-        android:text="@string/menu_new_playlist"
+        android:text="@string/new_playlist"
         android:textColor="@color/white"
         app:backgroundTint="@color/primary"
         app:icon="@drawable/ic_add"

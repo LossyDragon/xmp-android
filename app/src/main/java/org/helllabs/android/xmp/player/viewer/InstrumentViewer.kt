@@ -124,6 +124,6 @@ class InstrumentViewer(context: Context) : Viewer(context) {
     }
 
     companion object {
-        private const val TAG = "InstrumentViewer"
+        private val TAG = InstrumentViewer::class.java.simpleName
     }
 }
