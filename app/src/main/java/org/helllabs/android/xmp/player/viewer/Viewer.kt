@@ -4,6 +4,8 @@ import org.helllabs.android.xmp.service.ModInterface
 import org.helllabs.android.xmp.util.Log
 
 import android.content.Context
+import android.content.res.Configuration
+import android.graphics.Color
 import android.os.RemoteException
 import android.view.GestureDetector
 import android.view.GestureDetector.SimpleOnGestureListener
@@ -11,6 +13,7 @@ import android.view.MotionEvent
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.view.View
+import androidx.appcompat.app.AppCompatDelegate
 import org.helllabs.android.xmp.player.getScreenSize
 import kotlin.math.abs
 
@@ -163,8 +166,8 @@ abstract class Viewer(context: Context) : SurfaceView(context), SurfaceHolder.Ca
         // do nothing
     }
 
-    open fun setRotation(`val`: Int) {
-        viewerRotation = `val`
+    open fun setRotation(value: Int) {
+        viewerRotation = value
     }
 
     open fun update(info: Info, paused: Boolean) {
@@ -221,6 +224,16 @@ abstract class Viewer(context: Context) : SurfaceView(context), SurfaceHolder.Ca
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
         // do nothing
+    }
+
+
+    fun getBackgroundColor(): Int {
+        //Detect if dark mode is enabled or not
+        return when (resources.configuration.uiMode.and(Configuration.UI_MODE_NIGHT_MASK)) {
+            Configuration.UI_MODE_NIGHT_YES -> Color.BLACK
+            Configuration.UI_MODE_NIGHT_NO -> Color.WHITE
+            else -> Color.BLACK
+        }
     }
 
     companion object {

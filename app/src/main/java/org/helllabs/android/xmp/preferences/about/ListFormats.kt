@@ -21,7 +21,6 @@ class ListFormats : AppCompatActivity() {
 
         setContentView(R.layout.pref_item_formats)
 
-        setSupportActionBar(toolbar)
         supportActionBar!!.apply {
             setDisplayShowHomeEnabled(true)
             setDisplayHomeAsUpEnabled(true)

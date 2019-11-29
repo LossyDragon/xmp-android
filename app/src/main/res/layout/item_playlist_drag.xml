@@ -11,12 +11,12 @@
 
     <ImageView
         android:id="@+id/plist_image"
+        style="@style/ListTint"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
         android:layout_margin="8dp"
         android:contentDescription="@string/desc_plist_image"
-        android:tint="@color/iconTint"
         tools:src="@drawable/ic_file" />
 
     <LinearLayout
@@ -33,6 +33,7 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:singleLine="true"
+            android:textColor="?colorOnSurface"
             android:textSize="19sp"
             tools:text="plist_title" />
 
@@ -42,6 +43,7 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:singleLine="true"
+            android:textColor="?colorOnSurface"
             android:textSize="13sp"
             tools:text="plist_info" />
     </LinearLayout>
@@ -57,7 +59,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:contentDescription="@string/desc_plist_drag"
-            android:tint="@color/iconTint"
+            android:tint="?colorOnSurface"
             app:srcCompat="@drawable/ic_drag" />
 
     </FrameLayout>

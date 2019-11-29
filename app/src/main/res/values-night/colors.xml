@@ -2,11 +2,12 @@
 
 <resources>
 
-<!-- TODO DayNight Colors -->
-    <color name="windowBackground">@color/black</color>
-    <color name="iconTint">@color/white</color>
-<!--    <color name="textTint">@color/white</color>-->
+    <color name="cardColor">@color/colorGray</color>
 
-    <color name="surface">@color/gray</color>
+    <color name="colorSurface">@color/colorPrimaryDark</color>
+
+    <color name="colorTint">@color/colorWhite</color>
+
+    <color name="windowBackground">@color/colorBlack</color>
 
 </resources>

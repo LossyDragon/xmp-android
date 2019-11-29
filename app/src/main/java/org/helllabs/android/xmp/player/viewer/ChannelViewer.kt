@@ -42,7 +42,11 @@ class ChannelViewer(context: Context) : Viewer(context) {
     private var panWidth: Int = 0
     private val keyRow = IntArray(Xmp.MAX_CHANNELS)
 
+    private var backGroundColor: Int = Color.BLACK
+
     init {
+        backGroundColor = getBackgroundColor()
+
         val font2Size = resources.getDimensionPixelSize(R.dimen.channelview_channel_font_size)
 
         scopePaint = Paint()
@@ -234,8 +238,8 @@ class ChannelViewer(context: Context) : Viewer(context) {
         }
     }
 
-    override fun setRotation(`val`: Int) {
-        super.setRotation(`val`)
+    override fun setRotation(value: Int) {
+        super.setRotation(value)
 
         // Should use canvasWidth but it's not updated yet
         //width deprecated in API level 15. Our min is 16
@@ -299,7 +303,7 @@ class ChannelViewer(context: Context) : Viewer(context) {
         val row = info.values[2]
 
         // Clear screen
-        canvas.drawColor(Color.BLACK)
+        canvas.drawColor(backGroundColor)
 
         for (chn in 0 until numChannels) {
             val num = (numChannels + 1) / cols

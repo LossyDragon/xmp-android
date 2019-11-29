@@ -1,21 +1,24 @@
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="gray">#FF282828</color>
-    <color name="lightgray">#FFc0c0c0</color>
-    <color name="white">#FFF0F0F0</color>
+    <color name="colorPrimary">#1a305d</color>
+    <color name="colorPrimaryDark">#1a305d</color>
+    <color name="colorAccent">#3460ba</color>
+    <color name="colorSurface">@color/colorWhite</color>
+
+    <color name="colorBlack">#FF000000</color>
+    <color name="colorGray">#FF282828</color>
+    <color name="colorDarkGray">#FF141414</color>
+    <color name="colorLightGray">#FFc0c0c0</color>
+    <color name="colorWhite">#FFF0F0F0</color>
 
     <color name="section_background">#FF202020</color>
     <color name="section_background_dark">#FF1A1A1A</color>
 
-    <color name="primary">#1a305d</color>
-    <color name="primary_dark">#1a305d</color>
-    <color name="accent">#3460ba</color>
-    <color name="surface">@color/white</color>
+    <color name="colorTint">@color/colorBlack</color>
 
-    <color name="pressed_color">#606060</color>
-    <color name="refresh_color">#229e3c</color>
+    <color name="windowBackground">@color/colorWhite</color>
 
-    <color name="windowBackground">@color/white</color>
-    <color name="iconTint">@color/black</color>
+    <color name="cardColor">@color/colorWhite</color>
 
+    <color name="colorPressed">#606060</color>
+    <color name="colorRefresh">#229e3c</color>
 </resources>

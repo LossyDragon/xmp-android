@@ -17,7 +17,6 @@ class About : AppCompatActivity() {
 
         setContentView(R.layout.pref_item_about)
 
-        setSupportActionBar(toolbar)
         supportActionBar?.apply {
             setDisplayShowHomeEnabled(true)
             setDisplayHomeAsUpEnabled(true)

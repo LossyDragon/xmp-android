@@ -14,11 +14,10 @@ import org.helllabs.android.xmp.util.applyTheme
 //TODO: Perform migration functions between cmatsuoka's version to this
 // 1: Preferences migrations
 
-//TODO: Some Toolbar text is black. (ModArchive activites)
-//TODO: Dialog corners
-//TODO: Verify DayNight theme
 //TODO: PlayerActivity DayNight theme
 //TODO: For some odd reason, play/pause between the Service and Notifications get de-synced
+//TODO: Notification on API 23: Pause is desynced when pressing it once.
+//TODO: Changing theme on API 23: "Cancelling event due to no window focus: MotionEvent android" Not focused?/Resumed?
 //TODO: Unplugging USB headset will resume playing.
 
 class XmpApplication : Application() {

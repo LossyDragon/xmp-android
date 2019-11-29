@@ -8,27 +8,12 @@
     android:gravity="top"
     android:orientation="vertical">
 
-    <com.google.android.material.appbar.AppBarLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:ellipsize="start">
-
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="?attr/colorPrimary"
-            android:minHeight="?attr/actionBarSize"
-            app:titleTextColor="@color/white" />
-
-    </com.google.android.material.appbar.AppBarLayout>
-
     <!-- Directory Status -->
     <LinearLayout
         android:id="@+id/status_area"
-        style="@style/StatusTheme"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@color/colorPrimaryDark"
         android:orientation="horizontal">
 
         <TextView
@@ -39,9 +24,11 @@
             android:layout_marginTop="12dp"
             android:layout_marginBottom="12dp"
             android:layout_weight="1.0"
+            android:ellipsize="start"
             android:focusable="true"
             android:longClickable="true"
-            android:textColor="@color/white"
+            android:singleLine="true"
+            android:textColor="@color/colorWhite"
             android:textSize="16sp"
             android:textStyle="bold"
             tools:text="/some/directory/mod" />
@@ -92,7 +79,7 @@
                 android:layout_width="128dp"
                 android:layout_height="125dp"
                 android:layout_gravity="center"
-                android:tint="@color/iconTint"
+                android:tint="?colorOnBackground"
                 app:srcCompat="@drawable/ic_folder"
                 tools:ignore="ContentDescription" />
 

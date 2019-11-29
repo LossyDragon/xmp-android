@@ -3,18 +3,20 @@
     <!-- Application theme. -->
     <style name="AppTheme" parent="@style/Theme.MaterialComponents.DayNight">
         <!-- All customizations that are NOT specific to a particular API-level can go here. -->
-        <item name="colorSurface">@color/surface</item>
-        <item name="colorPrimary">@color/primary</item>
-        <item name="colorPrimaryDark">@color/primary_dark</item>
-        <item name="colorAccent">@color/accent</item>
+        <item name="colorSurface">@color/colorSurface</item>
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
 
-        <item name="android:textColorPrimary">?colorOnSurface</item>
-        <item name="actionMenuTextColor">@color/white</item>
+        <item name="android:textColorPrimary">@color/colorWhite</item>
+        <item name="android:textColorSecondary">@color/colorLightGray</item>
 
-        <item name="android:windowTranslucentStatus">true</item>
-        <item name="android:windowTranslucentNavigation">true</item>
+        <item name="android:textColor">?colorOnBackground</item>
+
+        <item name="android:windowBackground">@color/windowBackground</item>
 
         <item name="md_corner_radius">16dp</item>
+        <item name="md_color_button_text">?colorOnBackground</item>
     </style>
 
     <style name="AppTheme.NoActionBar" parent="AppTheme">
@@ -22,42 +24,70 @@
         <item name="windowNoTitle">true</item>
     </style>
 
-    <!-- 'New' ColoredSurface and some issue with Text/Icon color is meh...-->
-<!--    <style name="AppTheme.ColoredSurface" parent="AppTheme">-->
-<!--        <item name="colorSurface">@color/primary</item>-->
-<!--        <item name="titleTextColor">@color/white</item>-->
-<!--    </style>-->
-
-<!--    <style name="AppTheme.Preferences" parent="AppTheme">-->
-<!--        <item name="colorSurface">@color/primary</item>-->
-<!--    </style>-->
-
-    <style name="StatusTheme" parent="AppTheme">
-        <item name="android:background">@color/primary_dark</item>
+    <style name="AppTheme.Preferences" parent="AppTheme">
+        <item name="android:textColorPrimary">@color/colorWhite</item>
+        <item name="android:textColorSecondary">@color/colorTint</item>
     </style>
 
+    <!-- Color the background on CardViews -->
+    <style name="CardTint" parent="Widget.MaterialComponents.CardView">
+        <item name="cardBackgroundColor">@color/cardColor</item>
+    </style>
+
+    <!-- Color the icon tint on recyclerView items -->
+    <style name="ListTint" parent="AppTheme">
+        <item name="tint">@color/colorTint</item>
+    </style>
+
+    <!-- Bottom Sheet Styles -->
     <style name="SidebarTheme" parent="AppTheme">
         <item name="android:padding">4dp</item>
-        <item name="android:background">@color/gray</item>
-        <item name="android:textColor">@color/lightgray</item>
+        <item name="android:background">@color/colorGray</item>
+        <item name="android:textColor">@color/colorLightGray</item>
     </style>
 
     <style name="SidebarDetailsTheme" parent="AppTheme">
         <item name="android:paddingLeft">4dp</item>
         <item name="android:paddingRight">4dp</item>
         <item name="android:textSize">14sp</item>
-        <item name="android:textColor">@color/lightgray</item>
+        <item name="android:textColor">@color/colorLightGray</item>
     </style>
 
     <style name="SidebarSequenceTheme" parent="AppTheme">
         <item name="android:textSize">15sp</item>
-        <item name="android:textColor">@color/lightgray</item>
+        <item name="android:textColor">@color/colorLightGray</item>
     </style>
 
     <style name="SidebarSectionTheme" parent="AppTheme">
         <item name="android:textSize">16sp</item>
         <item name="android:background">@drawable/section_background</item>
-        <item name="android:textColor">@color/white</item>
+        <item name="android:textColor">@color/colorWhite</item>
+    </style>
+    <!-- End Bottom Sheet Styles -->
+
+    <!--Style for buttons in activity_search-->
+    <style name="SearchActivityButtons" parent="Widget.MaterialComponents.Button.Icon">
+        <item name="android:textColor">@color/colorWhite</item>
+        <item name="drawableTint">@color/colorWhite</item>
+        <item name="iconTint">@color/colorWhite</item>
+        <item name="iconGravity">textStart</item>
+        <item name="android:layout_marginTop">16dp</item>
+        <item name="android:layout_marginBottom">32sp</item>
+    </style>
+
+    <!--Player Buttons -->
+    <style name="PlayerButtons" parent="AppTheme">
+        <item name="tint">@color/colorWhite</item>
+        <item name="android:scaleX">1.2</item>
+        <item name="android:scaleY">1.2</item>
+        <item name="android:background">?selectableItemBackgroundBorderless</item>
+    </style>
+
+    <!--Fab Buttons -->
+    <style name="FabStyle" parent="Widget.MaterialComponents.ExtendedFloatingActionButton">
+        <item name="android:textColor">@color/colorWhite</item>
+        <item name="iconTint">@color/colorWhite</item>
+        <item name="backgroundTint">@color/colorPrimary</item>
     </style>
 
 </resources>

@@ -9,39 +9,32 @@
 
     <ImageButton
         android:id="@+id/control_button_play"
+        style="@style/PlayerButtons"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_gravity="center_vertical"
         android:layout_weight="1"
-        android:background="?selectableItemBackgroundBorderless"
         android:contentDescription="@string/button_play_all"
-        android:scaleType="center"
-        android:scaleX="1.2"
-        android:scaleY="1.2"
         app:srcCompat="@drawable/ic_play" />
 
     <ImageButton
         android:id="@+id/control_button_loop"
+        style="@style/PlayerButtons"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_gravity="center_vertical"
         android:layout_weight="1"
-        android:background="?selectableItemBackgroundBorderless"
         android:contentDescription="@string/button_toggle_loop"
-        android:scaleX="1.2"
-        android:scaleY="1.2"
         app:srcCompat="@drawable/ic_repeat_off" />
 
     <ImageButton
         android:id="@+id/control_button_shuffle"
+        style="@style/PlayerButtons"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_gravity="center_vertical"
         android:layout_weight="1"
-        android:background="?selectableItemBackgroundBorderless"
         android:contentDescription="@string/button_toggle_shuffle"
-        android:scaleX="1.2"
-        android:scaleY="1.2"
         app:srcCompat="@drawable/ic_shuffle_off" />
 
 </LinearLayout>

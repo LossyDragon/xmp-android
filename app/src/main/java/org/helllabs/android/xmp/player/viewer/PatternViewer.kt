@@ -30,7 +30,11 @@ class PatternViewer(context: Context) : Viewer(context) {
     private var oldPosX: Int = 0
     private val rect = Rect()
 
+    private var backGroundColor: Int = Color.BLACK
+
     init {
+        backGroundColor = getBackgroundColor()
+
         notePaint.setARGB(255, 140, 140, 160)
         notePaint.typeface = Typeface.MONOSPACE
         notePaint.textSize = fontSize.toFloat()
@@ -142,7 +146,7 @@ class PatternViewer(context: Context) : Viewer(context) {
         val numRows = info.values[3]
 
         // Clear screen
-        canvas.drawColor(Color.BLACK)
+        canvas.drawColor(backGroundColor)
 
         // Header
         rect.set(0, 0, canvasWidth - 1, fontHeight - 1)

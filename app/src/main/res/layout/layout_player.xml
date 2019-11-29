@@ -9,7 +9,7 @@
         android:id="@+id/title_flipper"
         android:layout_width="fill_parent"
         android:layout_height="?actionBarSize"
-        android:background="@color/primary"
+        android:background="@color/colorPrimary"
         android:elevation="10dp"
         tools:ignore="UnusedAttribute">
 
@@ -27,7 +27,7 @@
                 android:paddingEnd="0dp"
                 android:singleLine="true"
                 android:textAppearance="?android:attr/textAppearanceLarge"
-                android:textColor="@color/white"
+                android:textColor="@color/colorWhite"
                 tools:text="info_name_0" />
 
             <TextView
@@ -40,7 +40,7 @@
                 android:paddingBottom="2dp"
                 android:singleLine="true"
                 android:textAppearance="?android:attr/textAppearanceMedium"
-                android:textColor="#c0c0c0"
+                android:textColor="@color/colorLightGray"
                 tools:text="info_type_0" />
 
         </LinearLayout>
@@ -59,7 +59,7 @@
                 android:paddingEnd="0dp"
                 android:singleLine="true"
                 android:textAppearance="?android:attr/textAppearanceLarge"
-                android:textColor="@color/white" />
+                android:textColor="@color/colorWhite" />
 
             <TextView
                 android:id="@+id/info_type_1"
@@ -71,7 +71,7 @@
                 android:paddingBottom="2dp"
                 android:singleLine="true"
                 android:textAppearance="?android:attr/textAppearanceMedium"
-                android:textColor="#c0c0c0" />
+                android:textColor="@color/colorLightGray" />
 
         </LinearLayout>
     </ViewFlipper>

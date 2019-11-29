@@ -116,7 +116,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
 
     protected fun setSwipeRefresh(swipeContainer: SwipeRefreshLayout) {
         swipeContainer.apply {
-            setColorSchemeResources(R.color.refresh_color)
+            setColorSchemeResources(R.color.colorRefresh)
             setOnRefreshListener {
                 update()
                 isRefreshing = false

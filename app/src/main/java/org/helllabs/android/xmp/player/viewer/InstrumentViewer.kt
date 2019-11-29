@@ -21,7 +21,11 @@ class InstrumentViewer(context: Context) : Viewer(context) {
     private var insName: Array<String>? = null
     private val rect = Rect()
 
+    private var backGroundColor: Int = Color.BLACK
+
     init {
+        backGroundColor = getBackgroundColor()
+
         for (i in 0..7) {
             val `val` = 120 + 10 * i
             insPaint[i] = Paint()
@@ -84,7 +88,7 @@ class InstrumentViewer(context: Context) : Viewer(context) {
         val ins = modVars[4]
 
         // Clear screen
-        canvas.drawColor(Color.BLACK)
+        canvas.drawColor(backGroundColor)
 
         for (i in 0 until ins) {
             val y = (i + 1) * fontHeight - posY.toInt()

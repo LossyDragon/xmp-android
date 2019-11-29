@@ -16,9 +16,7 @@ class Preferences : AppCompatActivity() {
 
         setContentView(R.layout.pref_layout)
 
-        setSupportActionBar(toolbar)
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
-        supportActionBar!!.setHomeAsUpIndicator(R.drawable.ic_back)
 
         supportFragmentManager
                 .beginTransaction()

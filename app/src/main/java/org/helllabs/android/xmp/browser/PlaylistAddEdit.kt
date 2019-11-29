@@ -15,8 +15,6 @@ class PlaylistAddEdit : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_edit_playlist)
 
-        setSupportActionBar(toolbar)
-        supportActionBar!!.setDisplayHomeAsUpEnabled(true)
         supportActionBar!!.setHomeAsUpIndicator(R.drawable.ic_close)
 
         val name = intent.getStringExtra(EXTRA_NAME)

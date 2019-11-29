@@ -45,9 +45,9 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        setContentView(R.layout.activity_playlist)
-        setSupportActionBar(toolbar)
         super.onCreate(savedInstanceState)
+
+        setContentView(R.layout.activity_playlist)
 
         val extras = intent.extras ?: return
         name = extras.getString(PLAYLIST_NAME)

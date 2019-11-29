@@ -4,9 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_marginStart="6dp"
-    android:layout_marginEnd="6dp"
-    android:layout_marginBottom="6dp"
     tools:context=".modarchive.result.ModuleResult">
 
     <ProgressBar
@@ -123,7 +120,7 @@
             android:id="@+id/module_button_play"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/white"
+            android:textColor="@color/colorWhite"
             tools:text="@string/search_result_play" />
 
         <com.google.android.material.button.MaterialButton
@@ -131,7 +128,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/search_random_title"
-            android:textColor="@color/white" />
+            android:textColor="@color/colorWhite" />
 
     </LinearLayout>
 

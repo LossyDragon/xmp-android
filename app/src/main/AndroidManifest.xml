@@ -27,7 +27,7 @@
         <activity
             android:name=".browser.PlaylistMenu"
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -129,28 +129,28 @@
 
         <activity
             android:name=".preferences.Preferences"
-            android:theme="@style/AppTheme.NoActionBar" />
+            android:theme="@style/AppTheme.Preferences" />
 
         <activity
             android:name=".browser.FilelistActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:theme="@style/AppTheme.NoActionBar" />
+            android:theme="@style/AppTheme" />
 
         <activity
             android:name=".browser.PlaylistActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:theme="@style/AppTheme.NoActionBar" />
+            android:theme="@style/AppTheme" />
 
         <activity
             android:name=".browser.PlaylistAddEdit"
             android:parentActivityName=".browser.PlaylistMenu"
-            android:theme="@style/AppTheme.NoActionBar" />
+            android:theme="@style/AppTheme" />
 
         <!-- ModArchive activity_search & download -->
         <activity
             android:name=".modarchive.Search"
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".browser.PlaylistMenu" />
@@ -159,7 +159,7 @@
         <activity
             android:name=".modarchive.SearchError"
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:theme="@style/AppTheme.NoActionBar" />
+            android:theme="@style/AppTheme" />
 
         <activity
             android:name=".modarchive.result.TitleResult"
@@ -204,7 +204,7 @@
         <!-- To be called from settings -->
         <activity
             android:name=".preferences.about.ListFormats"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme">
             <intent-filter>
                 <action android:name="org.helllabs.android.xmp.LIST_FORMATS" />
 
@@ -214,7 +214,7 @@
 
         <activity
             android:name=".preferences.about.About"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme">
             <intent-filter>
                 <action android:name="org.helllabs.android.xmp.ABOUT" />
 

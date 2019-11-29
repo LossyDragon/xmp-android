@@ -1,129 +1,97 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:layout_height="match_parent">
 
-    <com.google.android.material.appbar.AppBarLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="?attr/colorPrimary"
-            android:minHeight="?attr/actionBarSize"
-            app:titleTextColor="@color/white" />
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.5" />
 
-    </com.google.android.material.appbar.AppBarLayout>
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/search_input_layout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="32dp"
+            android:hint="@string/search_search"
+            app:endIconMode="clear_text"
+            app:helperText="@string/search_helper_text"
+            app:helperTextEnabled="true"
+            app:hintTextColor="?colorOnSurface"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
 
-    <ScrollView xmlns:tools="http://schemas.android.com/tools"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <androidx.constraintlayout.widget.Guideline
-                android:id="@+id/guideline"
-                android:layout_width="wrap_content"
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/search_edit_text"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                app:layout_constraintGuide_percent="0.5" />
+                android:imeOptions="actionSearch"
+                android:inputType="text"
+                android:maxLines="1" />
 
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/search_input_layout"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                android:layout_width="0dp"
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <RadioGroup
+            android:id="@+id/search_radio_group"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:layout_constraintLeft_toLeftOf="@+id/search_input_layout"
+            app:layout_constraintRight_toRightOf="@+id/search_input_layout"
+            app:layout_constraintTop_toBottomOf="@+id/search_input_layout">
+
+            <com.google.android.material.radiobutton.MaterialRadioButton
+                android:id="@+id/search_title_radio_button"
+                android:layout_width="175dp"
                 android:layout_height="wrap_content"
-                android:layout_margin="32dp"
-                android:hint="@string/search_search"
-                app:endIconMode="clear_text"
-                app:helperText="@string/search_helper_text"
-                app:helperTextEnabled="true"
-                app:hintTextColor="?colorOnSurface"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
+                android:text="@string/search_title_or_filename" />
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/search_edit_text"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:imeOptions="actionSearch"
-                    android:inputType="text"
-                    android:maxLines="1" />
-
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <RadioGroup
-                android:id="@+id/search_radio_group"
-                android:layout_width="0dp"
+            <com.google.android.material.radiobutton.MaterialRadioButton
+                android:id="@+id/search_artist_radio_button"
+                android:layout_width="175dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                app:layout_constraintLeft_toLeftOf="@+id/search_input_layout"
-                app:layout_constraintRight_toRightOf="@+id/search_input_layout"
-                app:layout_constraintTop_toBottomOf="@+id/search_input_layout">
+                android:text="@string/search_artist" />
 
-                <com.google.android.material.radiobutton.MaterialRadioButton
-                    android:id="@+id/search_title_radio_button"
-                    android:layout_width="175dp"
-                    android:layout_height="wrap_content"
-                    android:text="@string/search_title_or_filename" />
+        </RadioGroup>
 
-                <com.google.android.material.radiobutton.MaterialRadioButton
-                    android:id="@+id/search_artist_radio_button"
-                    android:layout_width="175dp"
-                    android:layout_height="wrap_content"
-                    android:text="@string/search_artist" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/search_search_button"
+            style="@style/SearchActivityButtons"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:enabled="false"
+            android:text="@string/search_search"
+            app:icon="@drawable/ic_search"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="@+id/search_input_layout"
+            app:layout_constraintRight_toLeftOf="@+id/guideline"
+            app:layout_constraintTop_toBottomOf="@+id/search_radio_group"
+            tools:ignore="UnusedAttribute" />
 
-            </RadioGroup>
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/search_random_button"
+            style="@style/SearchActivityButtons"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:text="@string/search_random_pick"
+            app:icon="@drawable/ic_random"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toRightOf="@+id/guideline"
+            app:layout_constraintRight_toRightOf="@id/search_input_layout"
+            app:layout_constraintTop_toBottomOf="@+id/search_radio_group"
+            tools:ignore="UnusedAttribute" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/search_search_button"
-                style="@style/Widget.MaterialComponents.Button.Icon"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:layout_marginEnd="16dp"
-                android:layout_marginBottom="32dp"
-                android:drawableTint="@color/white"
-                android:enabled="false"
-                android:text="@string/search_search"
-                android:textColor="@color/white"
-                app:icon="@drawable/ic_search"
-                app:iconGravity="textStart"
-                app:iconTint="@color/white"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintLeft_toLeftOf="@+id/search_input_layout"
-                app:layout_constraintRight_toLeftOf="@+id/guideline"
-                app:layout_constraintTop_toBottomOf="@+id/search_radio_group"
-                tools:ignore="UnusedAttribute" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/search_random_button"
-                style="@style/Widget.MaterialComponents.Button.Icon"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="32dp"
-                android:drawableTint="@color/white"
-                android:text="@string/search_random_pick"
-                android:textColor="@color/white"
-                app:icon="@drawable/ic_random"
-                app:iconGravity="textStart"
-                app:iconTint="@color/white"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintLeft_toRightOf="@+id/guideline"
-                app:layout_constraintRight_toRightOf="@id/search_input_layout"
-                app:layout_constraintTop_toBottomOf="@+id/search_radio_group"
-                tools:ignore="UnusedAttribute" />
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-    </ScrollView>
-
-</LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

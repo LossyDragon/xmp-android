@@ -18,7 +18,6 @@ class SearchError : AppCompatActivity(), Runnable {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_search_error)
-        setSupportActionBar(toolbar)
 
         val error = intent.getSerializableExtra(Search.ERROR) as Throwable
 

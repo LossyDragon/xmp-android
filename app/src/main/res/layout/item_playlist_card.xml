@@ -3,7 +3,7 @@
     xmlns:cardview="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/plist_container"
-    style="@style/Widget.MaterialComponents.CardView"
+    style="@style/CardTint"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginLeft="9dp"
@@ -20,13 +20,13 @@
 
         <ImageView
             android:id="@+id/plist_image"
+            style="@style/ListTint"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:layout_marginEnd="8dp"
             android:contentDescription="@string/desc_plist_image"
             android:padding="8dp"
-            android:tint="@color/iconTint"
             tools:src="@drawable/ic_file" />
 
         <LinearLayout

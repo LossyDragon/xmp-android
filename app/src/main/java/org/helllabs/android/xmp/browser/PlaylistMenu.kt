@@ -36,17 +36,14 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener, P
 
     override fun onCreate(icicle: Bundle?) {
         super.onCreate(icicle)
+
         setContentView(R.layout.activity_playlist_menu)
-        setSupportActionBar(toolbar)
 
         Log.d(TAG, "start application")
 
-//        title = ""  // Custom toolbar has a TextView as a button
-//        toolbar_title.setOnClickListener { startPlayerActivity() }
-
         // Swipe refresh
         swipeContainer.apply {
-            setColorSchemeResources(R.color.refresh_color)
+            setColorSchemeResources(R.color.colorRefresh)
             setOnRefreshListener {
                 updateList()
                 this.isRefreshing = false

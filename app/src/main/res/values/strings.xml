@@ -38,6 +38,7 @@
     <string name="button_stop">Stop</string>
     <string name="button_toggle_loop">Toggle loop</string>
     <string name="button_toggle_shuffle">Toggle shuffle</string>
+    <string name="button_sheet_lock">Lock Bottom Sheet, Slide up to reveal</string>
 
     <string name="clipboard_copied">Copied to clipboard</string>
 
@@ -226,7 +227,7 @@
     <string name="title_delete_directory">Delete Directory</string>
     <string name="title_delete_file">Delete File</string>
     <string name="title_search_result">Search result</string>
-    <string name="title_edit_playlist">Edit playlist %s</string>
+    <string name="title_edit_playlist">Edit: playlist %s</string>
     <string name="title_no_path">Path not found</string>
     <string name="title_playlist_name">Playlist %s</string>
     <string name="title_playlist">Playlist</string>

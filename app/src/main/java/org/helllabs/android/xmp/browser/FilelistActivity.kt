@@ -81,10 +81,10 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        setContentView(R.layout.activity_modlist)
-        setSupportActionBar(toolbar)
-        setTitle(R.string.title_file_browser)
         super.onCreate(savedInstanceState)
+
+        setContentView(R.layout.activity_modlist)
+        setTitle(R.string.title_file_browser)
 
         val mediaPath = prefs.getString(Preferences.MEDIA_PATH, Preferences.DEFAULT_MEDIA_PATH)
 
@@ -110,7 +110,7 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
                     setTextColor(textColor)
                 } else {
                     @Suppress("DEPRECATION")
-                    setTextColor(resources.getColor(R.color.pressed_color))
+                    setTextColor(resources.getColor(R.color.colorPressed))
                 }
 
                 view.performClick()

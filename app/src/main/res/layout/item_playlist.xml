@@ -10,12 +10,12 @@
 
     <ImageView
         android:id="@+id/plist_image"
+        style="@style/ListTint"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
         android:layout_margin="8dp"
         android:contentDescription="@string/desc_plist_image"
-        android:tint="@color/iconTint"
         tools:src="@drawable/ic_file" />
 
     <LinearLayout
