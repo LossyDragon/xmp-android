@@ -8,7 +8,6 @@ import androidx.appcompat.app.AppCompatDelegate
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
-
 fun isAtLeastP() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P
 fun isAtLeastL() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP
 fun isAtLeastN() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N

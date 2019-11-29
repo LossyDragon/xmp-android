@@ -30,7 +30,6 @@ class PlaylistAddEdit : AppCompatActivity() {
                 visibility = View.VISIBLE
                 text = String.format(getString(R.string.button_playlist_delete), name)
             }
-
         } else {
             title = getString(R.string.new_playlist)
             button_add_edit_playlist.text = getString(R.string.button_playlist_add)
@@ -54,7 +53,7 @@ class PlaylistAddEdit : AppCompatActivity() {
 
         playlist_add_edit_name_layout.isErrorEnabled = false
 
-        //Check if name is empty.
+        // Check if name is empty.
         if (name.trim().isBlank()) {
             playlist_add_edit_name_layout.apply {
                 isErrorEnabled = true

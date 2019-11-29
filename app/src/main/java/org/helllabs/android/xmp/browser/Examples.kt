@@ -5,7 +5,6 @@ import org.helllabs.android.xmp.util.Log
 import java.io.*
 import java.lang.Exception
 
-
 object Examples {
 
     private val TAG = Examples::class.java.simpleName

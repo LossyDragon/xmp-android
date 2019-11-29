@@ -2,13 +2,12 @@ package org.helllabs.android.xmp.service.utils
 
 import java.util.Collections
 
-
 class QueueManager(
-        private val list: MutableList<String>,
-        start: Int,
-        private val shuffleMode: Boolean,
-        private val loopListMode: Boolean,
-        keepFirst: Boolean
+    private val list: MutableList<String>,
+    start: Int,
+    private val shuffleMode: Boolean,
+    private val loopListMode: Boolean,
+    keepFirst: Boolean
 ) {
     private val ridx: RandomIndex
     var index: Int = 0

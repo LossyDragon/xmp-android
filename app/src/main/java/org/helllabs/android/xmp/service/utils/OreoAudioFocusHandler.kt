@@ -7,7 +7,7 @@ import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.os.Build
 
-//https://developer.android.com/guide/topics/media-apps/audio-focus#audio-focus-8-0
+// https://developer.android.com/guide/topics/media-apps/audio-focus#audio-focus-8-0
 
 @TargetApi(Build.VERSION_CODES.O)
 class OreoAudioFocusHandler constructor(val context: Context) {

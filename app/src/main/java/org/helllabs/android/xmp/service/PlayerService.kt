@@ -58,9 +58,10 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
     private var allPlayerSequences: Boolean = false
     private var canRelease: Boolean = false
     private var cmd: Int = 0
-    private var discardBuffer: Boolean = false      // don't play current buffer if changing module while paused
+    // don't play current buffer if changing module while paused
+    private var discardBuffer: Boolean = false
     private var looped: Boolean = false
-    private var playerFileName: String? = null      // currently playing file
+    private var playerFileName: String? = null // currently playing file
     private var playThread: Thread? = null
     private var queue: QueueManager? = null
     private var restart: Boolean = false
@@ -99,8 +100,13 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
 
         override fun getInstruments(): Array<String> = Xmp.getInstruments()
 
-        override fun play(fileList: MutableList<String>?, start: Int, shuffle: Boolean, loopList: Boolean, keepFirst: Boolean) {
-
+        override fun play(
+            fileList: MutableList<String>?,
+            start: Int,
+            shuffle: Boolean,
+            loopList: Boolean,
+            keepFirst: Boolean
+        ) {
             if (!audioInitialized) {
                 stopSelf()
                 return
@@ -147,15 +153,31 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
 
         override fun getModVars(vars: IntArray?) = Xmp.getModVars(vars!!)
 
-        override fun getChannelData(volumes: IntArray?, finalvols: IntArray?, pans: IntArray?, instruments: IntArray?, keys: IntArray?, periods: IntArray?) {
+        override fun getChannelData(
+            volumes: IntArray?,
+            finalvols: IntArray?,
+            pans: IntArray?,
+            instruments: IntArray?,
+            keys: IntArray?,
+            periods: IntArray?
+        ) {
             if (updateData) {
                 synchronized(playThread!!) {
-                    Xmp.getChannelData(volumes!!, finalvols!!, pans!!, instruments!!, keys!!, periods!!)
+                    Xmp.getChannelData(
+                            volumes!!, finalvols!!, pans!!, instruments!!, keys!!, periods!!)
                 }
             }
         }
 
-        override fun getSampleData(trigger: Boolean, ins: Int, key: Int, period: Int, chn: Int, width: Int, buffer: ByteArray?) {
+        override fun getSampleData(
+            trigger: Boolean,
+            ins: Int,
+            key: Int,
+            period: Int,
+            chn: Int,
+            width: Int,
+            buffer: ByteArray?
+        ) {
             if (updateData) {
                 synchronized(playThread!!) {
                     Xmp.getSampleData(trigger, ins, key, period, chn, width, buffer!!)
@@ -195,7 +217,12 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
 
         override fun getSeqVars(vars: IntArray) = Xmp.getSeqVars(vars)
 
-        override fun getPatternRow(pat: Int, row: Int, rowNotes: ByteArray?, rowInstruments: ByteArray?) {
+        override fun getPatternRow(
+            pat: Int,
+            row: Int,
+            rowNotes: ByteArray?,
+            rowInstruments: ByteArray?
+        ) {
             if (isAlive) Xmp.getPatternRow(pat, row, rowNotes!!, rowInstruments!!)
         }
 
@@ -236,7 +263,8 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                     Log.w(TAG, playerFileName!! + ": unrecognized format")
                     if (cmd == CMD_PREV) {
                         if (queue!!.index <= 0) {
-                            queue!!.index = lastRecognized - 1        // -1 because we have queue.next() in the while condition
+                            // -1 because we have queue.next() in the while condition
+                            queue!!.index = lastRecognized - 1
                             continue
                         }
                         queue!!.previous()
@@ -287,9 +315,12 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
 
                 val volBoost = prefs!!.getString(Preferences.VOL_BOOST, "1")
 
-                val interpTypes = intArrayOf(Xmp.INTERP_NEAREST, Xmp.INTERP_LINEAR, Xmp.INTERP_SPLINE)
-                val temp = Integer.parseInt(prefs!!.getString(Preferences.INTERP_TYPE, "1")!!)
+                val interpTypes =
+                        intArrayOf(Xmp.INTERP_NEAREST, Xmp.INTERP_LINEAR, Xmp.INTERP_SPLINE)
+                val temp =
+                        Integer.parseInt(prefs!!.getString(Preferences.INTERP_TYPE, "1")!!)
                 var interpType: Int
+
                 interpType = if (temp in 1..2) {
                     interpTypes[temp]
                 } else {
@@ -309,7 +340,6 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                     } catch (e: RemoteException) {
                         Log.e(TAG, "Error notifying new module to client")
                     }
-
                 }
                 callbacks.finishBroadcast()
 
@@ -339,7 +369,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                 do {
                     Xmp.getModVars(vars)
 
-                    //MetaData necessary for mod trackers? - Yeah, for android wear.
+                    // MetaData necessary for mod trackers? - Yeah, for android wear.
                     val metaData = MediaMetadataCompat.Builder().apply {
                         putString(MediaMetadataCompat.METADATA_KEY_TITLE, Xmp.getModName())
                         putString(MediaMetadataCompat.METADATA_KEY_ARTIST, Xmp.getModType())
@@ -373,7 +403,6 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                                 Thread.sleep(40)
                             } catch (e: InterruptedException) {
                             }
-
                         }
 
                         // Fill a new buffer
@@ -414,7 +443,6 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                         } catch (e: RemoteException) {
                             Log.e(TAG, "Error notifying end of module to client")
                         }
-
                     }
                     callbacks.finishBroadcast()
 
@@ -428,7 +456,6 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                     } catch (e: InterruptedException) {
                         Log.e(TAG, "Sleep interrupted: $e")
                     }
-
                 } else {
                     callbacks.finishBroadcast()
                 }
@@ -609,7 +636,6 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         stopSelf()
     }
 
-
     private fun updateNotification() {
         // It seems that queue can be null if we're called from PhoneStateListener
         if (queue != null) {
@@ -698,7 +724,6 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
             } catch (e: RemoteException) {
                 Log.e(TAG, "Error notifying end of module to client")
             }
-
         }
         callbacks.finishBroadcast()
     }
@@ -712,7 +737,6 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
             } catch (e: RemoteException) {
                 Log.e(TAG, "Error notifying end of play to client")
             }
-
         }
         callbacks.finishBroadcast()
 
@@ -761,14 +785,14 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         }
     }
 
-    //So... new API's use MediaSession instead of a Broadcast receiver.
-    //Note: Don't Log anything in here, it slows it down and hooks don't work right
+    // So... new API's use MediaSession instead of a Broadcast receiver.
+    // Note: Don't Log anything in here, it slows it down and hooks don't work right
     private fun mediaSessionButtons(mediaButtonEvent: Intent) {
         if (mediaButtonEvent.action == ACTION_MEDIA_BUTTON) {
             val event = mediaButtonEvent.getParcelableExtra(Intent.EXTRA_KEY_EVENT) as KeyEvent
             if (event.action == KeyEvent.ACTION_UP) {
                 when (event.keyCode) {
-                    //This should handle single button headsets.
+                    // This should handle single button headsets.
                     KeyEvent.KEYCODE_HEADSETHOOK,
                     KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> {
                         hookCount++
@@ -778,7 +802,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                         else
                             hookHandler.postDelayed(hookRunnable, 500)
                     }
-                    //These [Below] should handle multi-button headsets, etc.
+                    // These [Below] should handle multi-button headsets, etc.
                     KeyEvent.KEYCODE_MEDIA_PLAY -> onPlayPause()
                     KeyEvent.KEYCODE_MEDIA_PAUSE -> onPlayPause()
                     KeyEvent.KEYCODE_MEDIA_PREVIOUS -> onPrevious()
@@ -815,6 +839,5 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
 
         var isAlive: Boolean = false
         var isLoaded: Boolean = false
-
     }
 }

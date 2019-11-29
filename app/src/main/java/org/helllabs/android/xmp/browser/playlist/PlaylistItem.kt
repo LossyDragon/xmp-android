@@ -4,7 +4,11 @@ import java.io.File
 
 import org.helllabs.android.xmp.R
 
-class PlaylistItem(val type: Int, val name: String, val comment: String) : Comparable<PlaylistItem> {
+class PlaylistItem(
+        val type: Int,
+        val name: String,
+        val comment: String
+) : Comparable<PlaylistItem> {
 
     // Accessors
     var id: Int = 0

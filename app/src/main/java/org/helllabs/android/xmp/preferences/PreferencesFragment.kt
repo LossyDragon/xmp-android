@@ -20,7 +20,8 @@ class PreferencesFragment : PreferenceFragmentCompat() {
         val soundScreen: PreferenceScreen? = findPreference("sound_screen")
         if (PlayerService.isAlive) {
             soundScreen?.isEnabled = false
-            soundScreen?.title = getString(R.string.pref_category_sound) + getString(R.string.pref_disabled)
+            soundScreen?.title =
+                    getString(R.string.pref_category_sound) + getString(R.string.pref_disabled)
         }
 
         val clearCache: Preference? = findPreference("clear_cache")
@@ -34,10 +35,11 @@ class PreferencesFragment : PreferenceFragmentCompat() {
         }
 
         val appTheme: ListPreference? = findPreference("themePref")
-        appTheme?.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _, newValue ->
-            setTheme(newValue.toString())
-            true
-        }
+        appTheme?.onPreferenceChangeListener =
+                Preference.OnPreferenceChangeListener { _, newValue ->
+                    setTheme(newValue.toString())
+                    true
+                }
     }
 
     override fun onCreatePreferences(bundle: Bundle?, rootKey: String?) {
@@ -99,8 +101,6 @@ class PreferencesFragment : PreferenceFragmentCompat() {
             booleanFlag = booleanFlag and file.delete()
 
             return booleanFlag
-
         }
     }
-
 }

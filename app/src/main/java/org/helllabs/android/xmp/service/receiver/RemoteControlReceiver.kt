@@ -26,7 +26,7 @@ class RemoteControlReceiver : BroadcastReceiver() {
             val event = intent.extras!!.get(Intent.EXTRA_KEY_EVENT) as KeyEvent
             if (event.action == KeyEvent.ACTION_UP) {
                 when (event.keyCode) {
-                    //This should handle single button headsets.
+                    // This should handle single button headsets.
                     KeyEvent.KEYCODE_HEADSETHOOK,
                     KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> {
                         hookCount++
@@ -36,11 +36,15 @@ class RemoteControlReceiver : BroadcastReceiver() {
                         else
                             hookHandler.postDelayed(hookRunnable, 500)
                     }
-                    //These [Below] should handle multi-button headsets.
-                    KeyEvent.KEYCODE_MEDIA_PLAY -> context.sendBroadcast(PlayerService.XMP_PLAYER_PLAY)
-                    KeyEvent.KEYCODE_MEDIA_PAUSE -> context.sendBroadcast(PlayerService.XMP_PLAYER_PAUSE)
-                    KeyEvent.KEYCODE_MEDIA_PREVIOUS -> context.sendBroadcast(PlayerService.XMP_PLAYER_PREV)
-                    KeyEvent.KEYCODE_MEDIA_NEXT -> context.sendBroadcast(PlayerService.XMP_PLAYER_NEXT)
+                    // These [Below] should handle multi-button headsets.
+                    KeyEvent.KEYCODE_MEDIA_PLAY ->
+                        context.sendBroadcast(PlayerService.XMP_PLAYER_PLAY)
+                    KeyEvent.KEYCODE_MEDIA_PAUSE ->
+                        context.sendBroadcast(PlayerService.XMP_PLAYER_PAUSE)
+                    KeyEvent.KEYCODE_MEDIA_PREVIOUS ->
+                        context.sendBroadcast(PlayerService.XMP_PLAYER_PREV)
+                    KeyEvent.KEYCODE_MEDIA_NEXT ->
+                        context.sendBroadcast(PlayerService.XMP_PLAYER_NEXT)
                 }
             }
             abortBroadcast()

@@ -17,12 +17,16 @@ import org.helllabs.android.xmp.util.Log
 import java.io.File
 import java.util.*
 
-
 class PlaylistAdapter :
         RecyclerView.Adapter<PlaylistAdapter.ViewHolder>,
         DraggableItemAdapter<PlaylistAdapter.ViewHolder> {
 
-    constructor(context: Context, items: MutableList<PlaylistItem>, useFilename: Boolean, layoutType: Int) {
+    constructor(
+            context: Context,
+            items: MutableList<PlaylistItem>,
+            useFilename: Boolean,
+            layoutType: Int
+    ) {
         this.playlist = null
         this.items = items
         this.context = context
@@ -126,7 +130,7 @@ class PlaylistAdapter :
 
     //region [region] Advanced RecyclerView
     override fun onMoveItem(fromPosition: Int, toPosition: Int) {
-        //Log.d(TAG, "onMoveItem(fromPosition = " + fromPosition + ", toPosition = " + toPosition + ")");
+        // Log.d(TAG, "onMoveItem(fromPosition = " + fromPosition + ", toPosition = " + toPosition + ")");
 
         if (fromPosition == toPosition) {
             return
@@ -135,7 +139,7 @@ class PlaylistAdapter :
         val item = items[fromPosition]
         items.remove(item)
         items.add(toPosition, item)
-        //playlist.setListChanged(true);
+        // playlist.setListChanged(true);
 
         notifyItemMoved(fromPosition, toPosition)
         playlist?.setListChanged(true)
@@ -147,7 +151,7 @@ class PlaylistAdapter :
         val dragHandleView = holder.handle
 
         val offsetX = containerView.left + (containerView.translationX + 0.5f).toInt()
-        //final int offsetY = containerView.getTop() + (int) (ViewCompat.getTranslationY(containerView) + 0.5f);
+        // final int offsetY = containerView.getTop() + (int) (ViewCompat.getTranslationY(containerView) + 0.5f);
 
         return hitTest(dragHandleView!!, x - offsetX, y /*- offsetY*/)
     }
@@ -169,7 +173,10 @@ class PlaylistAdapter :
     }
     //endregion
 
-    inner class ViewHolder(itemView: View, val adapter: PlaylistAdapter) : AbstractDraggableItemViewHolder(itemView) {
+    inner class ViewHolder(
+            itemView: View,
+            val adapter: PlaylistAdapter
+    ) : AbstractDraggableItemViewHolder(itemView) {
 
         val container: View = itemView.findViewById(R.id.plist_container)
         val handle: FrameLayout? = itemView.findViewById(R.id.plist_handle)
@@ -207,7 +214,6 @@ class PlaylistAdapter :
                 longClickListener!!.onLongItemClick(adapter, it, adapterPosition)
                 true
             }
-
         }
     }
 

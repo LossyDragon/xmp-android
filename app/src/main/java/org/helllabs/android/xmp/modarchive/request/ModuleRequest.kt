@@ -20,10 +20,12 @@ class ModuleRequest : ModArchiveRequest {
     constructor(key: String, request: String) : super(key, request)
 
     @Throws(UnsupportedEncodingException::class)
-    constructor(key: String, request: String, parameter: String) : super(key, request, parameter)
+    constructor(key: String, request: String, parameter: String) :
+            super(key, request, parameter)
 
     @Throws(UnsupportedEncodingException::class)
-    constructor(key: String, request: String, parameter: Long) : this(key, request, parameter.toString())
+    constructor(key: String, request: String, parameter: Long) :
+            this(key, request, parameter.toString())
 
     override fun xmlParse(result: String): ModArchiveResponse {
         val moduleList = ModuleResponse()
@@ -52,7 +54,7 @@ class ModuleRequest : ModArchiveRequest {
                     XmlPullParser.TEXT -> text = myparser.text.trim { it <= ' ' }
                     XmlPullParser.END_TAG -> {
                         val end = myparser.name
-                        //Log.d(TAG, "name=" + name + " text=" + text);
+                        // Log.d(TAG, "name=" + name + " text=" + text);
                         when {
                             sponsor != null -> when (end) {
                                 "text" -> sponsor.name = text

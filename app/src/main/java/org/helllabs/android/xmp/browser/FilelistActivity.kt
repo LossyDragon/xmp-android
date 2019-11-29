@@ -20,7 +20,10 @@ import org.helllabs.android.xmp.util.*
 import java.io.File
 import java.text.DateFormat
 
-class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickListener, PlaylistAdapter.OnItemLongClickListener {
+class FilelistActivity :
+        BasePlaylistActivity(),
+        PlaylistAdapter.OnItemClickListener,
+        PlaylistAdapter.OnItemLongClickListener {
 
     private var mNavigation: FilelistNavigation? = null
     override var isLoopMode: Boolean = false
@@ -43,8 +46,11 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
      */
     private val addRecursiveToPlaylistChoice = object : PlaylistChoice {
         override fun execute(fileSelection: Int, playlistSelection: Int) {
-            filesToPlaylist(this@FilelistActivity, recursiveList(mPlaylistAdapter.getFile(fileSelection)),
-                    getPlaylistName(playlistSelection))
+            filesToPlaylist(
+                    activity = this@FilelistActivity,
+                    fileList = recursiveList(mPlaylistAdapter.getFile(fileSelection)),
+                    playlistName = getPlaylistName(playlistSelection)
+            )
         }
     }
 
@@ -53,10 +59,12 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
      */
     private val addFileToPlaylistChoice = object : PlaylistChoice {
         override fun execute(fileSelection: Int, playlistSelection: Int) {
-            filesToPlaylist(this@FilelistActivity, mPlaylistAdapter.getFilename(fileSelection),
-                    getPlaylistName(playlistSelection))
+            filesToPlaylist(
+                    activity = this@FilelistActivity,
+                    filename = mPlaylistAdapter.getFilename(fileSelection),
+                    playlistName = getPlaylistName(playlistSelection)
+            )
         }
-
     }
 
     /**
@@ -89,14 +97,24 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         val mediaPath = prefs.getString(Preferences.MEDIA_PATH, Preferences.DEFAULT_MEDIA_PATH)
 
         // Adapter
-        mPlaylistAdapter = PlaylistAdapter(this, ArrayList(), false, PlaylistAdapter.LAYOUT_LIST)
+        mPlaylistAdapter = PlaylistAdapter(
+                context = this,
+                items = ArrayList(),
+                useFilename = false,
+                layoutType = PlaylistAdapter.LAYOUT_LIST
+        )
         mPlaylistAdapter.setOnItemClickListener(this)
         mPlaylistAdapter.setOnItemLongClickListener(this)
 
         modlist_listview.apply {
             layoutManager = LinearLayoutManager(this@FilelistActivity)
             adapter = mPlaylistAdapter
-            addItemDecoration(DividerItemDecoration(this@FilelistActivity, DividerItemDecoration.VERTICAL))
+            addItemDecoration(
+                    DividerItemDecoration(
+                            this@FilelistActivity,
+                            DividerItemDecoration.VERTICAL
+                    )
+            )
         }
 
         setSwipeRefresh(swipeContainer)
@@ -146,7 +164,7 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         setupButtons()
     }
 
-    //Override the 'back' arrow on toolbar
+    // Override the 'back' arrow on toolbar
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         // Return to parent dir up to the starting level, then act as regular back
         if (mBackButtonParentdir) {
@@ -203,7 +221,12 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         onLongClickMenu(dialogTitle, dialogItems, dialogOption, position)
     }
 
-    private fun onLongClickMenu(dialogTitle: Int, dialogItems: Int, dialogOption: Int, position: Int) {
+    private fun onLongClickMenu(
+            dialogTitle: Int,
+            dialogItems: Int,
+            dialogOption: Int,
+            position: Int
+    ) {
         MaterialDialog(this, BottomSheet(LayoutMode.WRAP_CONTENT)).show {
             title(dialogTitle)
             listItems(dialogItems) { _, index, _ ->
@@ -221,10 +244,16 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
             title(R.string.title_no_path)
             message(text = String.format(getString(R.string.msg_no_path), media_path))
             positiveButton(R.string.create) {
-                val ret = Examples.install(this@FilelistActivity, media_path, prefs.getBoolean(Preferences.EXAMPLES, true))
+                val ret = Examples.install(
+                        context = this@FilelistActivity,
+                        path = media_path,
+                        examples = prefs.getBoolean(Preferences.EXAMPLES, true)
+                )
 
                 if (ret < 0)
-                    this@FilelistActivity.error(text = String.format(getString(R.string.error_create_path), media_path))
+                    this@FilelistActivity.error(text = String.format(
+                            getString(R.string.error_create_path), media_path)
+                    )
 
                 mNavigation!!.startNavigation(File(media_path))
                 updateModlist()
@@ -263,10 +292,19 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
             for (file in dirFiles) {
                 val item: PlaylistItem
                 item = if (file.isDirectory) {
-                    PlaylistItem(PlaylistItem.TYPE_DIRECTORY, file.name, getString(R.string.directory))
+                    PlaylistItem(
+                            type = PlaylistItem.TYPE_DIRECTORY,
+                            name = file.name,
+                            comment = getString(R.string.directory)
+                    )
                 } else {
-                    val date = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM).format(file.lastModified())
-                    val comment = date + String.format(getString(R.string.format_kb), file.length() / 1024)
+                    val date =
+                            DateFormat
+                                    .getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM)
+                                    .format(file.lastModified())
+                    val comment = date + String.format(
+                            getString(R.string.format_kb), file.length() / 1024)
+
                     PlaylistItem(PlaylistItem.TYPE_FILE, file.name, comment)
                 }
                 item.file = file
@@ -331,7 +369,8 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
 
         if (deleteName.startsWith(mediaPath!!) && deleteName != mediaPath) {
             val title = getString(R.string.title_delete_directory)
-            val message = String.format(getString(R.string.msg_delete_file, FileUtils.basename(deleteName)))
+            val message = String.format(
+                    getString(R.string.msg_delete_file, FileUtils.basename(deleteName)))
 
             yesNoDialog(title, message) { result ->
                 if (result) {
@@ -343,7 +382,6 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
                     }
                 }
             }
-
         } else {
             toast(R.string.error_dir_not_under_moddir)
         }
@@ -352,7 +390,8 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
     private fun deleteFile(position: Int) {
         val deleteName = mPlaylistAdapter.getFilename(position)
         val title = getString(R.string.title_delete_file)
-        val message = String.format(getString(R.string.msg_delete_file, FileUtils.basename(deleteName)))
+        val message = String.format(
+                getString(R.string.msg_delete_file, FileUtils.basename(deleteName)))
 
         yesNoDialog(title, message) { result ->
             if (result) {
@@ -382,30 +421,44 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
 
     private fun onMenuAll(index: Int) {
         when (index) {
-            0 -> choosePlaylist(0, addFileListToPlaylistChoice)     // Add all to playlist
-            1 -> choosePlaylist(0, addCurrentRecursiveChoice)       // Add all to queue // Recursive add to playlist
-            2 -> addToQueue(mPlaylistAdapter.filenameList)                      // Add all to queue
-            3 -> setDefaultPath()                                               // Set as default path
-            4 -> clearCachedEntries(mPlaylistAdapter.filenameList)              // Clear cache
+            // Add all to playlist
+            0 -> choosePlaylist(0, addFileListToPlaylistChoice)
+            // Add all to queue // Recursive add to playlist
+            1 -> choosePlaylist(0, addCurrentRecursiveChoice)
+            // Add all to queue
+            2 -> addToQueue(mPlaylistAdapter.filenameList)
+            // Set as default path
+            3 -> setDefaultPath()
+            // Clear cache
+            4 -> clearCachedEntries(mPlaylistAdapter.filenameList)
         }
     }
 
     private fun onMenuDirectory(index: Int, position: Int) {
         when (index) {
-            0 -> choosePlaylist(position, addRecursiveToPlaylistChoice)                      // Add to playlist (recursive)
-            1 -> addToQueue(recursiveList(mPlaylistAdapter.getFile(position)))               // Add to play queue (recursive)
-            2 -> playModule(modList = recursiveList(mPlaylistAdapter.getFile(position)))     // Play now (recursive)
-            3 -> deleteDirectory(position)                                                   // delete directory
+            // Add to playlist (recursive)
+            0 -> choosePlaylist(position, addRecursiveToPlaylistChoice)
+            // Add to play queue (recursive)
+            1 -> addToQueue(recursiveList(mPlaylistAdapter.getFile(position)))
+            // Play now (recursive)
+            2 -> playModule(modList = recursiveList(mPlaylistAdapter.getFile(position)))
+            // delete directory
+            3 -> deleteDirectory(position)
         }
     }
 
     private fun onMenuFile(index: Int, position: Int) {
         when (index) {
-            0 -> choosePlaylist(position, addFileToPlaylistChoice)                       //   Add to playlist
-            1 -> addToQueue(mPlaylistAdapter.getFilename(position))                      //   Add to queue
-            2 -> playModule(mod = mPlaylistAdapter.getFilename(position))                //   Play this module
-            3 -> playModule(modList = mPlaylistAdapter.filenameList, start = position)   //   Play all starting here
-            4 -> deleteFile(position)                                                    //   Delete file
+            // Add to playlist
+            0 -> choosePlaylist(position, addFileToPlaylistChoice)
+            // Add to queue
+            1 -> addToQueue(mPlaylistAdapter.getFilename(position))
+            // Play this module
+            2 -> playModule(mod = mPlaylistAdapter.getFilename(position))
+            // Play all starting here
+            3 -> playModule(modList = mPlaylistAdapter.filenameList, start = position)
+            // Delete file
+            4 -> deleteFile(position)
         }
     }
 

@@ -3,10 +3,10 @@ package org.helllabs.android.xmp.player
 import android.content.Context
 import android.content.res.Configuration
 
-
 private val digits = charArrayOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9')
 
-private val hexDigits = charArrayOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F')
+private val hexDigits =
+        charArrayOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F')
 
 fun Context.getScreenSize(): Int {
     return resources.configuration.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK

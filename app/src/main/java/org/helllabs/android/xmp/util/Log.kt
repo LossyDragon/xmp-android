@@ -1,6 +1,5 @@
 package org.helllabs.android.xmp.util
 
-
 object Log {
     private const val TAG = "Xmp"
 

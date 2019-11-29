@@ -1,6 +1,5 @@
 package org.helllabs.android.xmp.browser
 
-
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 

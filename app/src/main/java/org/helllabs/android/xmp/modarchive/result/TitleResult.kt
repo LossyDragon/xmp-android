@@ -18,7 +18,10 @@ import org.helllabs.android.xmp.modarchive.response.ModuleResponse
 import org.helllabs.android.xmp.modarchive.response.SoftErrorResponse
 import java.io.UnsupportedEncodingException
 
-class TitleResult : Result(), ModArchiveRequest.OnResponseListener, AdapterView.OnItemClickListener {
+class TitleResult :
+        Result(),
+        ModArchiveRequest.OnResponseListener,
+        AdapterView.OnItemClickListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,7 +41,6 @@ class TitleResult : Result(), ModArchiveRequest.OnResponseListener, AdapterView.
         } catch (e: UnsupportedEncodingException) {
             handleQueryError()
         }
-
     }
 
     override fun onResponse(response: ModArchiveResponse) {

@@ -1,6 +1,5 @@
 package org.helllabs.android.xmp.preferences.about
 
-
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.MenuItem
@@ -36,7 +35,7 @@ class About : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
-    //Get the app's version number
+    // Get the app's version number
     private fun getVersion(): String {
         return try {
             val packageInfo = packageManager.getPackageInfo(packageName, 0)

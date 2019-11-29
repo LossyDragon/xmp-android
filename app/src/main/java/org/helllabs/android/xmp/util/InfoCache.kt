@@ -4,10 +4,8 @@ import java.io.BufferedReader
 import java.io.File
 import java.io.FileReader
 import java.io.IOException
-
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.preferences.Preferences
-
 
 object InfoCache {
 
@@ -47,7 +45,7 @@ object InfoCache {
         return file.delete()
     }
 
-    //TODO recursive
+    // TODO recursive
     fun deleteRecursive(filename: String): Boolean {
         val file = File(filename)
         return if (file.isDirectory) {
@@ -105,7 +103,7 @@ object InfoCache {
 
                 if (size.toLong() == file.length()) {
                     info.name = reader.readLine()
-                    reader.readLine()                // skip filename
+                    reader.readLine() // skip filename
                     info.type = reader.readLine()
                     ret = true
                 }
@@ -113,7 +111,6 @@ object InfoCache {
                 // Someone had binary contents in the cache file, breaking parseInt()
                 ret = false
             }
-
         }
 
         reader.close()
@@ -144,7 +141,7 @@ object InfoCache {
                     return true
                 }
 
-                cacheFile.delete()        // Invalid or outdated cache file
+                cacheFile.delete() // Invalid or outdated cache file
             }
 
             if (skipFile.isFile) {
@@ -173,6 +170,5 @@ object InfoCache {
         } catch (e: IOException) {
             return Xmp.testModule(filename, info)
         }
-
     }
 }

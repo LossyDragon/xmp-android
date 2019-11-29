@@ -10,8 +10,7 @@ import org.helllabs.android.xmp.player.PlayerActivity
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.service.receiver.NotificationActionReceiver
 import org.helllabs.android.xmp.service.utils.QueueManager
-import java.util.*
-
+import java.util.Locale
 
 abstract class Notifier(protected val service: Service) {
 
@@ -24,7 +23,6 @@ abstract class Notifier(protected val service: Service) {
     protected val pauseIntent: PendingIntent
     protected val nextIntent: PendingIntent
     protected val playIntent: PendingIntent
-
 
     init {
         val intent = Intent(service, PlayerActivity::class.java)

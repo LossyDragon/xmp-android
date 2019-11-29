@@ -11,7 +11,13 @@ import org.helllabs.android.xmp.util.Log
 import java.io.UnsupportedEncodingException
 import java.net.URLEncoder
 
-abstract class ModArchiveRequest(private val mKey: String, private val mRequest: String) : Response.Listener<String>, Response.ErrorListener {
+abstract class ModArchiveRequest(
+        private val mKey: String,
+        private val mRequest: String
+) :
+        Response.Listener<String>,
+        Response.ErrorListener {
+
     private var mOnResponseListener: OnResponseListener? = null
 
     interface OnResponseListener {
@@ -25,7 +31,8 @@ abstract class ModArchiveRequest(private val mKey: String, private val mRequest:
     }
 
     @Throws(UnsupportedEncodingException::class)
-    constructor(key: String, request: String, parameter: String) : this(key, request + URLEncoder.encode(parameter, "UTF-8"))
+    constructor(key: String, request: String, parameter: String) :
+            this(key, request + URLEncoder.encode(parameter, "UTF-8"))
 
     fun setOnResponseListener(listener: OnResponseListener): ModArchiveRequest {
         mOnResponseListener = listener

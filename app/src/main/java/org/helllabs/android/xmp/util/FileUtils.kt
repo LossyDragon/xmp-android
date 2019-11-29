@@ -61,7 +61,6 @@ object FileUtils {
                 writer.flush()
             }
             lineNum++
-
         } while (line != null)
 
         writer.close()
@@ -73,7 +72,6 @@ object FileUtils {
         } else tempFile.renameTo(file)
 
         // Rename the new file to the filename the original file had.
-
     }
 
     fun basename(pathname: String?): String {

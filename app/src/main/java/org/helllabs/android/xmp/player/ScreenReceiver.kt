@@ -27,4 +27,3 @@ class ScreenReceiver : BroadcastReceiver() {
         internal var wasScreenOn = true
     }
 }
-

@@ -4,7 +4,6 @@ import android.app.Service
 import androidx.core.app.NotificationCompat
 import org.helllabs.android.xmp.R
 
-
 class LegacyNotifier(service: Service) : Notifier(service) {
 
     private val sinceWhen: Long = System.currentTimeMillis()
@@ -30,10 +29,12 @@ class LegacyNotifier(service: Service) : Notifier(service) {
                 .addAction(R.drawable.ic_stop, service.getString(R.string.notif_stop), stopIntent)
 
         if (type == TYPE_PAUSE) {
-            builder.addAction(R.drawable.ic_play, service.getString(R.string.notif_play), playIntent)
+            builder.addAction(
+                    R.drawable.ic_play, service.getString(R.string.notif_play), playIntent)
             builder.setContentText(service.getString(R.string.notif_paused))
         } else {
-            builder.addAction(R.drawable.ic_pause, service.getString(R.string.notif_pause), pauseIntent)
+            builder.addAction(
+                    R.drawable.ic_pause, service.getString(R.string.notif_pause), pauseIntent)
         }
 
         builder.addAction(R.drawable.ic_forward, service.getString(R.string.notif_next), nextIntent)
@@ -48,5 +49,4 @@ class LegacyNotifier(service: Service) : Notifier(service) {
 
         service.startForeground(NOTIFY_ID, builder.build())
     }
-
 }

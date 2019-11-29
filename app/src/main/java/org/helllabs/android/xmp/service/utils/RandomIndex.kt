@@ -3,7 +3,6 @@ package org.helllabs.android.xmp.service.utils
 import java.util.Date
 import java.util.Random
 
-
 class RandomIndex(start: Int, size: Int) {
     private var idx: IntArray? = null
     private val random: Random

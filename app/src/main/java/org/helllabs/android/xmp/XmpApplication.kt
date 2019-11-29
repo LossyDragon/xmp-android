@@ -11,14 +11,14 @@ import org.helllabs.android.xmp.preferences.Preferences
 import org.helllabs.android.xmp.util.THEME_DEFAULT
 import org.helllabs.android.xmp.util.applyTheme
 
-//TODO: Perform migration functions between cmatsuoka's version to this
+// TODO: Perform migration functions between cmatsuoka's version to this
 // 1: Preferences migrations
 
-//TODO: PlayerActivity DayNight theme
-//TODO: For some odd reason, play/pause between the Service and Notifications get de-synced
-//TODO: Notification on API 23: Pause is desynced when pressing it once.
-//TODO: Changing theme on API 23: "Cancelling event due to no window focus: MotionEvent android" Not focused?/Resumed?
-//TODO: Unplugging USB headset will resume playing.
+// TODO: PlayerActivity DayNight theme
+// TODO: For some odd reason, play/pause between the Service and Notifications get de-synced
+// TODO: Notification on API 23: Pause is desynced when pressing it once.
+// TODO: Changing theme on API 23: "Cancelling event due to no window focus: MotionEvent android" Not focused?/Resumed?
+// TODO: Unplugging USB headset will resume playing.
 
 class XmpApplication : Application() {
 
@@ -30,7 +30,7 @@ class XmpApplication : Application() {
         super.onCreate()
         instance = this
 
-        //Fetch download manager
+        // Fetch download manager
         val fetchConfiguration = FetchConfiguration.Builder(this)
                 .enableRetryOnNetworkGain(true)
                 .setDownloadConcurrentLimit(1)
@@ -38,7 +38,7 @@ class XmpApplication : Application() {
 
         Fetch.setDefaultInstanceConfiguration(fetchConfiguration)
 
-        //DayNight Theme
+        // DayNight Theme
         val themePref = sharedPrefs.getString(Preferences.APP_THEME, THEME_DEFAULT)
         applyTheme(themePref!!)
     }
@@ -48,6 +48,5 @@ class XmpApplication : Application() {
         @get:Synchronized
         var instance: XmpApplication? = null
             private set
-
     }
 }

@@ -7,7 +7,6 @@ import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.player.to02X
 import org.helllabs.android.xmp.service.ModInterface
 
-
 // http://developer.android.com/guide/topics/graphics/2d-graphics.html
 
 class PatternViewer(context: Context) : Viewer(context) {
@@ -95,11 +94,6 @@ class PatternViewer(context: Context) : Viewer(context) {
         setMaxX((chn * 6 + 2) * fontWidth)
     }
 
-    //@Override
-    //public void setViewerRotation(final int val) {
-    // 	super.setViewerRotation(val);
-    //}
-
     override fun update(info: Info, paused: Boolean) {
         super.update(info, paused)
 
@@ -113,7 +107,8 @@ class PatternViewer(context: Context) : Viewer(context) {
         val numRows = info.values[3]
         var canvas: Canvas? = null
 
-        if (numRows != 0) {        // Skip first invalid infos
+        // Skip first invalid infos
+        if (numRows != 0) {
             oldRow = row
             oldOrd = ord
             oldPosX = posX.toInt()
@@ -155,7 +150,8 @@ class PatternViewer(context: Context) : Viewer(context) {
             val adj = if (i + 1 < 10) 1 else 0
             val x = (3 + i * 6 + 1 + adj) * fontWidth - posX.toInt()
             if (x > -2 * fontWidth && x < canvasWidth) {
-                canvas.drawText((i + 1).toString(), x.toFloat(), fontSize.toFloat(), headerTextPaint)
+                canvas.drawText(
+                        (i + 1).toString(), x.toFloat(), fontSize.toFloat(), headerTextPaint)
             }
         }
 
@@ -208,15 +204,20 @@ class PatternViewer(context: Context) : Viewer(context) {
 
                 val note = rowNotes[j]
                 when {
-                    note < 0 -> canvas.drawText("===", x.toFloat(), y.toFloat(), paint)
-                    note > MAX_NOTES -> canvas.drawText(">>>", x.toFloat(), y.toFloat(), paint)
-                    note > 0 -> canvas.drawText(allNotes[note - 1]!!, x.toFloat(), y.toFloat(), paint)
-                    else -> canvas.drawText("---", x.toFloat(), y.toFloat(), paint)
+                    note < 0 ->
+                        canvas.drawText("===", x.toFloat(), y.toFloat(), paint)
+                    note > MAX_NOTES ->
+                        canvas.drawText(">>>", x.toFloat(), y.toFloat(), paint)
+                    note > 0 ->
+                        canvas.drawText(allNotes[note - 1]!!, x.toFloat(), y.toFloat(), paint)
+                    else ->
+                        canvas.drawText("---", x.toFloat(), y.toFloat(), paint)
                 }
 
                 x = (3 + j * 6 + 3) * fontWidth - posX.toInt()
                 if (rowInstruments[j] > 0) {
-                    canvas.drawText(hexByte[rowInstruments[j].toInt()]!!, x.toFloat(), y.toFloat(), paint2)
+                    canvas.drawText(
+                            hexByte[rowInstruments[j].toInt()]!!, x.toFloat(), y.toFloat(), paint2)
                 } else {
                     canvas.drawText("--", x.toFloat(), y.toFloat(), paint2)
                 }
@@ -229,6 +230,7 @@ class PatternViewer(context: Context) : Viewer(context) {
 
         private const val MAX_NOTES = 120
 
-        private val NOTES = arrayOf("C ", "C#", "D ", "D#", "E ", "F ", "F#", "G ", "G#", "A ", "A#", "B ")
+        private val NOTES =
+                arrayOf("C ", "C#", "D ", "D#", "E ", "F ", "F#", "G ", "G#", "A ", "A#", "B ")
     }
 }

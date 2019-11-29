@@ -17,7 +17,12 @@ import org.xmlpull.v1.XmlPullParserFactory
 
 class ArtistRequest
 @Throws(UnsupportedEncodingException::class)
-constructor(key: String, request: String, parameter: String) : ModArchiveRequest(key, request, parameter) {
+constructor(
+        key: String,
+        request: String,
+        parameter: String
+) :
+        ModArchiveRequest(key, request, parameter) {
 
     override fun xmlParse(result: String): ModArchiveResponse {
         val artistList = ArtistResponse()

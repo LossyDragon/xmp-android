@@ -34,7 +34,10 @@ class Module {
         }
     var instruments: String? = null
         set(instruments) {
-            val lines = instruments!!.split("\n".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+            val lines = instruments!!
+                    .split("\n".toRegex())
+                    .dropLastWhile { it.isEmpty() }
+                    .toTypedArray()
             val buffer = StringBuilder()
             for (line in lines) {
                 @Suppress("DEPRECATION")

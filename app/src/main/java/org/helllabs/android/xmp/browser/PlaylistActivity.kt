@@ -20,8 +20,10 @@ import org.helllabs.android.xmp.preferences.Preferences
 import org.helllabs.android.xmp.util.Log
 import java.io.IOException
 
-
-class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickListener, PlaylistAdapter.OnItemLongClickListener {
+class PlaylistActivity :
+        BasePlaylistActivity(),
+        PlaylistAdapter.OnItemClickListener,
+        PlaylistAdapter.OnItemLongClickListener {
 
     private var mPlaylist: Playlist? = null
     private var mWrappedAdapter: RecyclerView.Adapter<*>? = null
@@ -43,7 +45,6 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
     override val allFiles: List<String>
         get() = mPlaylistAdapter.filenameList
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -64,7 +65,12 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         mRecyclerViewDragDropManager = RecyclerViewDragDropManager()
 
         // adapter
-        mPlaylistAdapter = PlaylistAdapter(this, mPlaylist!!, useFilename, PlaylistAdapter.LAYOUT_DRAG)
+        mPlaylistAdapter = PlaylistAdapter(
+                context = this,
+                playlist = mPlaylist!!,
+                useFilename = useFilename,
+                layoutType = PlaylistAdapter.LAYOUT_DRAG
+        )
         mWrappedAdapter = mRecyclerViewDragDropManager!!.createWrappedAdapter(mPlaylistAdapter)
 
         setSwipeRefresh(swipeContainer)
@@ -73,7 +79,11 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
             layoutManager = LinearLayoutManager(this@PlaylistActivity)
             adapter = mWrappedAdapter
             itemAnimator = RefactoredDefaultItemAnimator()
-            addItemDecoration(DividerItemDecoration(this@PlaylistActivity, DividerItemDecoration.VERTICAL))
+            addItemDecoration(
+                    DividerItemDecoration(
+                            this@PlaylistActivity,
+                            DividerItemDecoration.VERTICAL)
+            )
         }
 
         mRecyclerViewDragDropManager!!.attachRecyclerView(plist_list)

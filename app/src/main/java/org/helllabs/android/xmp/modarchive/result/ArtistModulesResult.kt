@@ -18,15 +18,18 @@ import org.helllabs.android.xmp.modarchive.response.ModuleResponse
 import org.helllabs.android.xmp.modarchive.response.SoftErrorResponse
 import java.io.UnsupportedEncodingException
 
-class ArtistModulesResult : Result(), ModArchiveRequest.OnResponseListener, AdapterView.OnItemClickListener {
-    
+class ArtistModulesResult :
+        Result(),
+        ModArchiveRequest.OnResponseListener,
+        AdapterView.OnItemClickListener {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.result_list)
         setupCrossfade()
 
         setTitle(R.string.search_artist_modules_title)
-        
+
         result_list.onItemClickListener = this
 
         val artistId = intent.getLongExtra(Search.ARTIST_ID, -1)
@@ -38,7 +41,6 @@ class ArtistModulesResult : Result(), ModArchiveRequest.OnResponseListener, Adap
         } catch (e: UnsupportedEncodingException) {
             handleQueryError()
         }
-
     }
 
     override fun onResponse(response: ModArchiveResponse) {

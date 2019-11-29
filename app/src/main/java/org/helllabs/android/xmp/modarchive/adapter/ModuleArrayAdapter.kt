@@ -11,13 +11,19 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.TextView
 
-class ModuleArrayAdapter(context: Context, resource: Int, items: List<Module>) : ArrayAdapter<Module>(context, resource, items) {
+class ModuleArrayAdapter(
+        context: Context,
+        resource: Int,
+        items: List<Module>
+) :
+        ArrayAdapter<Module>(context, resource, items) {
 
     @SuppressLint("InflateParams")
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         var view = convertView
         if (view == null) {
-            val inflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+            val inflater =
+                    context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
             view = inflater.inflate(R.layout.item_search, null)
         }
 
@@ -31,11 +37,10 @@ class ModuleArrayAdapter(context: Context, resource: Int, items: List<Module>) :
             fmt.text = module.format
             line1.text = module.songTitle
             line2.text = String.format(context.getString(R.string.module_by), module.artist)
-            size.text = String.format(context.getString(R.string.module_size), (module.bytes / 1024).toString())
+            size.text = String.format(
+                    context.getString(R.string.module_size), (module.bytes / 1024).toString())
         }
 
         return view!!
     }
-
-
 }

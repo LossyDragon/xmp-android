@@ -29,7 +29,11 @@ import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.util.*
 import java.io.File
 
-class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener, PlaylistAdapter.OnItemLongClickListener {
+class PlaylistMenu :
+        AppCompatActivity(),
+        PlaylistAdapter.OnItemClickListener,
+        PlaylistAdapter.OnItemLongClickListener {
+
     private var mediaPath: String? = null
     private var playlistAdapter: PlaylistAdapter? = null
     private val prefs = XmpApplication.instance!!.sharedPrefs
@@ -65,7 +69,6 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener, P
         plist_menu_list.apply {
             layoutManager = LinearLayoutManager(this@PlaylistMenu)
             adapter = playlistAdapter
-            //registerForContextMenu(this)
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     if (dy > 0 && playlist_add_button.visibility == View.VISIBLE) {
@@ -96,7 +99,7 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener, P
         super.onResume()
         updateList()
 
-        //Show changelog on Version_Code updates.
+        // Show changelog on Version_Code updates.
         val lastViewed = prefs.getInt(Preferences.CHANGELOG_VERSION, 0)
         val versionCode = BuildConfig.VERSION_CODE
         if (lastViewed < versionCode && lastViewed != 0) {
@@ -105,18 +108,23 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener, P
     }
 
     private fun getStoragePermissions() {
-        val hasPermission =
-                ContextCompat.checkSelfPermission(this, WRITE_EXTERNAL_STORAGE) == PERMISSION_GRANTED
+        val hasPermission = ContextCompat
+                .checkSelfPermission(this, WRITE_EXTERNAL_STORAGE) == PERMISSION_GRANTED
 
         if (hasPermission) {
             setupDataDir()
             updateList()
         } else {
-            ActivityCompat.requestPermissions(this, arrayOf(WRITE_EXTERNAL_STORAGE), REQUEST_WRITE_STORAGE)
+            ActivityCompat.requestPermissions(
+                    this, arrayOf(WRITE_EXTERNAL_STORAGE), REQUEST_WRITE_STORAGE)
         }
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+            requestCode: Int,
+            permissions: Array<String>,
+            grantResults: IntArray
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
             REQUEST_WRITE_STORAGE -> {
@@ -135,7 +143,11 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener, P
     private fun setupDataDir() {
         if (!Preferences.DATA_DIR.isDirectory) {
             if (Preferences.DATA_DIR.mkdirs()) {
-                createEmptyPlaylist(this, getString(R.string.empty_playlist), getString(R.string.empty_comment))
+                createEmptyPlaylist(
+                        activity = this,
+                        name = getString(R.string.empty_playlist),
+                        comment = getString(R.string.empty_comment)
+                )
             } else {
                 fatalError(R.string.error_datadir)
             }
@@ -199,7 +211,11 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener, P
         playlistAdapter!!.add(browserItem)
 
         for (name in listNoSuffix()) {
-            val item = PlaylistItem(PlaylistItem.TYPE_PLAYLIST, name, Playlist.readComment(this, name))
+            val item = PlaylistItem(
+                    type = PlaylistItem.TYPE_PLAYLIST,
+                    name = name,
+                    comment = Playlist.readComment(this, name)
+            )
             item.imageRes = R.drawable.ic_list
             playlistAdapter!!.add(item)
         }
@@ -219,18 +235,17 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener, P
                     Log.e(TAG, "Failed to create new playlist: $name")
                     error(R.string.error_create_playlist)
                 }
-
             }
             MOD_EDIT_REQUEST -> {
                 val id = data?.getIntExtra(PlaylistAddEdit.EXTRA_ID, -1)
 
-                //Something went wrong.
+                // Something went wrong.
                 if (id == -1 || id == null) {
                     error(R.string.error_edit_playlist)
                     return
                 }
 
-                //Delete playlist.
+                // Delete playlist.
                 if (id == -2) {
                     val name = data.getStringExtra(PlaylistAddEdit.EXTRA_NAME)!!
                     Playlist.delete(this, name)
@@ -238,13 +253,12 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener, P
                     return
                 }
 
-                //Everything is OK, edit playlist.
+                // Everything is OK, edit playlist.
                 editPlaylistFromFile(
                         data.getStringExtra(PlaylistAddEdit.EXTRA_NAME)!!,
                         data.getStringExtra(PlaylistAddEdit.EXTRA_COMMENT)!!,
                         data.getStringExtra(PlaylistAddEdit.EXTRA_OLD_NAME)!!
                 )
-
             }
             SETTINGS_REQUEST -> {
                 if (resultCode == RESULT_OK) {
@@ -268,16 +282,18 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener, P
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            android.R.id.home -> startPlayerActivity()
-            R.id.menu_prefs -> startActivityForResult(Intent(this, Preferences::class.java), SETTINGS_REQUEST)
-            R.id.menu_download -> startActivity(Intent(this, Search::class.java))
+            android.R.id.home ->
+                startPlayerActivity()
+            R.id.menu_prefs ->
+                startActivityForResult(
+                        Intent(this, Preferences::class.java), SETTINGS_REQUEST)
+            R.id.menu_download ->
+                startActivity(Intent(this, Search::class.java))
         }
         return super.onOptionsItemSelected(item)
     }
 
     private fun editPlaylistFromFile(name: String, info: String, oldName: String) {
-        println("OldName: $oldName")
-        println("NewName: $name")
         if (!Playlist.rename(this, oldName, name))
             error(R.string.error_rename_playlist)
 

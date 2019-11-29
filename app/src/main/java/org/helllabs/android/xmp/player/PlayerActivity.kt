@@ -36,7 +36,6 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.*
 
-
 class PlayerActivity : AppCompatActivity() {
 
     /* actual mod player */
@@ -63,14 +62,14 @@ class PlayerActivity : AppCompatActivity() {
     private var viewer: Viewer? = null
     private var info: Viewer.Info? = null
     private val modVars = IntArray(10)
-    private val seqVars = IntArray(16)        // this is MAX_SEQUENCES defined in common.h
+    private val seqVars = IntArray(16) // this is MAX_SEQUENCES defined in common.h
     private var currentViewer: Int = 0
     private var display: Display? = null
     private var instrumentViewer: Viewer? = null
     private var channelViewer: Viewer? = null
     private var patternViewer: Viewer? = null
     private var playTime: Int = 0
-    private val playerLock = Any()        // for sync
+    private val playerLock = Any() // for sync
     private var sheet: Sheet? = null
 
     private val connection = object : ServiceConnection {
@@ -104,7 +103,6 @@ class PlayerActivity : AppCompatActivity() {
                     } catch (e: RemoteException) {
                         Log.e(TAG, "Can't get module file name")
                     }
-
                 }
             }
         }
@@ -114,7 +112,7 @@ class PlayerActivity : AppCompatActivity() {
 
             synchronized(playerLock) {
                 stopUpdate = true
-                //modPlayer = null;
+                // modPlayer = null;
                 Log.i(TAG, "Service disconnected")
                 finish()
             }
@@ -162,7 +160,6 @@ class PlayerActivity : AppCompatActivity() {
                         progressThread!!.join()
                     } catch (e: InterruptedException) {
                     }
-
                 }
                 if (!isFinishing) {
                     finish()
@@ -228,18 +225,23 @@ class PlayerActivity : AppCompatActivity() {
                             modPlayer!!.getInfo(info!!.values)
                             info!!.time = modPlayer!!.time() / 1000
 
-                            modPlayer!!.getChannelData(info!!.volumes, info!!.finalVols, info!!.pans,
-                                    info!!.instruments, info!!.keys, info!!.periods)
+                            modPlayer!!.getChannelData(
+                                    info!!.volumes,
+                                    info!!.finalVols,
+                                    info!!.pans,
+                                    info!!.instruments,
+                                    info!!.keys,
+                                    info!!.periods
+                            )
                         } catch (e: RemoteException) {
                             // fail silently
                         }
-
                     }
                 }
 
                 // display frame info
-                if (info!!.values[5] != oldSpd || info!!.values[6] != oldBpm
-                        || info!!.values[0] != oldPos || info!!.values[1] != oldPat) {
+                if (info!!.values[5] != oldSpd || info!!.values[6] != oldBpm ||
+                        info!!.values[0] != oldPos || info!!.values[1] != oldPat) {
                     // Ugly code to avoid expensive String.format()
 
                     s.delete(0, s.length)
@@ -320,7 +322,6 @@ class PlayerActivity : AppCompatActivity() {
                 } catch (e: RemoteException) {
                     Log.e(TAG, "Can't get all sequences status")
                 }
-
             }
             return false
         }
@@ -331,7 +332,8 @@ class PlayerActivity : AppCompatActivity() {
         control_player_seek.progress = 0
         control_player_seek.max = time / 100
 
-        toast(text = String.format(getString(R.string.msg_new_sequence), time / 60000, time / 1000 % 60))
+        toast(text = String.format(
+                getString(R.string.msg_new_sequence), time / 60000, time / 1000 % 60))
 
         sheet!!.selectSequence(modVars[7])
     }
@@ -386,7 +388,8 @@ class PlayerActivity : AppCompatActivity() {
                 }
                 sheet!!.selectSequence(0)
 
-                control_player_loop.setImageResource(if (loop) R.drawable.ic_repeat_on else R.drawable.ic_repeat_off)
+                control_player_loop.setImageResource(
+                        if (loop) R.drawable.ic_repeat_on else R.drawable.ic_repeat_off)
 
                 totalTime = time / 1000
                 control_player_seek.max = time / 100
@@ -453,7 +456,6 @@ class PlayerActivity : AppCompatActivity() {
                         } catch (e: RemoteException) {
                             // fail silently
                         }
-
                     }
                 }
 
@@ -465,14 +467,11 @@ class PlayerActivity : AppCompatActivity() {
                     do {
                         now = System.nanoTime()
                         sleep(10)
-
                     } while (now - lastTimer < frameTime && !stopUpdate)
 
                     lastTimer = now
-
                 } catch (e: InterruptedException) {
                 }
-
             } while (playTime >= 0)
 
             handler.removeCallbacksAndMessages(null)
@@ -481,11 +480,11 @@ class PlayerActivity : AppCompatActivity() {
                     if (modPlayer != null) {
                         Log.i(TAG, "Flush interface update")
                         try {
-                            modPlayer!!.allowRelease()        // finished playing, we can release the module
+                            // finished playing, we can release the module
+                            modPlayer!!.allowRelease()
                         } catch (e: RemoteException) {
                             Log.e(TAG, "Can't allow module release")
                         }
-
                     }
                 }
             }
@@ -530,7 +529,8 @@ class PlayerActivity : AppCompatActivity() {
             }
         }
 
-        if (path != null) {        // from intent filter
+        // from intent filter
+        if (path != null) {
             Log.i(TAG, "Player started from intent filter")
             fileList = ArrayList()
             fileList!!.add(path)
@@ -550,7 +550,7 @@ class PlayerActivity : AppCompatActivity() {
         } else {
             val extras = intent.extras
             if (extras != null) {
-                //fileArray = extras.getStringArray("files");
+                // fileArray = extras.getStringArray("files");
                 fileList = XmpApplication.instance!!.fileList
                 shuffleMode = extras.getBoolean(PARM_SHUFFLE)
                 loopListMode = extras.getBoolean(PARM_LOOP)
@@ -587,7 +587,7 @@ class PlayerActivity : AppCompatActivity() {
         val fileName: String = "temp." + uriSting.substring(uriSting.lastIndexOf('.') + 1)
         val outFile = File(this.externalCacheDir, fileName)
 
-        //Lets delete the file to ensure a clean copy.
+        // Lets delete the file to ensure a clean copy.
         outFile.delete()
 
         contentResolver.openInputStream(uri).use { input ->
@@ -643,7 +643,8 @@ class PlayerActivity : AppCompatActivity() {
             if (modPlayer != null) {
                 var dragLock = prefs!!.getBoolean(Preferences.PLAYER_DRAG_LOCK, false)
                 dragLock = dragLock xor true
-                control_player_lock.setImageResource(if (dragLock) R.drawable.ic_lock else R.drawable.ic_unlock)
+                control_player_lock.setImageResource(
+                        if (dragLock) R.drawable.ic_lock else R.drawable.ic_unlock)
 
                 val editor = prefs!!.edit()
                 editor.putBoolean(Preferences.PLAYER_DRAG_LOCK, dragLock)
@@ -659,7 +660,8 @@ class PlayerActivity : AppCompatActivity() {
             if (modPlayer != null) {
                 try {
                     val toggle = modPlayer!!.toggleLoop()
-                    control_player_loop.setImageResource(if (toggle) R.drawable.ic_repeat_on else R.drawable.ic_repeat_off)
+                    control_player_loop.setImageResource(
+                            if (toggle) R.drawable.ic_repeat_on else R.drawable.ic_repeat_off)
                 } catch (e: RemoteException) {
                     Log.e(TAG, "Can't get loop status")
                 }
@@ -668,7 +670,7 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     private fun playButtonListener() {
-        //Debug.startMethodTracing("xmp");
+        // Debug.startMethodTracing("xmp");
         synchronized(playerLock) {
             if (modPlayer != null) {
                 try {
@@ -688,7 +690,7 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     private fun stopButtonListener() {
-        //Debug.stopMethodTracing();
+        // Debug.stopMethodTracing();
         synchronized(playerLock) {
             Log.d(TAG, "Stop button pressed")
             if (modPlayer != null) {
@@ -854,7 +856,6 @@ class PlayerActivity : AppCompatActivity() {
                     } catch (e: RemoteException) {
                         Log.e(TAG, "Can't seek to time")
                     }
-
                 }
                 seeking = false
             }

@@ -6,7 +6,8 @@ import android.app.Activity
 import android.view.View
 
 class Crossfader(private val activity: Activity) {
-    private val animationDuration: Int = activity.resources.getInteger(android.R.integer.config_mediumAnimTime)
+    private val animationDuration: Int =
+            activity.resources.getInteger(android.R.integer.config_mediumAnimTime)
     private var contentView: View? = null
     private var progressView: View? = null
 
@@ -41,7 +42,5 @@ class Crossfader(private val activity: Activity) {
                         progressView!!.visibility = View.GONE
                     }
                 })
-
     }
-
 }

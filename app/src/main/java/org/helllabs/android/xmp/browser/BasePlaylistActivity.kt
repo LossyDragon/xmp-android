@@ -25,7 +25,6 @@ import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.util.InfoCache
 import org.helllabs.android.xmp.util.Log
 import org.helllabs.android.xmp.util.toast
-import java.util.*
 
 abstract class BasePlaylistActivity : AppCompatActivity() {
     private var mShowToasts: Boolean = false
@@ -48,7 +47,9 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     private val toggleLoopButtonListener = OnClickListener { view ->
         var loopMode = isLoopMode
         loopMode = loopMode xor true
-        (view as ImageButton).setImageResource(if (loopMode) R.drawable.ic_repeat_on else R.drawable.ic_repeat_off)
+        (view as ImageButton).setImageResource(
+                if (loopMode) R.drawable.ic_repeat_on else R.drawable.ic_repeat_off)
+
         if (mShowToasts) {
             toast(if (loopMode) R.string.msg_loop_on else R.string.msg_loop_off)
         }
@@ -60,7 +61,9 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     private val toggleShuffleButtonListener = OnClickListener { view ->
         var shuffleMode = isShuffleMode
         shuffleMode = shuffleMode xor true
-        (view as ImageButton).setImageResource(if (shuffleMode) R.drawable.ic_shuffle_on else R.drawable.ic_shuffle_off)
+        (view as ImageButton).setImageResource(
+                if (shuffleMode) R.drawable.ic_shuffle_on else R.drawable.ic_shuffle_off)
+
         if (mShowToasts) {
             toast(if (shuffleMode) R.string.msg_shuffle_on else R.string.msg_shuffle_off)
         }
@@ -140,12 +143,14 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         }
 
         control_button_loop.apply {
-            setImageResource(if (isLoopMode) R.drawable.ic_repeat_on else R.drawable.ic_repeat_off)
+            setImageResource(
+                    if (isLoopMode) R.drawable.ic_repeat_on else R.drawable.ic_repeat_off)
             setOnClickListener(toggleLoopButtonListener)
         }
 
         control_button_shuffle.apply {
-            setImageResource(if (isShuffleMode) R.drawable.ic_shuffle_on else R.drawable.ic_shuffle_off)
+            setImageResource(
+                    if (isShuffleMode) R.drawable.ic_shuffle_on else R.drawable.ic_shuffle_off)
             setOnClickListener(toggleShuffleButtonListener)
         }
     }
@@ -153,7 +158,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     open fun onItemClick(adapter: PlaylistAdapter, view: View, position: Int) {
         val filename = adapter.getItem(position).file!!.path
 
-        //It's a string because of "ListPreference" :U
+        // It's a string because of "ListPreference" :U
         val mode = prefs.getString(Preferences.PLAYLIST_MODE, "1")!!.toInt()
 
         /*
@@ -166,7 +171,11 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
                 1 -> {
                     val count = position - adapter.directoryCount
                     if (count >= 0) {
-                        playModule(modList = adapter.filenameList, start = count, keepFirst = isShuffleMode)
+                        playModule(
+                                modList = adapter.filenameList,
+                                start = count,
+                                keepFirst = isShuffleMode
+                        )
                     }
                 }
                 // play this one
@@ -182,13 +191,14 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         }
     }
 
-    //TODO: if shuffle is `Enabled`, play all starting here does not work right.
-
+    // TODO: if shuffle is `Enabled`, play all starting here does not work right.
     // Play this module or all modules in list
-    protected fun playModule(mod: String? = null,
-                             modList: List<String>? = null,
-                             start: Int = 0,
-                             keepFirst: Boolean = false) {
+    protected fun playModule(
+            mod: String? = null,
+            modList: List<String>? = null,
+            start: Int = 0,
+            keepFirst: Boolean = false
+    ) {
 
         XmpApplication.instance!!.fileList =
                 if (!mod.isNullOrEmpty())
@@ -282,8 +292,14 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
                 startActivity(intent)
                 return true
             }
-            R.id.menu_prefs -> startActivityForResult(Intent(this, Preferences::class.java), SETTINGS_REQUEST)
-            R.id.menu_download -> startActivityForResult(Intent(this, Search::class.java), SEARCH_REQUEST)
+            R.id.menu_prefs ->
+                startActivityForResult(
+                        Intent(this, Preferences::class.java), SETTINGS_REQUEST
+                )
+            R.id.menu_download ->
+                startActivityForResult(
+                        Intent(this, Search::class.java), SEARCH_REQUEST
+                )
         }
         return super.onOptionsItemSelected(item)
     }

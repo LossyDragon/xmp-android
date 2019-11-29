@@ -33,7 +33,7 @@ class Search : AppCompatActivity(), TextView.OnEditorActionListener {
 
         search_edit_text!!.setOnEditorActionListener(this)
 
-        //Search cant be empty or less than 3 characters, let's stop a wasted event.
+        // Search cant be empty or less than 3 characters, let's stop a wasted event.
         search_edit_text.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(p0: Editable?) {}
 

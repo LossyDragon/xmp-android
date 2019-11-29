@@ -56,17 +56,21 @@ class ModernNotifier(service: Service) : Notifier(service) {
                 .setStyle(NotiCompatMedia.MediaStyle().setShowActionsInCompactView(1, 2, 3))
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
 
-
-        //Action Builders
-        builder.addAction(R.drawable.ic_previous, service.getString(R.string.notif_prev), prevIntent)       // 0
-        builder.addAction(R.drawable.ic_stop, service.getString(R.string.notif_stop), stopIntent)           // 1
+        // Action Builders
+        builder.addAction(
+                R.drawable.ic_previous, service.getString(R.string.notif_prev), prevIntent) // 0
+        builder.addAction(
+                R.drawable.ic_stop, service.getString(R.string.notif_stop), stopIntent) // 1
         if (type == TYPE_PAUSE) {
-            builder.addAction(R.drawable.ic_play, service.getString(R.string.notif_play), playIntent)       // 2a
+            builder.addAction(
+                    R.drawable.ic_play, service.getString(R.string.notif_play), playIntent) // 2a
             builder.setContentText(service.getString(R.string.notif_paused))
         } else {
-            builder.addAction(R.drawable.ic_pause, service.getString(R.string.notif_pause), pauseIntent)    // 2b
+            builder.addAction(
+                    R.drawable.ic_pause, service.getString(R.string.notif_pause), pauseIntent) // 2b
         }
-        builder.addAction(R.drawable.ic_forward, service.getString(R.string.notif_next), nextIntent)        // 3
+        builder.addAction(
+                R.drawable.ic_forward, service.getString(R.string.notif_next), nextIntent) // 3
 
         if (type == TYPE_TICKER) {
             if (queueManager.size() > 1) {

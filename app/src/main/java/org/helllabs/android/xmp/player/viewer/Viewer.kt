@@ -1,24 +1,21 @@
 package org.helllabs.android.xmp.player.viewer
 
-import org.helllabs.android.xmp.service.ModInterface
-import org.helllabs.android.xmp.util.Log
-
 import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Color
 import android.os.RemoteException
-import android.view.GestureDetector
+import android.view.*
 import android.view.GestureDetector.SimpleOnGestureListener
-import android.view.MotionEvent
-import android.view.SurfaceHolder
-import android.view.SurfaceView
-import android.view.View
-import androidx.appcompat.app.AppCompatDelegate
+import android.view.View.OnTouchListener
 import org.helllabs.android.xmp.player.getScreenSize
+import org.helllabs.android.xmp.service.ModInterface
+import org.helllabs.android.xmp.util.Log
 import kotlin.math.abs
 
-
-abstract class Viewer(context: Context) : SurfaceView(context), SurfaceHolder.Callback, View.OnClickListener {
+abstract class Viewer(context: Context) :
+        SurfaceView(context),
+        SurfaceHolder.Callback,
+        View.OnClickListener {
     protected lateinit var surfaceHolder: SurfaceHolder
     protected var canvasHeight: Int = 0
     protected var canvasWidth: Int = 0
@@ -40,7 +37,7 @@ abstract class Viewer(context: Context) : SurfaceView(context), SurfaceHolder.Ca
 
     class Info {
         var time: Int = 0
-        val values = IntArray(7)    // order pattern row num_rows frame speed bpm
+        val values = IntArray(7) // order pattern row num_rows frame speed bpm
         val volumes = IntArray(64)
         val finalVols = IntArray(64)
         val pans = IntArray(64)
@@ -67,7 +64,12 @@ abstract class Viewer(context: Context) : SurfaceView(context), SurfaceHolder.Ca
 
     private inner class MyGestureDetector : SimpleOnGestureListener() {
 
-        override fun onScroll(e1: MotionEvent, e2: MotionEvent, distanceX: Float, distanceY: Float): Boolean {
+        override fun onScroll(
+                e1: MotionEvent,
+                e2: MotionEvent,
+                distanceX: Float,
+                distanceY: Float
+        ): Boolean {
             synchronized(this) {
                 posX = posX.plus(distanceX)
                 posY = posY.plus(distanceY)
@@ -80,10 +82,15 @@ abstract class Viewer(context: Context) : SurfaceView(context), SurfaceHolder.Ca
             return true
         }
 
-        override fun onFling(e1: MotionEvent, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
-            //This is very wonky.
-            //velX = velocityX / 25
-            //velY = velocityY / 25
+        override fun onFling(
+                e1: MotionEvent,
+                e2: MotionEvent,
+                velocityX: Float,
+                velocityY: Float
+        ): Boolean {
+            // This is very wonky.
+            // velX = velocityX / 25
+            // velY = velocityY / 25
             return true
         }
 
@@ -98,7 +105,7 @@ abstract class Viewer(context: Context) : SurfaceView(context), SurfaceHolder.Ca
 
         override fun onDown(e: MotionEvent): Boolean {
             velY = 0f
-            velX = velY        // stop fling
+            velX = velY // stop fling
             return true
         }
     }
@@ -186,7 +193,6 @@ abstract class Viewer(context: Context) : SurfaceView(context), SurfaceHolder.Ca
             } catch (e: RemoteException) {
                 Log.e(TAG, "Can't read channel mute status")
             }
-
         }
 
         posY = 0f
@@ -226,9 +232,8 @@ abstract class Viewer(context: Context) : SurfaceView(context), SurfaceHolder.Ca
         // do nothing
     }
 
-
     fun getBackgroundColor(): Int {
-        //Detect if dark mode is enabled or not
+        // Detect if dark mode is enabled or not
         return when (resources.configuration.uiMode.and(Configuration.UI_MODE_NIGHT_MASK)) {
             Configuration.UI_MODE_NIGHT_YES -> Color.BLACK
             Configuration.UI_MODE_NIGHT_NO -> Color.WHITE

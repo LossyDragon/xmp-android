@@ -10,8 +10,7 @@ import kotlinx.android.synthetic.main.pref_item_formats.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.util.toast
-import java.util.*
-
+import java.util.Arrays
 
 class ListFormats : AppCompatActivity() {
     private val formats = Xmp.getFormats()

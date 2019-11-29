@@ -4,10 +4,8 @@ import android.os.Bundle
 import android.os.Environment
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
-import kotlinx.android.synthetic.main.pref_layout.*
 import org.helllabs.android.xmp.R
 import java.io.File
-
 
 class Preferences : AppCompatActivity() {
 
@@ -34,7 +32,7 @@ class Preferences : AppCompatActivity() {
     }
 
     companion object {
-        //SAF absolutely sucks. Keep until that `pile` is better documented.
+        // SAF absolutely sucks. Keep until that `pile` is better documented.
         @Suppress("DEPRECATION")
         private val SD_DIR: File = Environment.getExternalStorageDirectory()
         val DATA_DIR: File = File(SD_DIR, "Xmp for Android")
@@ -46,13 +44,13 @@ class Preferences : AppCompatActivity() {
         const val APP_THEME = "themePref"
         const val ARTIST_FOLDER = "artist_folder"
         const val BACK_BUTTON_NAVIGATION = "back_button_navigation"
-        //const val BLUETOOTH_PAUSE = "bluetooth_pause"
+        // const val BLUETOOTH_PAUSE = "bluetooth_pause"
         const val BUFFER_MS = "buffer_ms_opensl"
         const val CHANGELOG_VERSION = "changelog_version"
         const val DEFAULT_PAN = "default_pan"
         const val ENABLE_DELETE = "enable_delete"
         const val EXAMPLES = "examples"
-        //const val HEADSET_PAUSE = "headset_pause"
+        // const val HEADSET_PAUSE = "headset_pause"
         const val INTERPOLATE = "interpolate"
         const val INTERP_TYPE = "interp_type"
         const val KEEP_SCREEN_ON = "keep_screen_on"
@@ -70,11 +68,11 @@ class Preferences : AppCompatActivity() {
         const val OPTIONS_SHUFFLE_MODE = "options_shuffleMode"
         const val OPTIONS_LOOP_MODE = "options_loopMode"
 
-        //public static final String STEREO = "stereo";
-        //public static final String PAN_SEPARATION = "pan_separation";
-        //public static final String BACK_BUTTON_PARENTDIR = "back_button_parentdir";
-        //public static final String TITLES_IN_BROWSER = "titles_in_browser";
-        //public static final String BUFFER_MS = "buffer_ms";
-        //public static final String FILTER = "filter";
+        // public static final String STEREO = "stereo";
+        // public static final String PAN_SEPARATION = "pan_separation";
+        // public static final String BACK_BUTTON_PARENTDIR = "back_button_parentdir";
+        // public static final String TITLES_IN_BROWSER = "titles_in_browser";
+        // public static final String BUFFER_MS = "buffer_ms";
+        // public static final String FILTER = "filter";
     }
 }

@@ -42,7 +42,7 @@ import java.io.IOException
 import java.io.UnsupportedEncodingException
 import java.util.*
 
-//Download sampled from Fetch-3.0 SingleDownloaderActivity.
+// Download sampled from Fetch-3.0 SingleDownloaderActivity.
 open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, FetchObserver<Download> {
 
     private var module: Module? = null
@@ -71,7 +71,7 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, FetchO
 
         module_button_random.setOnClickListener { randomClick() }
 
-        //updateButtons(module)
+        // updateButtons(module)
 
         val id = intent.getLongExtra(Search.MODULE_ID, -1)
 
@@ -175,14 +175,23 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, FetchO
             module_title!!.text = module.songTitle
             module_filename!!.text = module.filename
             val size = module.bytes / 1024
-            module_info!!.text = String.format("%s by %s (%d KB)", module.format, module.artist, size)
-
+            module_info!!.text =
+                    String.format("%s by %s (%d KB)", module.format, module.artist, size)
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                module_license!!.text = Html.fromHtml("License: <a href=\"" + module.legalUrl + "\">" + module.license + "</a>", Html.FROM_HTML_MODE_LEGACY)
+                module_license!!.text = Html.fromHtml(
+                        "License: <a href=\"" +
+                                module.legalUrl + "\">" +
+                                module.license + "</a>",
+                        Html.FROM_HTML_MODE_LEGACY
+                )
             } else {
                 @Suppress("DEPRECATION")
-                module_license!!.text = Html.fromHtml("License: <a href=\"" + module.legalUrl + "\">" + module.license + "</a>")
+                module_license!!.text = Html.fromHtml(
+                        "License: <a href=\"" +
+                                module.legalUrl + "\">" +
+                                module.license + "</a>"
+                )
             }
 
             module_license!!.movementMethod = LinkMovementMethod.getInstance()
@@ -196,11 +205,21 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, FetchO
         val sponsor = response.sponsor
         if (sponsor?.name != null) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                module_sponsor!!.text = Html.fromHtml("Download mirrors provided by <a href=\"" + sponsor.link + "\">" + sponsor.name + "</a>", Html.FROM_HTML_MODE_LEGACY)
+                module_sponsor!!.text =
+                        Html.fromHtml(
+                                "Download mirrors provided by <a href=\"" +
+                                        sponsor.link + "\">" +
+                                        sponsor.name + "</a>",
+                                Html.FROM_HTML_MODE_LEGACY
+                        )
             } else {
                 @Suppress("DEPRECATION")
-                module_sponsor!!.text = Html.fromHtml("Download mirrors provided by <a href=\"" + sponsor.link + "\">" + sponsor.name + "</a>")
-
+                module_sponsor!!.text =
+                        Html.fromHtml(
+                                "Download mirrors provided by <a href=\"" +
+                                        sponsor.link + "\">" +
+                                        sponsor.name + "</a>"
+                        )
             }
             module_sponsor!!.movementMethod = LinkMovementMethod.getInstance()
         }
@@ -230,7 +249,7 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, FetchO
     private fun playClick() {
 
         if (localFile(module).exists()) {
-            //Exist, play module
+            // Exist, play module
             val path = localFile(module).path
             val modList = ArrayList<String>()
 
@@ -242,9 +261,8 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, FetchO
             XmpApplication.instance!!.fileList = modList
             Log.i(TAG, "Play $path")
             startActivity(intent)
-
         } else {
-            //Does not exist, download module
+            // Does not exist, download module
             val modDir = getDownloadPath(module)
             val url = module!!.url
 
@@ -278,7 +296,11 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, FetchO
                     val contents = parent.listFiles()
                     if (contents != null && contents.isEmpty()) {
                         try {
-                            val mediaPath = File(mPrefs!!.getString(Preferences.MEDIA_PATH, Preferences.DEFAULT_MEDIA_PATH)!!).canonicalPath
+                            val path = mPrefs!!.getString(
+                                    Preferences.MEDIA_PATH,
+                                    Preferences.DEFAULT_MEDIA_PATH
+                            )!!
+                            val mediaPath = File(path).canonicalPath
                             val parentPath = parent.canonicalPath
 
                             if (parentPath.startsWith(mediaPath) && parentPath != mediaPath) {
@@ -291,7 +313,6 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, FetchO
                         } catch (e: IOException) {
                             Log.e(TAG, e.message.toString())
                         }
-
                     }
                 }
                 updateButtons(module)

@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import org.helllabs.android.xmp.service.PlayerService
 
-
 class HeadsetPlugReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         // Stop the initial broadcast, it pauses on play

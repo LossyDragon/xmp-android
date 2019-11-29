@@ -18,7 +18,6 @@ import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.preferences.Preferences
 
-
 fun Activity.fatalError(@StringRes resId: Int? = null, text: String? = null) {
     MaterialDialog(this).show {
         title(R.string.error)
@@ -40,7 +39,6 @@ fun Activity.error(@StringRes resId: Int? = null, text: String? = null) {
 fun Activity.toast(@StringRes resId: Int? = null, text: String? = null) {
     Toast.makeText(this, resId?.let { getString(it) } ?: text, Toast.LENGTH_SHORT).show()
 }
-
 
 fun Activity.yesNoDialog(title: String, message: String, callback: (result: Boolean) -> Unit) {
     MaterialDialog(this).show {
@@ -66,7 +64,8 @@ fun Activity.showChangeLog() {
                 }
 
         val view = dialog.getCustomView()
-        view.text_version.text = String.format(getString(R.string.title_changelog), BuildConfig.VERSION_NAME)
+        view.text_version.text =
+                String.format(getString(R.string.title_changelog), BuildConfig.VERSION_NAME)
         view.text_changelog.text = getChangelog()
         dialog.show()
     }
@@ -77,7 +76,7 @@ fun Activity.showChangeDir(prefs: SharedPreferences, runnable: Runnable) {
     val dialog = MaterialDialog(this).customView(R.layout.dialog_input)
     val customView = dialog.getCustomView()
 
-    //TextWatcher
+    // TextWatcher
     customView.dialog_input_text.addTextChangedListener(object : TextWatcher {
         override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
             dialog.setActionButtonEnabled(WhichButton.POSITIVE, !s.isNullOrEmpty())
@@ -105,5 +104,4 @@ fun Activity.showChangeDir(prefs: SharedPreferences, runnable: Runnable) {
         }
         negativeButton(R.string.cancel)
     }
-
 }

@@ -9,7 +9,6 @@ import kotlinx.android.synthetic.main.activity_search_error.*
 import org.helllabs.android.xmp.R
 import java.util.*
 
-
 class SearchError : AppCompatActivity(), Runnable {
 
     private var frameBlink: Boolean = false
@@ -35,7 +34,9 @@ class SearchError : AppCompatActivity(), Runnable {
                 getString(R.string.search_error_unknown)
             } else {
                 message.substring(0, 1)
-                        .toUpperCase(Locale.US) + message.substring(1) + getString(R.string.search_error_back)
+                        .toUpperCase(Locale.US) +
+                        message.substring(1) +
+                        getString(R.string.search_error_back)
             }
         }
 
@@ -63,7 +64,6 @@ class SearchError : AppCompatActivity(), Runnable {
         }
         return super.onKeyDown(keyCode, event)
     }
-
 
     override fun run() {
         // Guru frame blink

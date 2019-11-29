@@ -36,13 +36,15 @@ constructor(context: Context, val name: String) {
     private class ListFile : File {
         constructor(name: String) : super(Preferences.DATA_DIR, name + PLAYLIST_SUFFIX)
 
-        constructor(name: String, suffix: String) : super(Preferences.DATA_DIR, name + PLAYLIST_SUFFIX + suffix)
+        constructor(name: String, suffix: String) :
+                super(Preferences.DATA_DIR, name + PLAYLIST_SUFFIX + suffix)
     }
 
     private class CommentFile : File {
         constructor(name: String) : super(Preferences.DATA_DIR, name + COMMENT_SUFFIX)
 
-        constructor(name: String, suffix: String) : super(Preferences.DATA_DIR, name + COMMENT_SUFFIX + suffix)
+        constructor(name: String, suffix: String) :
+                super(Preferences.DATA_DIR, name + COMMENT_SUFFIX + suffix)
     }
 
     init {
@@ -111,9 +113,7 @@ constructor(context: Context, val name: String) {
         mListChanged = true
     }
 
-
     // Helper methods
-
     private fun readList(name: String): Boolean {
         mList.clear()
 
@@ -134,7 +134,6 @@ constructor(context: Context, val name: String) {
                 if (InfoCache.fileExists(filename)) {
                     val item = PlaylistItem(PlaylistItem.TYPE_FILE, title, comment)
                     item.file = File(filename)
-                    //item.imageRes = R.drawable.ic_drag
                     mList.add(item)
                 } else {
                     invalidList.add(lineNum)
@@ -163,7 +162,6 @@ constructor(context: Context, val name: String) {
             } catch (e: IOException) {
                 Log.e(TAG, "I/O error removing invalid lines from " + file.path)
             }
-
         }
 
         return true
@@ -187,7 +185,6 @@ constructor(context: Context, val name: String) {
         } catch (e: IOException) {
             Log.e(TAG, "Error writing playlist file " + file.path)
         }
-
     }
 
     private fun writeComment(name: String) {
@@ -202,7 +199,6 @@ constructor(context: Context, val name: String) {
         } catch (e: IOException) {
             Log.e(TAG, "Error writing comment file " + file.path)
         }
-
     }
 
     private fun readShuffleModePref(name: String): Boolean {
@@ -284,8 +280,14 @@ constructor(context: Context, val name: String) {
 
             val prefs = PreferenceManager.getDefaultSharedPreferences(context)
             val editor = prefs.edit()
-            editor.putBoolean(optionName(newName, SHUFFLE_MODE), prefs.getBoolean(optionName(oldName, SHUFFLE_MODE), DEFAULT_SHUFFLE_MODE))
-            editor.putBoolean(optionName(newName, LOOP_MODE), prefs.getBoolean(optionName(oldName, LOOP_MODE), DEFAULT_LOOP_MODE))
+            editor.putBoolean(
+                    optionName(newName, SHUFFLE_MODE),
+                    prefs.getBoolean(optionName(oldName, SHUFFLE_MODE), DEFAULT_SHUFFLE_MODE)
+            )
+            editor.putBoolean(
+                    optionName(newName, LOOP_MODE),
+                    prefs.getBoolean(optionName(oldName, LOOP_MODE), DEFAULT_LOOP_MODE)
+            )
             editor.remove(optionName(oldName, SHUFFLE_MODE))
             editor.remove(optionName(oldName, LOOP_MODE))
             editor.apply()
@@ -325,7 +327,8 @@ constructor(context: Context, val name: String) {
             }
 
             try {
-                FileUtils.writeToFile(File(Preferences.DATA_DIR, name + PLAYLIST_SUFFIX), lines.toTypedArray())
+                val file = File(Preferences.DATA_DIR, name + PLAYLIST_SUFFIX)
+                FileUtils.writeToFile(file, lines.toTypedArray())
             } catch (e: IOException) {
                 activity.error(R.string.error_write_to_playlist)
             }
@@ -345,7 +348,8 @@ constructor(context: Context, val name: String) {
             try {
                 comment = FileUtils.readFromFile(file)
             } catch (e: IOException) {
-                val error = String.format(activity.getString(R.string.error_read_comment), file.name)
+                val error =
+                        String.format(activity.getString(R.string.error_read_comment), file.name)
                 activity.error(text = error)
             }
 

@@ -27,7 +27,7 @@ class ChannelViewer(context: Context) : Viewer(context) {
     private var insName: Array<String?>? = null
     private var insNameTrim: Array<String?>? = null
     private val rect = Rect()
-    private val buffer: Array<ByteArray>        // keep several buffers to hold data in pause
+    private val buffer: Array<ByteArray> // keep several buffers to hold data in pause
     private val bufferXY: FloatArray
     private var holdKey: IntArray? = null
     private var channelNumber: Array<String?>? = null
@@ -190,7 +190,6 @@ class ChannelViewer(context: Context) : Viewer(context) {
             } catch (e: RemoteException) {
                 Log.e(TAG, "Can't mute channel $n")
             }
-
         } else {
             super.onClick(x, y)
         }
@@ -221,7 +220,6 @@ class ChannelViewer(context: Context) : Viewer(context) {
                 } catch (e: RemoteException) {
                     Log.e(TAG, "Can't mute channels")
                 }
-
             } else {
                 try {
                     for (i in 0 until chn) {
@@ -231,7 +229,6 @@ class ChannelViewer(context: Context) : Viewer(context) {
                 } catch (e: RemoteException) {
                     Log.e(TAG, "Can't unmute channel $n")
                 }
-
             }
         } else {
             super.onLongClick(x, y)
@@ -242,8 +239,8 @@ class ChannelViewer(context: Context) : Viewer(context) {
         super.setRotation(value)
 
         // Should use canvasWidth but it's not updated yet
-        //width deprecated in API level 15. Our min is 16
-        //val width = (context as Activity).windowManager.defaultDisplay.width
+        // width deprecated in API level 15. Our min is 16
+        // val width = (context as Activity).windowManager.defaultDisplay.width
         val size = Point()
         (context as Activity).windowManager.defaultDisplay.getSize(size)
         val width = size.x
@@ -255,7 +252,8 @@ class ChannelViewer(context: Context) : Viewer(context) {
                 if (width < 800) {
                     cols = 1
                 }
-                cols = if (viewerRotation == Surface.ROTATION_0 || viewerRotation == Surface.ROTATION_180) {
+                cols = if (viewerRotation == Surface.ROTATION_0 ||
+                        viewerRotation == Surface.ROTATION_180) {
                     1
                 } else {
                     2
@@ -263,7 +261,8 @@ class ChannelViewer(context: Context) : Viewer(context) {
             }
             /* fall-though */
             Configuration.SCREENLAYOUT_SIZE_LARGE -> {
-                cols = if (viewerRotation == Surface.ROTATION_0 || viewerRotation == Surface.ROTATION_180) {
+                cols = if (viewerRotation == Surface.ROTATION_0 ||
+                        viewerRotation == Surface.ROTATION_180) {
                     1
                 } else {
                     2
@@ -333,13 +332,23 @@ class ChannelViewer(context: Context) : Viewer(context) {
             }
 
             // Draw channel number
-            canvas.drawText(channelNumber!![chn]!!, x.toFloat(), (y + (scopeHeight + font2Height) / 2).toFloat(), numPaint)
+            canvas.drawText(
+                    channelNumber!![chn]!!,
+                    x.toFloat(),
+                    (y + (scopeHeight + font2Height) / 2).toFloat(),
+                    numPaint
+            )
 
             // Draw scopes
             rect.set(x + scopeLeft, y + 1, x + scopeLeft + scopeWidth, y + scopeHeight)
             if (isMuted[chn]) {
                 canvas.drawRect(rect, scopeMutePaint)
-                canvas.drawText("MUTE", (x + scopeLeft + 2 * fontWidth).toFloat(), (y + fontHeight + fontSize).toFloat(), insPaint)
+                canvas.drawText(
+                        "MUTE",
+                        (x + scopeLeft + 2 * fontWidth).toFloat(),
+                        (y + fontHeight + fontSize).toFloat(),
+                        insPaint
+                )
             } else {
                 canvas.drawRect(rect, scopePaint)
 
@@ -366,7 +375,8 @@ class ChannelViewer(context: Context) : Viewer(context) {
                 val h = scopeHeight / 2
                 for (j in 0 until scopeWidth) {
                     bufferXY[j * 2] = (x + scopeLeft + j).toFloat()
-                    bufferXY[j * 2 + 1] = (y + h + buffer[chn][j].toInt() * h * finalVol / (64 * 180)).toFloat()
+                    bufferXY[j * 2 + 1] =
+                            (y + h + buffer[chn][j].toInt() * h * finalVol / (64 * 180)).toFloat()
                 }
 
                 // Using drawPoints() instead of drawing each point saves a lot of CPU
@@ -375,7 +385,12 @@ class ChannelViewer(context: Context) : Viewer(context) {
 
             // Draw instrument name
             if (ins in 0 until numInstruments) {
-                canvas.drawText(insNameTrim?.get(ins)!!, (x + volLeft).toFloat(), (y + fontHeight).toFloat(), insPaint)
+                canvas.drawText(
+                        insNameTrim?.get(ins)!!,
+                        (x + volLeft).toFloat(),
+                        (y + fontHeight).toFloat(),
+                        insPaint
+                )
             }
 
             // Draw volumes
