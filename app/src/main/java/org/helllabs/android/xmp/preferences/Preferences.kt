@@ -65,6 +65,7 @@ class Preferences : AppCompatActivity() {
         const val USE_FILENAME = "use_filename"
         const val VOL_BOOST = "vol_boost"
         const val PLAYER_DRAG_LOCK = "player_drag_lock"
+        const val PLAYER_DRAG_STAY = "player_drag_stay"
         const val OPTIONS_SHUFFLE_MODE = "options_shuffleMode"
         const val OPTIONS_LOOP_MODE = "options_loopMode"
 

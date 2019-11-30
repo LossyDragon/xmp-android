@@ -191,7 +191,6 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         }
     }
 
-    // TODO: if shuffle is `Enabled`, play all starting here does not work right.
     // Play this module or all modules in list
     protected fun playModule(
             mod: String? = null,

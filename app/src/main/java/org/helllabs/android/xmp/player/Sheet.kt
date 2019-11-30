@@ -20,6 +20,8 @@ class Sheet(private val activity: PlayerActivity) {
 
     private var sheet: BottomSheetBehavior<*>
     var isDragLocked: Boolean = false
+    var isDragStaying: Boolean = false
+    var state: Int? = null
 
     init {
         val contentView: LinearLayout = activity.findViewById(R.id.content_view)
@@ -45,7 +47,6 @@ class Sheet(private val activity: PlayerActivity) {
         }
         seqGroup.setOnCheckedChangeListener(seqGroupListener)
 
-        // TODO: Give indication the bottom sheet is present.
         sheet = BottomSheetBehavior.from(activity.findViewById<LinearLayout>(R.id.player_sheet))
         sheet.addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
             override fun onSlide(bottomSheet: View, slideOffset: Float) {
@@ -53,17 +54,25 @@ class Sheet(private val activity: PlayerActivity) {
             }
 
             override fun onStateChanged(bottomSheet: View, newState: Int) {
-                if (newState == BottomSheetBehavior.STATE_DRAGGING && isDragLocked)
-                    sheet.state = BottomSheetBehavior.STATE_COLLAPSED
+                if (newState == BottomSheetBehavior.STATE_DRAGGING && isDragLocked) {
+                    if (isDragStaying) {
+                        sheet.state = state!!
+                    } else {
+                        sheet.state = BottomSheetBehavior.STATE_COLLAPSED
+                    }
+                }
             }
         })
     }
 
-    fun setDragLock(boolean: Boolean) {
-        isDragLocked = boolean
+    fun setDragLock(dragLock: Boolean, stayLock: Boolean) {
+        isDragLocked = dragLock
+        isDragStaying = stayLock
 
-        if (isDragLocked && sheet.state != BottomSheetBehavior.STATE_COLLAPSED)
+        if (isDragLocked && !isDragStaying && sheet.state != BottomSheetBehavior.STATE_COLLAPSED)
             sheet.state = BottomSheetBehavior.STATE_COLLAPSED
+        else
+            state = sheet.state
     }
 
     fun setDetails(numPat: Int, numIns: Int, numSmp: Int, numChn: Int, allSequences: Boolean) {

@@ -12,6 +12,7 @@
     <string name="create">Create</string>
     <string name="directory">Directory</string>
     <string name="dismiss">Dismiss</string>
+    <string name="exit">Exit</string>
     <string name="error">Error</string>
     <string name="new_playlist">New Playlist</string>
     <string name="no">No</string>
@@ -192,6 +193,9 @@
     <string name="pref_site_title">Website</string>
     <string name="pref_support_summary">Create or View issues about Xmp</string>
     <string name="pref_support_title">Support</string>
+    <string name="pref_category_player_interface">Player</string>
+    <string name="pref_drag_lock_title">Lock Module Details</string>
+    <string name="pref_drag_lock_summary">Checking this on will keep Module Details in place when locking</string>
 
     <string name="search_artist">Artist</string>
     <string name="search_artist_modules_title">Modules by artist</string>
@@ -233,6 +237,5 @@
     <string name="title_playlist">Playlist</string>
     <string name="title_this_directory">This Directory</string>
     <string name="title_this_file">This File</string>
-    <!--End of organized strings-->
 
 </resources>

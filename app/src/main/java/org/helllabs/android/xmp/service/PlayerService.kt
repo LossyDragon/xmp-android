@@ -101,11 +101,11 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         override fun getInstruments(): Array<String> = Xmp.getInstruments()
 
         override fun play(
-            fileList: MutableList<String>?,
-            start: Int,
-            shuffle: Boolean,
-            loopList: Boolean,
-            keepFirst: Boolean
+                fileList: MutableList<String>?,
+                start: Int,
+                shuffle: Boolean,
+                loopList: Boolean,
+                keepFirst: Boolean
         ) {
             if (!audioInitialized) {
                 stopSelf()
@@ -117,7 +117,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
 
             cmd = CMD_NONE
 
-            if (isPaused)
+            if (isPlayerPaused)
                 onPlayPause()
 
             if (isAlive) {
@@ -154,12 +154,12 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         override fun getModVars(vars: IntArray?) = Xmp.getModVars(vars!!)
 
         override fun getChannelData(
-            volumes: IntArray?,
-            finalvols: IntArray?,
-            pans: IntArray?,
-            instruments: IntArray?,
-            keys: IntArray?,
-            periods: IntArray?
+                volumes: IntArray?,
+                finalvols: IntArray?,
+                pans: IntArray?,
+                instruments: IntArray?,
+                keys: IntArray?,
+                periods: IntArray?
         ) {
             if (updateData) {
                 synchronized(playThread!!) {
@@ -170,13 +170,13 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         }
 
         override fun getSampleData(
-            trigger: Boolean,
-            ins: Int,
-            key: Int,
-            period: Int,
-            chn: Int,
-            width: Int,
-            buffer: ByteArray?
+                trigger: Boolean,
+                ins: Int,
+                key: Int,
+                period: Int,
+                chn: Int,
+                width: Int,
+                buffer: ByteArray?
         ) {
             if (updateData) {
                 synchronized(playThread!!) {
@@ -218,10 +218,10 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         override fun getSeqVars(vars: IntArray) = Xmp.getSeqVars(vars)
 
         override fun getPatternRow(
-            pat: Int,
-            row: Int,
-            rowNotes: ByteArray?,
-            rowInstruments: ByteArray?
+                pat: Int,
+                row: Int,
+                rowNotes: ByteArray?,
+                rowInstruments: ByteArray?
         ) {
             if (isAlive) Xmp.getPatternRow(pat, row, rowNotes!!, rowInstruments!!)
         }
@@ -654,20 +654,15 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
     }
 
     private fun onPlayPause() {
-        isPlayerPaused = when (isPlayerPaused) {
-            true -> {
-                requestAudioFocus()
-                notifyPause()
-                updateNotification()
-                Xmp.restartAudio()
-                false
-            }
-            false -> {
-                updateNotification()
-                notifyPause()
-                Xmp.stopAudio()
-                true
-            }
+        isPlayerPaused = isPlayerPaused xor true
+        updateNotification()
+        notifyPause()
+
+        if (isPlayerPaused) {
+            Xmp.stopAudio()
+        } else {
+            requestAudioFocus()
+            Xmp.restartAudio()
         }
     }
 

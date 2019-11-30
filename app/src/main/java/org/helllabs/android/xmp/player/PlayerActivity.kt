@@ -585,7 +585,7 @@ class PlayerActivity : AppCompatActivity() {
         Log.d(TAG, "Intent Path $uri")
 
         val fileName: String = "temp." + uriSting.substring(uriSting.lastIndexOf('.') + 1)
-        val outFile = File(this.externalCacheDir, fileName)
+        val outFile = File(externalCacheDir, fileName)
 
         // Lets delete the file to ensure a clean copy.
         outFile.delete()
@@ -642,6 +642,8 @@ class PlayerActivity : AppCompatActivity() {
         synchronized(playerLock) {
             if (modPlayer != null) {
                 var dragLock = prefs!!.getBoolean(Preferences.PLAYER_DRAG_LOCK, false)
+                val dragStay = prefs!!.getBoolean(Preferences.PLAYER_DRAG_STAY, false)
+
                 dragLock = dragLock xor true
                 control_player_lock.setImageResource(
                         if (dragLock) R.drawable.ic_lock else R.drawable.ic_unlock)
@@ -650,7 +652,7 @@ class PlayerActivity : AppCompatActivity() {
                 editor.putBoolean(Preferences.PLAYER_DRAG_LOCK, dragLock)
                 editor.apply()
 
-                sheet!!.setDragLock(dragLock)
+                sheet!!.setDragLock(dragLock, dragStay)
             }
         }
     }
@@ -816,9 +818,12 @@ class PlayerActivity : AppCompatActivity() {
             }
         }
 
-        val lock = prefs!!.getBoolean(Preferences.PLAYER_DRAG_LOCK, false)
-        control_player_lock.setImageResource(if (lock) R.drawable.ic_lock else R.drawable.ic_unlock)
-        sheet!!.setDragLock(lock)
+        val dragLock = prefs!!.getBoolean(Preferences.PLAYER_DRAG_LOCK, false)
+        val dragStay = prefs!!.getBoolean(Preferences.PLAYER_DRAG_STAY, false)
+
+        control_player_lock.setImageResource(
+                if (dragLock) R.drawable.ic_lock else R.drawable.ic_unlock)
+        sheet!!.setDragLock(dragLock, dragStay)
         control_player_lock.setOnClickListener {
             lockButtonListener()
         }

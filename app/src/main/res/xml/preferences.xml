@@ -200,6 +200,15 @@
                     app:title="@string/pref_start_on_player_title" />
             </PreferenceCategory>
 
+            <PreferenceCategory app:title="@string/pref_category_player_interface">
+                <CheckBoxPreference
+                    app:defaultValue="false"
+                    app:key="player_drag_stay"
+                    app:persistent="true"
+                    app:summary="@string/pref_drag_lock_summary"
+                    app:title="@string/pref_drag_lock_title" />
+            </PreferenceCategory>
+
             <PreferenceCategory app:title="@string/pref_category_experimental">
                 <CheckBoxPreference
                     app:defaultValue="false"

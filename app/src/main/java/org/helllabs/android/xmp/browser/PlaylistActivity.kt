@@ -155,7 +155,11 @@ class PlaylistActivity :
                     1 -> addToQueue(mPlaylistAdapter.getFilename(position))
                     2 -> addToQueue(mPlaylistAdapter.filenameList)
                     3 -> playModule(mod = mPlaylistAdapter.getFilename(position))
-                    4 -> playModule(modList = mPlaylistAdapter.filenameList, start = position)
+                    4 -> playModule(
+                            modList = mPlaylistAdapter.filenameList,
+                            start = position,
+                            keepFirst = true
+                    )
                 }
             }
         }

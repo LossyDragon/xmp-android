@@ -15,8 +15,6 @@ import org.helllabs.android.xmp.util.applyTheme
 // 1: Preferences migrations
 
 // TODO: PlayerActivity DayNight theme
-// TODO: For some odd reason, play/pause between the Service and Notifications get de-synced
-// TODO: Notification on API 23: Pause is desynced when pressing it once.
 // TODO: Changing theme on API 23: "Cancelling event due to no window focus: MotionEvent android" Not focused?/Resumed?
 // TODO: Unplugging USB headset will resume playing.
 

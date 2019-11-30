@@ -456,7 +456,11 @@ class FilelistActivity :
             // Play this module
             2 -> playModule(mod = mPlaylistAdapter.getFilename(position))
             // Play all starting here
-            3 -> playModule(modList = mPlaylistAdapter.filenameList, start = position)
+            3 -> playModule(
+                    modList = mPlaylistAdapter.filenameList,
+                    start = position,
+                    keepFirst = true
+            )
             // Delete file
             4 -> deleteFile(position)
         }

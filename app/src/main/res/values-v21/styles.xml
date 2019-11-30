@@ -19,6 +19,7 @@
         <item name="android:navigationBarColor">@color/colorDarkGray</item>
 
         <item name="md_corner_radius">16dp</item>
+        <item name="md_color_title">?colorOnBackground</item>
         <item name="md_color_button_text">?colorOnBackground</item>
     </style>
 </resources>

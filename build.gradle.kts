@@ -2,7 +2,6 @@
 buildscript {
 
     val kotlinVersion = "1.3.60-eap-25"
-    val ktlintPlugin = "9.1.1"
 
     repositories {
         google()
@@ -19,7 +18,7 @@ buildscript {
     dependencies {
         classpath("com.android.tools.build:gradle:4.0.0-alpha04")
         classpath(kotlin("gradle-plugin", version = kotlinVersion))
-        classpath("org.jlleitschuh.gradle:ktlint-gradle:$ktlintPlugin")
+        classpath("org.jlleitschuh.gradle:ktlint-gradle:9.1.1")
     }
 }
 
@@ -42,6 +41,6 @@ plugins {
     id("org.jlleitschuh.gradle.ktlint") version "9.1.1"
 }
 
-tasks.register("clean", Delete::class) {
+task<Delete>("clean") {
     delete(rootProject.buildDir)
 }

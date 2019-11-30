@@ -1,11 +1,14 @@
 package org.helllabs.android.xmp.util
 
+import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.app.Activity
 import android.content.SharedPreferences
+import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.text.Editable
 import android.text.TextWatcher
 import android.widget.Toast
 import androidx.annotation.StringRes
+import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.WhichButton
@@ -22,7 +25,7 @@ fun Activity.fatalError(@StringRes resId: Int? = null, text: String? = null) {
     MaterialDialog(this).show {
         title(R.string.error)
         message(text = resId?.let { getString(it) } ?: text)
-        positiveButton(R.string.dismiss) {
+        positiveButton(R.string.exit) {
             finish()
         }
     }
@@ -49,14 +52,18 @@ fun Activity.yesNoDialog(title: String, message: String, callback: (result: Bool
     }
 }
 
+// Show changelog on first time use, and on version upgrades.
 fun Activity.showChangeLog() {
     val prefs = PreferenceManager.getDefaultSharedPreferences(this)
     val lastViewed = prefs.getInt(Preferences.CHANGELOG_VERSION, 0)
     val versionCode = BuildConfig.VERSION_CODE
-    if (lastViewed < versionCode) {
+    val hasPermission =
+            ContextCompat.checkSelfPermission(this, WRITE_EXTERNAL_STORAGE) == PERMISSION_GRANTED
+    if (lastViewed < versionCode && hasPermission) {
         val dialog = MaterialDialog(this)
                 .title(R.string.changelog)
                 .customView(R.layout.dialog_changelog)
+                .cancelOnTouchOutside(false)
                 .positiveButton(R.string.dismiss) {
                     val editor = prefs.edit()
                     editor.putInt(Preferences.CHANGELOG_VERSION, versionCode)
