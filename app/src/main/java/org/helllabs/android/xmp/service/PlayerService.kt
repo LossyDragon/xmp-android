@@ -12,28 +12,27 @@ import android.os.*
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.view.KeyEvent
+import android.view.KeyEvent.*
 import androidx.media.session.MediaButtonReceiver
-import androidx.preference.PreferenceManager
 import org.helllabs.android.xmp.Xmp
+import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.preferences.Preferences
 import org.helllabs.android.xmp.service.notifier.LegacyNotifier
 import org.helllabs.android.xmp.service.notifier.ModernNotifier
 import org.helllabs.android.xmp.service.notifier.Notifier
-import org.helllabs.android.xmp.service.receiver.HeadsetPlugReceiver
 import org.helllabs.android.xmp.service.receiver.NoisyReceiver
-import org.helllabs.android.xmp.service.receiver.RemoteControlReceiver
 import org.helllabs.android.xmp.service.utils.OreoAudioFocusHandler
 import org.helllabs.android.xmp.service.utils.QueueManager
 import org.helllabs.android.xmp.service.utils.Watchdog
+import org.helllabs.android.xmp.util.*
 import org.helllabs.android.xmp.util.FileUtils
-import org.helllabs.android.xmp.util.InfoCache
-import org.helllabs.android.xmp.util.Log
 
 class PlayerService : Service(), OnAudioFocusChangeListener {
 
     /* Media Stuff */
     private var mediaSession: MediaSessionCompat? = null
     private var audioManager: AudioManager? = null
+
     private var oreoFocusHandler: OreoAudioFocusHandler? = null
     private var audioInitialized = false
     private var isDucking = false
@@ -41,7 +40,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
     var isPlayerPaused: Boolean = false
         private set
 
-    /* Headset Controls stuff */
+    /* Headset Hook stuff */
     private var hookCount = 0
     private val hookHandler = Handler()
     private val hookRunnable = Runnable {
@@ -75,9 +74,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
     private var prefs: SharedPreferences? = null
     private lateinit var notifier: Notifier
 
-    private lateinit var remoteControlReceiver: RemoteControlReceiver
-    private lateinit var headsetPlugReceiver: HeadsetPlugReceiver
-    private lateinit var noisyReceiver: NoisyReceiver
+    private var noisyReceiver = NoisyReceiver()
 
     private val binder = object : ModInterface.Stub() {
         override fun currentPlayTime(time: Int) {
@@ -121,12 +118,12 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                 onPlayPause()
 
             if (isAlive) {
-                Log.i(TAG, "Use existing layout_player thread")
+                Log.i(TAG, "Use existing player thread")
                 restart = true
                 startIndex = if (keepFirst) 0 else start
                 nextSong()
             } else {
-                Log.i(TAG, "Start layout_player thread")
+                Log.i(TAG, "Start player thread")
                 playThread = Thread(PlayRunnable())
                 playThread!!.start()
             }
@@ -489,7 +486,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         Log.i(TAG, "Create service")
 
         // Init Prefs
-        prefs = PreferenceManager.getDefaultSharedPreferences(this)
+        prefs = XmpApplication.instance!!.sharedPrefs
         sampleRate = prefs!!.getString(Preferences.SAMPLING_RATE, "44100")!!.toInt()
 
         // Init Media Session
@@ -502,8 +499,14 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         })
         mediaSession!!.isActive = true
 
-        // Init Broadcasts
-        registerReceivers()
+        // Init Headphone pull receiver
+        registerNoisyReceiver()
+
+        // Init AudioManager
+        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+
+        if (isAtLeastO())
+            oreoFocusHandler = OreoAudioFocusHandler(applicationContext) // Kinda need this >.<
 
         var bufferMs = prefs!!.getInt(Preferences.BUFFER_MS, DEFAULT_BUFFER_MS)
         when {
@@ -551,6 +554,8 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
 
         MediaButtonReceiver.handleIntent(mediaSession, intent)
 
+        requestAudioFocus()
+
         return START_NOT_STICKY
     }
 
@@ -563,10 +568,6 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         else
             end(RESULT_CANT_OPEN_AUDIO)
 
-        unregisterReceiver(remoteControlReceiver)
-        unregisterReceiver(noisyReceiver)
-        unregisterReceiver(headsetPlugReceiver)
-
         super.onDestroy()
     }
 
@@ -574,52 +575,22 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         return binder
     }
 
-    @Suppress("DEPRECATION")
-    private fun requestAudioFocus(): Boolean {
-        val focusResult: Int
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            oreoFocusHandler = OreoAudioFocusHandler(applicationContext)
-            focusResult = oreoFocusHandler!!.requestAudioFocus(this)
+    private fun requestAudioFocus() {
+        if (isAtLeastO()) {
+            oreoFocusHandler?.requestAudioFocus(this)
         } else {
-            audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-            focusResult = audioManager!!.requestAudioFocus(this, STREAM_MUSIC, AUDIOFOCUS_GAIN)
+            @Suppress("DEPRECATION")
+            audioManager?.requestAudioFocus(this, STREAM_MUSIC, AUDIOFOCUS_GAIN)
         }
-
-        return focusResult == 1
     }
 
     @Suppress("DEPRECATION")
     private fun abandonAudioFocus() {
-        oreoFocusHandler?.abandonAudioFocus()
-        audioManager?.abandonAudioFocus(this)
-    }
-
-    // Should implement these in specific order, per Android BBQ2015 talk
-    // ex: https://www.youtube.com/watch?v=XQwe30cZffg @ 34:56
-    private fun registerReceivers() {
-        headsetPlugReceiver = HeadsetPlugReceiver()
-        val headsetPlugFilter = IntentFilter().apply {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                addAction(ACTION_HEADSET_PLUG)
-            } else {
-                addAction(Intent.ACTION_HEADSET_PLUG)
-            }
+        if (isAtLeastO()) {
+            oreoFocusHandler?.abandonAudioFocus()
+        } else {
+            audioManager?.abandonAudioFocus(this)
         }
-
-        remoteControlReceiver = RemoteControlReceiver()
-        val remoteControlFilter = IntentFilter().apply {
-            addAction(ACTION_MEDIA_BUTTON)
-            priority = 1000
-        }
-
-        noisyReceiver = NoisyReceiver()
-        val noisyFilter = IntentFilter().apply {
-            addAction(ACTION_AUDIO_BECOMING_NOISY)
-        }
-
-        registerReceiver(noisyReceiver, noisyFilter)
-        registerReceiver(headsetPlugReceiver, headsetPlugFilter)
-        registerReceiver(remoteControlReceiver, remoteControlFilter)
     }
 
     private fun onServiceKill() {
@@ -631,6 +602,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         playThread?.interrupt()
 
         abandonAudioFocus()
+        unregisterReceiver(noisyReceiver)
 
         stopForeground(true)
         stopSelf()
@@ -660,9 +632,15 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
 
         if (isPlayerPaused) {
             Xmp.stopAudio()
+
+            // Unregister NoisyReceiver on pause
+            unregisterReceiver(noisyReceiver)
         } else {
             requestAudioFocus()
             Xmp.restartAudio()
+
+            // Register NoisyReceiver on play
+            registerNoisyReceiver()
         }
     }
 
@@ -742,6 +720,14 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         onServiceKill()
     }
 
+    private fun registerNoisyReceiver() {
+        val filter = IntentFilter().apply {
+            addAction(if (isAtLeastL()) ACTION_HEADSET_PLUG else Intent.ACTION_HEADSET_PLUG)
+            addAction(ACTION_AUDIO_BECOMING_NOISY)
+        }
+        registerReceiver(noisyReceiver, filter)
+    }
+
     private fun onFocusGain() {
         when (isDucking) {
             true -> onFocusUnDuck()
@@ -750,7 +736,6 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
     }
 
     private fun onFocusLost() {
-        isPlayerPaused = true
         onPlayPause()
     }
 
@@ -767,29 +752,24 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
 
     override fun onAudioFocusChange(focusChange: Int) {
         when (focusChange) {
-            AUDIOFOCUS_GAIN -> {
-                onFocusGain()
-            }
-            AUDIOFOCUS_LOSS,
-            AUDIOFOCUS_LOSS_TRANSIENT -> {
-                onFocusLost()
-            }
-            AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
-                onFocusDuck()
-            }
+            AUDIOFOCUS_GAIN -> onFocusGain() // Gain
+            AUDIOFOCUS_LOSS, AUDIOFOCUS_LOSS_TRANSIENT -> onFocusLost() // Loss
+            AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> onFocusDuck() // Duck
         }
     }
 
     // So... new API's use MediaSession instead of a Broadcast receiver.
-    // Note: Don't Log anything in here, it slows it down and hooks don't work right
     private fun mediaSessionButtons(mediaButtonEvent: Intent) {
         if (mediaButtonEvent.action == ACTION_MEDIA_BUTTON) {
             val event = mediaButtonEvent.getParcelableExtra(Intent.EXTRA_KEY_EVENT) as KeyEvent
-            if (event.action == KeyEvent.ACTION_UP) {
+            if (event.action == ACTION_UP) {
                 when (event.keyCode) {
-                    // This should handle single button headsets.
-                    KeyEvent.KEYCODE_HEADSETHOOK,
-                    KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> {
+                    KEYCODE_MEDIA_PLAY_PAUSE,
+                    KEYCODE_MEDIA_PLAY,
+                    KEYCODE_MEDIA_PAUSE -> onPlayPause()
+                    KEYCODE_MEDIA_NEXT -> onNext()
+                    KEYCODE_MEDIA_PREVIOUS -> onPrevious()
+                    KEYCODE_HEADSETHOOK -> {
                         hookCount++
                         hookHandler.removeCallbacks(hookRunnable)
                         if (hookCount >= 3)
@@ -797,11 +777,6 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                         else
                             hookHandler.postDelayed(hookRunnable, 500)
                     }
-                    // These [Below] should handle multi-button headsets, etc.
-                    KeyEvent.KEYCODE_MEDIA_PLAY -> onPlayPause()
-                    KeyEvent.KEYCODE_MEDIA_PAUSE -> onPlayPause()
-                    KeyEvent.KEYCODE_MEDIA_PREVIOUS -> onPrevious()
-                    KeyEvent.KEYCODE_MEDIA_NEXT -> onNext()
                 }
             }
         }

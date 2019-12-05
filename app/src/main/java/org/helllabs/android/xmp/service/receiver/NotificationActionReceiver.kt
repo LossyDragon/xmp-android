@@ -5,9 +5,8 @@ import android.content.Context
 import android.content.Intent
 import org.helllabs.android.xmp.service.PlayerService
 
-// Intents for the Action buttons on notification shade
+// Intents for the action buttons on service notification
 class NotificationActionReceiver : BroadcastReceiver() {
-
     override fun onReceive(context: Context, intent: Intent) {
         when (val action = intent.action) {
             PlayerService.XMP_PLAYER_STOP,
@@ -17,8 +16,4 @@ class NotificationActionReceiver : BroadcastReceiver() {
             PlayerService.XMP_PLAYER_PAUSE -> context.sendBroadcast(action)
         }
     }
-
-//    companion object {
-//        private val TAG = NotificationActionReceiver::class.java.simpleName
-//    }
 }

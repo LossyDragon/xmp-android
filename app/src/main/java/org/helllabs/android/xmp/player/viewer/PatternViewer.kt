@@ -12,7 +12,7 @@ import org.helllabs.android.xmp.service.ModInterface
 class PatternViewer(context: Context) : Viewer(context) {
     private val headerPaint: Paint
     private val headerTextPaint: Paint
-    private val notePaint: Paint = Paint()
+    private val notePaint: Paint
     private val insPaint: Paint
     private val barPaint: Paint
     private val muteNotePaint: Paint
@@ -34,40 +34,44 @@ class PatternViewer(context: Context) : Viewer(context) {
     init {
         backGroundColor = getBackgroundColor()
 
-        notePaint.setARGB(255, 140, 140, 160)
-        notePaint.typeface = Typeface.MONOSPACE
-        notePaint.textSize = fontSize.toFloat()
-        notePaint.isAntiAlias = true
+        notePaint = Paint().apply {
+            setARGB(255, 140, 140, 160)
+            typeface = Typeface.MONOSPACE
+            textSize = fontSize.toFloat()
+            isAntiAlias = true
+        }
 
-        insPaint = Paint()
-        insPaint.setARGB(255, 160, 80, 80)
-        insPaint.typeface = Typeface.MONOSPACE
-        insPaint.textSize = fontSize.toFloat()
-        insPaint.isAntiAlias = true
+        insPaint = Paint().apply {
+            setARGB(255, 160, 80, 80)
+            typeface = Typeface.MONOSPACE
+            textSize = fontSize.toFloat()
+            isAntiAlias = true
+        }
 
-        muteNotePaint = Paint()
-        muteNotePaint.setARGB(255, 60, 60, 60)
-        muteNotePaint.typeface = Typeface.MONOSPACE
-        muteNotePaint.textSize = fontSize.toFloat()
-        muteNotePaint.isAntiAlias = true
+        muteNotePaint = Paint().apply {
+            setARGB(255, 60, 60, 60)
+            typeface = Typeface.MONOSPACE
+            textSize = fontSize.toFloat()
+            isAntiAlias = true
+        }
 
-        muteInsPaint = Paint()
-        muteInsPaint.setARGB(255, 80, 40, 40)
-        muteInsPaint.typeface = Typeface.MONOSPACE
-        muteInsPaint.textSize = fontSize.toFloat()
-        muteInsPaint.isAntiAlias = true
+        muteInsPaint = Paint().apply {
+            setARGB(255, 80, 40, 40)
+            typeface = Typeface.MONOSPACE
+            textSize = fontSize.toFloat()
+            isAntiAlias = true
+        }
 
-        headerTextPaint = Paint()
-        headerTextPaint.setARGB(255, 220, 220, 220)
-        headerTextPaint.typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
-        headerTextPaint.textSize = fontSize.toFloat()
-        headerTextPaint.isAntiAlias = true
+        headerTextPaint = Paint().apply {
+            setARGB(255, 220, 220, 220)
+            typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
+            textSize = fontSize.toFloat()
+            isAntiAlias = true
+        }
 
-        headerPaint = Paint()
-        headerPaint.setARGB(255, 140, 140, 220)
+        headerPaint = Paint().apply { setARGB(255, 140, 140, 220) }
 
-        barPaint = Paint()
-        barPaint.setARGB(255, 40, 40, 40)
+        barPaint = Paint().apply { setARGB(255, 40, 40, 40) }
 
         fontWidth = notePaint.measureText("X").toInt()
         fontHeight = fontSize * 12 / 10
@@ -156,7 +160,9 @@ class PatternViewer(context: Context) : Viewer(context) {
         }
 
         // Current line bar
-        rect.set(0, barY - fontHeight + 1, canvasWidth - 1, barY)
+        // Dec-1-2019: Centered the line bar a bit.
+        // rect.set(0, barY - fontHeight + 1, canvasWidth - 1, barY)
+        rect.set(0, barY - fontHeight + 10, canvasWidth - 1, barY + 10)
         canvas.drawRect(rect, barPaint)
 
         // Pattern data

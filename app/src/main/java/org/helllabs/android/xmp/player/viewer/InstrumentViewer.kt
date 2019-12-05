@@ -12,6 +12,7 @@ import android.graphics.Rect
 import android.graphics.Typeface
 import android.os.RemoteException
 
+// Main player View
 class InstrumentViewer(context: Context) : Viewer(context) {
     private val insPaint: Array<Paint?> = arrayOfNulls(8)
     private val barPaint: Array<Paint?>

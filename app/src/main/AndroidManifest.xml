@@ -222,27 +222,21 @@
             </intent-filter>
         </activity>
 
+        <!-- Service -->
         <service
             android:name=".service.PlayerService"
             android:exported="false" />
 
-        <receiver
-            android:name=".service.receiver.RemoteControlReceiver"
-            android:enabled="true">
-            <intent-filter android:priority="1000">
-                <action android:name="android.intent.action.MEDIA_BUTTON" />
-            </intent-filter>
-        </receiver>
-
-        <receiver android:name=".service.receiver.HeadsetPlugReceiver">
+        <!-- Receivers -->
+        <receiver android:name=".service.receiver.RemoteControlReceiver">
             <intent-filter>
-                <action android:name="android.intent.action.ACTION_HEADSET_PLUG" />
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
             </intent-filter>
         </receiver>
 
         <receiver android:name=".service.receiver.NoisyReceiver">
             <intent-filter>
-                <action android:name="android.media.AUDIO_BECOMING_NOISY" />
+                <action android:name="android.intent.action.ACTION_HEADSET_PLUG" />
             </intent-filter>
         </receiver>
 

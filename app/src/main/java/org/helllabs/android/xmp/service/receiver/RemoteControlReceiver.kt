@@ -50,8 +50,4 @@ class RemoteControlReceiver : BroadcastReceiver() {
             abortBroadcast()
         }
     }
-
-//    companion object {
-//        private val TAG = RemoteControlReceiver::class.java.simpleName
-//    }
 }

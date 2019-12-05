@@ -19,9 +19,15 @@ class ModernNotifier(service: Service) : Notifier(service) {
 
     @TargetApi(26)
     private fun createNotificationChannel(service: Service) {
-        val channel = NotificationChannel(CHANNEL_ID,
-                service.getString(R.string.notif_channel_name), NotificationManager.IMPORTANCE_LOW)
-        channel.description = service.getString(R.string.notif_channel_desc)
+        val channel = NotificationChannel(
+                CHANNEL_ID,
+                service.getString(R.string.notif_channel_name),
+                NotificationManager.IMPORTANCE_HIGH
+        ).apply {
+            description = service.getString(R.string.notif_channel_desc)
+            enableVibration(false)
+            enableLights(false)
+        }
         val notificationManager = service.getSystemService(NotificationManager::class.java)
         notificationManager!!.createNotificationChannel(channel)
     }
@@ -50,9 +56,11 @@ class ModernNotifier(service: Service) : Notifier(service) {
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setLargeIcon(icon)
                 .setOngoing(true)
-                .setShowWhen(true)
-                .setWhen(0)
+                .setShowWhen(false) // was true
+                .setDefaults(0)
                 .setChannelId(CHANNEL_ID)
+                .setVibrate(longArrayOf(-1L))
+                .setSound(null)
                 .setStyle(NotiCompatMedia.MediaStyle().setShowActionsInCompactView(1, 2, 3))
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
 
