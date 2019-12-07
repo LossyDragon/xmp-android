@@ -14,7 +14,6 @@ import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.preference.PreferenceManager
 import kotlinx.android.synthetic.main.layout_player.*
 import kotlinx.android.synthetic.main.layout_player_controls.*
 import org.helllabs.android.xmp.R
@@ -622,7 +621,7 @@ class PlayerActivity : AppCompatActivity() {
         }
     }
 
-    // Sidebar services
+    // Bottom Sheet services
     fun toggleAllSequences(): Boolean {
         synchronized(playerLock) {
             if (modPlayer != null) {
@@ -754,9 +753,11 @@ class PlayerActivity : AppCompatActivity() {
 
         Log.i(TAG, "Create player interface")
 
-        // INITIALIZE RECEIVER by jwei512
-        val filter = IntentFilter(Intent.ACTION_SCREEN_ON)
-        filter.addAction(Intent.ACTION_SCREEN_OFF)
+        // Init Screen Receiver by jwei512
+        val filter = IntentFilter().apply {
+            addAction(Intent.ACTION_SCREEN_ON)
+            addAction(Intent.ACTION_SCREEN_OFF)
+        }
         screenReceiver = ScreenReceiver()
         registerReceiver(screenReceiver, filter)
 
@@ -767,7 +768,7 @@ class PlayerActivity : AppCompatActivity() {
         }
 
         setResult(RESULT_OK)
-        prefs = PreferenceManager.getDefaultSharedPreferences(this)
+        prefs = XmpApplication.instance!!.sharedPrefs
 
         val showInfoLine = prefs!!.getBoolean(Preferences.SHOW_INFO_LINE, true)
         showElapsed = true
@@ -824,6 +825,7 @@ class PlayerActivity : AppCompatActivity() {
         control_player_lock.setImageResource(
                 if (dragLock) R.drawable.ic_lock else R.drawable.ic_unlock)
         sheet!!.setDragLock(dragLock, dragStay)
+
         control_player_lock.setOnClickListener {
             lockButtonListener()
         }
@@ -917,7 +919,7 @@ class PlayerActivity : AppCompatActivity() {
 
     // Stop screen updates when screen is off
     override fun onPause() {
-        // Screen is pref_item_about to turn off
+        // Screen is about to turn off
         if (ScreenReceiver.wasScreenOn)
             screenOn = false
 
@@ -972,7 +974,6 @@ class PlayerActivity : AppCompatActivity() {
         }
     }
 
-    // Menu
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         if (prefs!!.getBoolean(Preferences.ENABLE_DELETE, false)) {
             menuInflater.inflate(R.menu.menu_delete, menu)

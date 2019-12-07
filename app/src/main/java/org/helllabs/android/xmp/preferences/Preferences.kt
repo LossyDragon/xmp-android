@@ -5,6 +5,9 @@ import android.os.Environment
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.XmpApplication
+import org.helllabs.android.xmp.util.fatalError
+import org.helllabs.android.xmp.util.isAtMostN
 import java.io.File
 
 class Preferences : AppCompatActivity() {
@@ -24,7 +27,15 @@ class Preferences : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == android.R.id.home) {
-            onBackPressed()
+
+            // Known issue with API <= 24 for themes
+            // https://android-review.googlesource.com/c/platform/frameworks/support/+/971248
+            // https://issuetracker.google.com/issues/131851825
+            if (isAtMostN() && XmpApplication.instance!!.isThemeChanged) {
+                fatalError(R.string.change_theme_older_apis)
+            } else {
+                onBackPressed()
+            }
             return true
         }
 

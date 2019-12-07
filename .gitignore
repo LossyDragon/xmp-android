@@ -20,6 +20,7 @@ out/
 .gradle
 /local.properties
 build/
+app/release/
 .idea
 app/app.iml
 *.iml

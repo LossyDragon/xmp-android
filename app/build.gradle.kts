@@ -112,7 +112,6 @@ dependencies {
 // Run: gradlew ktlintCheck
 ktlint {
     android.set(true)
-    outputColorName.set("RED")
     outputToConsole.set(true)
     // Ignore: lexicographic ordering, wildcard imports, and indentation warnings
     disabledRules.set(setOf("import-ordering", "no-wildcard-imports", "parameter-list-wrapping"))

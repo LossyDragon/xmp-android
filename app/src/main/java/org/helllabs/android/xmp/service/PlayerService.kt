@@ -35,6 +35,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
 
     private var oreoFocusHandler: OreoAudioFocusHandler? = null
     private var audioInitialized = false
+    private var hasAudioFocus = false
     private var isDucking = false
     private var volume: Int = 0
     var isPlayerPaused: Boolean = false
@@ -104,7 +105,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                 loopList: Boolean,
                 keepFirst: Boolean
         ) {
-            if (!audioInitialized) {
+            if (!audioInitialized || !hasAudioFocus) {
                 stopSelf()
                 return
             }
@@ -547,24 +548,23 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
             XMP_PLAYER_NEXT -> onNext()
             XMP_PLAYER_PREV -> onPrevious()
             XMP_PLAYER_STOP -> onStop()
-            XMP_PLAYER_PLAY -> onPlayPause()
-            XMP_PLAYER_PAUSE -> onPlayPause()
-            XMP_PLAYER_HOOK -> onPlayPause()
+            XMP_PLAYER_PLAY_PAUSE -> onPlayPause()
         }
 
         MediaButtonReceiver.handleIntent(mediaSession, intent)
 
-        requestAudioFocus()
+        hasAudioFocus = requestAudioFocus()
 
         return START_NOT_STICKY
     }
 
     override fun onDestroy() {
+        unregisterReceiver(noisyReceiver)
 
         onServiceKill()
 
         if (audioInitialized)
-            end(RESULT_OK)
+            end(if (hasAudioFocus) RESULT_OK else RESULT_NO_AUDIO_FOCUS)
         else
             end(RESULT_CANT_OPEN_AUDIO)
 
@@ -575,13 +575,15 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         return binder
     }
 
-    private fun requestAudioFocus() {
-        if (isAtLeastO()) {
+    private fun requestAudioFocus(): Boolean {
+        val result: Int? = if (isAtLeastO()) {
             oreoFocusHandler?.requestAudioFocus(this)
         } else {
             @Suppress("DEPRECATION")
             audioManager?.requestAudioFocus(this, STREAM_MUSIC, AUDIOFOCUS_GAIN)
         }
+
+        return result == AUDIOFOCUS_REQUEST_GRANTED
     }
 
     @Suppress("DEPRECATION")
@@ -602,7 +604,6 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         playThread?.interrupt()
 
         abandonAudioFocus()
-        unregisterReceiver(noisyReceiver)
 
         stopForeground(true)
         stopSelf()
@@ -646,20 +647,19 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
 
     private fun onStop() {
         Xmp.stopModule()
-        abandonAudioFocus()
         onServiceKill()
         mediaSession?.isActive = false
         cmd = CMD_STOP
     }
 
     private fun onPrevious() {
-        when {
-            Xmp.time() > 2000 -> Xmp.seek(0)
-            else -> {
-                Xmp.stopModule()
-                cmd = CMD_PREV
-            }
+        if (Xmp.time() > 2000) {
+            Xmp.seek(0)
+        } else {
+            Xmp.stopModule()
+            cmd = CMD_PREV
         }
+
         if (isPlayerPaused) {
             discardBuffer = true
             onPlayPause()
@@ -788,9 +788,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         const val XMP_PLAYER_NEXT = "XMP_NEXT"
         const val XMP_PLAYER_PREV = "XMP_PREV"
         const val XMP_PLAYER_STOP = "XMP_STOP"
-        const val XMP_PLAYER_PLAY = "XMP_PLAY"
-        const val XMP_PLAYER_PAUSE = "XMP_PAUSE"
-        const val XMP_PLAYER_HOOK = "XMP_HOOK"
+        const val XMP_PLAYER_PLAY_PAUSE = "XMP_PLAY"
 
         const val RESULT_OK = 0
         const val RESULT_CANT_OPEN_AUDIO = 1

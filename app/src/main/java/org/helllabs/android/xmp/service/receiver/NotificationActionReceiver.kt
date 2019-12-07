@@ -12,8 +12,7 @@ class NotificationActionReceiver : BroadcastReceiver() {
             PlayerService.XMP_PLAYER_STOP,
             PlayerService.XMP_PLAYER_PREV,
             PlayerService.XMP_PLAYER_NEXT,
-            PlayerService.XMP_PLAYER_PLAY,
-            PlayerService.XMP_PLAYER_PAUSE -> context.sendBroadcast(action)
+            PlayerService.XMP_PLAYER_PLAY_PAUSE -> context.sendBroadcast(action)
         }
     }
 }

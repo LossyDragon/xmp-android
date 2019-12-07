@@ -82,17 +82,17 @@ abstract class Viewer(context: Context) :
             return true
         }
 
-        override fun onFling(
-                e1: MotionEvent,
-                e2: MotionEvent,
-                velocityX: Float,
-                velocityY: Float
-        ): Boolean {
-            // This is very wonky.
-            // velX = velocityX / 25
-            // velY = velocityY / 25
-            return true
-        }
+//        override fun onFling(
+//                e1: MotionEvent,
+//                e2: MotionEvent,
+//                velocityX: Float,
+//                velocityY: Float
+//        ): Boolean {
+//            // This is very wonky.
+//            // velX = velocityX / 25
+//            // velY = velocityY / 25
+//            return true
+//        }
 
         override fun onSingleTapUp(e: MotionEvent): Boolean {
             onClick(e.x.toInt(), e.y.toInt())
@@ -131,7 +131,7 @@ abstract class Viewer(context: Context) :
 
     init {
 
-        // register our interest in hearing preferences_about changes to our surface
+        // register our interest in hearing about changes to our surface
         setupHolder()
 
         posY = 0f
@@ -234,11 +234,13 @@ abstract class Viewer(context: Context) :
 
     fun getBackgroundColor(): Int {
         // Detect if dark mode is enabled or not
-        return when (resources.configuration.uiMode.and(Configuration.UI_MODE_NIGHT_MASK)) {
-            Configuration.UI_MODE_NIGHT_YES -> Color.BLACK
-            Configuration.UI_MODE_NIGHT_NO -> Color.WHITE
-            else -> Color.BLACK
+        var color = Color.BLACK
+        when (resources.configuration.uiMode.and(Configuration.UI_MODE_NIGHT_MASK)) {
+            Configuration.UI_MODE_NIGHT_YES -> color = Color.BLACK
+            Configuration.UI_MODE_NIGHT_NO -> color = Color.WHITE
         }
+
+        return color
     }
 
     companion object {

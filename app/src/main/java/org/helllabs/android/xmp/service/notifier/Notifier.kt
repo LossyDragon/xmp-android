@@ -31,8 +31,8 @@ abstract class Notifier(protected val service: Service) {
         icon = BitmapFactory.decodeResource(service.resources, R.mipmap.ic_launcher_foreground)
         prevIntent = makePendingIntent(PlayerService.XMP_PLAYER_PREV)
         stopIntent = makePendingIntent(PlayerService.XMP_PLAYER_STOP)
-        playIntent = makePendingIntent(PlayerService.XMP_PLAYER_PLAY)
-        pauseIntent = makePendingIntent(PlayerService.XMP_PLAYER_PAUSE)
+        playIntent = makePendingIntent(PlayerService.XMP_PLAYER_PLAY_PAUSE)
+        pauseIntent = makePendingIntent(PlayerService.XMP_PLAYER_PLAY_PAUSE)
         nextIntent = makePendingIntent(PlayerService.XMP_PLAYER_NEXT)
     }
 

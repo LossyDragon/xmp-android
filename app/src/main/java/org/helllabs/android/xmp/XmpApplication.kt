@@ -15,14 +15,15 @@ import org.helllabs.android.xmp.util.applyTheme
 // 1: Preferences migrations
 
 // TODO: PlayerActivity DayNight theme
-// TODO: Changing theme on API 23: "Cancelling event due to no window focus: MotionEvent android" Not focused?/Resumed?
-// TODO: Unplugging USB headset will resume playing.
 
 class XmpApplication : Application() {
 
     var fileList: MutableList<String>? = null
     val requestQueue: RequestQueue by lazy { newRequestQueue(applicationContext) }
     val sharedPrefs: SharedPreferences by lazy { getDefaultSharedPreferences(this) }
+
+    // Workaround for now. Read notes from its usage.
+    var isThemeChanged: Boolean = false
 
     override fun onCreate() {
         super.onCreate()

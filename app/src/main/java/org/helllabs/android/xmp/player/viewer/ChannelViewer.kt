@@ -49,31 +49,36 @@ class ChannelViewer(context: Context) : Viewer(context) {
 
         val font2Size = resources.getDimensionPixelSize(R.dimen.channelview_channel_font_size)
 
-        scopePaint = Paint()
-        scopePaint.setARGB(255, 40, 40, 40)
+        scopePaint = Paint().apply {
+            setARGB(255, 40, 40, 40)
+        }
 
         scopeLinePaint = Paint()
         scopeLinePaint.setARGB(255, 80, 160, 80)
         scopeLinePaint.strokeWidth = 0f
         scopeLinePaint.isAntiAlias = false
 
-        scopeMutePaint = Paint()
-        scopeMutePaint.setARGB(255, 60, 0, 0)
+        scopeMutePaint = Paint().apply {
+            setARGB(255, 60, 0, 0)
+        }
 
-        meterPaint = Paint()
-        meterPaint.setARGB(255, 40, 80, 160)
+        meterPaint = Paint().apply {
+            setARGB(255, 40, 80, 160)
+        }
 
-        insPaint = Paint()
-        insPaint.setARGB(255, 140, 140, 160)
-        insPaint.typeface = Typeface.MONOSPACE
-        insPaint.textSize = fontSize.toFloat()
-        insPaint.isAntiAlias = true
+        insPaint = Paint().apply {
+            setARGB(255, 140, 140, 160)
+            typeface = Typeface.MONOSPACE
+            textSize = fontSize.toFloat()
+            isAntiAlias = true
+        }
 
-        numPaint = Paint()
-        numPaint.setARGB(255, 220, 220, 220)
-        numPaint.typeface = Typeface.MONOSPACE
-        numPaint.textSize = font2Size.toFloat()
-        numPaint.isAntiAlias = true
+        numPaint = Paint().apply {
+            setARGB(255, 220, 220, 220)
+            typeface = Typeface.MONOSPACE
+            textSize = font2Size.toFloat()
+            isAntiAlias = true
+        }
 
         fontWidth = insPaint.measureText("X").toInt()
         fontHeight = fontSize * 12 / 10

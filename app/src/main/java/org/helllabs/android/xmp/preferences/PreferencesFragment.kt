@@ -7,6 +7,7 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceScreen
 import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.util.applyTheme
 import org.helllabs.android.xmp.util.toast
@@ -80,6 +81,7 @@ class PreferencesFragment : PreferenceFragmentCompat() {
 
         fun setTheme(theme: String) {
             applyTheme(theme)
+            XmpApplication.instance!!.isThemeChanged = true // Workaround for now.
         }
 
         fun deleteCache(file: File): Boolean {

@@ -13,9 +13,9 @@ class NoisyReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (!isInitialStickyBroadcast && intent.action == Intent.ACTION_HEADSET_PLUG) {
             if (intent.getIntExtra("state", -1) == 0)
-                context.sendBroadcast(PlayerService.XMP_PLAYER_PAUSE)
+                context.sendBroadcast(PlayerService.XMP_PLAYER_PLAY_PAUSE)
         } else if (intent.action == AudioManager.ACTION_AUDIO_BECOMING_NOISY) {
-            context.sendBroadcast(PlayerService.XMP_PLAYER_PAUSE)
+            context.sendBroadcast(PlayerService.XMP_PLAYER_PLAY_PAUSE)
         }
     }
 }

@@ -26,7 +26,7 @@ fun Activity.fatalError(@StringRes resId: Int? = null, text: String? = null) {
         title(R.string.error)
         message(text = resId?.let { getString(it) } ?: text)
         positiveButton(R.string.exit) {
-            finish()
+            finishAffinity()
         }
     }
 }
