@@ -23,7 +23,7 @@ import org.helllabs.android.xmp.player.viewer.ChannelViewer
 import org.helllabs.android.xmp.player.viewer.InstrumentViewer
 import org.helllabs.android.xmp.player.viewer.PatternViewer
 import org.helllabs.android.xmp.player.viewer.Viewer
-import org.helllabs.android.xmp.preferences.Preferences
+import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.service.ModInterface
 import org.helllabs.android.xmp.service.PlayerCallback
 import org.helllabs.android.xmp.service.PlayerService
@@ -53,7 +53,6 @@ class PlayerActivity : AppCompatActivity() {
     private var flipperPage: Int = 0
     private var fileList: MutableList<String>? = null
     private var start: Int = 0
-    private var prefs: SharedPreferences? = null
     private val handler = Handler()
     private var totalTime: Int = 0
     private var screenOn: Boolean = false
@@ -640,16 +639,14 @@ class PlayerActivity : AppCompatActivity() {
     private fun lockButtonListener() {
         synchronized(playerLock) {
             if (modPlayer != null) {
-                var dragLock = prefs!!.getBoolean(Preferences.PLAYER_DRAG_LOCK, false)
-                val dragStay = prefs!!.getBoolean(Preferences.PLAYER_DRAG_STAY, false)
+                var dragLock = PrefManager.playerDragLock
+                val dragStay = PrefManager.playerDragStay
 
                 dragLock = dragLock xor true
                 control_player_lock.setImageResource(
                         if (dragLock) R.drawable.ic_lock else R.drawable.ic_unlock)
 
-                val editor = prefs!!.edit()
-                editor.putBoolean(Preferences.PLAYER_DRAG_LOCK, dragLock)
-                editor.apply()
+                PrefManager.playerDragLock = dragLock
 
                 sheet!!.setDragLock(dragLock, dragStay)
             }
@@ -768,9 +765,8 @@ class PlayerActivity : AppCompatActivity() {
         }
 
         setResult(RESULT_OK)
-        prefs = XmpApplication.instance!!.sharedPrefs
 
-        val showInfoLine = prefs!!.getBoolean(Preferences.SHOW_INFO_LINE, true)
+        val showInfoLine = PrefManager.showInfoLine
         showElapsed = true
 
         onNewIntent(intent)
@@ -790,7 +786,7 @@ class PlayerActivity : AppCompatActivity() {
             }
         }
 
-        if (prefs!!.getBoolean(Preferences.KEEP_SCREEN_ON, false)) {
+        if (PrefManager.keepScreenOn) {
             title_flipper.keepScreenOn = true
         }
 
@@ -819,8 +815,8 @@ class PlayerActivity : AppCompatActivity() {
             }
         }
 
-        val dragLock = prefs!!.getBoolean(Preferences.PLAYER_DRAG_LOCK, false)
-        val dragStay = prefs!!.getBoolean(Preferences.PLAYER_DRAG_STAY, false)
+        val dragLock = PrefManager.playerDragLock
+        val dragStay = PrefManager.playerDragStay
 
         control_player_lock.setImageResource(
                 if (dragLock) R.drawable.ic_lock else R.drawable.ic_unlock)
@@ -879,11 +875,9 @@ class PlayerActivity : AppCompatActivity() {
                 try {
                     // Write our all sequences button status to shared prefs
                     val allSeq = modPlayer!!.allSequences
-                    if (allSeq != prefs!!.getBoolean(Preferences.ALL_SEQUENCES, false)) {
+                    if (allSeq != PrefManager.allSequences) {
+                        PrefManager.allSequences = allSeq
                         Log.i(TAG, "Write all sequences preference")
-                        val editor = prefs!!.edit()
-                        editor.putBoolean(Preferences.ALL_SEQUENCES, allSeq)
-                        editor.apply()
                     }
                 } catch (e: RemoteException) {
                     Log.e(TAG, "Can't save all sequences preference")
@@ -975,7 +969,7 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        if (prefs!!.getBoolean(Preferences.ENABLE_DELETE, false)) {
+        if (PrefManager.enableDelete) {
             menuInflater.inflate(R.menu.menu_delete, menu)
         }
         return true

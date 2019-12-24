@@ -2,14 +2,12 @@ package org.helllabs.android.xmp.util
 
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.app.Activity
-import android.content.SharedPreferences
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.text.Editable
 import android.text.TextWatcher
 import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
-import androidx.preference.PreferenceManager
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.WhichButton
 import com.afollestad.materialdialogs.actions.setActionButtonEnabled
@@ -19,7 +17,6 @@ import kotlinx.android.synthetic.main.dialog_changelog.view.*
 import kotlinx.android.synthetic.main.dialog_input.view.*
 import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.preferences.Preferences
 
 fun Activity.fatalError(@StringRes resId: Int? = null, text: String? = null) {
     MaterialDialog(this).show {
@@ -53,9 +50,7 @@ fun Activity.yesNoDialog(title: String, message: String, callback: (result: Bool
 }
 
 // Show changelog on first time use, and on version upgrades.
-fun Activity.showChangeLog() {
-    val prefs = PreferenceManager.getDefaultSharedPreferences(this)
-    val lastViewed = prefs.getInt(Preferences.CHANGELOG_VERSION, 0)
+fun Activity.showChangeLog(lastViewed: Int, callback: (result: Boolean, versionCode: Int) -> Unit) {
     val versionCode = BuildConfig.VERSION_CODE
     val hasPermission =
             ContextCompat.checkSelfPermission(this, WRITE_EXTERNAL_STORAGE) == PERMISSION_GRANTED
@@ -65,9 +60,7 @@ fun Activity.showChangeLog() {
                 .customView(R.layout.dialog_changelog)
                 .cancelOnTouchOutside(false)
                 .positiveButton(R.string.dismiss) {
-                    val editor = prefs.edit()
-                    editor.putInt(Preferences.CHANGELOG_VERSION, versionCode)
-                    editor.apply()
+                    callback(true, versionCode)
                 }
 
         val view = dialog.getCustomView()
@@ -78,8 +71,7 @@ fun Activity.showChangeLog() {
     }
 }
 
-fun Activity.showChangeDir(prefs: SharedPreferences, runnable: Runnable) {
-    val mediaPath = prefs.getString(Preferences.MEDIA_PATH, Preferences.DEFAULT_MEDIA_PATH)!!
+fun Activity.showChangeDir(mediaPath: String, callback: (result: Boolean, path: String) -> Unit) {
     val dialog = MaterialDialog(this).customView(R.layout.dialog_input)
     val customView = dialog.getCustomView()
 
@@ -101,13 +93,7 @@ fun Activity.showChangeDir(prefs: SharedPreferences, runnable: Runnable) {
         customView.dialog_input_text.setText(mediaPath)
         positiveButton(R.string.ok) {
             val value = getCustomView().dialog_input_text.text.toString()
-            if (value != mediaPath) {
-                val editor = prefs.edit()
-                editor.putString(Preferences.MEDIA_PATH, value)
-                editor.apply()
-            }
-
-            runnable.run()
+            callback(true, value)
         }
         negativeButton(R.string.cancel)
     }

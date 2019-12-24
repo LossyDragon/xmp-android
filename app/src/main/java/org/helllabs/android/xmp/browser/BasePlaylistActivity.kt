@@ -19,6 +19,7 @@ import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter
 import org.helllabs.android.xmp.modarchive.Search
 import org.helllabs.android.xmp.player.PlayerActivity
+import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.preferences.Preferences
 import org.helllabs.android.xmp.service.ModInterface
 import org.helllabs.android.xmp.service.PlayerService
@@ -32,7 +33,6 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     private var mAddList: MutableList<String> = mutableListOf()
     private var refresh: Boolean = false
 
-    protected var prefs = XmpApplication.instance!!.sharedPrefs
     protected lateinit var mPlaylistAdapter: PlaylistAdapter
 
     private val playAllButtonListener = OnClickListener {
@@ -97,7 +97,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mShowToasts = prefs.getBoolean(Preferences.SHOW_TOAST, true)
+        mShowToasts = PrefManager.showToast
 
         // Action bar icon navigation
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
@@ -129,11 +129,8 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
 
     private fun saveButtonConfig() {
         Log.d(TAG, "Saving button preferences")
-        prefs.edit().run {
-            putBoolean(Preferences.OPTIONS_SHUFFLE_MODE, isShuffleMode)
-            putBoolean(Preferences.OPTIONS_LOOP_MODE, isLoopMode)
-            apply()
-        }
+        PrefManager.optionsModeShuffle = isShuffleMode
+        PrefManager.optionsModeLoop = isLoopMode
     }
 
     protected fun setupButtons() {
@@ -159,7 +156,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         val filename = adapter.getItem(position).file!!.path
 
         // It's a string because of "ListPreference" :U
-        val mode = prefs.getString(Preferences.PLAYLIST_MODE, "1")!!.toInt()
+        val mode = PrefManager.playlistMode.toInt()
 
         /*
          * Test module again if invalid, in case a new file format is added to the
@@ -222,7 +219,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         when (requestCode) {
             SETTINGS_REQUEST -> {
                 update()
-                mShowToasts = prefs.getBoolean(Preferences.SHOW_TOAST, true)
+                mShowToasts = PrefManager.showToast
             }
             PLAY_MOD_REQUEST -> if (resultCode != RESULT_OK) {
                 update()

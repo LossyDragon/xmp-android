@@ -238,5 +238,6 @@
     <string name="title_this_directory">This Directory</string>
     <string name="title_this_file">This File</string>
     <string name="change_theme_older_apis">Changing the theme on an older platform causes issues.\nPlease restart the application to apply changes.</string>
+    <string name="player_viewer_mute">MUTE</string>
 
 </resources>

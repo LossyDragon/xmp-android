@@ -1,16 +1,21 @@
 package org.helllabs.android.xmp.player.viewer
 
-import android.app.Activity
 import android.content.Context
-import android.content.res.Configuration
-import android.graphics.*
+import android.content.res.Configuration.*
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.Rect
+import android.graphics.Typeface
 import android.os.RemoteException
-import android.view.Surface
+import android.util.DisplayMetrics
+import android.view.Surface.ROTATION_0
+import android.view.Surface.ROTATION_180
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.player.to2d
 import org.helllabs.android.xmp.service.ModInterface
 import org.helllabs.android.xmp.util.Log
+
 
 class ChannelViewer(context: Context) : Viewer(context) {
     private val scopePaint: Paint
@@ -19,7 +24,7 @@ class ChannelViewer(context: Context) : Viewer(context) {
     private val meterPaint: Paint
     private val numPaint: Paint
     private val scopeMutePaint: Paint
-    private val fontSize: Int = resources.getDimensionPixelSize(R.dimen.channelview_font_size)
+    private val fontSize: Int
     private val fontHeight: Int
     private val fontWidth: Int
     private val font2Height: Int
@@ -42,48 +47,53 @@ class ChannelViewer(context: Context) : Viewer(context) {
     private var panWidth: Int = 0
     private val keyRow = IntArray(Xmp.MAX_CHANNELS)
 
-    private var backGroundColor: Int = Color.BLACK
+    private var backGroundColor: Int? = null
+    private var mute: String? = null
 
     init {
         backGroundColor = getBackgroundColor()
+        mute = getMuteText()
+
+        fontSize = resources.getDimensionPixelSize(R.dimen.channelview_font_size)
 
         val font2Size = resources.getDimensionPixelSize(R.dimen.channelview_channel_font_size)
 
         scopePaint = Paint().apply {
-            setARGB(255, 40, 40, 40)
+            color = getColor(R.color.channelScopePaint)
         }
 
-        scopeLinePaint = Paint()
-        scopeLinePaint.setARGB(255, 80, 160, 80)
-        scopeLinePaint.strokeWidth = 0f
-        scopeLinePaint.isAntiAlias = false
+        scopeLinePaint = Paint().apply {
+            color = getColor(R.color.channelScopeLinePaint)
+            strokeWidth = 0f
+            isAntiAlias = false
+        }
 
         scopeMutePaint = Paint().apply {
-            setARGB(255, 60, 0, 0)
+            color = getColor(R.color.channelScopeMutePaint)
         }
 
         meterPaint = Paint().apply {
-            setARGB(255, 40, 80, 160)
+            color = getColor(R.color.channelMeterPaint)
         }
 
         insPaint = Paint().apply {
-            setARGB(255, 140, 140, 160)
+            color = getColor(R.color.channelInsPaint)
             typeface = Typeface.MONOSPACE
             textSize = fontSize.toFloat()
             isAntiAlias = true
         }
 
         numPaint = Paint().apply {
-            setARGB(255, 220, 220, 220)
+            color = getColor(R.color.channelNumPaint)
             typeface = Typeface.MONOSPACE
             textSize = font2Size.toFloat()
             isAntiAlias = true
         }
 
-        fontWidth = insPaint.measureText("X").toInt()
+        fontWidth = insPaint.measureText(MEASURED_TEXT).toInt()
         fontHeight = fontSize * 12 / 10
 
-        font2Width = numPaint.measureText("X").toInt()
+        font2Width = numPaint.measureText(MEASURED_TEXT).toInt()
         font2Height = font2Size * 12 / 10
 
         scopeWidth = 8 * fontWidth
@@ -245,38 +255,28 @@ class ChannelViewer(context: Context) : Viewer(context) {
 
         // Should use canvasWidth but it's not updated yet
         // width deprecated in API level 15. Our min is 16
-        // val width = (context as Activity).windowManager.defaultDisplay.width
-        val size = Point()
-        (context as Activity).windowManager.defaultDisplay.getSize(size)
-        val width = size.x
+        //val width = (context as Activity).windowManager.defaultDisplay.width
+        //val size = Point()
+        //(context as Activity).windowManager.defaultDisplay.getSize(size)
+        //val width = size.x
+
+        val metrics: DisplayMetrics = context.resources.displayMetrics
+        val width = metrics.widthPixels
 
         // Use two columns in large screen or normal screen with 800 or more pixels in
         // landscape or xlarge screen in any orientation
         when (screenSize) {
-            Configuration.SCREENLAYOUT_SIZE_NORMAL -> {
-                if (width < 800) {
-                    cols = 1
-                }
-                cols = if (viewerRotation == Surface.ROTATION_0 ||
-                        viewerRotation == Surface.ROTATION_180) {
-                    1
-                } else {
-                    2
-                }
+            SCREENLAYOUT_SIZE_NORMAL -> if (width < 800) cols = 1
+            SCREENLAYOUT_SIZE_LARGE -> {
+                cols =
+                        if (viewerRotation == ROTATION_0 || viewerRotation == ROTATION_180)
+                            1
+                        else
+                            2
             }
-            /* fall-though */
-            Configuration.SCREENLAYOUT_SIZE_LARGE -> {
-                cols = if (viewerRotation == Surface.ROTATION_0 ||
-                        viewerRotation == Surface.ROTATION_180) {
-                    1
-                } else {
-                    2
-                }
-            }
-            Configuration.SCREENLAYOUT_SIZE_XLARGE -> cols = 2
+            SCREENLAYOUT_SIZE_XLARGE -> cols = 2
             else -> cols = 1
         }
-
         val chn = modVars[3]
         if (cols == 1) {
             setMaxY((chn * 4 + 1) * fontHeight)
@@ -307,7 +307,7 @@ class ChannelViewer(context: Context) : Viewer(context) {
         val row = info.values[2]
 
         // Clear screen
-        canvas.drawColor(backGroundColor)
+        canvas.drawColor(backGroundColor!!)
 
         for (chn in 0 until numChannels) {
             val num = (numChannels + 1) / cols
@@ -349,7 +349,7 @@ class ChannelViewer(context: Context) : Viewer(context) {
             if (isMuted[chn]) {
                 canvas.drawRect(rect, scopeMutePaint)
                 canvas.drawText(
-                        "MUTE",
+                        mute!!,
                         (x + scopeLeft + 2 * fontWidth).toFloat(),
                         (y + fontHeight + fontSize).toFloat(),
                         insPaint

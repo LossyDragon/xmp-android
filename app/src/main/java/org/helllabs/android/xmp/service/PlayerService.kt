@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.Intent.ACTION_MEDIA_BUTTON
 import android.content.IntentFilter
-import android.content.SharedPreferences
 import android.media.AudioManager
 import android.media.AudioManager.*
 import android.os.*
@@ -15,8 +14,7 @@ import android.view.KeyEvent
 import android.view.KeyEvent.*
 import androidx.media.session.MediaButtonReceiver
 import org.helllabs.android.xmp.Xmp
-import org.helllabs.android.xmp.XmpApplication
-import org.helllabs.android.xmp.preferences.Preferences
+import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.service.notifier.LegacyNotifier
 import org.helllabs.android.xmp.service.notifier.ModernNotifier
 import org.helllabs.android.xmp.service.notifier.Notifier
@@ -72,7 +70,6 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
     private var watchdog: Watchdog = Watchdog(10)
 
     /* Other Stuff */
-    private var prefs: SharedPreferences? = null
     private lateinit var notifier: Notifier
 
     private var noisyReceiver = NoisyReceiver()
@@ -271,7 +268,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                 }
 
                 // Set default pan before we load the module
-                val defpan = prefs!!.getInt(Preferences.DEFAULT_PAN, 50)
+                val defpan = PrefManager.defaultPan
                 Log.i(TAG, "Set default pan to $defpan")
                 Xmp.setPlayer(Xmp.PLAYER_DEFPAN, defpan)
 
@@ -311,12 +308,10 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                     Xmp.mute(i, 0)
                 }
 
-                val volBoost = prefs!!.getString(Preferences.VOL_BOOST, "1")
-
+                val volBoost = PrefManager.volumeBoost
                 val interpTypes =
                         intArrayOf(Xmp.INTERP_NEAREST, Xmp.INTERP_LINEAR, Xmp.INTERP_SPLINE)
-                val temp =
-                        Integer.parseInt(prefs!!.getString(Preferences.INTERP_TYPE, "1")!!)
+                val temp = PrefManager.interpType.toInt()
                 var interpType: Int
 
                 interpType = if (temp in 1..2) {
@@ -325,7 +320,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                     Xmp.INTERP_LINEAR
                 }
 
-                if (!prefs!!.getBoolean(Preferences.INTERPOLATE, true)) {
+                if (!PrefManager.interpolate) {
                     interpType = Xmp.INTERP_NEAREST
                 }
 
@@ -341,13 +336,13 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                 }
                 callbacks.finishBroadcast()
 
-                Xmp.setPlayer(Xmp.PLAYER_AMP, Integer.parseInt(volBoost!!))
-                Xmp.setPlayer(Xmp.PLAYER_MIX, prefs!!.getInt(Preferences.STEREO_MIX, 100))
+                Xmp.setPlayer(Xmp.PLAYER_AMP, Integer.parseInt(volBoost))
+                Xmp.setPlayer(Xmp.PLAYER_MIX, PrefManager.stereoMix)
                 Xmp.setPlayer(Xmp.PLAYER_INTERP, interpType)
                 Xmp.setPlayer(Xmp.PLAYER_DSP, Xmp.DSP_LOWPASS)
 
                 var flags = Xmp.getPlayer(Xmp.PLAYER_CFLAGS)
-                flags = if (prefs!!.getBoolean(Preferences.AMIGA_MIXER, false)) {
+                flags = if (PrefManager.amigaMixer) {
                     flags or Xmp.FLAGS_A500
                 } else {
                     flags and Xmp.FLAGS_A500.inv()
@@ -487,8 +482,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         Log.i(TAG, "Create service")
 
         // Init Prefs
-        prefs = XmpApplication.instance!!.sharedPrefs
-        sampleRate = prefs!!.getString(Preferences.SAMPLING_RATE, "44100")!!.toInt()
+        sampleRate = PrefManager.samplingRate.toInt()
 
         // Init Media Session
         mediaSession = MediaSessionCompat(this, TAG)
@@ -509,7 +503,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         if (isAtLeastO())
             oreoFocusHandler = OreoAudioFocusHandler(applicationContext) // Kinda need this >.<
 
-        var bufferMs = prefs!!.getInt(Preferences.BUFFER_MS, DEFAULT_BUFFER_MS)
+        var bufferMs = PrefManager.bufferMS
         when {
             bufferMs < MIN_BUFFER_MS -> bufferMs = MIN_BUFFER_MS
             bufferMs > MAX_BUFFER_MS -> bufferMs = MAX_BUFFER_MS
@@ -524,7 +518,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         isAlive = false
         isLoaded = false
         isPlayerPaused = false
-        allPlayerSequences = prefs!!.getBoolean(Preferences.ALL_SEQUENCES, false)
+        allPlayerSequences = PrefManager.allSequences
 
         notifier = when (Build.VERSION.SDK_INT >= 21) {
             true -> ModernNotifier(this)
@@ -627,21 +621,23 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
     }
 
     private fun onPlayPause() {
-        isPlayerPaused = isPlayerPaused xor true
-        updateNotification()
-        notifyPause()
+        synchronized(this) { // Think.gif
+            isPlayerPaused = isPlayerPaused xor true
+            updateNotification()
+            notifyPause()
 
-        if (isPlayerPaused) {
-            Xmp.stopAudio()
+            if (isPlayerPaused) {
+                Xmp.stopAudio()
 
-            // Unregister NoisyReceiver on pause
-            unregisterReceiver(noisyReceiver)
-        } else {
-            requestAudioFocus()
-            Xmp.restartAudio()
+                // Unregister NoisyReceiver on pause
+                unregisterReceiver(noisyReceiver)
+            } else {
+                requestAudioFocus()
+                Xmp.restartAudio()
 
-            // Register NoisyReceiver on play
-            registerNoisyReceiver()
+                // Register NoisyReceiver on play
+                registerNoisyReceiver()
+            }
         }
     }
 
@@ -801,7 +797,6 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
 
         private const val MIN_BUFFER_MS = 80
         private const val MAX_BUFFER_MS = 1000
-        private const val DEFAULT_BUFFER_MS = 400
 
         private const val DUCK_VOLUME = 0x500
 

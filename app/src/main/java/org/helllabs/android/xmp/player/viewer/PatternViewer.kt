@@ -29,51 +29,55 @@ class PatternViewer(context: Context) : Viewer(context) {
     private var oldPosX: Int = 0
     private val rect = Rect()
 
-    private var backGroundColor: Int = Color.BLACK
+    private var backGroundColor: Int? = null
 
     init {
         backGroundColor = getBackgroundColor()
 
         notePaint = Paint().apply {
-            setARGB(255, 140, 140, 160)
+            color = getColor(R.color.patternNotePaint)
             typeface = Typeface.MONOSPACE
             textSize = fontSize.toFloat()
             isAntiAlias = true
         }
 
         insPaint = Paint().apply {
-            setARGB(255, 160, 80, 80)
+            color = getColor(R.color.patternInsPaint)
             typeface = Typeface.MONOSPACE
             textSize = fontSize.toFloat()
             isAntiAlias = true
         }
 
         muteNotePaint = Paint().apply {
-            setARGB(255, 60, 60, 60)
+            color = getColor(R.color.patternMutePaint)
             typeface = Typeface.MONOSPACE
             textSize = fontSize.toFloat()
             isAntiAlias = true
         }
 
         muteInsPaint = Paint().apply {
-            setARGB(255, 80, 40, 40)
+            color = getColor(R.color.patternMuteInsPaint)
             typeface = Typeface.MONOSPACE
             textSize = fontSize.toFloat()
             isAntiAlias = true
         }
 
         headerTextPaint = Paint().apply {
-            setARGB(255, 220, 220, 220)
+            color = getColor(R.color.patternHeaderTextPaint)
             typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
             textSize = fontSize.toFloat()
             isAntiAlias = true
         }
 
-        headerPaint = Paint().apply { setARGB(255, 140, 140, 220) }
+        headerPaint = Paint().apply {
+            color = getColor(R.color.patternHeaderPaint)
+        }
 
-        barPaint = Paint().apply { setARGB(255, 40, 40, 40) }
+        barPaint = Paint().apply {
+            color = getColor(R.color.patternBarPaint)
+        }
 
-        fontWidth = notePaint.measureText("X").toInt()
+        fontWidth = notePaint.measureText(MEASURED_TEXT).toInt()
         fontHeight = fontSize * 12 / 10
 
         for (i in 0 until MAX_NOTES) {
@@ -145,7 +149,7 @@ class PatternViewer(context: Context) : Viewer(context) {
         val numRows = info.values[3]
 
         // Clear screen
-        canvas.drawColor(backGroundColor)
+        canvas.drawColor(backGroundColor!!)
 
         // Header
         rect.set(0, 0, canvasWidth - 1, fontHeight - 1)

@@ -19,10 +19,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.activity_playlist_menu.*
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.browser.playlist.*
 import org.helllabs.android.xmp.modarchive.Search
 import org.helllabs.android.xmp.player.PlayerActivity
+import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.preferences.Preferences
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.util.*
@@ -35,7 +35,6 @@ class PlaylistMenu :
 
     private var mediaPath: String? = null
     private var playlistAdapter: PlaylistAdapter? = null
-    private val prefs = XmpApplication.instance!!.sharedPrefs
 
     override fun onCreate(icicle: Bundle?) {
         super.onCreate(icicle)
@@ -98,7 +97,10 @@ class PlaylistMenu :
         super.onResume()
         updateList()
 
-        showChangeLog()
+        showChangeLog(PrefManager.changelogVersion) { result, versionCode ->
+            if (result)
+                PrefManager.changelogVersion = versionCode
+        }
     }
 
     private fun getStoragePermissions() {
@@ -169,7 +171,10 @@ class PlaylistMenu :
 
     override fun onLongItemClick(adapter: PlaylistAdapter, view: View, position: Int) {
         if (position == 0) {
-            showChangeDir(prefs, Runnable { updateList() })
+            showChangeDir(mediaPath!!) { result, path ->
+                if (result)
+                    PrefManager.mediaPath = path
+            }
         } else {
             val playlist = playlistAdapter!!.getItem(position)
             val intent = Intent(this, PlaylistAddEdit::class.java)
@@ -182,7 +187,7 @@ class PlaylistMenu :
     }
 
     private fun startPlayerActivity() {
-        if (prefs.getBoolean(Preferences.START_ON_PLAYER, true)) {
+        if (PrefManager.startOnPlayer) {
             if (PlayerService.isAlive) {
                 val playerIntent = Intent(this, PlayerActivity::class.java)
                 startActivity(playerIntent)
@@ -191,7 +196,7 @@ class PlaylistMenu :
     }
 
     private fun updateList() {
-        mediaPath = prefs.getString(Preferences.MEDIA_PATH, Preferences.DEFAULT_MEDIA_PATH)
+        mediaPath = PrefManager.mediaPath
 
         playlistAdapter!!.clear()
         val browserItem =

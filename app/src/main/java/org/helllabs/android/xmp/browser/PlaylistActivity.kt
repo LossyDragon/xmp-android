@@ -16,7 +16,7 @@ import kotlinx.android.synthetic.main.activity_playlist.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.browser.playlist.Playlist
 import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter
-import org.helllabs.android.xmp.preferences.Preferences
+import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.util.Log
 import java.io.IOException
 
@@ -53,7 +53,7 @@ class PlaylistActivity :
         val extras = intent.extras ?: return
         name = extras.getString(PLAYLIST_NAME)
 
-        val useFilename = prefs.getBoolean(Preferences.USE_FILENAME, false)
+        val useFilename = PrefManager.useFilename
 
         try {
             mPlaylist = Playlist(this, name!!)
@@ -103,7 +103,7 @@ class PlaylistActivity :
     override fun onResume() {
         super.onResume()
 
-        mPlaylistAdapter.setUseFilename(prefs.getBoolean(Preferences.USE_FILENAME, false))
+        mPlaylistAdapter.setUseFilename(PrefManager.useFilename)
         update()
     }
 

@@ -22,7 +22,7 @@ class ModernNotifier(service: Service) : Notifier(service) {
         val channel = NotificationChannel(
                 CHANNEL_ID,
                 service.getString(R.string.notif_channel_name),
-                NotificationManager.IMPORTANCE_HIGH
+                NotificationManager.IMPORTANCE_MIN
         ).apply {
             description = service.getString(R.string.notif_channel_desc)
             enableVibration(false)

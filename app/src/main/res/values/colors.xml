@@ -21,4 +21,20 @@
 
     <color name="colorPressed">#606060</color>
     <color name="colorRefresh">#229e3c</color>
+
+    <!-- Viewer Colors -->
+    <color name="channelScopePaint">#FF282828</color>
+    <color name="channelScopeLinePaint">#FF50A050</color>
+    <color name="channelScopeMutePaint">#FF3C0000</color>
+    <color name="channelMeterPaint">#FF2850A0</color>
+    <color name="channelInsPaint">#FF8C8CA0</color>
+    <color name="channelNumPaint">#FFDCDCDC</color>
+    <color name="patternNotePaint">#FF8C8CA0</color>
+    <color name="patternInsPaint">#FFA05050</color>
+    <color name="patternMutePaint">#FF3C3C3C</color>
+    <color name="patternMuteInsPaint">#FF502828</color>
+    <color name="patternHeaderTextPaint">#FFDCDCDC</color>
+    <color name="patternHeaderPaint">#FF8C8CDC</color>
+    <color name="patternBarPaint">#FF282828</color>
+
 </resources>

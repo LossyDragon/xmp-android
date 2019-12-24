@@ -75,8 +75,8 @@ android {
 
     externalNativeBuild {
         cmake {
-            setVersion("3.10.2")
-            setPath("src/main/cpp/CMakeLists.txt")
+            it.setVersion("3.10.2")
+            it.setPath("src/main/cpp/CMakeLists.txt")
         }
     }
 }

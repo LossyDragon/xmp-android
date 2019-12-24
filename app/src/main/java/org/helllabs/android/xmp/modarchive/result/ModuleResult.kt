@@ -33,7 +33,7 @@ import org.helllabs.android.xmp.modarchive.response.ModArchiveResponse
 import org.helllabs.android.xmp.modarchive.response.ModuleResponse
 import org.helllabs.android.xmp.modarchive.response.SoftErrorResponse
 import org.helllabs.android.xmp.player.PlayerActivity
-import org.helllabs.android.xmp.preferences.Preferences
+import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.util.Log
 import org.helllabs.android.xmp.util.toast
 import org.helllabs.android.xmp.util.yesNoDialog
@@ -291,15 +291,12 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, FetchO
                 } else {
                     toast(R.string.error)
                 }
-                if (mPrefs!!.getBoolean(Preferences.ARTIST_FOLDER, true)) {
+                if (PrefManager.artistFolder) {
                     val parent = file.parentFile!!
                     val contents = parent.listFiles()
                     if (contents != null && contents.isEmpty()) {
                         try {
-                            val path = mPrefs!!.getString(
-                                    Preferences.MEDIA_PATH,
-                                    Preferences.DEFAULT_MEDIA_PATH
-                            )!!
+                            val path = PrefManager.mediaPath
                             val mediaPath = File(path).canonicalPath
                             val parentPath = parent.canonicalPath
 
@@ -323,14 +320,14 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, FetchO
     private fun getDownloadPath(module: Module?): String {
 
         val sb = StringBuilder()
-        sb.append(mPrefs!!.getString(Preferences.MEDIA_PATH, Preferences.DEFAULT_MEDIA_PATH))
+        sb.append(PrefManager.mediaPath)
 
-        if (mPrefs!!.getBoolean(Preferences.MODARCHIVE_FOLDER, true)) {
+        if (PrefManager.modArchiveFolder) {
             sb.append(File.separatorChar)
             sb.append(getString(R.string.dirname_theModArchive))
         }
 
-        if (mPrefs!!.getBoolean(Preferences.ARTIST_FOLDER, true)) {
+        if (PrefManager.artistFolder) {
             sb.append(File.separatorChar)
             sb.append(module!!.artist)
         }

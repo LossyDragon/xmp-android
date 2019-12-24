@@ -1,26 +1,22 @@
 package org.helllabs.android.xmp
 
 import android.app.Application
-import android.content.SharedPreferences
-import androidx.preference.PreferenceManager.getDefaultSharedPreferences
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.Volley.newRequestQueue
 import com.tonyodev.fetch2.Fetch
 import com.tonyodev.fetch2.FetchConfiguration
-import org.helllabs.android.xmp.preferences.Preferences
-import org.helllabs.android.xmp.util.THEME_DEFAULT
+import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.util.applyTheme
 
 // TODO: Perform migration functions between cmatsuoka's version to this
-// 1: Preferences migrations
-
 // TODO: PlayerActivity DayNight theme
+// TODO: Emu crashes on API 19??
+// TODO: Finally work on Internal / External storage support
 
 class XmpApplication : Application() {
 
     var fileList: MutableList<String>? = null
     val requestQueue: RequestQueue by lazy { newRequestQueue(applicationContext) }
-    val sharedPrefs: SharedPreferences by lazy { getDefaultSharedPreferences(this) }
 
     // Workaround for now. Read notes from its usage.
     var isThemeChanged: Boolean = false
@@ -28,6 +24,9 @@ class XmpApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         instance = this
+
+        // Initialize Preferences
+        PrefManager.init(applicationContext)
 
         // Fetch download manager
         val fetchConfiguration = FetchConfiguration.Builder(this)
@@ -38,8 +37,7 @@ class XmpApplication : Application() {
         Fetch.setDefaultInstanceConfiguration(fetchConfiguration)
 
         // DayNight Theme
-        val themePref = sharedPrefs.getString(Preferences.APP_THEME, THEME_DEFAULT)
-        applyTheme(themePref!!)
+        applyTheme(PrefManager.themePref)
     }
 
     companion object {

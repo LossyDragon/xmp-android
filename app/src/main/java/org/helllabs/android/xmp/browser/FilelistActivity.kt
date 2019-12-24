@@ -15,7 +15,7 @@ import com.afollestad.materialdialogs.list.listItemsSingleChoice
 import kotlinx.android.synthetic.main.activity_modlist.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.browser.playlist.*
-import org.helllabs.android.xmp.preferences.Preferences
+import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.util.*
 import java.io.File
 import java.text.DateFormat
@@ -25,7 +25,7 @@ class FilelistActivity :
         PlaylistAdapter.OnItemClickListener,
         PlaylistAdapter.OnItemLongClickListener {
 
-    private var mNavigation: FilelistNavigation? = null
+    private var filelistNavigation: FilelistNavigation? = null
     override var isLoopMode: Boolean = false
     override var isShuffleMode: Boolean = false
     private var mBackButtonParentdir: Boolean = false
@@ -36,7 +36,7 @@ class FilelistActivity :
      */
     private val addCurrentRecursiveChoice = object : PlaylistChoice {
         override fun execute(fileSelection: Int, playlistSelection: Int) {
-            filesToPlaylist(this@FilelistActivity, recursiveList(mNavigation!!.currentDir),
+            filesToPlaylist(this@FilelistActivity, recursiveList(filelistNavigation!!.currentDir),
                     getPlaylistName(playlistSelection))
         }
     }
@@ -79,7 +79,7 @@ class FilelistActivity :
     //endregion
 
     override val allFiles: List<String>
-        get() = recursiveList(mNavigation!!.currentDir)
+        get() = recursiveList(filelistNavigation!!.currentDir)
 
     /**
      * For actions based on playlist selection made using choosePlaylist()
@@ -94,7 +94,7 @@ class FilelistActivity :
         setContentView(R.layout.activity_modlist)
         setTitle(R.string.title_file_browser)
 
-        val mediaPath = prefs.getString(Preferences.MEDIA_PATH, Preferences.DEFAULT_MEDIA_PATH)
+        val mediaPath = PrefManager.mediaPath
 
         // Adapter
         mPlaylistAdapter = PlaylistAdapter(
@@ -119,7 +119,7 @@ class FilelistActivity :
 
         setSwipeRefresh(swipeContainer)
 
-        mNavigation = FilelistNavigation()
+        filelistNavigation = FilelistNavigation()
 
         val textColor = current_path.currentTextColor
         current_path.apply {
@@ -140,19 +140,19 @@ class FilelistActivity :
             }
         }
 
-        mBackButtonParentdir = prefs.getBoolean(Preferences.BACK_BUTTON_NAVIGATION, true)
+        mBackButtonParentdir = PrefManager.backButtonNavigation
 
         // Back/Up button
         up_button.setOnClickListener {
-            if (!mNavigation!!.isAtTopDir)
+            if (!filelistNavigation!!.isAtTopDir)
                 parentDir()
         }
 
         // Check if directory exists
-        val modDir = File(mediaPath!!)
+        val modDir = File(mediaPath)
 
         if (modDir.isDirectory) {
-            mNavigation!!.startNavigation(modDir)
+            filelistNavigation!!.startNavigation(modDir)
             updateModlist()
         } else {
             pathNotFound(mediaPath)
@@ -168,7 +168,7 @@ class FilelistActivity :
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         // Return to parent dir up to the starting level, then act as regular back
         if (mBackButtonParentdir) {
-            if (!mNavigation!!.isAtTopDir) {
+            if (!filelistNavigation!!.isAtTopDir) {
                 parentDir()
                 return true
             }
@@ -180,7 +180,7 @@ class FilelistActivity :
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             // Return to parent dir up to the starting level, then act as regular back
-            if (!mNavigation!!.isAtTopDir) {
+            if (!filelistNavigation!!.isAtTopDir) {
                 parentDir()
                 return true
             }
@@ -195,8 +195,8 @@ class FilelistActivity :
     override fun onItemClick(adapter: PlaylistAdapter, view: View, position: Int) {
         val file = mPlaylistAdapter.getFile(position)
 
-        if (mNavigation!!.changeDirectory(file)) {
-            mNavigation!!.saveListPosition(modlist_listview)
+        if (filelistNavigation!!.changeDirectory(file)) {
+            filelistNavigation!!.saveListPosition(modlist_listview)
             updateModlist()
         } else {
             super.onItemClick(adapter, view, position)
@@ -247,7 +247,7 @@ class FilelistActivity :
                 val ret = Examples.install(
                         context = this@FilelistActivity,
                         path = media_path,
-                        examples = prefs.getBoolean(Preferences.EXAMPLES, true)
+                        examples = PrefManager.installExample
                 )
 
                 if (ret < 0)
@@ -255,7 +255,7 @@ class FilelistActivity :
                             getString(R.string.error_create_path), media_path)
                     )
 
-                mNavigation!!.startNavigation(File(media_path))
+                filelistNavigation!!.startNavigation(File(media_path))
                 updateModlist()
             }
             negativeButton(R.string.cancel) {
@@ -264,23 +264,19 @@ class FilelistActivity :
         }
     }
 
-    private fun readShuffleModePref(): Boolean {
-        return prefs.getBoolean(Preferences.OPTIONS_SHUFFLE_MODE, DEFAULT_SHUFFLE_MODE)
-    }
+    private fun readShuffleModePref(): Boolean = PrefManager.optionsModeShuffle
 
-    private fun readLoopModePref(): Boolean {
-        return prefs.getBoolean(Preferences.OPTIONS_LOOP_MODE, DEFAULT_LOOP_MODE)
-    }
+    private fun readLoopModePref(): Boolean = PrefManager.optionsModeLoop
 
     private fun parentDir() {
-        if (mNavigation!!.parentDir()) {
+        if (filelistNavigation!!.parentDir()) {
             updateModlist()
-            mNavigation!!.restoreListPosition(modlist_listview)
+            filelistNavigation!!.restoreListPosition(modlist_listview)
         }
     }
 
     private fun updateModlist() {
-        val modDir = mNavigation!!.currentDir ?: return
+        val modDir = filelistNavigation!!.currentDir ?: return
 
         mPlaylistAdapter.clear()
 
@@ -357,17 +353,15 @@ class FilelistActivity :
     }
 
     private fun setDefaultPath() {
-        val editor = prefs.edit()
-        editor.putString(Preferences.MEDIA_PATH, mNavigation!!.currentDir!!.path)
-        editor.apply()
+        PrefManager.mediaPath = filelistNavigation!!.currentDir!!.path
         toast(R.string.msg_default_path)
     }
 
     private fun deleteDirectory(position: Int) {
         val deleteName = mPlaylistAdapter.getFilename(position)
-        val mediaPath = prefs.getString(Preferences.MEDIA_PATH, Preferences.DEFAULT_MEDIA_PATH)
+        val mediaPath = PrefManager.mediaPath
 
-        if (deleteName.startsWith(mediaPath!!) && deleteName != mediaPath) {
+        if (deleteName.startsWith(mediaPath) && deleteName != mediaPath) {
             val title = getString(R.string.title_delete_directory)
             val message = String.format(
                     getString(R.string.msg_delete_file, FileUtils.basename(deleteName)))

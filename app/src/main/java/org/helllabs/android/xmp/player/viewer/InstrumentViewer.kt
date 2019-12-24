@@ -1,49 +1,48 @@
 package org.helllabs.android.xmp.player.viewer
 
-import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.service.ModInterface
-import org.helllabs.android.xmp.util.Log
-
 import android.content.Context
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.Typeface
 import android.os.RemoteException
+import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.service.ModInterface
+import org.helllabs.android.xmp.util.Log
 
 // Main player View
 class InstrumentViewer(context: Context) : Viewer(context) {
-    private val insPaint: Array<Paint?> = arrayOfNulls(8)
-    private val barPaint: Array<Paint?>
+    private val insPaint = arrayOfNulls<Paint?>(8)
+    private val barPaint = arrayOfNulls<Paint?>(8)
     private val fontSize: Int = resources.getDimensionPixelSize(R.dimen.instrumentview_font_size)
     private val fontHeight: Int
     private val fontWidth: Int
     private var insName: Array<String>? = null
     private val rect = Rect()
 
-    private var backGroundColor: Int = Color.BLACK
+    private var backGroundColor: Int? = null
 
     init {
         backGroundColor = getBackgroundColor()
 
-        for (i in 0..7) {
-            val `val` = 120 + 10 * i
+        // TODO color
+        for (i in insPaint.indices) {
+            val value = 120 + 10 * i
             insPaint[i] = Paint()
-            insPaint[i]!!.setARGB(255, `val`, `val`, `val`)
+            insPaint[i]!!.setARGB(255, value, value, value)
             insPaint[i]!!.typeface = Typeface.MONOSPACE
             insPaint[i]!!.textSize = fontSize.toFloat()
             insPaint[i]!!.isAntiAlias = true
         }
 
-        barPaint = arrayOfNulls(8)
-        for (i in 0..7) {
-            val `val` = 15 * i
+        // TODO color
+        for (i in barPaint.indices) {
+            val value = 15 * i
             barPaint[i] = Paint()
-            barPaint[i]!!.setARGB(255, `val` / 4, `val` / 2, `val`)
+            barPaint[i]!!.setARGB(255, value / 4, value / 2, value)
         }
 
-        fontWidth = insPaint[0]!!.measureText("X").toInt()
+        fontWidth = insPaint[0]!!.measureText(MEASURED_TEXT).toInt()
         fontHeight = fontSize * 14 / 10
     }
 
@@ -89,7 +88,7 @@ class InstrumentViewer(context: Context) : Viewer(context) {
         val ins = modVars[4]
 
         // Clear screen
-        canvas.drawColor(backGroundColor)
+        canvas.drawColor(backGroundColor!!)
 
         for (i in 0 until ins) {
             val y = (i + 1) * fontHeight - posY.toInt()
