@@ -167,10 +167,12 @@ class FilelistActivity :
     // Override the 'back' arrow on toolbar
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         // Return to parent dir up to the starting level, then act as regular back
-        if (mBackButtonParentdir) {
-            if (!filelistNavigation!!.isAtTopDir) {
-                parentDir()
-                return true
+        if (item.itemId == android.R.id.home) {
+            if (mBackButtonParentdir) {
+                if (!filelistNavigation!!.isAtTopDir) {
+                    parentDir()
+                    return true
+                }
             }
         }
 

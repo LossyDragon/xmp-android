@@ -238,8 +238,11 @@ class PlayerActivity : AppCompatActivity() {
                 }
 
                 // display frame info
-                if (info!!.values[5] != oldSpd || info!!.values[6] != oldBpm ||
-                        info!!.values[0] != oldPos || info!!.values[1] != oldPat) {
+                if (info!!.values[5] != oldSpd ||
+                        info!!.values[6] != oldBpm ||
+                        info!!.values[0] != oldPos ||
+                        info!!.values[1] != oldPat
+                ) {
                     // Ugly code to avoid expensive String.format()
 
                     s.delete(0, s.length)
