@@ -1,7 +1,8 @@
 # Project files
 res/values-v1
 app/src/main/res/values-v1
-app/.cxx
+app/.cxx/
+app/.cxx/*
 
 # Generated files
 *.apk
@@ -22,6 +23,7 @@ out/
 /local.properties
 build/
 app/release/
+app/release/output.json
 .idea
 app/app.iml
 *.iml
