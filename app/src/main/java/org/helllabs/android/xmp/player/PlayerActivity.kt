@@ -35,6 +35,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.*
 
+
 class PlayerActivity : AppCompatActivity() {
 
     /* actual mod player */
@@ -159,6 +160,7 @@ class PlayerActivity : AppCompatActivity() {
                     } catch (e: InterruptedException) {
                     }
                 }
+
                 if (!isFinishing) {
                     finish()
                 }
@@ -473,7 +475,7 @@ class PlayerActivity : AppCompatActivity() {
                     lastTimer = now
                 } catch (e: InterruptedException) {
                 }
-            } while (playTime >= 0)
+            } while (playTime >= 0 && !stopUpdate)
 
             handler.removeCallbacksAndMessages(null)
             handler.post {
@@ -911,6 +913,11 @@ class PlayerActivity : AppCompatActivity() {
             Log.i(TAG, "Can't unbind unregistered service")
         }
 
+        stopUpdate = true
+        handler.removeCallbacksAndMessages(null)
+        progressThread?.interrupt()
+        progressThread = null
+
         super.onDestroy()
     }
 
@@ -1009,7 +1016,10 @@ class PlayerActivity : AppCompatActivity() {
         const val PARM_START = "start"
         const val PARM_KEEPFIRST = "keepFirst"
         private const val FRAME_RATE = 25
+
+        @Volatile
         private var stopUpdate: Boolean = false
+        @Volatile
         private var canChangeViewer: Boolean = false
     }
 }

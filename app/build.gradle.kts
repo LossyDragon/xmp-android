@@ -1,5 +1,4 @@
-import com.android.build.gradle.api.ApplicationVariant
-import com.android.build.gradle.api.BaseVariantOutput
+import com.android.build.gradle.internal.api.BaseVariantOutputImpl
 
 plugins {
     id("com.android.application")
@@ -27,24 +26,16 @@ android {
             abiFilters("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
         }
 
-        // Maybe Kotlin gradle DSL isn't the best idea, just because of this [outputFileName]
-        // We can rename built APK's using this below
-        // https://stackoverflow.com/a/50801989
-        applicationVariants.all(object : Action<ApplicationVariant> {
-            override fun execute(variant: ApplicationVariant) {
-                variant.outputs.all(object : Action<BaseVariantOutput> {
-                    override fun execute(output: BaseVariantOutput) {
-                        val outputImpl = output as
-                                com.android.build.gradle.internal.api.BaseVariantOutputImpl
-                        val fileName = output.outputFileName
+        // https://stackoverflow.com/a/58035977
+        applicationVariants.forEach { variant ->
+            variant.outputs
+                    .map { it as BaseVariantOutputImpl }
+                    .forEach { output ->
+                        output.outputFileName = output.outputFileName
                                 .replace("app-", "xmp-")
-                                .replace("-release", "-${defaultConfig.versionName}-release")
-                                .replace("-debug", "-${defaultConfig.versionName}-debug")
-                        outputImpl.outputFileName = fileName
+                                .replace(".apk", "-${variant.versionName}.${variant.versionCode}.apk")
                     }
-                })
-            }
-        })
+        }
 
         // ModArchive API Key
         // Must be in your `Global` gradle.properties! ex: C:\Users\<name>\.gradle
@@ -75,8 +66,8 @@ android {
 
     externalNativeBuild {
         cmake {
-            it.setVersion("3.10.2")
-            it.setPath("src/main/cpp/CMakeLists.txt")
+            version = "3.10.2"
+            setPath("src/main/cpp/CMakeLists.txt")
         }
     }
 }
@@ -84,21 +75,22 @@ android {
 dependencies {
     implementation("androidx.appcompat:appcompat:1.1.0")
     implementation("androidx.cardview:cardview:1.0.0")
-    implementation("androidx.constraintlayout:constraintlayout:1.1.3")
-    implementation("androidx.recyclerview:recyclerview:1.1.0")
+    implementation("androidx.constraintlayout:constraintlayout:2.0.0-beta4")
+    implementation("androidx.recyclerview:recyclerview:1.2.0-alpha01")
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0-alpha03")
     implementation("androidx.preference:preference:1.1.0")
     implementation("androidx.media:media:1.1.0")
+    implementation("androidx.core:core-ktx:1.2.0")
 
-    implementation("com.google.android.material:material:1.2.0-alpha03")
+    implementation("com.google.android.material:material:1.2.0-alpha04")
 
-    implementation("androidx.core:core-ktx:1.2.0-rc01")
+    implementation("androidx.core:core-ktx:1.3.0-alpha01")
 
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.61")
 
     implementation("com.h6ah4i.android.widget.advrecyclerview:advrecyclerview:1.0.0")
 
-    val materialDialogs = "3.1.1"
+    val materialDialogs = "3.2.1"
     implementation("com.afollestad.material-dialogs:core:$materialDialogs")
     implementation("com.afollestad.material-dialogs:bottomsheets:$materialDialogs")
 
@@ -106,7 +98,9 @@ dependencies {
 
     implementation("androidx.tonyodev.fetch2:xfetch2:3.1.4")
 
-    implementation("com.android.volley:volley:1.2.0-SNAPSHOT")
+    implementation("com.android.volley:volley:1.2.0-SNAPSHOT") //okhttp?
+
+    debugImplementation("com.squareup.leakcanary:leakcanary-android:2.2")
 }
 
 // Run: gradlew ktlintCheck

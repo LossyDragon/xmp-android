@@ -7,6 +7,7 @@ import android.os.RemoteException
 import android.view.*
 import android.view.GestureDetector.SimpleOnGestureListener
 import android.view.View.OnTouchListener
+import androidx.core.content.ContextCompat
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.player.getScreenSize
 import org.helllabs.android.xmp.service.ModInterface
@@ -244,8 +245,7 @@ abstract class Viewer(context: Context) :
         return color
     }
 
-    @Suppress("DEPRECATION")
-    fun getColor(int: Int): Int = resources.getColor(int)
+    fun getColor(int: Int): Int = ContextCompat.getColor(context, int)
 
     fun getMuteText(): String = resources.getString(R.string.player_viewer_mute)
 
