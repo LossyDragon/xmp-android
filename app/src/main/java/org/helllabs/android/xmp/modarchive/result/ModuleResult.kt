@@ -35,8 +35,8 @@ import org.helllabs.android.xmp.modarchive.response.SoftErrorResponse
 import org.helllabs.android.xmp.player.PlayerActivity
 import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.util.Log
-import org.helllabs.android.xmp.util.toast
-import org.helllabs.android.xmp.util.yesNoDialog
+import org.helllabs.android.xmp.extension.toast
+import org.helllabs.android.xmp.extension.yesNoDialog
 import java.io.File
 import java.io.IOException
 import java.io.UnsupportedEncodingException
@@ -83,7 +83,7 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, FetchO
         val key = BuildConfig.ApiKey
         try {
             val request = ModuleRequest(key, ModArchiveRequest.MODULE, query)
-            request.setOnResponseListener(this).send()
+            request.setOnResponseListener(this).send(xmpApplication().requestQueue)
         } catch (e: UnsupportedEncodingException) {
             handleQueryError()
         }
@@ -258,7 +258,8 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, FetchO
             val intent = Intent(this, PlayerActivity::class.java)
             intent.putExtra(PlayerActivity.PARM_START, 0)
 
-            XmpApplication.instance!!.fileList = modList
+
+            xmpApplication().fileList = modList
             Log.i(TAG, "Play $path")
             startActivity(intent)
         } else {

@@ -1,6 +1,7 @@
 package org.helllabs.android.xmp.browser
 
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
@@ -25,7 +26,7 @@ import org.helllabs.android.xmp.service.ModInterface
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.util.InfoCache
 import org.helllabs.android.xmp.util.Log
-import org.helllabs.android.xmp.util.toast
+import org.helllabs.android.xmp.extension.toast
 
 abstract class BasePlaylistActivity : AppCompatActivity() {
     private var mShowToasts: Boolean = false
@@ -94,6 +95,8 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     protected abstract var isLoopMode: Boolean
 
     protected abstract val allFiles: List<String>
+
+    fun xmpApplication() = application as XmpApplication
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -196,12 +199,13 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
             keepFirst: Boolean = false
     ) {
 
-        XmpApplication.instance!!.fileList =
+        xmpApplication().fileList =
                 if (!mod.isNullOrEmpty())
                     mutableListOf(mod)
                 else
                     modList!!.toMutableList()
 
+        startService(Intent(this, PlayerService::class.java))
         val intent = Intent(this, PlayerActivity::class.java).apply {
             putExtra(PlayerActivity.PARM_SHUFFLE, isShuffleMode)
             putExtra(PlayerActivity.PARM_LOOP, isLoopMode)
@@ -221,8 +225,10 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
                 update()
                 mShowToasts = PrefManager.showToast
             }
-            PLAY_MOD_REQUEST -> if (resultCode != RESULT_OK) {
-                update()
+            PLAY_MOD_REQUEST -> {
+                if (resultCode != RESULT_OK) {
+                    update()
+                }
             }
             SEARCH_REQUEST -> refresh = true
         }
@@ -306,7 +312,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         private const val PLAY_MOD_REQUEST = 669
         private const val SEARCH_REQUEST = 47
 
-        const val DEFAULT_SHUFFLE_MODE = true
-        const val DEFAULT_LOOP_MODE = false
+        // const val DEFAULT_SHUFFLE_MODE = true
+        // const val DEFAULT_LOOP_MODE = false
     }
 }

@@ -5,9 +5,8 @@ import android.os.Environment
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.XmpApplication
-import org.helllabs.android.xmp.util.fatalError
-import org.helllabs.android.xmp.util.isAtMostN
+import org.helllabs.android.xmp.extension.fatalError
+import org.helllabs.android.xmp.extension.isAtMostN
 import java.io.File
 
 class Preferences : AppCompatActivity() {
@@ -31,7 +30,7 @@ class Preferences : AppCompatActivity() {
             // Known issue with API <= 24 for themes
             // https://android-review.googlesource.com/c/platform/frameworks/support/+/971248
             // https://issuetracker.google.com/issues/131851825
-            if (isAtMostN() && XmpApplication.instance!!.isThemeChanged) {
+            if (isAtMostN() && isThemeChanged) {
                 fatalError(R.string.change_theme_older_apis)
             } else {
                 onBackPressed()
@@ -43,6 +42,9 @@ class Preferences : AppCompatActivity() {
     }
 
     companion object {
+        @Volatile
+        var isThemeChanged: Boolean = false
+
         // SAF absolutely sucks. Keep until that `pile` is better documented.
         @Suppress("DEPRECATION")
         internal val SD_DIR: File = Environment.getExternalStorageDirectory()

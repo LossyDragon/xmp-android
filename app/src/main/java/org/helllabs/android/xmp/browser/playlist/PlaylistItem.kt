@@ -20,6 +20,7 @@ class PlaylistItem(
 
     init {
         imageRes = when (type) {
+            TYPE_SPECIAL -> R.drawable.ic_browser
             TYPE_DIRECTORY -> R.drawable.ic_folder
             TYPE_PLAYLIST -> R.drawable.ic_list
             TYPE_FILE -> R.drawable.ic_file

@@ -15,8 +15,7 @@ class ModuleArrayAdapter(
         context: Context,
         resource: Int,
         items: List<Module>
-) :
-        ArrayAdapter<Module>(context, resource, items) {
+) : ArrayAdapter<Module>(context, resource, items) {
 
     @SuppressLint("InflateParams")
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
@@ -29,16 +28,18 @@ class ModuleArrayAdapter(
 
         val module = getItem(position)
         if (module != null) {
-            val fmt = view!!.findViewById<View>(R.id.search_list_fmt) as TextView
-            val line1 = view.findViewById<View>(R.id.search_list_line1) as TextView
-            val line2 = view.findViewById<View>(R.id.search_list_line2) as TextView
-            val size = view.findViewById<View>(R.id.search_list_size) as TextView
+            val fmt = view!!.findViewById<TextView>(R.id.search_list_fmt)
+            val line1 = view.findViewById<TextView>(R.id.search_list_line1)
+            val line2 = view.findViewById<TextView>(R.id.search_list_line2)
+            val size = view.findViewById<TextView>(R.id.search_list_size)
 
             fmt.text = module.format
             line1.text = module.songTitle
             line2.text = String.format(context.getString(R.string.module_by), module.artist)
             size.text = String.format(
-                    context.getString(R.string.module_size), (module.bytes / 1024).toString())
+                    context.getString(R.string.module_size),
+                    (module.bytes / 1024).toString()
+            )
         }
 
         return view!!

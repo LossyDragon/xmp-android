@@ -42,12 +42,12 @@ object Xmp {
     external fun endPlayer(): Int
     external fun fillBuffer(loop: Boolean): Int
     external fun getChannelData(
-        volumes: IntArray,
-        finalvols: IntArray,
-        pans: IntArray,
-        instruments: IntArray,
-        keys: IntArray,
-        periods: IntArray
+            volumes: IntArray,
+            finalvols: IntArray,
+            pans: IntArray,
+            instruments: IntArray,
+            keys: IntArray,
+            periods: IntArray
     )
     external fun getComment(): String
     external fun getFormats(): Array<String>
@@ -59,13 +59,13 @@ object Xmp {
     external fun getPatternRow(pat: Int, row: Int, rowNotes: ByteArray, rowInstruments: ByteArray)
     external fun getPlayer(parm: Int): Int
     external fun getSampleData(
-        trigger: Boolean,
-        ins: Int,
-        key: Int,
-        period: Int,
-        chn: Int,
-        width: Int,
-        buffer: ByteArray
+            trigger: Boolean,
+            ins: Int,
+            key: Int,
+            period: Int,
+            chn: Int,
+            width: Int,
+            buffer: ByteArray
     )
     external fun getSeqVars(vars: IntArray)
     external fun getVersion(): String
@@ -78,7 +78,7 @@ object Xmp {
     external fun releaseModule(): Int
     external fun restartAudio(): Boolean
     external fun seek(time: Int): Int
-    external fun setPlayer(parm: Int, `val`: Int)
+    external fun setPlayer(parm: Int, value: Int)
     external fun setSequence(seq: Int): Boolean
     external fun setVolume(vol: Int): Int
     external fun startPlayer(rate: Int): Int

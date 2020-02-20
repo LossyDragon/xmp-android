@@ -9,5 +9,4 @@ class ArtistArrayAdapter(
         context: Context,
         resource: Int,
         items: List<Artist>
-) :
-        ArrayAdapter<Artist>(context, resource, items)
+) : ArrayAdapter<Artist>(context, resource, items)

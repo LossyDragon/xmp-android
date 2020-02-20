@@ -15,6 +15,9 @@ import com.afollestad.materialdialogs.list.listItemsSingleChoice
 import kotlinx.android.synthetic.main.activity_modlist.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.browser.playlist.*
+import org.helllabs.android.xmp.extension.error
+import org.helllabs.android.xmp.extension.toast
+import org.helllabs.android.xmp.extension.yesNoDialog
 import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.util.*
 import java.io.File
@@ -22,8 +25,7 @@ import java.text.DateFormat
 
 class FilelistActivity :
         BasePlaylistActivity(),
-        PlaylistAdapter.OnItemClickListener,
-        PlaylistAdapter.OnItemLongClickListener {
+        PlaylistAdapter.OnItemClickListener {
 
     private var filelistNavigation: FilelistNavigation? = null
     override var isLoopMode: Boolean = false
@@ -103,8 +105,7 @@ class FilelistActivity :
                 useFilename = false,
                 layoutType = PlaylistAdapter.LAYOUT_LIST
         )
-        mPlaylistAdapter.setOnItemClickListener(this)
-        mPlaylistAdapter.setOnItemLongClickListener(this)
+        mPlaylistAdapter.clickListener = this
 
         modlist_listview.apply {
             layoutManager = LinearLayoutManager(this@FilelistActivity)
@@ -205,7 +206,7 @@ class FilelistActivity :
         }
     }
 
-    override fun onLongItemClick(adapter: PlaylistAdapter, view: View, position: Int) {
+    override fun onItemLongClick(adapter: PlaylistAdapter, view: View, position: Int) {
         val dialogTitle: Int
         val dialogItems: Int
         val dialogOption: Int

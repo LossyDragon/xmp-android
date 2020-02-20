@@ -22,8 +22,7 @@ import java.io.IOException
 
 class PlaylistActivity :
         BasePlaylistActivity(),
-        PlaylistAdapter.OnItemClickListener,
-        PlaylistAdapter.OnItemLongClickListener {
+        PlaylistAdapter.OnItemClickListener {
 
     private var mPlaylist: Playlist? = null
     private var mWrappedAdapter: RecyclerView.Adapter<*>? = null
@@ -87,9 +86,7 @@ class PlaylistActivity :
         }
 
         mRecyclerViewDragDropManager!!.attachRecyclerView(plist_list)
-
-        mPlaylistAdapter.setOnItemClickListener(this)
-        mPlaylistAdapter.setOnItemLongClickListener(this)
+        mPlaylistAdapter.clickListener = this
 
 //        current_list_name.text = name
 //        current_list_description.text = mPlaylist!!.comment
@@ -125,6 +122,7 @@ class PlaylistActivity :
             WrapperAdapterUtils.releaseAll(mWrappedAdapter)
             mWrappedAdapter = null
         }
+
         mPlaylistAdapter.clear()
 
         super.onDestroy()
@@ -142,7 +140,7 @@ class PlaylistActivity :
         }
     }
 
-    override fun onLongItemClick(adapter: PlaylistAdapter, view: View, position: Int) {
+    override fun onItemLongClick(adapter: PlaylistAdapter, view: View, position: Int) {
         MaterialDialog(this, BottomSheet(LayoutMode.WRAP_CONTENT)).show {
             title(text = String.format(getString(R.string.title_playlist_name), name))
             listItems(R.array.dialog_playlist) { _, index, _ ->

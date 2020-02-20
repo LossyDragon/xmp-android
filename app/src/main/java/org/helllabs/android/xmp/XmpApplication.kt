@@ -18,12 +18,9 @@ class XmpApplication : Application() {
     var fileList: MutableList<String>? = null
     val requestQueue: RequestQueue by lazy { newRequestQueue(applicationContext) }
 
-    // Workaround for now. Read notes from its usage.
-    var isThemeChanged: Boolean = false
-
     override fun onCreate() {
         super.onCreate()
-        instance = this
+        //instance = this
 
         // Initialize Preferences
         PrefManager.init(applicationContext)
@@ -40,10 +37,10 @@ class XmpApplication : Application() {
         applyTheme(PrefManager.themePref)
     }
 
-    companion object {
-
-        @get:Synchronized
-        var instance: XmpApplication? = null
-            private set
-    }
+//    companion object {
+//
+//        @get:Synchronized
+//        var instance: XmpApplication? = null
+//            private set
+//    }
 }

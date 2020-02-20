@@ -14,6 +14,8 @@ import android.view.KeyEvent
 import android.view.KeyEvent.*
 import androidx.media.session.MediaButtonReceiver
 import org.helllabs.android.xmp.Xmp
+import org.helllabs.android.xmp.extension.isAtLeastL
+import org.helllabs.android.xmp.extension.isAtLeastO
 import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.service.notifier.LegacyNotifier
 import org.helllabs.android.xmp.service.notifier.ModernNotifier

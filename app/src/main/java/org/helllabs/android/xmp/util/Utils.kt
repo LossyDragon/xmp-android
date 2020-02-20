@@ -1,18 +1,15 @@
 package org.helllabs.android.xmp.util
 
 import android.content.Context
-import android.os.Build
 import android.text.Html
 import android.text.Spanned
 import androidx.appcompat.app.AppCompatDelegate
+import org.helllabs.android.xmp.extension.isAtLeastL
+import org.helllabs.android.xmp.extension.isAtLeastN
+import org.helllabs.android.xmp.extension.isAtLeastP
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
-fun isAtLeastP() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P
-fun isAtLeastL() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP
-fun isAtLeastN() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
-fun isAtLeastO() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
-fun isAtMostN() = Build.VERSION.SDK_INT <= Build.VERSION_CODES.N
 
 /**
  * Get Changelog from html file

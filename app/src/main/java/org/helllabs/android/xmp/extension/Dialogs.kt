@@ -1,4 +1,4 @@
-package org.helllabs.android.xmp.util
+package org.helllabs.android.xmp.extension
 
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.app.Activity
@@ -17,6 +17,7 @@ import kotlinx.android.synthetic.main.dialog_changelog.view.*
 import kotlinx.android.synthetic.main.dialog_input.view.*
 import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.util.getChangelog
 
 fun Activity.fatalError(@StringRes resId: Int? = null, text: String? = null) {
     MaterialDialog(this).show {

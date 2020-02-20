@@ -37,7 +37,7 @@ class ArtistResult :
 
         try {
             val request = ArtistRequest(key, ModArchiveRequest.ARTIST, searchText)
-            request.setOnResponseListener(this).send()
+            request.setOnResponseListener(this).send(xmpApplication().requestQueue)
         } catch (e: UnsupportedEncodingException) {
             handleQueryError()
         }

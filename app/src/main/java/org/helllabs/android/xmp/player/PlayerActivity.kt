@@ -19,6 +19,8 @@ import kotlinx.android.synthetic.main.layout_player_controls.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.browser.PlaylistMenu
+import org.helllabs.android.xmp.extension.toast
+import org.helllabs.android.xmp.extension.yesNoDialog
 import org.helllabs.android.xmp.player.viewer.ChannelViewer
 import org.helllabs.android.xmp.player.viewer.InstrumentViewer
 import org.helllabs.android.xmp.player.viewer.PatternViewer
@@ -29,8 +31,6 @@ import org.helllabs.android.xmp.service.PlayerCallback
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.util.FileUtils
 import org.helllabs.android.xmp.util.Log
-import org.helllabs.android.xmp.util.toast
-import org.helllabs.android.xmp.util.yesNoDialog
 import java.io.File
 import java.io.FileOutputStream
 import java.util.*
@@ -554,12 +554,12 @@ class PlayerActivity : AppCompatActivity() {
             val extras = intent.extras
             if (extras != null) {
                 // fileArray = extras.getStringArray("files");
-                fileList = XmpApplication.instance!!.fileList
+                fileList = (application as XmpApplication).fileList
                 shuffleMode = extras.getBoolean(PARM_SHUFFLE)
                 loopListMode = extras.getBoolean(PARM_LOOP)
                 keepFirst = extras.getBoolean(PARM_KEEPFIRST)
                 start = extras.getInt(PARM_START)
-                XmpApplication.instance!!.fileList = null
+                (application as XmpApplication).fileList = null
             } else {
                 reconnect = true
             }

@@ -5,8 +5,8 @@ import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.preferences.Preferences
 import org.helllabs.android.xmp.util.ModInfo
-import org.helllabs.android.xmp.util.error
-import org.helllabs.android.xmp.util.toast
+import org.helllabs.android.xmp.extension.error
+import org.helllabs.android.xmp.extension.toast
 import java.io.File
 import java.io.IOException
 import java.util.*

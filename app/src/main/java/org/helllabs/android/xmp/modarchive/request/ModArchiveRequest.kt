@@ -1,9 +1,9 @@
 package org.helllabs.android.xmp.modarchive.request
 
+import com.android.volley.RequestQueue
 import com.android.volley.Response
 import com.android.volley.VolleyError
 import com.android.volley.toolbox.StringRequest
-import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.modarchive.response.HardErrorResponse
 import org.helllabs.android.xmp.modarchive.response.ModArchiveResponse
 import org.helllabs.android.xmp.modarchive.response.SoftErrorResponse
@@ -39,11 +39,10 @@ abstract class ModArchiveRequest(
         return this
     }
 
-    fun send() {
+    fun send(requestQueue: RequestQueue) {
         val url = "$SERVER/xml-tools.php?key=$mKey&request=$mRequest"
-        val queue = XmpApplication.instance!!.requestQueue
         val jsObjRequest = StringRequest(url, this, this)
-        queue.add(jsObjRequest)
+        requestQueue.add(jsObjRequest)
     }
 
     override fun onErrorResponse(error: VolleyError) {

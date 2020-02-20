@@ -13,6 +13,7 @@ import com.h6ah4i.android.widget.advrecyclerview.draggable.DraggableItemAdapter
 import com.h6ah4i.android.widget.advrecyclerview.draggable.ItemDraggableRange
 import com.h6ah4i.android.widget.advrecyclerview.utils.AbstractDraggableItemViewHolder
 import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.extension.*
 import org.helllabs.android.xmp.util.Log
 import java.io.File
 import java.util.*
@@ -50,8 +51,7 @@ class PlaylistAdapter :
         setHasStableIds(true)
     }
 
-    private var clickListener: OnItemClickListener? = null
-    private var longClickListener: OnItemLongClickListener? = null
+    var clickListener: OnItemClickListener? = null
 
     val items: MutableList<PlaylistItem>
     var position: Int = 0
@@ -98,7 +98,7 @@ class PlaylistAdapter :
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.onBind(items[position], clickListener, longClickListener)
+        items[position].let { holder.onBind(it) }
     }
 
     override fun getItemCount(): Int = items.size
@@ -184,16 +184,12 @@ class PlaylistAdapter :
         private val infoText: TextView = itemView.findViewById(R.id.plist_info)
         private val image: ImageView = itemView.findViewById(R.id.plist_image)
 
-        fun onBind(
-                item: PlaylistItem,
-                clickListener: OnItemClickListener?,
-                longClickListener: OnItemLongClickListener?
-        ) {
+        fun onBind(item: PlaylistItem) {
 
             if (item.type == PlaylistItem.TYPE_DIRECTORY) {
-                infoText.setTypeface(typeface, Typeface.ITALIC)
+                infoText.italic()
             } else {
-                infoText.setTypeface(typeface, Typeface.NORMAL)
+                infoText.normal()
             }
 
             titleText.text = if (useFilename) item.filename else item.name
@@ -201,17 +197,17 @@ class PlaylistAdapter :
 
             if (item.imageRes > 0) {
                 image.setImageResource(item.imageRes)
-                image.visibility = View.VISIBLE
+                image.show()
             } else {
-                image.visibility = View.GONE
+                image.hide()
             }
 
-            itemView.setOnClickListener {
-                clickListener!!.onItemClick(adapter, it, adapterPosition)
+            itemView.click {
+                clickListener?.onItemClick(adapter, it, adapterPosition)
             }
 
-            itemView.setOnLongClickListener {
-                longClickListener!!.onLongItemClick(adapter, it, adapterPosition)
+            itemView.longClick {
+                clickListener?.onItemLongClick(adapter, it, adapterPosition)
                 true
             }
         }
@@ -219,18 +215,7 @@ class PlaylistAdapter :
 
     interface OnItemClickListener {
         fun onItemClick(adapter: PlaylistAdapter, view: View, position: Int)
-    }
-
-    interface OnItemLongClickListener {
-        fun onLongItemClick(adapter: PlaylistAdapter, view: View, position: Int)
-    }
-
-    fun setOnItemClickListener(listener: OnItemClickListener) {
-        clickListener = listener
-    }
-
-    fun setOnItemLongClickListener(listener: OnItemLongClickListener) {
-        longClickListener = listener
+        fun onItemLongClick(adapter: PlaylistAdapter, view: View, position: Int)
     }
 
     companion object {

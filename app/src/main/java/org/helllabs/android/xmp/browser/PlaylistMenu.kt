@@ -20,6 +20,10 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.activity_playlist_menu.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.browser.playlist.*
+import org.helllabs.android.xmp.extension.error
+import org.helllabs.android.xmp.extension.fatalError
+import org.helllabs.android.xmp.extension.showChangeDir
+import org.helllabs.android.xmp.extension.showChangeLog
 import org.helllabs.android.xmp.modarchive.Search
 import org.helllabs.android.xmp.player.PlayerActivity
 import org.helllabs.android.xmp.preferences.PrefManager
@@ -30,8 +34,7 @@ import java.io.File
 
 class PlaylistMenu :
         AppCompatActivity(),
-        PlaylistAdapter.OnItemClickListener,
-        PlaylistAdapter.OnItemLongClickListener {
+        PlaylistAdapter.OnItemClickListener {
 
     private var mediaPath: String? = null
     private var playlistAdapter: PlaylistAdapter? = null
@@ -61,8 +64,7 @@ class PlaylistMenu :
         }
 
         playlistAdapter = PlaylistAdapter(this, mutableListOf(), false, PlaylistAdapter.LAYOUT_CARD)
-        playlistAdapter!!.setOnItemClickListener(this)
-        playlistAdapter!!.setOnItemLongClickListener(this)
+        playlistAdapter!!.clickListener = this
 
         plist_menu_list.apply {
             layoutManager = LinearLayoutManager(this@PlaylistMenu)
@@ -169,7 +171,7 @@ class PlaylistMenu :
         }
     }
 
-    override fun onLongItemClick(adapter: PlaylistAdapter, view: View, position: Int) {
+    override fun onItemLongClick(adapter: PlaylistAdapter, view: View, position: Int) {
         if (position == 0) {
             showChangeDir(mediaPath!!) { result, path ->
                 if (result)
@@ -205,7 +207,6 @@ class PlaylistMenu :
                         getString(R.string.browser_filelist_title),
                         String.format(getString(R.string.browser_filelist_desc, mediaPath))
                 )
-        browserItem.imageRes = R.drawable.ic_browser
         playlistAdapter!!.add(browserItem)
 
         for (name in listNoSuffix()) {
@@ -214,7 +215,6 @@ class PlaylistMenu :
                     name = name,
                     comment = Playlist.readComment(this, name)
             )
-            item.imageRes = R.drawable.ic_list
             playlistAdapter!!.add(item)
         }
 

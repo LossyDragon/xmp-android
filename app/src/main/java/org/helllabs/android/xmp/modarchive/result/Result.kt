@@ -9,6 +9,7 @@ import android.content.Intent
 import android.os.Bundle
 
 import androidx.appcompat.app.AppCompatActivity
+import org.helllabs.android.xmp.XmpApplication
 
 abstract class Result : AppCompatActivity() {
 
@@ -44,4 +45,6 @@ abstract class Result : AppCompatActivity() {
     protected fun handleQueryError() {
         handleError(Throwable("Bad search string. "))
     }
+
+    protected fun xmpApplication() = application as XmpApplication
 }

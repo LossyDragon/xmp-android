@@ -16,6 +16,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.preference.PreferenceManager
+import org.helllabs.android.xmp.extension.error
 import org.helllabs.android.xmp.util.*
 
 class Playlist @Throws(IOException::class)
@@ -48,7 +49,6 @@ constructor(context: Context, val name: String) {
     }
 
     init {
-
         val file = ListFile(name)
         if (file.exists()) {
             Log.i(TAG, "Read playlist $name")
@@ -95,10 +95,11 @@ constructor(context: Context, val name: String) {
             saveModes = true
         }
         if (saveModes) {
-            val editor = mPrefs.edit()
-            editor.putBoolean(optionName(name, SHUFFLE_MODE), isShuffleMode)
-            editor.putBoolean(optionName(name, LOOP_MODE), isLoopMode)
-            editor.apply()
+            mPrefs.edit().apply {
+                putBoolean(optionName(name, SHUFFLE_MODE), isShuffleMode)
+                putBoolean(optionName(name, LOOP_MODE), isLoopMode)
+                apply()
+            }
         }
     }
 
@@ -278,19 +279,21 @@ constructor(context: Context, val name: String) {
                 return false
             }
 
-            val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-            val editor = prefs.edit()
-            editor.putBoolean(
-                    optionName(newName, SHUFFLE_MODE),
-                    prefs.getBoolean(optionName(oldName, SHUFFLE_MODE), DEFAULT_SHUFFLE_MODE)
-            )
-            editor.putBoolean(
-                    optionName(newName, LOOP_MODE),
-                    prefs.getBoolean(optionName(oldName, LOOP_MODE), DEFAULT_LOOP_MODE)
-            )
-            editor.remove(optionName(oldName, SHUFFLE_MODE))
-            editor.remove(optionName(oldName, LOOP_MODE))
-            editor.apply()
+            PreferenceManager.getDefaultSharedPreferences(context).apply {
+                this.edit().run {
+                    putBoolean(
+                            optionName(newName, SHUFFLE_MODE),
+                            getBoolean(optionName(oldName, SHUFFLE_MODE), DEFAULT_SHUFFLE_MODE)
+                    )
+                    putBoolean(
+                            optionName(newName, LOOP_MODE),
+                            getBoolean(optionName(oldName, LOOP_MODE), DEFAULT_LOOP_MODE)
+                    )
+                    remove(optionName(oldName, SHUFFLE_MODE))
+                    remove(optionName(oldName, LOOP_MODE))
+                    apply()
+                }
+            }
 
             return true
         }
@@ -305,11 +308,13 @@ constructor(context: Context, val name: String) {
             ListFile(name).delete()
             CommentFile(name).delete()
 
-            val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-            val editor = prefs.edit()
-            editor.remove(optionName(name, SHUFFLE_MODE))
-            editor.remove(optionName(name, LOOP_MODE))
-            editor.apply()
+            PreferenceManager.getDefaultSharedPreferences(context).apply {
+                this.edit().run {
+                    remove(optionName(name, SHUFFLE_MODE))
+                    remove(optionName(name, LOOP_MODE))
+                    apply()
+                }
+            }
         }
 
         /**
