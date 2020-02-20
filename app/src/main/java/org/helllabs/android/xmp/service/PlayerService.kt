@@ -361,17 +361,17 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
 
                 Log.i(TAG, "Enter play loop")
 
+                Xmp.getModVars(vars)
+
+                // MetaData necessary for mod trackers? - Yeah, for android wear.
+                val metaData = MediaMetadataCompat.Builder().apply {
+                    putString(MediaMetadataCompat.METADATA_KEY_TITLE, Xmp.getModName())
+                    putString(MediaMetadataCompat.METADATA_KEY_ARTIST, Xmp.getModType())
+                    putLong(MediaMetadataCompat.METADATA_KEY_DURATION, vars[0].toLong())
+                }.build()
+                mediaSession?.setMetadata(metaData)
+
                 do {
-                    Xmp.getModVars(vars)
-
-                    // MetaData necessary for mod trackers? - Yeah, for android wear.
-                    val metaData = MediaMetadataCompat.Builder().apply {
-                        putString(MediaMetadataCompat.METADATA_KEY_TITLE, Xmp.getModName())
-                        putString(MediaMetadataCompat.METADATA_KEY_ARTIST, Xmp.getModType())
-                        putLong(MediaMetadataCompat.METADATA_KEY_DURATION, vars[0].toLong())
-                    }.build()
-                    mediaSession?.setMetadata(metaData)
-
                     while (cmd == CMD_NONE) {
                         discardBuffer = false
 
@@ -623,7 +623,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
     }
 
     private fun onPlayPause() {
-        synchronized(this) { // Think.gif
+        synchronized(this) {
             isPlayerPaused = isPlayerPaused xor true
             updateNotification()
             notifyPause()
