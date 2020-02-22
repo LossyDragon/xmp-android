@@ -564,6 +564,8 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         else
             end(RESULT_CANT_OPEN_AUDIO)
 
+        Xmp.deinit()
+
         super.onDestroy()
     }
 
@@ -713,7 +715,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
 
         isAlive = false
         Xmp.stopModule()
-        Xmp.deinit()
+
 
         onServiceKill()
     }
