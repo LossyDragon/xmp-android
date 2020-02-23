@@ -14,6 +14,7 @@ class Watchdog(private val timeout: Int) : Runnable {
         this.listener = listener
     }
 
+    // The runnable of the watchdog, if the threshold is met, it calls the interface to be executed.
     override fun run() {
         while (running) {
             if (--timer <= 0) {
@@ -28,21 +29,24 @@ class Watchdog(private val timeout: Int) : Runnable {
         }
     }
 
+    // Initialize the watchdog to start counting.
     fun start() {
         running = true
         refresh()
         thread = Thread(this)
-        thread!!.start()
+        thread?.start()
     }
 
+    // Stop and shutdown the watchdog.
     fun stop() {
         running = false
         try {
-            thread!!.join()
+            thread?.join()
         } catch (e: InterruptedException) {
         }
     }
 
+    // Called when everything is functioning okay. To reset the counter/
     fun refresh() {
         timer = timeout
     }

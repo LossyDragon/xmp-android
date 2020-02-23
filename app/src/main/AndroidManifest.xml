@@ -10,6 +10,11 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
+    <!--Used by Android Auto-->
+    <uses-feature
+        android:name="android.hardware.type.automotive"
+        android:required="false" />
+
     <!-- requestLegacyExternalStorage for Android Q -->
     <application
         android:name="XmpApplication"
@@ -24,6 +29,15 @@
         android:theme="@style/AppTheme"
         tools:ignore="AllowBackup,UnusedAttribute">
 
+        <!--Used by Android Auto-->
+        <meta-data
+            android:name="com.google.android.gms.car.application"
+            android:resource="@xml/automotive_app_desc" />
+
+        <meta-data
+            android:name="com.google.android.gms.car.notification.SmallIcon"
+            android:resource="@drawable/ic_xmp_auto" />
+
         <activity
             android:name=".browser.PlaylistMenu"
             android:configChanges="keyboardHidden|orientation|screenSize"
@@ -36,7 +50,7 @@
         </activity>
 
         <activity
-            android:name=".player.PlayerActivity"
+            android:name=".amvp.activity.PlayerActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:launchMode="singleTop"
             android:theme="@style/AppTheme.NoActionBar">
@@ -226,6 +240,20 @@
         <service
             android:name=".service.PlayerService"
             android:exported="false" />
+
+        <!-- Android Auto Service -->
+        <service
+            android:name=".service.auto.AutoService"
+            android:enabled="true"
+            android:exported="true"
+            tools:ignore="ExportedService">
+            <intent-filter>
+                <action android:name="android.media.browse.MediaBrowserService" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.media.action.MEDIA_PLAY_FROM_SEARCH"/>
+            </intent-filter>
+        </service>
 
         <!-- Receivers -->
         <receiver android:name=".service.receiver.RemoteControlReceiver">
