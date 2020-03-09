@@ -37,7 +37,7 @@ class TitleResult :
 
         try {
             val request = ModuleRequest(key, ModArchiveRequest.FILENAME_OR_TITLE, searchText)
-            request.setOnResponseListener(this).send(xmpApplication().requestQueue)
+            request.setOnResponseListener(this).send(this)
         } catch (e: UnsupportedEncodingException) {
             handleQueryError()
         }

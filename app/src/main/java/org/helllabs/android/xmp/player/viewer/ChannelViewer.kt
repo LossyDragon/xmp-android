@@ -16,7 +16,6 @@ import org.helllabs.android.xmp.player.to2d
 import org.helllabs.android.xmp.service.ModInterface
 import org.helllabs.android.xmp.util.Log
 
-
 class ChannelViewer(context: Context) : Viewer(context) {
     private val scopePaint: Paint
     private val scopeLinePaint: Paint
@@ -252,13 +251,6 @@ class ChannelViewer(context: Context) : Viewer(context) {
 
     override fun setRotation(value: Int) {
         super.setRotation(value)
-
-        // Should use canvasWidth but it's not updated yet
-        // width deprecated in API level 15. Our min is 16
-        //val width = (context as Activity).windowManager.defaultDisplay.width
-        //val size = Point()
-        //(context as Activity).windowManager.defaultDisplay.getSize(size)
-        //val width = size.x
 
         val metrics: DisplayMetrics = context.resources.displayMetrics
         val width = metrics.widthPixels

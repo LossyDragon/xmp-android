@@ -1,10 +1,10 @@
 package org.helllabs.android.xmp.preferences.about
 
-import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.pref_item_about.*
+import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.util.getChangelog
@@ -23,7 +23,7 @@ class About : AppCompatActivity() {
             title = getString(R.string.pref_about_title)
         }
 
-        version_name.text = getString(R.string.about_version, getVersion())
+        version_name.text = getString(R.string.about_version, BuildConfig.VERSION_NAME)
         xmp_version.text = getString(R.string.about_xmp, Xmp.getVersion())
         text_changelog.text = getChangelog()
     }
@@ -33,21 +33,5 @@ class About : AppCompatActivity() {
             onBackPressed()
         }
         return super.onOptionsItemSelected(item)
-    }
-
-    // Get the app's version number
-    private fun getVersion(): String {
-        return try {
-            val packageInfo = packageManager.getPackageInfo(packageName, 0)
-            var version = packageInfo.versionName
-            val end = version.indexOf(' ')
-            if (end > 0) {
-                version = version.substring(0, end)
-            }
-
-            version
-        } catch (e: PackageManager.NameNotFoundException) {
-            ""
-        }
     }
 }

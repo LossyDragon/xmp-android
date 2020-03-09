@@ -2,86 +2,98 @@ package org.helllabs.android.xmp.service.auto
 
 import android.content.Context
 import android.content.Intent
-import android.graphics.BitmapFactory
+import android.graphics.Bitmap
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.media.AudioManager.STREAM_MUSIC
-import android.media.MediaMetadata
 import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
-import android.support.v4.media.MediaBrowserCompat.MediaItem
+import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaBrowserCompat.MediaItem.FLAG_BROWSABLE
 import android.support.v4.media.MediaBrowserCompat.MediaItem.FLAG_PLAYABLE
 import android.support.v4.media.MediaDescriptionCompat
-import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.MediaMetadataCompat.*
+import android.support.v4.media.MediaMetadataCompat.Builder
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS
 import android.support.v4.media.session.MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS
+import android.support.v4.media.session.PlaybackStateCompat
 import android.support.v4.media.session.PlaybackStateCompat.*
-import android.support.v4.media.session.PlaybackStateCompat.Builder
+import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.graphics.drawable.toBitmap
 import androidx.media.AudioManagerCompat.AUDIOFOCUS_GAIN
 import androidx.media.MediaBrowserServiceCompat
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
-import org.helllabs.android.xmp.Xmp.INTERP_LINEAR
-import org.helllabs.android.xmp.Xmp.INTERP_NEAREST
-import org.helllabs.android.xmp.Xmp.INTERP_SPLINE
 import org.helllabs.android.xmp.browser.playlist.Playlist
 import org.helllabs.android.xmp.browser.playlist.PlaylistItem
 import org.helllabs.android.xmp.browser.playlist.listNoSuffix
 import org.helllabs.android.xmp.extension.isAtLeastO
 import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.service.utils.Watchdog
+import org.helllabs.android.xmp.util.FileUtils
 import org.helllabs.android.xmp.util.InfoCache
 import org.helllabs.android.xmp.util.Log
 
 // TODO: [Guntech] Dune appears to not to play correctly.
-//      I don't hear anything from channel 5?....
+//      I don't hear anything from channel 5; Emu quirk or what?
+//      Everything other song appears fine.
 // TODO: Playlist / Queue
 // TODO: Shuffle and Loop
 // TODO: Cleanup this mess
 // TODO: Must !MEET! criteria - https://developer.android.com/docs/quality-guidelines/car-app-quality
 class AutoService : MediaBrowserServiceCompat(), AudioManager.OnAudioFocusChangeListener {
 
-    private lateinit var becomingNoisyReceiver: BecomingNoisyReceiver
+    companion object {
+        private val TAG = AutoService::class.java.simpleName
 
-    private var session: MediaSessionCompat? = null
+        const val ROOT = "root"
+        const val CUSTOM_ACTION_SHUFFLE = "shuffle"
+        const val CUSTOM_ACTION_REPEAT = "repeat"
+        const val CUSTOM_ACTION_SEQUENCES = "allSequences"
 
-    private val metadatasPlaylist: MutableMap<String, MediaMetadataCompat> = mutableMapOf()
-    private val metadatasItems: MutableMap<String, MediaMetadataCompat> = mutableMapOf()
+        private const val MIN_BUFFER_MS = 80
+        private const val MAX_BUFFER_MS = 1000
 
+        private const val CMD_NONE = 0
+        private const val CMD_NEXT = 1
+        private const val CMD_PREV = 2
+        private const val CMD_STOP = 3
+
+        private const val DUCK_VOLUME = 0x500
+
+        const val EXTRA_MEDIA_SEARCH_SUPPORTED = "android.media.browse.SEARCH_SUPPORTED"
+    }
+
+    private lateinit var becomingNoisyReceiver: NoisyReceiver
+
+    private val metadatasPlaylist: MutableMap<String, MediaDescriptionCompat> = mutableMapOf()
+    private val metadatasItems: MutableMap<String, MediaDescriptionCompat> = mutableMapOf()
+
+    var xmpVolume = 0
+    var sampleRate = 0
     var isLoaded = false
-
-    private var playThread: Thread? = null
-
-    private var currentSongName: String? = null
-
+    var isAllSequence = false
     var isLoopEnabled = false
     var isShuffleEnabled = false
 
-    @Volatile
-    private var cmd: Int = 0
-
-    private var playerFileName: String? = null
     private var sequenceNumber: Int = 0
-    private var restart: Boolean = false
+    private var isPlayerPaused: Boolean = false
     private var discardBuffer: Boolean = false
-    var isPlayerPaused: Boolean = false
+    private var playThread: Thread? = null
+    private var playerFileName: String? = null
+    private var currentSongName: String? = null
+    private var currentPlaybackState: Int? = null
+    private var audioManager: AudioManager? = null
+    private var session: MediaSessionCompat? = null
     private var watchdog: Watchdog = Watchdog(10)
 
-    val playlists = mutableListOf<String>()
-
-    private var audioManager: AudioManager? = null
-
+    @Volatile
+    private var cmd: Int = 0
     @Volatile
     private var hasFocus = false
-
-    var xmpVolume = 0
-
-    var sampleRate =  0
 
     override fun onCreate() {
         super.onCreate()
@@ -92,12 +104,13 @@ class AutoService : MediaBrowserServiceCompat(), AudioManager.OnAudioFocusChange
             setSessionToken(sessionToken)
         }
 
-        becomingNoisyReceiver = BecomingNoisyReceiver(this, sessionToken!!)
+        becomingNoisyReceiver = NoisyReceiver(this, sessionToken!!)
 
         audioManager = applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
         /* XMP */
         sampleRate = PrefManager.samplingRate.toInt()
+        isAllSequence = PrefManager.allSequences
 
         var bufferMs = PrefManager.bufferMS
         when {
@@ -114,14 +127,10 @@ class AutoService : MediaBrowserServiceCompat(), AudioManager.OnAudioFocusChange
             setOnTimeoutListener(object : Watchdog.OnTimeoutListener {
                 override fun onTimeout() {
                     Log.w(TAG, "Stopped by watchdog")
-                    stopSelf()
+                    playThread?.interrupt()
+                    playThread = null
                 }
             })
-        }
-
-        listNoSuffix().forEach {
-            playlists.add(it)
-            println(it)
         }
     }
 
@@ -133,16 +142,16 @@ class AutoService : MediaBrowserServiceCompat(), AudioManager.OnAudioFocusChange
     override fun onDestroy() {
         super.onDestroy()
         Log.d(TAG, "onDestroy")
-        deinit()
+        deInit()
     }
 
     override fun onTaskRemoved(rootIntent: Intent) {
         super.onTaskRemoved(rootIntent)
         Log.d(TAG, "onTaskRemoved")
-        deinit()
+        deInit()
     }
 
-    private fun deinit() {
+    private fun deInit() {
         isPlayerPaused = true
 
         cmd = CMD_STOP
@@ -159,7 +168,7 @@ class AutoService : MediaBrowserServiceCompat(), AudioManager.OnAudioFocusChange
         watchdog.stop()
 
         Xmp.stopAudio()
-        Xmp.releaseModule()
+        // Xmp.releaseModule()
         Xmp.deinit()
 
         stopSelf()
@@ -189,71 +198,125 @@ class AutoService : MediaBrowserServiceCompat(), AudioManager.OnAudioFocusChange
         }
     }
 
-//    @Suppress("SameParameterValue")
-//    private fun retrievePlaylists(resourceName: String, flag: Int): MediaItem {
-//        //println("resourceName $resourceName")
-//        val mediaMetadata: MediaMetadataCompat = MediaMetadataCompat.Builder()
-//                .putString(MediaMetadata.METADATA_KEY_MEDIA_ID, resourceName)
-//                .putString(MediaMetadata.METADATA_KEY_TITLE, resourceName)
-//                .build()
-//        metadatasPlaylist[mediaMetadata.getString(MediaMetadata.METADATA_KEY_MEDIA_ID)] = mediaMetadata
-//        return MediaItem(mediaMetadata.description, flag)
-//    }
+    @Suppress("SameParameterValue")
+    private fun retrieveRoot(
+            title: String,
+            bitmap: Bitmap,
+            flag: Int
+    ): MediaBrowserCompat.MediaItem {
+        // println("resourceName $title")
+        val mediaDescriptionBuilder = MediaDescriptionCompat.Builder().apply {
+            setMediaId(title)
+            setTitle(title)
+            setIconBitmap(bitmap)
+        }
+        return MediaBrowserCompat.MediaItem(mediaDescriptionBuilder.build(), flag)
+    }
 
     @Suppress("SameParameterValue")
-    private fun retrievePlaylistItems(resourceName: PlaylistItem, flag: Int): MediaItem {
-        val bitmap = BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher_foreground)
-        //println("resourceName $resourceName")
-        val mediaMetadata: MediaMetadataCompat = MediaMetadataCompat.Builder()
-                .putString(MediaMetadata.METADATA_KEY_MEDIA_ID, resourceName.name)
-                .putString(MediaMetadata.METADATA_KEY_TITLE, resourceName.name)
-                .putBitmap(METADATA_KEY_ALBUM_ART, bitmap)
-                .putString("filepath", resourceName.file!!.absolutePath)
-                .build()
-        metadatasItems[mediaMetadata.getString(MediaMetadata.METADATA_KEY_MEDIA_ID)] = mediaMetadata
-        return MediaItem(mediaMetadata.description, flag)
+    private fun retrievePlaylists(resourceName: String, flag: Int): MediaBrowserCompat.MediaItem {
+        // println("resourceName $resourceName")
+        val mediaDescriptionBuilder = MediaDescriptionCompat.Builder().apply {
+            setMediaId(resourceName)
+            setTitle(resourceName)
+            setIconBitmap(getBitmapIcon())
+        }.build()
+        metadatasPlaylist[mediaDescriptionBuilder.mediaId.toString()] = mediaDescriptionBuilder
+        return MediaBrowserCompat.MediaItem(mediaDescriptionBuilder, flag)
     }
 
-    override fun onGetRoot(clientPackageName: String, clientUid: Int, rootHints: Bundle?): BrowserRoot? {
+    @Suppress("SameParameterValue")
+    private fun retrievePlaylistItems(
+            resourceName: PlaylistItem,
+            flag: Int
+    ): MediaBrowserCompat.MediaItem {
+        // println("resourceName $resourceName")
+        val mediaDescriptionBuilder = MediaDescriptionCompat.Builder().apply {
+            setMediaId(resourceName.name)
+            setTitle(resourceName.name)
+            setIconBitmap(getBitmapIcon())
+            setExtras(Bundle().apply {
+                putString("filepath", resourceName.file!!.absolutePath)
+            })
+        }.build()
+        metadatasItems[mediaDescriptionBuilder.mediaId.toString()] = mediaDescriptionBuilder
+        return MediaBrowserCompat.MediaItem(mediaDescriptionBuilder, flag)
+    }
+
+    override fun onGetRoot(
+            clientPackageName: String,
+            clientUid: Int,
+            rootHints: Bundle?
+    ): BrowserRoot? {
         println("onGetRoot")
-        return BrowserRoot(ROOT, null)
+        println("clientPackageName $clientPackageName")
+        println("clientUid $clientUid")
+        println("rootHints $rootHints")
+
+        val extras = Bundle().apply {
+            putBoolean(EXTRA_MEDIA_SEARCH_SUPPORTED, true)
+        }
+
+        return BrowserRoot(ROOT, extras)
     }
 
-    override fun onLoadChildren(parentId: String, result: Result<MutableList<MediaItem>>) {
-        val children: ArrayList<MediaItem> = ArrayList()
-
+    override fun onLoadChildren(
+            parentId: String,
+            result: Result<MutableList<MediaBrowserCompat.MediaItem>>
+    ) {
+        val children: ArrayList<MediaBrowserCompat.MediaItem> = arrayListOf()
         println("onLoadChildren $parentId")
 
-        if (ROOT == parentId) {
-            playlists.map { item ->
-                children.add(MediaItem(MediaDescriptionCompat.Builder()
-                        .setMediaId(item)
-                        .setTitle(item)
-                        .build(),
-                        FLAG_BROWSABLE
-                ))
+        when (parentId) {
+            ROOT -> {
+                // Initial root listing as Browsable
+                children.add(retrieveRoot("Playlists", getPlaylistsIcon(), FLAG_BROWSABLE))
+                children.add(retrieveRoot("Explorer", getExplorerIcon(), FLAG_BROWSABLE))
             }
-        } else if (parentId != ROOT) {
-            val playlistItems = Playlist(this, parentId).list.toMutableList()
-            playlistItems.forEach {
-                children.add(retrievePlaylistItems(it, FLAG_PLAYABLE))
+            "Playlists" -> {
+                // Playlist listing as Playable
+                listNoSuffix().map {
+                    children.add(retrievePlaylists(it, FLAG_PLAYABLE))
+                }
+            }
+            "Explorer" -> {
+                // Playlist listing as Browsable
+                listNoSuffix().map {
+                    children.add(retrievePlaylists(it, FLAG_BROWSABLE))
+                }
+            }
+            else -> {
+                // Playlist Items from Browsable
+                val playlistItems = Playlist(this, parentId).list
+                playlistItems.forEach {
+                    children.add(retrievePlaylistItems(it, FLAG_PLAYABLE))
+                }
             }
         }
 
-        if (children.isEmpty())
-            result.detach()
-        else
-            result.sendResult(children)
+        result.sendResult(children)
+    }
+
+    override fun onSearch(
+            query: String,
+            extras: Bundle?,
+            result: Result<MutableList<MediaBrowserCompat.MediaItem>>
+    ) {
+        println("onSearch")
+        println("query $query")
+        println("extras $extras")
+        println("result $result")
+        super.onSearch(query, extras, result)
     }
 
     private val callback = object : MediaSessionCompat.Callback() {
-        private var currentStream: MediaMetadataCompat? = null
+        private var currentStream: MediaDescriptionCompat? = null
 
         private fun playCurrentStream() {
             isPlayerPaused = false
             Xmp.stopModule()
 
-            val path = currentStream!!.getString("filepath").toString()
+            val path = currentStream!!.extras!!.getString("filepath")!!
 
             println("playCurrentStream $path")
 
@@ -261,11 +324,9 @@ class AutoService : MediaBrowserServiceCompat(), AudioManager.OnAudioFocusChange
                 throw RuntimeException("Bad Module")
             }
 
-            if (!hasFocus) {
-                hasFocus = requestAudioFocus()
-            }
-
-            session!!.setMetadata(currentStream)
+            hasFocus = requestAudioFocus()
+            if (!hasFocus)
+                throw RuntimeException("playCurrentStream AudioFocus failed")
 
             playerFileName = path
 
@@ -274,10 +335,6 @@ class AutoService : MediaBrowserServiceCompat(), AudioManager.OnAudioFocusChange
                 playThread!!.start()
                 watchdog.start()
             }
-
-            if (!hasFocus)
-                throw RuntimeException("playCurrentStream AudioFocus failed")
-
         }
 
         override fun onPlayFromMediaId(mediaId: String, extras: Bundle) {
@@ -302,7 +359,6 @@ class AutoService : MediaBrowserServiceCompat(), AudioManager.OnAudioFocusChange
 
         override fun onPlay() {
             becomingNoisyReceiver.register()
-            println("onPlay " + currentStream!!.getString(METADATA_KEY_MEDIA_ID))
             if (isPlayerPaused && requestAudioFocus()) {
                 Xmp.restartAudio()
                 isPlayerPaused = false
@@ -312,7 +368,6 @@ class AutoService : MediaBrowserServiceCompat(), AudioManager.OnAudioFocusChange
 
         override fun onPause() {
             becomingNoisyReceiver.unregister()
-            println("onPause $isPlayerPaused")
             if (!isPlayerPaused) {
                 Xmp.stopAudio()
                 isPlayerPaused = true
@@ -321,13 +376,6 @@ class AutoService : MediaBrowserServiceCompat(), AudioManager.OnAudioFocusChange
         }
 
         override fun onSkipToNext() {
-            for (index in playlists.indices) {
-                if (currentStream!!.getString(METADATA_KEY_MEDIA_ID) == playlists[index]) {
-                    currentStream = metadatasPlaylist[playlists[(index + 1) % playlists.size]]
-                    break
-                }
-            }
-
             Xmp.stopModule()
             cmd = CMD_NEXT
             if (isPlayerPaused) {
@@ -337,13 +385,6 @@ class AutoService : MediaBrowserServiceCompat(), AudioManager.OnAudioFocusChange
         }
 
         override fun onSkipToPrevious() {
-            for (index in playlists.indices) {
-                if (currentStream!!.getString(METADATA_KEY_MEDIA_ID) == playlists[index]) {
-                    currentStream = metadatasPlaylist[playlists[playlists.size + (index - 1) % playlists.size]]
-                    break
-                }
-            }
-
             Xmp.stopModule()
             cmd = CMD_PREV
             if (isPlayerPaused) {
@@ -355,7 +396,6 @@ class AutoService : MediaBrowserServiceCompat(), AudioManager.OnAudioFocusChange
 
         override fun onStop() {
             super.onStop()
-            println("OnStop")
 
             if (!isPlayerPaused) {
                 cmd = CMD_STOP
@@ -372,23 +412,31 @@ class AutoService : MediaBrowserServiceCompat(), AudioManager.OnAudioFocusChange
         }
 
         override fun onPlayFromSearch(query: String, extras: Bundle) {
+            println("onPlayFromSearch")
+            println("Query: $query")
+            println("extras: $extras")
             onPlay()
         }
 
-        override fun onCustomAction(action: String?, extras: Bundle?) {
+        override fun onCustomAction(action: String, extras: Bundle?) {
             println("Action: $action")
 
-            if (action == "loop") {
+            if (action == CUSTOM_ACTION_REPEAT) {
                 isLoopEnabled = !isLoopEnabled
                 println("loop $isLoopEnabled")
             }
 
-            if (action == "shuffle") {
+            if (action == CUSTOM_ACTION_SHUFFLE) {
                 isShuffleEnabled = !isShuffleEnabled
                 println("shuffle $isShuffleEnabled")
             }
 
-            //We should update our action buttons
+            if (action == CUSTOM_ACTION_SEQUENCES) {
+                isAllSequence = !isAllSequence
+                println("allSeq $isAllSequence")
+            }
+
+            // We should update our action buttons
             playbackState()
 
             super.onCustomAction(action, extras)
@@ -396,22 +444,22 @@ class AutoService : MediaBrowserServiceCompat(), AudioManager.OnAudioFocusChange
     }
 
     private fun requestAudioFocus(): Boolean {
-        val request: Int = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val request: Int = if (isAtLeastO()) {
             audioManager!!.requestAudioFocus(
-                    AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
-                            .setAudioAttributes(
-                                    AudioAttributes
-                                            .Builder()
-                                            .setLegacyStreamType(STREAM_MUSIC)
-                                            .build())
-                            .setOnAudioFocusChangeListener(this@AutoService)
-                            .build())
+                    AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN).run {
+                        setOnAudioFocusChangeListener(this@AutoService)
+                        setAudioAttributes(AudioAttributes.Builder().run {
+                            setUsage(AudioAttributes.USAGE_MEDIA)
+                            setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                            build()
+                        })
+                    }.build()
+            )
         } else {
             @Suppress("DEPRECATION")
             audioManager!!.requestAudioFocus(this@AutoService, STREAM_MUSIC, AUDIOFOCUS_GAIN)
         }
 
-        hasFocus = true
         return request == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
     }
 
@@ -427,27 +475,52 @@ class AutoService : MediaBrowserServiceCompat(), AudioManager.OnAudioFocusChange
         }
     }
 
-    //TODO: Could be better, but a playstate is always called first before a null update
-    private var currentPlaybackState: Int? = null
     private fun playbackState(state: Int? = null) {
         if (state != null)
             currentPlaybackState = state
 
-        // TODO Need a Shuffle-Off icon, colors don't work
         session!!.setPlaybackState(
-                Builder()
-                        .setActions(ACTION_PLAY or
-                                ACTION_PAUSE or
-                                ACTION_SKIP_TO_NEXT or
-                                ACTION_SKIP_TO_PREVIOUS or
-                                ACTION_SEEK_TO
+                PlaybackStateCompat.Builder()
+                        .setActions(getPlaybackActions())
+                        .addCustomAction(
+                                CUSTOM_ACTION_REPEAT,
+                                getString(R.string.button_toggle_loop),
+                                if (isLoopEnabled) R.drawable.ic_auto_repeat_on
+                                else R.drawable.ic_auto_repeat_off
                         )
-                        .addCustomAction("loop", "Loop", if (isLoopEnabled) R.drawable.ic_repeat_on else R.drawable.ic_repeat_off)
-                        .addCustomAction("shuffle", "Shuffle", if (isShuffleEnabled) R.drawable.ic_shuffle_on else R.drawable.ic_shuffle_off)
-                        .setState(currentPlaybackState!!, Xmp.time().toLong(), 1f, SystemClock.elapsedRealtime())
+                        .addCustomAction(
+                                CUSTOM_ACTION_SHUFFLE,
+                                getString(R.string.button_toggle_shuffle),
+                                if (isShuffleEnabled) R.drawable.ic_auto_shuffle_on
+                                else R.drawable.ic_auto_shuffle_off
+                        )
+                        .addCustomAction(
+                                CUSTOM_ACTION_SEQUENCES,
+                                getString(R.string.sheet_button_allseqs),
+                                if (isAllSequence) R.drawable.ic_auto_sequence_on
+                                else R.drawable.ic_auto_sequence_off
+                        )
+                        .setState(currentPlaybackState!!,
+                                Xmp.time().toLong(),
+                                1f,
+                                SystemClock.elapsedRealtime()
+                        )
                         .build()
         )
     }
+
+    private fun getPlaybackActions(): Long = ACTION_PLAY or ACTION_PAUSE or ACTION_SKIP_TO_NEXT or
+            ACTION_SKIP_TO_PREVIOUS or ACTION_SEEK_TO
+
+    private fun getBitmapIcon(): Bitmap =
+            AppCompatResources.getDrawable(
+                    applicationContext, R.mipmap.ic_launcher_foreground)!!.toBitmap()
+
+    private fun getExplorerIcon(): Bitmap =
+            AppCompatResources.getDrawable(applicationContext, R.drawable.ic_folder)!!.toBitmap()
+
+    private fun getPlaylistsIcon(): Bitmap =
+            AppCompatResources.getDrawable(applicationContext, R.drawable.ic_file)!!.toBitmap()
 
     private inner class PlayRunnable : Runnable {
         @Synchronized
@@ -462,13 +535,14 @@ class AutoService : MediaBrowserServiceCompat(), AudioManager.OnAudioFocusChange
                 // If this file is unrecognized, and we're going backwards, go to previous
                 // If we're at the start of the list, go to the last recognized file
                 if (playerFileName == null || !InfoCache.testModule(playerFileName!!)) {
-                    continue
+                    cmd = CMD_STOP
+                    break
+                    // continue
                 }
 
                 // Set default pan before we load the module
-                val defpan = PrefManager.defaultPan
-                Log.i(TAG, "Set default pan to $defpan")
-                Xmp.setPlayer(Xmp.PLAYER_DEFPAN, defpan)
+                Log.i(TAG, "Set default pan to ${PrefManager.defaultPan}")
+                Xmp.setPlayer(Xmp.PLAYER_DEFPAN, PrefManager.defaultPan)
 
                 // Ditto if we can't load the module
                 Log.i(TAG, "Load " + playerFileName!!)
@@ -479,28 +553,24 @@ class AutoService : MediaBrowserServiceCompat(), AudioManager.OnAudioFocusChange
 
                 isLoaded = true
 
-                // Unmute all channels
-                for (i in 0..63) {
-                    Xmp.mute(i, 0)
-                }
-
-                val interpTypes = intArrayOf(INTERP_NEAREST, INTERP_LINEAR, INTERP_SPLINE)
+                val volBoost = PrefManager.volumeBoost
+                val interpTypes =
+                        intArrayOf(Xmp.INTERP_NEAREST, Xmp.INTERP_LINEAR, Xmp.INTERP_SPLINE)
                 val temp = PrefManager.interpType.toInt()
-
                 var interpType: Int
+
                 interpType = if (temp in 1..2) {
                     interpTypes[temp]
                 } else {
-                    INTERP_LINEAR
+                    Xmp.INTERP_LINEAR
                 }
 
                 if (!PrefManager.interpolate) {
-                    interpType = INTERP_NEAREST
+                    interpType = Xmp.INTERP_NEAREST
                 }
 
                 Xmp.startPlayer(sampleRate)
 
-                val volBoost = PrefManager.volumeBoost
                 Xmp.setPlayer(Xmp.PLAYER_AMP, Integer.parseInt(volBoost))
                 Xmp.setPlayer(Xmp.PLAYER_MIX, PrefManager.stereoMix)
                 Xmp.setPlayer(Xmp.PLAYER_INTERP, interpType)
@@ -520,13 +590,14 @@ class AutoService : MediaBrowserServiceCompat(), AudioManager.OnAudioFocusChange
                 Xmp.playAudio()
                 Xmp.getModVars(vars)
 
-                val bitmap = BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher_foreground)
-                val metaData = MediaMetadataCompat.Builder().apply {
-                    putString(METADATA_KEY_TITLE, Xmp.getModName())
+                var modName = Xmp.getModName()
+                if (modName.isEmpty())
+                    modName = FileUtils.basename(playerFileName)
+                val metaData = Builder().apply {
+                    putString(METADATA_KEY_TITLE, modName)
                     putString(METADATA_KEY_ARTIST, Xmp.getModType())
                     putLong(METADATA_KEY_DURATION, vars[0].toLong())
-                    putBitmap(METADATA_KEY_ALBUM_ART, bitmap)
-
+                    putBitmap(METADATA_KEY_ALBUM_ART, getBitmapIcon())
                 }.build()
                 session!!.setMetadata(metaData)
 
@@ -535,6 +606,11 @@ class AutoService : MediaBrowserServiceCompat(), AudioManager.OnAudioFocusChange
                 // TODO: Handle updating controls and stuff
                 // Everything appears to be OKAY, set the playback state.
                 playbackState(STATE_PLAYING)
+
+                // Unmute all channels
+                for (i in 0..63) {
+                    Xmp.mute(i, 0)
+                }
 
                 Log.i(TAG, "Enter play loop")
                 do {
@@ -567,43 +643,43 @@ class AutoService : MediaBrowserServiceCompat(), AudioManager.OnAudioFocusChange
                         }
 
                         // Fill a new buffer
-                        if (Xmp.fillBuffer(false) < 0) {
+                        if (Xmp.fillBuffer(isLoopEnabled) < 0) {
                             break
                         }
 
                         watchdog.refresh()
                     }
 
+                    // Subsong explorer
+                    // Do all this if we've exited normally and explorer is active
                     playNewSequence = false
+                    if (isAllSequence && cmd == CMD_NONE) {
+                        sequenceNumber++
 
-
+                        Log.i(TAG, "Play sequence $sequenceNumber")
+                        if (Xmp.setSequence(sequenceNumber)) {
+                            playNewSequence = true
+                        }
+                    }
                 } while (playNewSequence)
 
                 Xmp.endPlayer()
 
                 isLoaded = false
 
+                var timeout = 0
+                try {
+                    while (timeout < 20) {
+                        Thread.sleep(100)
+                        timeout++
+                    }
+                } catch (e: InterruptedException) {
+                    Log.e(TAG, "Sleep interrupted: $e")
+                }
+
                 Log.i(TAG, "Release module")
                 Xmp.releaseModule()
-
             } while (cmd != CMD_STOP)
         }
-    }
-
-    companion object {
-        private val TAG = AutoService::class.java.simpleName
-
-        const val ROOT = "root"
-        //const val TYPE_PLAYLISTS = "Playlists"
-
-        private const val MIN_BUFFER_MS = 80
-        private const val MAX_BUFFER_MS = 1000
-
-        private const val CMD_NONE = 0
-        private const val CMD_NEXT = 1
-        private const val CMD_PREV = 2
-        private const val CMD_STOP = 3
-
-        private const val DUCK_VOLUME = 0x500
     }
 }

@@ -14,6 +14,7 @@
     <uses-feature
         android:name="android.hardware.type.automotive"
         android:required="false" />
+    <!--End Android Auto-->
 
     <!-- requestLegacyExternalStorage for Android Q -->
     <application
@@ -37,6 +38,7 @@
         <meta-data
             android:name="com.google.android.gms.car.notification.SmallIcon"
             android:resource="@drawable/ic_xmp_auto" />
+        <!--End Android Auto-->
 
         <activity
             android:name=".browser.PlaylistMenu"
@@ -50,7 +52,7 @@
         </activity>
 
         <activity
-            android:name=".amvp.activity.PlayerActivity"
+            android:name=".player.PlayerActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:launchMode="singleTop"
             android:theme="@style/AppTheme.NoActionBar">
@@ -160,7 +162,7 @@
             android:parentActivityName=".browser.PlaylistMenu"
             android:theme="@style/AppTheme" />
 
-        <!-- ModArchive activity_search & download -->
+        <!-- ModArchive search & download -->
         <activity
             android:name=".modarchive.Search"
             android:configChanges="keyboardHidden|orientation|screenSize"

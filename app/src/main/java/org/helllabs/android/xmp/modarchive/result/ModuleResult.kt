@@ -23,7 +23,9 @@ import kotlinx.android.synthetic.main.layout_error.*
 import kotlinx.android.synthetic.main.result_module.*
 import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.XmpApplication
+import org.helllabs.android.xmp.player.PlayerActivity
+import org.helllabs.android.xmp.extension.toast
+import org.helllabs.android.xmp.extension.yesNoDialog
 import org.helllabs.android.xmp.modarchive.Search
 import org.helllabs.android.xmp.modarchive.model.Module
 import org.helllabs.android.xmp.modarchive.request.ModArchiveRequest
@@ -32,11 +34,8 @@ import org.helllabs.android.xmp.modarchive.response.HardErrorResponse
 import org.helllabs.android.xmp.modarchive.response.ModArchiveResponse
 import org.helllabs.android.xmp.modarchive.response.ModuleResponse
 import org.helllabs.android.xmp.modarchive.response.SoftErrorResponse
-import org.helllabs.android.xmp.player.PlayerActivity
 import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.util.Log
-import org.helllabs.android.xmp.extension.toast
-import org.helllabs.android.xmp.extension.yesNoDialog
 import java.io.File
 import java.io.IOException
 import java.io.UnsupportedEncodingException
@@ -83,7 +82,7 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, FetchO
         val key = BuildConfig.ApiKey
         try {
             val request = ModuleRequest(key, ModArchiveRequest.MODULE, query)
-            request.setOnResponseListener(this).send(xmpApplication().requestQueue)
+            request.setOnResponseListener(this).send(this)
         } catch (e: UnsupportedEncodingException) {
             handleQueryError()
         }
@@ -171,7 +170,7 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, FetchO
             result_data!!.visibility = View.GONE
         } else {
             val module = moduleList[0]
-            Log.i(TAG, "Response: title=" + module.songTitle!!)
+            Log.i(TAG, "Response: title - " + module.songTitle!!)
             module_title!!.text = module.songTitle
             module_filename!!.text = module.filename
             val size = module.bytes / 1024
@@ -257,7 +256,6 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, FetchO
 
             val intent = Intent(this, PlayerActivity::class.java)
             intent.putExtra(PlayerActivity.PARM_START, 0)
-
 
             xmpApplication().fileList = modList
             Log.i(TAG, "Play $path")

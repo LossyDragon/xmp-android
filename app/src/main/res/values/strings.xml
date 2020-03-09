@@ -130,8 +130,8 @@
     <string name="pref_artist_folder_title">Artist folders</string>
     <string name="pref_back_button_navigation_summary">Back button returns to parent directory</string>
     <string name="pref_back_button_navigation_title">Back button navigation</string>
-    <string name="pref_bluetooth_pause_summary">Automatically pause replay when bluetooth is disconnected</string>
-    <string name="pref_bluetooth_pause_title">Pause on bluetooth disconnection</string>
+<!--    <string name="pref_bluetooth_pause_summary">Automatically pause replay when bluetooth is disconnected</string>-->
+<!--    <string name="pref_bluetooth_pause_title">Pause on bluetooth disconnection</string>-->
     <string name="pref_buffer_ms_dialog">Set the size of sound buffer in milliseconds:</string>
     <string name="pref_buffer_ms_summary">Sound buffer duration</string>
     <string name="pref_buffer_ms_title">Buffer size</string>
@@ -159,8 +159,8 @@
     <string name="pref_enable_delete_title">Enable file delete</string>
     <string name="pref_examples_summary">Install example music files when creating modules directory</string>
     <string name="pref_examples_title">Install modules</string>
-    <string name="pref_headset_pause_summary">Automatically pause replay when headset is disconnected</string>
-    <string name="pref_headset_pause_title">Pause on headset unplug</string>
+<!--    <string name="pref_headset_pause_summary">Automatically pause replay when headset is disconnected</string>-->
+<!--    <string name="pref_headset_pause_title">Pause on headset unplug</string>-->
     <string name="pref_interpolate_summary">Interpolate samples</string>
     <string name="pref_interpolate_title">Interpolation</string>
     <string name="pref_interp_type_summary">Set sample interpolation method</string>
@@ -239,5 +239,6 @@
     <string name="title_this_file">This File</string>
     <string name="change_theme_older_apis">Changing the theme on an older platform causes issues.\nPlease restart the application to apply changes.</string>
     <string name="player_viewer_mute">MUTE</string>
+    <string name="text_download_provided">Downloads provided by modarchive.org</string>
 
 </resources>

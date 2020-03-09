@@ -1,5 +1,6 @@
 package org.helllabs.android.xmp.service
 
+import android.annotation.SuppressLint
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -358,9 +359,6 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                 Xmp.setSequence(sequenceNumber)
 
                 Xmp.playAudio()
-
-                Log.i(TAG, "Enter play loop")
-
                 Xmp.getModVars(vars)
 
                 // MetaData necessary for mod trackers? - Yeah, for android wear.
@@ -371,6 +369,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                 }.build()
                 mediaSession?.setMetadata(metaData)
 
+                Log.i(TAG, "Enter play loop")
                 do {
                     while (cmd == CMD_NONE) {
                         discardBuffer = false
@@ -488,12 +487,14 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
 
         // Init Media Session
         mediaSession = MediaSessionCompat(this, TAG)
-        mediaSession!!.setCallback(object : MediaSessionCompat.Callback() {
-            override fun onMediaButtonEvent(mediaButtonEvent: Intent): Boolean {
-                mediaSessionButtons(mediaButtonEvent)
-                return super.onMediaButtonEvent(mediaButtonEvent)
-            }
-        })
+        mediaSession!!.setCallback(
+                @SuppressLint("MissingOnPlayFromSearch")
+                object : MediaSessionCompat.Callback() {
+                    override fun onMediaButtonEvent(mediaButtonEvent: Intent): Boolean {
+                        mediaSessionButtons(mediaButtonEvent)
+                        return super.onMediaButtonEvent(mediaButtonEvent)
+                    }
+                })
         mediaSession!!.isActive = true
 
         // Init Headphone pull receiver
@@ -503,7 +504,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
         if (isAtLeastO())
-            oreoFocusHandler = OreoAudioFocusHandler(applicationContext) // Kinda need this >.<
+            oreoFocusHandler = OreoAudioFocusHandler(applicationContext)
 
         var bufferMs = PrefManager.bufferMS
         when {
@@ -522,7 +523,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         isPlayerPaused = false
         allPlayerSequences = PrefManager.allSequences
 
-        notifier = when (Build.VERSION.SDK_INT >= 21) {
+        notifier = when (isAtLeastL()) {
             true -> ModernNotifier(this)
             false -> LegacyNotifier(this)
         }
@@ -555,7 +556,11 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
     }
 
     override fun onDestroy() {
-        unregisterReceiver(noisyReceiver)
+        try {
+            unregisterReceiver(noisyReceiver)
+        } catch (e: RuntimeException) {
+            // Nothing, just make sure its unregistered.
+        }
 
         onServiceKill()
 
@@ -715,7 +720,6 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
 
         isAlive = false
         Xmp.stopModule()
-
 
         onServiceKill()
     }

@@ -1,7 +1,6 @@
 package org.helllabs.android.xmp.browser
 
 import android.content.ComponentName
-import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
@@ -17,16 +16,16 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import kotlinx.android.synthetic.main.layout_list_controls.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.XmpApplication
-import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter
-import org.helllabs.android.xmp.modarchive.Search
 import org.helllabs.android.xmp.player.PlayerActivity
+import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter
+import org.helllabs.android.xmp.extension.toast
+import org.helllabs.android.xmp.modarchive.Search
 import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.preferences.Preferences
 import org.helllabs.android.xmp.service.ModInterface
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.util.InfoCache
 import org.helllabs.android.xmp.util.Log
-import org.helllabs.android.xmp.extension.toast
 
 abstract class BasePlaylistActivity : AppCompatActivity() {
     private var mShowToasts: Boolean = false
@@ -95,8 +94,6 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     protected abstract var isLoopMode: Boolean
 
     protected abstract val allFiles: List<String>
-
-    fun xmpApplication() = application as XmpApplication
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -199,7 +196,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
             keepFirst: Boolean = false
     ) {
 
-        xmpApplication().fileList =
+        (application as XmpApplication).fileList =
                 if (!mod.isNullOrEmpty())
                     mutableListOf(mod)
                 else

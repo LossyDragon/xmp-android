@@ -1,7 +1,6 @@
 package org.helllabs.android.xmp.browser.playlist
 
 import android.content.Context
-import android.graphics.Typeface
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -56,7 +55,6 @@ class PlaylistAdapter :
     val items: MutableList<PlaylistItem>
     var position: Int = 0
 
-    private val typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
     private val playlist: Playlist?
     private val context: Context
     private var useFilename: Boolean = false
@@ -120,8 +118,8 @@ class PlaylistAdapter :
         items.add(item)
     }
 
-    fun setUseFilename(useFilename: Boolean) {
-        this.useFilename = useFilename
+    fun setUseFilename(fileName: Boolean) {
+        useFilename = fileName
     }
 
     fun addList(list: List<PlaylistItem>) {
@@ -139,7 +137,6 @@ class PlaylistAdapter :
         val item = items[fromPosition]
         items.remove(item)
         items.add(toPosition, item)
-        // playlist.setListChanged(true);
 
         notifyItemMoved(fromPosition, toPosition)
         playlist?.setListChanged(true)
@@ -147,13 +144,16 @@ class PlaylistAdapter :
 
     override fun onCheckCanStartDrag(holder: ViewHolder, position: Int, x: Int, y: Int): Boolean {
         // x, y --- relative from the itemView's top-left
+        if (holder.container == null || holder.handle == null)
+            return false
+
         val containerView = holder.container
         val dragHandleView = holder.handle
 
         val offsetX = containerView.left + (containerView.translationX + 0.5f).toInt()
         // final int offsetY = containerView.getTop() + (int) (ViewCompat.getTranslationY(containerView) + 0.5f);
 
-        return hitTest(dragHandleView!!, x - offsetX, y /*- offsetY*/)
+        return hitTest(dragHandleView, x - offsetX, y /*- offsetY*/)
     }
 
     override fun onGetItemDraggableRange(holder: ViewHolder, position: Int): ItemDraggableRange? {
@@ -178,11 +178,11 @@ class PlaylistAdapter :
             val adapter: PlaylistAdapter
     ) : AbstractDraggableItemViewHolder(itemView) {
 
-        val container: View = itemView.findViewById(R.id.plist_container)
+        val container: View? = itemView.findViewById(R.id.plist_container)
         val handle: FrameLayout? = itemView.findViewById(R.id.plist_handle)
-        private val titleText: TextView = itemView.findViewById(R.id.plist_title)
-        private val infoText: TextView = itemView.findViewById(R.id.plist_info)
-        private val image: ImageView = itemView.findViewById(R.id.plist_image)
+        private val titleText = itemView.findViewById<TextView>(R.id.plist_title)
+        private val infoText = itemView.findViewById<TextView>(R.id.plist_info)
+        private val image = itemView.findViewById<ImageView>(R.id.plist_image)
 
         fun onBind(item: PlaylistItem) {
 

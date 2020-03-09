@@ -81,7 +81,8 @@ class PlaylistActivity :
             addItemDecoration(
                     DividerItemDecoration(
                             this@PlaylistActivity,
-                            DividerItemDecoration.VERTICAL)
+                            DividerItemDecoration.VERTICAL
+                    )
             )
         }
 

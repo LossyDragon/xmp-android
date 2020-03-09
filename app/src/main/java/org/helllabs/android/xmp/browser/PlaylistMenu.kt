@@ -6,9 +6,6 @@ import android.content.pm.PackageManager.PERMISSION_DENIED
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.os.Build
 import android.os.Bundle
-import android.os.Environment
-import android.os.Environment.MEDIA_MOUNTED
-import android.os.Environment.MEDIA_MOUNTED_READ_ONLY
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -16,20 +13,18 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.activity_playlist_menu.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.browser.playlist.*
-import org.helllabs.android.xmp.extension.error
-import org.helllabs.android.xmp.extension.fatalError
-import org.helllabs.android.xmp.extension.showChangeDir
-import org.helllabs.android.xmp.extension.showChangeLog
+import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter.Companion.LAYOUT_CARD
+import org.helllabs.android.xmp.extension.*
 import org.helllabs.android.xmp.modarchive.Search
 import org.helllabs.android.xmp.player.PlayerActivity
 import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.preferences.Preferences
+import org.helllabs.android.xmp.preferences.Preferences.Companion.checkStorage
 import org.helllabs.android.xmp.service.PlayerService
-import org.helllabs.android.xmp.util.*
+import org.helllabs.android.xmp.util.Log
 import java.io.File
 
 class PlaylistMenu :
@@ -63,21 +58,13 @@ class PlaylistMenu :
             )
         }
 
-        playlistAdapter = PlaylistAdapter(this, mutableListOf(), false, PlaylistAdapter.LAYOUT_CARD)
+        playlistAdapter = PlaylistAdapter(this, mutableListOf(), false, LAYOUT_CARD)
         playlistAdapter!!.clickListener = this
 
         plist_menu_list.apply {
             layoutManager = LinearLayoutManager(this@PlaylistMenu)
             adapter = playlistAdapter
-            addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                    if (dy > 0 && playlist_add_button.visibility == View.VISIBLE) {
-                        playlist_add_button.hide()
-                    } else if (dy < 0 && playlist_add_button.visibility != View.VISIBLE) {
-                        playlist_add_button.show()
-                    }
-                }
-            })
+            addOnScrollListener(OnScrollListener(playlist_add_button))
         }
 
         if (!checkStorage()) {
@@ -179,11 +166,12 @@ class PlaylistMenu :
             }
         } else {
             val playlist = playlistAdapter!!.getItem(position)
-            val intent = Intent(this, PlaylistAddEdit::class.java)
-            intent.putExtra(PlaylistAddEdit.EXTRA_ID, playlist.id)
-            intent.putExtra(PlaylistAddEdit.EXTRA_NAME, playlist.name)
-            intent.putExtra(PlaylistAddEdit.EXTRA_COMMENT, playlist.comment)
-            intent.putExtra(PlaylistAddEdit.EXTRA_TYPE, playlist.type)
+            val intent = Intent(this, PlaylistAddEdit::class.java).apply {
+                putExtra(PlaylistAddEdit.EXTRA_ID, playlist.id)
+                putExtra(PlaylistAddEdit.EXTRA_NAME, playlist.name)
+                putExtra(PlaylistAddEdit.EXTRA_COMMENT, playlist.comment)
+                putExtra(PlaylistAddEdit.EXTRA_TYPE, playlist.type)
+            }
             startActivityForResult(intent, MOD_EDIT_REQUEST)
         }
     }
@@ -201,21 +189,23 @@ class PlaylistMenu :
         mediaPath = PrefManager.mediaPath
 
         playlistAdapter!!.clear()
-        val browserItem =
-                PlaylistItem(
-                        PlaylistItem.TYPE_SPECIAL,
-                        getString(R.string.browser_filelist_title),
-                        String.format(getString(R.string.browser_filelist_desc, mediaPath))
-                )
-        playlistAdapter!!.add(browserItem)
 
-        for (name in listNoSuffix()) {
-            val item = PlaylistItem(
-                    type = PlaylistItem.TYPE_PLAYLIST,
-                    name = name,
-                    comment = Playlist.readComment(this, name)
+        playlistAdapter!!.add(
+                PlaylistItem(
+                        type = PlaylistItem.TYPE_SPECIAL,
+                        name = getString(R.string.browser_filelist_title),
+                        comment = getString(R.string.browser_filelist_desc, mediaPath)
+                )
+        )
+
+        listNoSuffix().map {
+            playlistAdapter!!.add(
+                    PlaylistItem(
+                            type = PlaylistItem.TYPE_PLAYLIST,
+                            name = it,
+                            comment = Playlist.readComment(this, it)
+                    )
             )
-            playlistAdapter!!.add(item)
         }
 
         renumberIds(playlistAdapter!!.items)
@@ -311,16 +301,5 @@ class PlaylistMenu :
 
         const val MOD_ADD_REQUEST = 1
         const val MOD_EDIT_REQUEST = 2
-
-        private fun checkStorage(): Boolean {
-            val state = Environment.getExternalStorageState()
-
-            return if (MEDIA_MOUNTED == state || MEDIA_MOUNTED_READ_ONLY == state) {
-                true
-            } else {
-                Log.e(TAG, "External storage state error: $state")
-                false
-            }
-        }
     }
 }

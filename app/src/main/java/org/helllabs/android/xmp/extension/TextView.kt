@@ -1,6 +1,7 @@
 package org.helllabs.android.xmp.extension
 
 import android.graphics.Typeface
+import android.view.View
 import android.widget.TextView
 
 fun TextView.normal() {
@@ -9,4 +10,8 @@ fun TextView.normal() {
 
 fun TextView.italic() {
     this.setTypeface(typeface, Typeface.ITALIC)
+}
+
+fun TextView.show() {
+    this.visibility = View.VISIBLE
 }

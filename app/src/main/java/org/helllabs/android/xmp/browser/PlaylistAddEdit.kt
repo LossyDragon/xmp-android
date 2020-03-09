@@ -9,6 +9,7 @@ import com.afollestad.materialdialogs.MaterialDialog
 import kotlinx.android.synthetic.main.activity_add_edit_playlist.*
 import org.helllabs.android.xmp.R
 
+// TextInputEditText leaks, nothing we can do.
 class PlaylistAddEdit : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {

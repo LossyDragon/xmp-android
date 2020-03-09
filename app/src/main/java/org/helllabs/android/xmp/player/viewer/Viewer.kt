@@ -1,5 +1,6 @@
 package org.helllabs.android.xmp.player.viewer
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Color
@@ -155,8 +156,11 @@ abstract class Viewer(context: Context) :
         surfaceHolder = holder
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private fun setupTouch() {
-        val gestureListener = OnTouchListener { _, event -> gestureDetector.onTouchEvent(event) }
+        val gestureListener = OnTouchListener { _, event ->
+            gestureDetector.onTouchEvent(event)
+        }
 
         setOnClickListener(this@Viewer)
         setOnTouchListener(gestureListener)

@@ -3,18 +3,14 @@ package org.helllabs.android.xmp.extension
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.app.Activity
 import android.content.pm.PackageManager.PERMISSION_GRANTED
-import android.text.Editable
-import android.text.TextWatcher
 import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
 import com.afollestad.materialdialogs.MaterialDialog
-import com.afollestad.materialdialogs.WhichButton
-import com.afollestad.materialdialogs.actions.setActionButtonEnabled
 import com.afollestad.materialdialogs.customview.customView
 import com.afollestad.materialdialogs.customview.getCustomView
+import com.afollestad.materialdialogs.input.input
 import kotlinx.android.synthetic.main.dialog_changelog.view.*
-import kotlinx.android.synthetic.main.dialog_input.view.*
 import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.util.getChangelog
@@ -62,40 +58,26 @@ fun Activity.showChangeLog(lastViewed: Int, callback: (result: Boolean, versionC
                 .cancelOnTouchOutside(false)
                 .positiveButton(R.string.dismiss) {
                     callback(true, versionCode)
+                }.also {
+                    it.getCustomView().apply {
+                        text_version.text =
+                                getString(R.string.title_changelog, BuildConfig.VERSION_NAME)
+                        text_changelog.text = getChangelog()
+                    }
                 }
 
-        val view = dialog.getCustomView()
-        view.text_version.text =
-                String.format(getString(R.string.title_changelog), BuildConfig.VERSION_NAME)
-        view.text_changelog.text = getChangelog()
         dialog.show()
     }
 }
 
+// TODO: EditText view is weird.
 fun Activity.showChangeDir(mediaPath: String, callback: (result: Boolean, path: String) -> Unit) {
-    val dialog = MaterialDialog(this).customView(R.layout.dialog_input)
-    val customView = dialog.getCustomView()
-
-    // TextWatcher
-    customView.dialog_input_text.addTextChangedListener(object : TextWatcher {
-        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-            dialog.setActionButtonEnabled(WhichButton.POSITIVE, !s.isNullOrEmpty())
-        }
-
-        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
-        override fun afterTextChanged(s: Editable?) {}
-    })
-
-    dialog.show {
+    MaterialDialog(this).show {
         title(R.string.title_change_directory)
-        setActionButtonEnabled(WhichButton.POSITIVE, false)
-        cancelOnTouchOutside(true)
-        customView.dialog_input_text.setText(mediaPath)
-        positiveButton(R.string.ok) {
-            val value = getCustomView().dialog_input_text.text.toString()
-            callback(true, value)
+        input(waitForPositiveButton = true, allowEmpty = false, hint = mediaPath) { _, text ->
+            callback(true, text.toString())
         }
-        negativeButton(R.string.cancel)
+        positiveButton(R.string.ok)
+        negativeButton(R.string.cancel) { callback(false, "") } // Cancelled callback
     }
 }

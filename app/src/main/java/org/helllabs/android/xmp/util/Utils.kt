@@ -10,15 +10,14 @@ import org.helllabs.android.xmp.extension.isAtLeastP
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
-
 /**
  * Get Changelog from html file
  */
 fun Context.getChangelog(): Spanned {
-    val inputStream = InputStreamReader(resources.assets.open("changelog.html"))
+    val changelog = resources.assets.open("changelog.html")
     val total = StringBuilder()
 
-    BufferedReader(inputStream).forEachLine {
+    BufferedReader(InputStreamReader(changelog)).forEachLine {
         total.append(it)
     }
 

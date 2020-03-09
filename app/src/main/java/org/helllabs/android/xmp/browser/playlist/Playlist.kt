@@ -19,8 +19,7 @@ import androidx.preference.PreferenceManager
 import org.helllabs.android.xmp.extension.error
 import org.helllabs.android.xmp.util.*
 
-class Playlist @Throws(IOException::class)
-constructor(context: Context, val name: String) {
+class Playlist(context: Context, val name: String) {
     var comment: String? = null
 
     private var mListChanged: Boolean = false
@@ -202,13 +201,11 @@ constructor(context: Context, val name: String) {
         }
     }
 
-    private fun readShuffleModePref(name: String): Boolean {
-        return mPrefs.getBoolean(optionName(name, SHUFFLE_MODE), DEFAULT_SHUFFLE_MODE)
-    }
+    private fun readShuffleModePref(name: String): Boolean =
+            mPrefs.getBoolean(optionName(name, SHUFFLE_MODE), DEFAULT_SHUFFLE_MODE)
 
-    private fun readLoopModePref(name: String): Boolean {
-        return mPrefs.getBoolean(optionName(name, LOOP_MODE), DEFAULT_LOOP_MODE)
-    }
+    private fun readLoopModePref(name: String): Boolean =
+            mPrefs.getBoolean(optionName(name, LOOP_MODE), DEFAULT_LOOP_MODE)
 
     fun setListChanged(listChanged: Boolean) {
         mListChanged = listChanged

@@ -2,11 +2,14 @@ package org.helllabs.android.xmp.preferences
 
 import android.os.Bundle
 import android.os.Environment
+import android.os.Environment.MEDIA_MOUNTED
+import android.os.Environment.MEDIA_MOUNTED_READ_ONLY
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.extension.fatalError
 import org.helllabs.android.xmp.extension.isAtMostN
+import org.helllabs.android.xmp.util.Log
 import java.io.File
 
 class Preferences : AppCompatActivity() {
@@ -42,6 +45,19 @@ class Preferences : AppCompatActivity() {
     }
 
     companion object {
+        private val TAG = Preferences::class.java.simpleName
+
+        fun checkStorage(): Boolean {
+            val state = Environment.getExternalStorageState()
+
+            return if (MEDIA_MOUNTED == state || MEDIA_MOUNTED_READ_ONLY == state) {
+                true
+            } else {
+                Log.e(TAG, "External storage state error: $state")
+                false
+            }
+        }
+
         @Volatile
         var isThemeChanged: Boolean = false
 

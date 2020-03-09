@@ -35,7 +35,6 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.*
 
-
 class PlayerActivity : AppCompatActivity() {
 
     /* actual mod player */
@@ -109,9 +108,10 @@ class PlayerActivity : AppCompatActivity() {
         override fun onServiceDisconnected(className: ComponentName) {
             saveAllSeqPreference()
 
+            // Unexpected service disconnection.
             synchronized(playerLock) {
                 stopUpdate = true
-                // modPlayer = null;
+                modPlayer = null
                 Log.i(TAG, "Service disconnected")
                 finish()
             }
@@ -702,6 +702,13 @@ class PlayerActivity : AppCompatActivity() {
                 } catch (e1: RemoteException) {
                     Log.e(TAG, "Can't stop module")
                 }
+
+                // Should stop playerCallback being leaked
+                try {
+                    modPlayer!!.unregisterCallback(playerCallback)
+                } catch (e: RemoteException) {
+                    Log.e(TAG, "Can't unregister player callback")
+                }
             }
         }
 
@@ -771,7 +778,6 @@ class PlayerActivity : AppCompatActivity() {
 
         setResult(RESULT_OK)
 
-        val showInfoLine = PrefManager.showInfoLine
         showElapsed = true
 
         onNewIntent(intent)
@@ -796,7 +802,6 @@ class PlayerActivity : AppCompatActivity() {
         }
 
         val font = Typeface.createFromAsset(this.assets, "fonts/Michroma.ttf")
-
         for (i in 0..1) {
             infoName[i]!!.typeface = font
             infoName[i]!!.includeFontPadding = false
@@ -804,6 +809,7 @@ class PlayerActivity : AppCompatActivity() {
             infoType[i]!!.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12f)
         }
 
+        val showInfoLine = PrefManager.showInfoLine
         if (!showInfoLine) {
             control_player_info.visibility = LinearLayout.GONE
             control_player_time.visibility = LinearLayout.GONE
@@ -894,14 +900,11 @@ class PlayerActivity : AppCompatActivity() {
     public override fun onDestroy() {
         saveAllSeqPreference()
 
-        synchronized(playerLock) {
-            if (modPlayer != null) {
-                try {
-                    modPlayer!!.unregisterCallback(playerCallback)
-                } catch (e: RemoteException) {
-                    Log.e(TAG, "Can't unregister player callback")
-                }
-            }
+        // Should stop playerCallback leak
+        try {
+            modPlayer?.unregisterCallback(playerCallback)
+        } catch (e: RemoteException) {
+            Log.e(TAG, "Can't unregister player callback")
         }
 
         unregisterReceiver(screenReceiver)

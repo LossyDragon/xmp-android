@@ -129,7 +129,7 @@ class FilelistActivity :
                     setTextColor(textColor)
                 } else {
                     @Suppress("DEPRECATION")
-                    setTextColor(resources.getColor(R.color.colorPressed))
+                    setTextColor(getColor(R.color.colorPressed))
                 }
 
                 view.performClick()

@@ -6,29 +6,29 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.media.AudioManager.ACTION_AUDIO_BECOMING_NOISY
 import android.support.v4.media.session.MediaControllerCompat
-import android.support.v4.media.session.MediaSessionCompat
+import android.support.v4.media.session.MediaSessionCompat.Token
 
-class BecomingNoisyReceiver(
+class NoisyReceiver(
         private val context: Context,
-        sessionToken: MediaSessionCompat.Token
+        sessionToken: Token
 ) : BroadcastReceiver() {
 
     private val noisyIntentFilter = IntentFilter(ACTION_AUDIO_BECOMING_NOISY)
     private val controller = MediaControllerCompat(context, sessionToken)
 
-    private var registered = false
+    private var isRegistered = false
 
     fun register() {
-        if (!registered) {
+        if (!isRegistered) {
             context.registerReceiver(this, noisyIntentFilter)
-            registered = true
+            isRegistered = true
         }
     }
 
     fun unregister() {
-        if (registered) {
+        if (isRegistered) {
             context.unregisterReceiver(this)
-            registered = false
+            isRegistered = false
         }
     }
 

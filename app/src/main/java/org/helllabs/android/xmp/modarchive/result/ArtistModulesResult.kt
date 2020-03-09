@@ -37,7 +37,7 @@ class ArtistModulesResult :
 
         try {
             val request = ModuleRequest(key, ModArchiveRequest.ARTIST_MODULES, artistId)
-            request.setOnResponseListener(this).send(xmpApplication().requestQueue)
+            request.setOnResponseListener(this).send(this)
         } catch (e: UnsupportedEncodingException) {
             handleQueryError()
         }

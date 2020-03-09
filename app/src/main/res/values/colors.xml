@@ -11,7 +11,7 @@
     <color name="colorWhite">#FFF0F0F0</color>
 
     <color name="section_background">#FF202020</color>
-    <color name="section_background_dark">#FF1A1A1A</color>
+<!--    <color name="section_background_dark">#FF1A1A1A</color>-->
 
     <color name="colorTint">@color/colorBlack</color>
 
