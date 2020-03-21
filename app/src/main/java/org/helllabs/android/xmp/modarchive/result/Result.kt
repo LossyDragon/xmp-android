@@ -10,6 +10,7 @@ import android.os.Bundle
 
 import androidx.appcompat.app.AppCompatActivity
 import org.helllabs.android.xmp.XmpApplication
+import org.helllabs.android.xmp.extension.intent
 
 abstract class Result : AppCompatActivity() {
 
@@ -35,10 +36,11 @@ abstract class Result : AppCompatActivity() {
     }
 
     protected fun handleError(error: Throwable) {
-        val intent = Intent(this, SearchError::class.java)
-        intent.putExtra(Search.ERROR, error)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
-        startActivity(intent)
+        startActivity(
+                intent(SearchError::class.java).apply {
+                    putExtra(Search.ERROR, error)
+                    addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+                })
         overridePendingTransition(0, 0)
     }
 

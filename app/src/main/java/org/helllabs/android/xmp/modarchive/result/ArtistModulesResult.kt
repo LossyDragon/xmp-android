@@ -1,13 +1,13 @@
 package org.helllabs.android.xmp.modarchive.result
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.AdapterView
-import kotlinx.android.synthetic.main.result_list.*
 import kotlinx.android.synthetic.main.activity_search_error.*
+import kotlinx.android.synthetic.main.result_list.*
 import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.extension.intent
 import org.helllabs.android.xmp.modarchive.Search
 import org.helllabs.android.xmp.modarchive.adapter.ModuleArrayAdapter
 import org.helllabs.android.xmp.modarchive.request.ModArchiveRequest
@@ -68,9 +68,10 @@ class ArtistModulesResult :
 
     override fun onItemClick(parent: AdapterView<*>, view: View, position: Int, id: Long) {
         val adapter = parent.adapter as ModuleArrayAdapter
-        val intent = Intent(this, ModuleResult::class.java)
-        intent.putExtra(Search.MODULE_ID, adapter.getItem(position)!!.id)
-        startActivity(intent)
+        startActivity(
+                intent(ModuleResult::class.java).apply {
+                    putExtra(Search.MODULE_ID, adapter.getItem(position)!!.id)
+                })
         overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
     }
 }

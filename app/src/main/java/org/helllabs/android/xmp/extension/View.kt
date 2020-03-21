@@ -9,3 +9,5 @@ fun View.click(l: (v: View) -> Unit) {
 fun View.longClick(l: (v: View) -> Boolean) {
     this.setOnLongClickListener(l)
 }
+
+fun View.isVisible(): Boolean = this.visibility == View.VISIBLE

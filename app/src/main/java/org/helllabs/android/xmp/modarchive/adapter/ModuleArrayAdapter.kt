@@ -35,11 +35,8 @@ class ModuleArrayAdapter(
 
             fmt.text = module.format
             line1.text = module.songTitle
-            line2.text = String.format(context.getString(R.string.module_by), module.artist)
-            size.text = String.format(
-                    context.getString(R.string.module_size),
-                    (module.bytes / 1024).toString()
-            )
+            line2.text = context.getString(R.string.module_by, module.artist)
+            size.text = context.getString(R.string.module_size, (module.bytes / 1024).toString())
         }
 
         return view!!

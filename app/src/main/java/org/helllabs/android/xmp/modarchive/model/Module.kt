@@ -1,6 +1,6 @@
 package org.helllabs.android.xmp.modarchive.model
 
-import android.text.Html
+import org.helllabs.android.xmp.extension.fromHtml
 
 class Module {
     var artist: String? = null
@@ -9,28 +9,24 @@ class Module {
     var url: String? = null
     var bytes: Int = 0
     var songTitle: String? = null
-        set(songtitle) {
-            field = if (songtitle!!.isEmpty()) {
+        set(songTitle) {
+            field = if (songTitle!!.isEmpty()) {
                 UNTITLED
             } else {
-                @Suppress("DEPRECATION")
-                Html.fromHtml(songtitle).toString()
+                fromHtml(songTitle).toString()
             }
         }
     var license: String? = null
         set(license) {
-            @Suppress("DEPRECATION")
-            field = Html.fromHtml(license).toString()
+            field = fromHtml(license).toString()
         }
     var licenseDescription: String? = null
         set(licenseDescription) {
-            @Suppress("DEPRECATION")
-            field = Html.fromHtml(licenseDescription).toString()
+            field = fromHtml(licenseDescription).toString()
         }
     var legalUrl: String? = null
         set(legalUrl) {
-            @Suppress("DEPRECATION")
-            field = Html.fromHtml(legalUrl).toString()
+            field = fromHtml(legalUrl).toString()
         }
     var instruments: String? = null
         set(instruments) {
@@ -39,9 +35,8 @@ class Module {
                     .dropLastWhile { it.isEmpty() }
                     .toTypedArray()
             val buffer = StringBuilder()
-            for (line in lines) {
-                @Suppress("DEPRECATION")
-                buffer.append(Html.fromHtml(line).toString())
+            lines.forEach {
+                buffer.append(fromHtml(it).toString())
                 buffer.append('\n')
             }
             field = buffer.toString()
@@ -52,9 +47,7 @@ class Module {
         artist = Artist.UNKNOWN
     }
 
-    override fun toString(): String {
-        return songTitle!!
-    }
+    override fun toString(): String = songTitle!!
 
     companion object {
         private const val UNTITLED = "(untitled)"

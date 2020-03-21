@@ -13,9 +13,7 @@ abstract class ListResponse<T> : ModArchiveResponse() {
         list.add(item)
     }
 
-    fun getList(): List<T> {
-        return list
-    }
+    fun getList(): List<T> = list
 
     operator fun get(location: Int): T {
         return list[location]

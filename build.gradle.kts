@@ -12,7 +12,7 @@ buildscript {
     }
 
     dependencies {
-        classpath("com.android.tools.build:gradle:4.0.0-beta01")
+        classpath("com.android.tools.build:gradle:4.0.0-beta03")
         classpath(kotlin("gradle-plugin", version = kotlinVersion))
         classpath("org.jlleitschuh.gradle:ktlint-gradle:9.1.1")
     }

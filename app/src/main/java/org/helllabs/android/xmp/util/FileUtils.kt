@@ -13,10 +13,12 @@ object FileUtils {
     @Throws(IOException::class)
     fun writeToFile(file: File, lines: Array<String>) {
         val out = BufferedWriter(FileWriter(file, true), 512)
-        for (line in lines) {
-            out.write(line)
+
+        lines.forEach {
+            out.write(it)
             out.newLine()
         }
+
         out.close()
     }
 

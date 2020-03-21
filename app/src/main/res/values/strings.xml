@@ -84,6 +84,8 @@
     <string name="module_by">by %s</string>
     <string name="module_size">%s KB</string>
 
+    <string name="msg_file_exists">File exists!</string>
+    <string name="msg_file_exists_overwrite">This module already exists. Do you want to overwrite?</string>
     <string name="msg_cache_clear">File cache cleared</string>
     <string name="msg_default_path">Default module path set</string>
     <string name="msg_download_cancelled">Download cancelled</string>

@@ -72,8 +72,8 @@ fun getPlaylistName(index: Int): String =
 
 fun createEmptyPlaylist(activity: Activity, name: String, comment: String): Boolean =
         try {
-            Playlist(activity, name).also {
-                it.comment = comment
+            Playlist(activity, name).apply {
+                this.comment = comment
             }.commit()
             true
         } catch (e: IOException) {

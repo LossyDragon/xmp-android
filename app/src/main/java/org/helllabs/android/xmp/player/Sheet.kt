@@ -8,14 +8,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import kotlinx.android.synthetic.main.activity_player.*
+import kotlinx.android.synthetic.main.layout_bottom_sheet.*
+import kotlinx.android.synthetic.main.layout_player_controls.*
 
 class Sheet(private val activity: PlayerActivity) {
-    private val numPatText: TextView
-    private val numInsText: TextView
-    private val numSmpText: TextView
-    private val numChnText: TextView
-    private val allSequencesSwitch: Switch
-    private val seqGroup: RadioGroup
     private val seqGroupListener: RadioGroup.OnCheckedChangeListener
 
     private var sheet: BottomSheetBehavior<*>
@@ -24,30 +21,25 @@ class Sheet(private val activity: PlayerActivity) {
     var state: Int? = null
 
     init {
-        val contentView: LinearLayout = activity.findViewById(R.id.content_view)
-        activity.layoutInflater.inflate(R.layout.layout_player, contentView, true)
+        activity.apply {
+            layoutInflater.inflate(R.layout.layout_player, content_view, true)
+            layoutInflater.inflate(R.layout.layout_player_controls, sidebar_view, true)
 
-        val sidebarView: LinearLayout = activity.findViewById(R.id.sidebar_view)
-        activity.layoutInflater.inflate(R.layout.layout_player_controls, sidebarView, true)
+            sidebar_allseqs_switch.apply {
+                isChecked = allSequences
+                setOnClickListener {
+                    isChecked = toggleAllSequences()
+                }
+            }
 
-        numPatText = activity.findViewById(R.id.sidebar_num_pat)
-        numInsText = activity.findViewById(R.id.sidebar_num_ins)
-        numSmpText = activity.findViewById(R.id.sidebar_num_smp)
-        numChnText = activity.findViewById(R.id.sidebar_num_chn)
-        allSequencesSwitch = activity.findViewById(R.id.sidebar_allseqs_switch)
-        seqGroup = activity.findViewById(R.id.sidebar_sequences)
+            seqGroupListener = RadioGroup.OnCheckedChangeListener { _, checkedId ->
+                playNewSequence(checkedId)
+            }
 
-        allSequencesSwitch.isChecked = activity.allSequences
-        allSequencesSwitch.setOnClickListener {
-            allSequencesSwitch.isChecked = activity.toggleAllSequences()
+            sidebar_sequences.setOnCheckedChangeListener(seqGroupListener)
         }
 
-        seqGroupListener = RadioGroup.OnCheckedChangeListener { _, checkedId ->
-            activity.playNewSequence(checkedId)
-        }
-        seqGroup.setOnCheckedChangeListener(seqGroupListener)
-
-        sheet = BottomSheetBehavior.from(activity.findViewById<LinearLayout>(R.id.player_sheet))
+        sheet = BottomSheetBehavior.from(activity.player_sheet)
         sheet.addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
             override fun onSlide(bottomSheet: View, slideOffset: Float) {
                 // Not used
@@ -76,18 +68,19 @@ class Sheet(private val activity: PlayerActivity) {
     }
 
     fun setDetails(numPat: Int, numIns: Int, numSmp: Int, numChn: Int, allSequences: Boolean) {
-        numPatText.text = numPat.toString()
-        numInsText.text = numIns.toString()
-        numSmpText.text = numSmp.toString()
-        numChnText.text = numChn.toString()
-        allSequencesSwitch.isChecked = allSequences
+        activity.apply {
+            sidebar_num_pat.text = numPat.toString()
+            sidebar_num_ins.text = numIns.toString()
+            sidebar_num_smp.text = numSmp.toString()
+            sidebar_num_chn.text = numChn.toString()
+            sidebar_allseqs_switch.isChecked = allSequences
+        }
     }
 
-    fun clearSequences() = seqGroup.removeAllViews()
+    fun clearSequences() = activity.sidebar_sequences.removeAllViews()
 
     @SuppressLint("InflateParams")
     fun addSequence(num: Int, duration: Int) {
-        // final RadioButton button = new RadioButton(activity);
         // Can't get it styled this way, see http://stackoverflow.com/questions/3142067/android-set-style-in-code
         val button = activity.layoutInflater.inflate(R.layout.item_sequence, null) as RadioButton
 
@@ -102,16 +95,18 @@ class Sheet(private val activity: PlayerActivity) {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
         )
-        seqGroup.addView(button, num, layoutParams)
+        activity.sidebar_sequences.addView(button, num, layoutParams)
     }
 
     fun selectSequence(num: Int) {
-        seqGroup.setOnCheckedChangeListener(null)
+        activity.apply {
+            sidebar_sequences.setOnCheckedChangeListener(null)
 
-        Log.i(TAG, "Select sequence $num")
-        seqGroup.check(-1) // force redraw
-        seqGroup.check(num)
-        seqGroup.setOnCheckedChangeListener(seqGroupListener)
+            Log.i(TAG, "Select sequence $num")
+            sidebar_sequences.check(-1) // force redraw
+            sidebar_sequences.check(num)
+            sidebar_sequences.setOnCheckedChangeListener(seqGroupListener)
+        }
     }
 
     companion object {

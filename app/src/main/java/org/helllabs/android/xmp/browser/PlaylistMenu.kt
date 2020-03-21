@@ -51,11 +51,8 @@ class PlaylistMenu :
         }
 
         // Add playlist
-        playlist_add_button.setOnClickListener {
-            startActivityForResult(
-                    Intent(this, PlaylistAddEdit::class.java),
-                    MOD_ADD_REQUEST
-            )
+        playlist_add_button.click {
+            startActivityForResult(intent(PlaylistAddEdit::class.java), MOD_ADD_REQUEST)
         }
 
         playlistAdapter = PlaylistAdapter(this, mutableListOf(), false, LAYOUT_CARD)
@@ -149,12 +146,12 @@ class PlaylistMenu :
 
     override fun onItemClick(adapter: PlaylistAdapter, view: View, position: Int) {
         if (position == 0) {
-            val intent = Intent(this, FilelistActivity::class.java)
-            startActivityForResult(intent, PLAYLIST_REQUEST)
+            startActivityForResult(intent(FilelistActivity::class.java), PLAYLIST_REQUEST)
         } else {
-            val intent = Intent(this, PlaylistActivity::class.java)
-            intent.putExtra(PlaylistActivity.PLAYLIST_NAME, adapter.getItem(position).name)
-            startActivityForResult(intent, PLAYLIST_REQUEST)
+            startActivityForResult(
+                    intent(PlaylistActivity::class.java).apply {
+                        putExtra(PlaylistActivity.PLAYLIST_NAME, adapter.getItem(position).name)
+                    }, PLAYLIST_REQUEST)
         }
     }
 
@@ -166,22 +163,19 @@ class PlaylistMenu :
             }
         } else {
             val playlist = playlistAdapter!!.getItem(position)
-            val intent = Intent(this, PlaylistAddEdit::class.java).apply {
-                putExtra(PlaylistAddEdit.EXTRA_ID, playlist.id)
-                putExtra(PlaylistAddEdit.EXTRA_NAME, playlist.name)
-                putExtra(PlaylistAddEdit.EXTRA_COMMENT, playlist.comment)
-                putExtra(PlaylistAddEdit.EXTRA_TYPE, playlist.type)
-            }
-            startActivityForResult(intent, MOD_EDIT_REQUEST)
+            startActivityForResult(
+                    intent(PlaylistAddEdit::class.java).apply {
+                        putExtra(PlaylistAddEdit.EXTRA_ID, playlist.id)
+                        putExtra(PlaylistAddEdit.EXTRA_NAME, playlist.name)
+                        putExtra(PlaylistAddEdit.EXTRA_COMMENT, playlist.comment)
+                        putExtra(PlaylistAddEdit.EXTRA_TYPE, playlist.type)
+                    }, MOD_EDIT_REQUEST)
         }
     }
 
     private fun startPlayerActivity() {
-        if (PrefManager.startOnPlayer) {
-            if (PlayerService.isAlive) {
-                val playerIntent = Intent(this, PlayerActivity::class.java)
-                startActivity(playerIntent)
-            }
+        if (PrefManager.startOnPlayer && PlayerService.isAlive) {
+            startActivity(intent(PlayerActivity::class.java))
         }
     }
 
@@ -214,9 +208,12 @@ class PlaylistMenu :
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        if (data == null)
+            return
+
         when (requestCode) {
             MOD_ADD_REQUEST -> {
-                val name = data!!.getStringExtra(PlaylistAddEdit.EXTRA_NAME)!!
+                val name = data.getStringExtra(PlaylistAddEdit.EXTRA_NAME)!!
                 val comment = data.getStringExtra(PlaylistAddEdit.EXTRA_COMMENT)!!
 
                 if (!createEmptyPlaylist(this, name, comment)) {
@@ -225,10 +222,10 @@ class PlaylistMenu :
                 }
             }
             MOD_EDIT_REQUEST -> {
-                val id = data?.getIntExtra(PlaylistAddEdit.EXTRA_ID, -1)
+                val id = data.getIntExtra(PlaylistAddEdit.EXTRA_ID, -1)
 
                 // Something went wrong.
-                if (id == -1 || id == null) {
+                if (id == -1) {
                     error(R.string.error_edit_playlist)
                     return
                 }
@@ -262,9 +259,6 @@ class PlaylistMenu :
     // Menu
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_options, menu)
-
-        // Calling super after populating the menu is necessary here to ensure that the
-        // action bar helpers have a chance to handle this event.
         return super.onCreateOptionsMenu(menu)
     }
 
@@ -273,10 +267,9 @@ class PlaylistMenu :
             android.R.id.home ->
                 startPlayerActivity()
             R.id.menu_prefs ->
-                startActivityForResult(
-                        Intent(this, Preferences::class.java), SETTINGS_REQUEST)
+                startActivityForResult(intent(Preferences::class.java), SETTINGS_REQUEST)
             R.id.menu_download ->
-                startActivity(Intent(this, Search::class.java))
+                startActivity(intent(Search::class.java))
         }
         return super.onOptionsItemSelected(item)
     }

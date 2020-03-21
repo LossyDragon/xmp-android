@@ -14,8 +14,7 @@ class RandomResult : ModuleResult(), ModArchiveRequest.OnResponseListener {
     }
 
     override fun makeRequest(query: String) {
-        val key = BuildConfig.ApiKey
-        val request = ModuleRequest(key, ModArchiveRequest.RANDOM)
+        val request = ModuleRequest(BuildConfig.ApiKey, ModArchiveRequest.RANDOM)
         request.setOnResponseListener(this).send(this)
     }
 }

@@ -19,8 +19,7 @@ import kotlinx.android.synthetic.main.layout_player_controls.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.browser.PlaylistMenu
-import org.helllabs.android.xmp.extension.toast
-import org.helllabs.android.xmp.extension.yesNoDialog
+import org.helllabs.android.xmp.extension.*
 import org.helllabs.android.xmp.player.viewer.ChannelViewer
 import org.helllabs.android.xmp.player.viewer.InstrumentViewer
 import org.helllabs.android.xmp.player.viewer.PatternViewer
@@ -335,8 +334,8 @@ class PlayerActivity : AppCompatActivity() {
         control_player_seek.progress = 0
         control_player_seek.max = time / 100
 
-        toast(text = String.format(
-                getString(R.string.msg_new_sequence), time / 60000, time / 1000 % 60))
+        toast(text =
+        getString(R.string.msg_new_sequence, time / 60000, time / 1000 % 60))
 
         sheet!!.selectSequence(modVars[7])
     }
@@ -506,9 +505,7 @@ class PlayerActivity : AppCompatActivity() {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        if (viewer != null) {
-            viewer!!.setRotation(display!!.rotation)
-        }
+        viewer?.setRotation(display!!.rotation)
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -545,9 +542,11 @@ class PlayerActivity : AppCompatActivity() {
             // Oops. We don't want to start service if launched from history and service is not running
             // so run the browser instead.
             Log.i(TAG, "Start file browser")
-            val browserIntent = Intent(this, PlaylistMenu::class.java)
-            browserIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
-            startActivity(browserIntent)
+            startActivity(
+                    intent(PlaylistMenu::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    })
+
             finish()
             return
         } else {
@@ -565,10 +564,10 @@ class PlayerActivity : AppCompatActivity() {
             }
         }
 
-        val service = Intent(this, PlayerService::class.java)
+        val service = intent(PlayerService::class.java)
         if (!reconnect) {
             Log.i(TAG, "Start service")
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+            if (isAtLeastO())
                 startForegroundService(service)
             else
                 startService(service)
@@ -647,7 +646,7 @@ class PlayerActivity : AppCompatActivity() {
                 var dragLock = PrefManager.playerDragLock
                 val dragStay = PrefManager.playerDragStay
 
-                dragLock = dragLock xor true
+                dragLock = !dragLock
                 control_player_lock.setImageResource(
                         if (dragLock) R.drawable.ic_lock else R.drawable.ic_unlock)
 
@@ -664,7 +663,8 @@ class PlayerActivity : AppCompatActivity() {
                 try {
                     val toggle = modPlayer!!.toggleLoop()
                     control_player_loop.setImageResource(
-                            if (toggle) R.drawable.ic_repeat_on else R.drawable.ic_repeat_off)
+                            if (toggle) R.drawable.ic_repeat_on else R.drawable.ic_repeat_off
+                    )
                 } catch (e: RemoteException) {
                     Log.e(TAG, "Can't get loop status")
                 }
@@ -751,7 +751,6 @@ class PlayerActivity : AppCompatActivity() {
         }
     }
 
-    // Life cycle
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_player)
@@ -789,7 +788,7 @@ class PlayerActivity : AppCompatActivity() {
 
         viewer = InstrumentViewer(this)
         viewer_layout!!.addView(viewer)
-        viewer_layout!!.setOnClickListener {
+        viewer_layout!!.click {
             synchronized(playerLock) {
                 if (canChangeViewer) {
                     changeViewer()
@@ -815,13 +814,13 @@ class PlayerActivity : AppCompatActivity() {
             control_player_time.visibility = LinearLayout.GONE
         }
 
-        control_player_play!!.setOnClickListener {
+        control_player_play!!.click {
             playButtonListener()
         }
 
         control_player_loop.apply {
             setImageResource(R.drawable.ic_repeat_off)
-            setOnClickListener {
+            click {
                 loopButtonListener()
             }
         }
@@ -833,23 +832,25 @@ class PlayerActivity : AppCompatActivity() {
                 if (dragLock) R.drawable.ic_lock else R.drawable.ic_unlock)
         sheet!!.setDragLock(dragLock, dragStay)
 
-        control_player_lock.setOnClickListener {
+        control_player_lock.click {
             lockButtonListener()
         }
 
-        control_player_stop.setOnClickListener {
+        control_player_stop.click {
             stopButtonListener()
         }
 
-        control_player_back.setOnClickListener {
+        control_player_back.click {
             backButtonListener()
         }
 
-        control_player_forward.setOnClickListener {
+        control_player_forward.click {
             forwardButtonListener()
         }
 
-        control_player_time.setOnClickListener { showElapsed = showElapsed xor true }
+        control_player_time.click {
+            showElapsed = !showElapsed
+        }
 
         control_player_seek.progress = 0
         control_player_seek.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
@@ -990,9 +991,10 @@ class PlayerActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == R.id.menu_delete) {
-            val title = getString(R.string.menu_delete)
-            val message = String.format(getString(R.string.msg_delete_file), modPlayer!!.fileName)
-            yesNoDialog(title, message) { result ->
+            yesNoDialog(
+                    getString(R.string.menu_delete),
+                    getString(R.string.msg_delete_file, modPlayer!!.fileName)
+            ) { result ->
                 if (result) {
                     try {
                         if (modPlayer!!.deleteFile()) {
@@ -1022,6 +1024,7 @@ class PlayerActivity : AppCompatActivity() {
 
         @Volatile
         private var stopUpdate: Boolean = false
+
         @Volatile
         private var canChangeViewer: Boolean = false
     }

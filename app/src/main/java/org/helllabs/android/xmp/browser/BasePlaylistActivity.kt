@@ -18,6 +18,7 @@ import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.player.PlayerActivity
 import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter
+import org.helllabs.android.xmp.extension.intent
 import org.helllabs.android.xmp.extension.toast
 import org.helllabs.android.xmp.modarchive.Search
 import org.helllabs.android.xmp.preferences.PrefManager
@@ -180,11 +181,11 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
                 // add to queue
                 3 -> {
                     addToQueue(filename)
-                    toast(text = String.format(getString(R.string.msg_added_queue), filename))
+                    toast(text = getString(R.string.msg_added_queue, filename))
                 }
             }
         } else {
-            toast(text = String.format(getString(R.string.msg_unreconized_format, filename)))
+            toast(text = getString(R.string.msg_unreconized_format, filename))
         }
     }
 
@@ -202,21 +203,21 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
                 else
                     modList!!.toMutableList()
 
-        startService(Intent(this, PlayerService::class.java))
-        val intent = Intent(this, PlayerActivity::class.java).apply {
-            putExtra(PlayerActivity.PARM_SHUFFLE, isShuffleMode)
-            putExtra(PlayerActivity.PARM_LOOP, isLoopMode)
-            putExtra(PlayerActivity.PARM_START, start)
-            putExtra(PlayerActivity.PARM_KEEPFIRST, keepFirst)
-        }
+        startService(intent(PlayerService::class.java))
 
         Log.i(TAG, "Start Player activity")
-        startActivityForResult(intent, PLAY_MOD_REQUEST)
+        startActivityForResult(
+                intent(PlayerActivity::class.java).apply {
+                    putExtra(PlayerActivity.PARM_SHUFFLE, isShuffleMode)
+                    putExtra(PlayerActivity.PARM_LOOP, isLoopMode)
+                    putExtra(PlayerActivity.PARM_START, start)
+                    putExtra(PlayerActivity.PARM_KEEPFIRST, keepFirst)
+                }, PLAY_MOD_REQUEST)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        Log.i(TAG, "Activity result $requestCode,$resultCode")
+        Log.i(TAG, "Activity result $requestCode, $resultCode")
         when (requestCode) {
             SETTINGS_REQUEST -> {
                 update()
@@ -234,10 +235,9 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     protected fun addToQueue(filename: String) {
         if (InfoCache.testModule(filename)) {
             if (PlayerService.isAlive) {
-                val service = Intent(this, PlayerService::class.java)
                 mAddList.clear()
                 mAddList.add(filename)
-                bindService(service, connection, 0)
+                bindService(intent(PlayerService::class.java), connection, 0)
             } else {
                 playModule(filename)
             }
@@ -246,13 +246,11 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
 
     protected fun addToQueue(list: List<String>) {
         val realList = ArrayList<String>()
-        var realSize = 0
         var invalid = false
 
-        for (filename in list) {
-            if (InfoCache.testModule(filename)) {
-                realList.add(filename)
-                realSize++
+        list.forEach {
+            if (InfoCache.testModule(it)) {
+                realList.add(it)
             } else {
                 invalid = true
             }
@@ -262,43 +260,35 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
             toast(R.string.msg_only_valid_files_sent)
         }
 
-        if (realSize > 0) {
+        if (realList.size > 0) {
             if (PlayerService.isAlive) {
-                val service = Intent(this, PlayerService::class.java)
                 mAddList.clear()
                 mAddList.addAll(realList)
-                bindService(service, connection, 0)
+                bindService(intent(PlayerService::class.java), connection, 0)
             } else {
                 playModule(modList = realList)
             }
         }
     }
 
-    // Menu
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_options, menu)
-
-        // Calling super after populating the menu is necessary here to ensure that the
-        // action bar helpers have a chance to handle this event.
         return super.onCreateOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             android.R.id.home -> {
-                val intent = Intent(this, PlaylistMenu::class.java)
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                startActivity(intent)
+                startActivity(
+                        intent(PlaylistMenu::class.java).apply {
+                            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                        })
                 return true
             }
             R.id.menu_prefs ->
-                startActivityForResult(
-                        Intent(this, Preferences::class.java), SETTINGS_REQUEST
-                )
+                startActivityForResult(intent(Preferences::class.java), SETTINGS_REQUEST)
             R.id.menu_download ->
-                startActivityForResult(
-                        Intent(this, Search::class.java), SEARCH_REQUEST
-                )
+                startActivityForResult(intent(Search::class.java), SEARCH_REQUEST)
         }
         return super.onOptionsItemSelected(item)
     }
@@ -308,8 +298,5 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         private const val SETTINGS_REQUEST = 45
         private const val PLAY_MOD_REQUEST = 669
         private const val SEARCH_REQUEST = 47
-
-        // const val DEFAULT_SHUFFLE_MODE = true
-        // const val DEFAULT_LOOP_MODE = false
     }
 }

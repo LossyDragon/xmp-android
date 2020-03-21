@@ -1,29 +1,22 @@
 package org.helllabs.android.xmp.modarchive
 
-import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.KeyEvent
-import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_search.*
 import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.extension.click
+import org.helllabs.android.xmp.extension.intent
 import org.helllabs.android.xmp.modarchive.result.ArtistResult
 import org.helllabs.android.xmp.modarchive.result.RandomResult
 import org.helllabs.android.xmp.modarchive.result.TitleResult
 
 class Search : AppCompatActivity(), TextView.OnEditorActionListener {
-
-    private val searchClick = View.OnClickListener { performSearch() }
-
-    private val randomClick = View.OnClickListener {
-        startActivity(Intent(this@Search, RandomResult::class.java))
-        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
-    }
 
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,9 +39,14 @@ class Search : AppCompatActivity(), TextView.OnEditorActionListener {
 
         search_radio_group!!.check(R.id.search_title_radio_button)
 
-        search_search_button.setOnClickListener(searchClick)
+        search_search_button.click {
+            performSearch()
+        }
 
-        search_random_button.setOnClickListener(randomClick)
+        search_random_button.click {
+            startActivity(intent(RandomResult::class.java))
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+        }
     }
 
     public override fun onResume() {
@@ -70,19 +68,19 @@ class Search : AppCompatActivity(), TextView.OnEditorActionListener {
     private fun performSearch() {
         val searchText = search_edit_text!!.text.toString().trim { it <= ' ' }
 
-        val intent: Intent
-
         when (search_radio_group!!.checkedRadioButtonId) {
             R.id.search_title_radio_button -> {
-                intent = Intent(this@Search, TitleResult::class.java)
-                intent.putExtra(SEARCH_TEXT, searchText)
-                startActivity(intent)
+                startActivity(
+                        intent(TitleResult::class.java).apply {
+                            putExtra(SEARCH_TEXT, searchText)
+                        })
                 overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
             }
             R.id.search_artist_radio_button -> {
-                intent = Intent(this@Search, ArtistResult::class.java)
-                intent.putExtra(SEARCH_TEXT, searchText)
-                startActivity(intent)
+                startActivity(
+                        intent(ArtistResult::class.java).apply {
+                            putExtra(SEARCH_TEXT, searchText)
+                        })
                 overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
             }
             else -> {

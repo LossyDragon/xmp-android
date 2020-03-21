@@ -15,6 +15,7 @@ import com.afollestad.materialdialogs.list.listItemsSingleChoice
 import kotlinx.android.synthetic.main.activity_modlist.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.browser.playlist.*
+import org.helllabs.android.xmp.extension.click
 import org.helllabs.android.xmp.extension.error
 import org.helllabs.android.xmp.extension.toast
 import org.helllabs.android.xmp.extension.yesNoDialog
@@ -144,7 +145,7 @@ class FilelistActivity :
         mBackButtonParentdir = PrefManager.backButtonNavigation
 
         // Back/Up button
-        up_button.setOnClickListener {
+        up_button.click {
             if (!filelistNavigation!!.isAtTopDir)
                 parentDir()
         }
@@ -245,7 +246,7 @@ class FilelistActivity :
     private fun pathNotFound(media_path: String) {
         MaterialDialog(this).show {
             title(R.string.title_no_path)
-            message(text = String.format(getString(R.string.msg_no_path), media_path))
+            message(text = getString(R.string.msg_no_path, media_path))
             positiveButton(R.string.create) {
                 val ret = Examples.install(
                         context = this@FilelistActivity,
@@ -254,9 +255,8 @@ class FilelistActivity :
                 )
 
                 if (ret < 0)
-                    this@FilelistActivity.error(text = String.format(
-                            getString(R.string.error_create_path), media_path)
-                    )
+                    this@FilelistActivity
+                            .error(text = getString(R.string.error_create_path, media_path))
 
                 filelistNavigation!!.startNavigation(File(media_path))
                 updateModlist()
@@ -297,12 +297,10 @@ class FilelistActivity :
                             comment = getString(R.string.directory)
                     )
                 } else {
-                    val date =
-                            DateFormat
-                                    .getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM)
-                                    .format(file.lastModified())
-                    val comment = date + String.format(
-                            getString(R.string.format_kb), file.length() / 1024)
+                    val date = DateFormat
+                            .getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM)
+                            .format(file.lastModified())
+                    val comment = date + getString(R.string.format_kb, file.length() / 1024)
 
                     PlaylistItem(PlaylistItem.TYPE_FILE, file.name, comment)
                 }
@@ -366,8 +364,7 @@ class FilelistActivity :
 
         if (deleteName.startsWith(mediaPath) && deleteName != mediaPath) {
             val title = getString(R.string.title_delete_directory)
-            val message = String.format(
-                    getString(R.string.msg_delete_file, FileUtils.basename(deleteName)))
+            val message = getString(R.string.msg_delete_file, FileUtils.basename(deleteName))
 
             yesNoDialog(title, message) { result ->
                 if (result) {
@@ -387,8 +384,7 @@ class FilelistActivity :
     private fun deleteFile(position: Int) {
         val deleteName = mPlaylistAdapter.getFilename(position)
         val title = getString(R.string.title_delete_file)
-        val message = String.format(
-                getString(R.string.msg_delete_file, FileUtils.basename(deleteName)))
+        val message = getString(R.string.msg_delete_file, FileUtils.basename(deleteName))
 
         yesNoDialog(title, message) { result ->
             if (result) {

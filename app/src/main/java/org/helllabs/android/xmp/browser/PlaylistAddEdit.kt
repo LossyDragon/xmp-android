@@ -3,11 +3,13 @@ package org.helllabs.android.xmp.browser
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.afollestad.materialdialogs.MaterialDialog
 import kotlinx.android.synthetic.main.activity_add_edit_playlist.*
 import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.extension.click
+import org.helllabs.android.xmp.extension.hide
+import org.helllabs.android.xmp.extension.show
 
 // TextInputEditText leaks, nothing we can do.
 class PlaylistAddEdit : AppCompatActivity() {
@@ -22,26 +24,27 @@ class PlaylistAddEdit : AppCompatActivity() {
         val comment = intent.getStringExtra(EXTRA_COMMENT)
 
         if (intent.hasExtra(EXTRA_ID)) {
-            title = String.format(getString(R.string.title_edit_playlist), name)
+            title = getString(R.string.title_edit_playlist, name)
 
             playlist_add_edit_name_editText.setText(name)
             playlist_add_edit_comment_editText.setText(comment)
+
             button_add_edit_playlist.text = getString(R.string.button_playlist_update)
-            button_delete_playlist.apply {
-                visibility = View.VISIBLE
-                text = String.format(getString(R.string.button_playlist_delete), name)
-            }
+
+            button_delete_playlist.show()
+            button_delete_playlist.text = getString(R.string.button_playlist_delete, name)
         } else {
             title = getString(R.string.new_playlist)
+
             button_add_edit_playlist.text = getString(R.string.button_playlist_add)
-            button_delete_playlist.visibility = View.GONE
+            button_delete_playlist.hide()
         }
 
-        button_add_edit_playlist.setOnClickListener {
+        button_add_edit_playlist.click {
             savePlaylist()
         }
 
-        button_delete_playlist.setOnClickListener {
+        button_delete_playlist.click {
             deletePlaylist()
         }
 
@@ -78,10 +81,9 @@ class PlaylistAddEdit : AppCompatActivity() {
     }
 
     private fun deletePlaylist() {
-        val dialogMessage = String.format(getString(R.string.dialog_delete_playlist_message), title)
         MaterialDialog(this).show {
             title(R.string.dialog_delete_playlist)
-            message(text = dialogMessage)
+            message(text = getString(R.string.dialog_delete_playlist_message, title))
             positiveButton(R.string.menu_delete) {
 
                 val deleteIntent = Intent().apply {

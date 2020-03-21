@@ -7,6 +7,7 @@ import android.view.KeyEvent
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_search_error.*
 import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.extension.intent
 import java.util.*
 
 class SearchError : AppCompatActivity(), Runnable {
@@ -56,9 +57,10 @@ class SearchError : AppCompatActivity(), Runnable {
 
         // Back key returns to search
         if (keyCode == KeyEvent.KEYCODE_BACK) {
-            val intent = Intent(this, Search::class.java)
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-            startActivity(intent)
+            startActivity(
+                    intent(Search::class.java).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                    })
             overridePendingTransition(0, 0)
             return true
         }
@@ -75,7 +77,7 @@ class SearchError : AppCompatActivity(), Runnable {
             postDelayed(this@SearchError, PERIOD.toLong())
         }
 
-        frameBlink = frameBlink xor true
+        frameBlink = !frameBlink
     }
 
     companion object {

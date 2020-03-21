@@ -143,7 +143,7 @@ class PlaylistActivity :
 
     override fun onItemLongClick(adapter: PlaylistAdapter, view: View, position: Int) {
         MaterialDialog(this, BottomSheet(LayoutMode.WRAP_CONTENT)).show {
-            title(text = String.format(getString(R.string.title_playlist_name), name))
+            title(text = getString(R.string.title_playlist_name, name))
             listItems(R.array.dialog_playlist) { _, index, _ ->
                 when (index) {
                     0 -> {

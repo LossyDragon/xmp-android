@@ -64,16 +64,15 @@ class PreferencesFragment : PreferenceFragmentCompat() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            android.R.id.home -> {
-                if (fragmentManager!!.backStackEntryCount > 0) {
-                    fragmentManager?.popBackStack()
-                } else {
-                    activity?.onBackPressed()
-                }
-                return true
+        if (item.itemId == android.R.id.home) {
+            if (fragmentManager!!.backStackEntryCount > 0) {
+                fragmentManager?.popBackStack()
+            } else {
+                activity?.onBackPressed()
             }
+            return true
         }
+
         return super.onOptionsItemSelected(item)
     }
 
@@ -84,13 +83,12 @@ class PreferencesFragment : PreferenceFragmentCompat() {
             isThemeChanged = true // Workaround for now.
         }
 
-        fun deleteCache(file: File): Boolean {
-            return deleteCache(file, true)
-        }
+        fun deleteCache(file: File): Boolean = deleteCache(file, true)
 
         @Suppress("SameParameterValue")
         private fun deleteCache(file: File, flag: Boolean): Boolean {
             var booleanFlag = flag
+
             if (!file.exists()) {
                 return true
             }
@@ -100,6 +98,7 @@ class PreferencesFragment : PreferenceFragmentCompat() {
                     booleanFlag = booleanFlag and deleteCache(cacheFile)
                 }
             }
+
             booleanFlag = booleanFlag and file.delete()
 
             return booleanFlag

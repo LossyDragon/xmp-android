@@ -3,9 +3,7 @@ package org.helllabs.android.xmp.modarchive.result
 import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.Color
-import android.os.Build
 import android.os.Bundle
-import android.text.Html
 import android.text.method.LinkMovementMethod
 import android.view.Menu
 import android.view.MenuItem
@@ -23,9 +21,7 @@ import kotlinx.android.synthetic.main.layout_error.*
 import kotlinx.android.synthetic.main.result_module.*
 import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.player.PlayerActivity
-import org.helllabs.android.xmp.extension.toast
-import org.helllabs.android.xmp.extension.yesNoDialog
+import org.helllabs.android.xmp.extension.*
 import org.helllabs.android.xmp.modarchive.Search
 import org.helllabs.android.xmp.modarchive.model.Module
 import org.helllabs.android.xmp.modarchive.request.ModArchiveRequest
@@ -34,6 +30,7 @@ import org.helllabs.android.xmp.modarchive.response.HardErrorResponse
 import org.helllabs.android.xmp.modarchive.response.ModArchiveResponse
 import org.helllabs.android.xmp.modarchive.response.ModuleResponse
 import org.helllabs.android.xmp.modarchive.response.SoftErrorResponse
+import org.helllabs.android.xmp.player.PlayerActivity
 import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.util.Log
 import java.io.File
@@ -65,10 +62,10 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, FetchO
         module_button_play.apply {
             attachTextChangeAnimator()
             bindProgressButton(this)
-            setOnClickListener { playClick() }
+            click { playClick() }
         }
 
-        module_button_random.setOnClickListener { randomClick() }
+        module_button_random.click { randomClick() }
 
         // updateButtons(module)
 
@@ -79,9 +76,8 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, FetchO
     }
 
     protected open fun makeRequest(query: String) {
-        val key = BuildConfig.ApiKey
         try {
-            val request = ModuleRequest(key, ModArchiveRequest.MODULE, query)
+            val request = ModuleRequest(BuildConfig.ApiKey, ModArchiveRequest.MODULE, query)
             request.setOnResponseListener(this).send(this)
         } catch (e: UnsupportedEncodingException) {
             handleQueryError()
@@ -177,21 +173,8 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, FetchO
             module_info!!.text =
                     String.format("%s by %s (%d KB)", module.format, module.artist, size)
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                module_license!!.text = Html.fromHtml(
-                        "License: <a href=\"" +
-                                module.legalUrl + "\">" +
-                                module.license + "</a>",
-                        Html.FROM_HTML_MODE_LEGACY
-                )
-            } else {
-                @Suppress("DEPRECATION")
-                module_license!!.text = Html.fromHtml(
-                        "License: <a href=\"" +
-                                module.legalUrl + "\">" +
-                                module.license + "</a>"
-                )
-            }
+            module_license!!.text = fromHtml(
+                    "License: <a href=\"" + module.legalUrl + "\">" + module.license + "</a>")
 
             module_license!!.movementMethod = LinkMovementMethod.getInstance()
             module_license_description!!.text = module.licenseDescription
@@ -203,23 +186,13 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, FetchO
 
         val sponsor = response.sponsor
         if (sponsor?.name != null) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                module_sponsor!!.text =
-                        Html.fromHtml(
-                                "Download mirrors provided by <a href=\"" +
-                                        sponsor.link + "\">" +
-                                        sponsor.name + "</a>",
-                                Html.FROM_HTML_MODE_LEGACY
-                        )
-            } else {
-                @Suppress("DEPRECATION")
-                module_sponsor!!.text =
-                        Html.fromHtml(
-                                "Download mirrors provided by <a href=\"" +
-                                        sponsor.link + "\">" +
-                                        sponsor.name + "</a>"
-                        )
-            }
+            module_sponsor!!.text =
+                    fromHtml(
+                            "Download mirrors provided by <a href=\"" +
+                                    sponsor.link + "\">" +
+                                    sponsor.name + "</a>"
+                    )
+
             module_sponsor!!.movementMethod = LinkMovementMethod.getInstance()
         }
 
@@ -237,11 +210,10 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, FetchO
     }
 
     private fun randomClick() {
-
-        val intent = Intent(this, RandomResult::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-
-        startActivity(Intent(intent))
+        startActivity(
+                intent(RandomResult::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                })
         overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
     }
 
@@ -254,12 +226,13 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, FetchO
 
             modList.add(path)
 
-            val intent = Intent(this, PlayerActivity::class.java)
-            intent.putExtra(PlayerActivity.PARM_START, 0)
-
             xmpApplication().fileList = modList
+
             Log.i(TAG, "Play $path")
-            startActivity(intent)
+            startActivity(
+                    intent(PlayerActivity::class.java).apply {
+                        putExtra(PlayerActivity.PARM_START, 0)
+                    })
         } else {
             // Does not exist, download module
             val modDir = getDownloadPath(module)
@@ -281,7 +254,7 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, FetchO
     private fun deleteClick() {
         val file = localFile(module)
         val title = getString(R.string.title_delete_file)
-        val message = String.format(getString(R.string.msg_delete_file), module!!.filename)
+        val message = getString(R.string.msg_delete_file, module!!.filename)
         yesNoDialog(title, message) { result ->
             if (result) {
                 Log.i(TAG, "Delete " + file.path)
@@ -335,7 +308,6 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, FetchO
     }
 
     private fun updateButtons(module: Module?) {
-
         if (localFile(module).exists()) {
             // module exists, update button to reflect existance and enable Menu Delete
             deleteMenu.findItem(R.id.menu_delete).isEnabled = true
@@ -348,11 +320,10 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, FetchO
     }
 
     private fun download(mod: String, url: String, path: String) {
-
         if (localFile(url, path).exists()) {
             yesNoDialog(
-                    "File exists!",
-                    "This module already exists. Do you want to overwrite?") { result ->
+                    getString(R.string.msg_file_exists),
+                    getString(R.string.msg_file_exists_overwrite)) { result ->
                 if (result) {
                     modDownloader(mod, url, path)
                 }
@@ -381,10 +352,9 @@ open class ModuleResult : Result(), ModArchiveRequest.OnResponseListener, FetchO
     }
 
     private fun localFile(module: Module?): File {
-        val path = getDownloadPath(module)
         val url = module!!.url
         val moduleFilename = url!!.substring(url.lastIndexOf('#') + 1, url.length)
-        return File(path, moduleFilename)
+        return File(getDownloadPath(module), moduleFilename)
     }
 
     private fun localFile(url: String, path: String): File {

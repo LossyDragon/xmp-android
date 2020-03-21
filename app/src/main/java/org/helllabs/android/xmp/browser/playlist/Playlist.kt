@@ -174,9 +174,11 @@ class Playlist(context: Context, val name: String) {
 
         try {
             val out = BufferedWriter(FileWriter(file), 512)
-            for (item in mList) {
-                out.write(item.toString())
+
+            mList.forEach {
+                out.write(it.toString())
             }
+
             out.close()
 
             val oldFile = ListFile(name)
@@ -324,8 +326,8 @@ class Playlist(context: Context, val name: String) {
         fun addToList(activity: Activity, name: String, items: List<PlaylistItem>) {
             val lines: MutableList<String> = mutableListOf()
 
-            for (item in items) {
-                lines.add(item.toString())
+            items.forEach {
+                lines.add(it.toString())
             }
 
             try {
@@ -350,8 +352,7 @@ class Playlist(context: Context, val name: String) {
             try {
                 comment = FileUtils.readFromFile(file)
             } catch (e: IOException) {
-                val error =
-                        String.format(activity.getString(R.string.error_read_comment), file.name)
+                val error = activity.getString(R.string.error_read_comment, file.name)
                 activity.error(text = error)
             }
 

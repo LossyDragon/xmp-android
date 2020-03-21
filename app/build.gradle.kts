@@ -81,7 +81,7 @@ dependencies {
     implementation("androidx.cardview:cardview:1.0.0")
     implementation("androidx.constraintlayout:constraintlayout:2.0.0-beta4")
     implementation("androidx.recyclerview:recyclerview:1.2.0-alpha01")
-    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0-alpha03")
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0-beta01")
     implementation("androidx.preference:preference:1.1.0")
     implementation("androidx.media:media:1.1.0")
     implementation("androidx.core:core-ktx:1.2.0")
