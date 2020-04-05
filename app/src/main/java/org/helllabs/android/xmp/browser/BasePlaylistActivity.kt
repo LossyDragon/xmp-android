@@ -141,14 +141,14 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         }
 
         control_button_loop.apply {
-            setImageResource(
-                    if (isLoopMode) R.drawable.ic_repeat_on else R.drawable.ic_repeat_off)
+            val image = if (isLoopMode) R.drawable.ic_repeat_on else R.drawable.ic_repeat_off
+            setImageResource(image)
             setOnClickListener(toggleLoopButtonListener)
         }
 
         control_button_shuffle.apply {
-            setImageResource(
-                    if (isShuffleMode) R.drawable.ic_shuffle_on else R.drawable.ic_shuffle_off)
+            val image = if (isShuffleMode) R.drawable.ic_shuffle_on else R.drawable.ic_shuffle_off
+            setImageResource(image)
             setOnClickListener(toggleShuffleButtonListener)
         }
     }

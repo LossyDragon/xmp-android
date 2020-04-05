@@ -334,12 +334,9 @@ class FilelistActivity :
             return
         }
 
-        val list = mutableListOf<String>()
-        listNoSuffix().forEach { list.add(it) }
-
         MaterialDialog(this).show {
             title(R.string.msg_select_playlist)
-            listItemsSingleChoice(items = list, waitForPositiveButton = true) { _, index, _ ->
+            listItemsSingleChoice(items = listNoSuffix().toList()) { _, index, _ ->
                 choice.execute(fileSelection, index)
             }
             positiveButton(R.string.ok)
@@ -348,8 +345,8 @@ class FilelistActivity :
     }
 
     private fun clearCachedEntries(fileList: List<String>) {
-        for (filename in fileList) {
-            InfoCache.clearCache(filename)
+        fileList.forEach {
+            InfoCache.clearCache(it)
         }
     }
 

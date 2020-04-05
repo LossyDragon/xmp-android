@@ -80,7 +80,7 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.1.0")
     implementation("androidx.cardview:cardview:1.0.0")
     implementation("androidx.constraintlayout:constraintlayout:2.0.0-beta4")
-    implementation("androidx.recyclerview:recyclerview:1.2.0-alpha01")
+    implementation("androidx.recyclerview:recyclerview:1.2.0-alpha02")
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0-beta01")
     implementation("androidx.preference:preference:1.1.0")
     implementation("androidx.media:media:1.1.0")
@@ -88,9 +88,9 @@ dependencies {
 
     implementation("com.google.android.material:material:1.2.0-alpha05")
 
-    implementation("androidx.core:core-ktx:1.3.0-alpha02")
+    implementation("androidx.core:core-ktx:1.3.0-beta01")
 
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.70")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.71")
 
     implementation("com.h6ah4i.android.widget.advrecyclerview:advrecyclerview:1.0.0")
 
@@ -105,7 +105,7 @@ dependencies {
 
     // implementation("org.greenrobot:eventbus:3.2.0")
 
-    implementation("com.squareup.okhttp3:okhttp:4.4.0")
+    implementation("com.squareup.okhttp3:okhttp:4.4.1")
 
     debugImplementation("com.squareup.leakcanary:leakcanary-android:2.2")
 }

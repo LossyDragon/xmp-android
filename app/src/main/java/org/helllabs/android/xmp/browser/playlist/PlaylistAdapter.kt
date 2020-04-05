@@ -203,11 +203,11 @@ class PlaylistAdapter :
             }
 
             itemView.click {
-                clickListener?.onItemClick(adapter, it, adapterPosition)
+                clickListener?.onItemClick(adapter, it, bindingAdapterPosition)
             }
 
             itemView.longClick {
-                clickListener?.onItemLongClick(adapter, it, adapterPosition)
+                clickListener?.onItemLongClick(adapter, it, bindingAdapterPosition)
                 true
             }
         }
