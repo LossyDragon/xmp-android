@@ -21,66 +21,66 @@ import android.widget.TextView;
 
 public class ArtistResult extends Result implements ArtistRequest.OnResponseListener, ListView.OnItemClickListener {
 
-	private ListView list;
-	private TextView errorMessage;
+    private ListView list;
+    private TextView errorMessage;
 
-	@Override
-	public void onCreate(final Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.result_list);
-		setupCrossfade();
+    @Override
+    public void onCreate(final Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.result_list);
+        setupCrossfade();
 
-		setTitle(R.string.search_artist_title);
+        setTitle(R.string.search_artist_title);
 
-		list = (ListView)findViewById(R.id.result_list);
-		list.setOnItemClickListener(this);
-		
-		errorMessage = (TextView)findViewById(R.id.error_message);
+        list = (ListView) findViewById(R.id.result_list);
+        list.setOnItemClickListener(this);
 
-		final String searchText = getIntent().getStringExtra(Search.SEARCH_TEXT);
-		final String key = getString(R.string.modarchive_apikey);
+        errorMessage = (TextView) findViewById(R.id.error_message);
 
-		try {
-			final ArtistRequest request = new ArtistRequest(key, ModArchiveRequest.ARTIST, searchText);
-			request.setOnResponseListener(this).send();
-		} catch (UnsupportedEncodingException e) {
-			handleQueryError();
-		}
-	}
+        final String searchText = getIntent().getStringExtra(Search.SEARCH_TEXT);
+        final String key = getString(R.string.modarchive_apikey);
 
-	@Override
-	public void onResponse(final ModArchiveResponse response) {
-		final ArtistResponse artistList = (ArtistResponse)response;
-		final ArtistArrayAdapter adapter = new ArtistArrayAdapter(this, android.R.layout.simple_list_item_1, artistList.getList());
-		list.setAdapter(adapter);
+        try {
+            final ArtistRequest request = new ArtistRequest(key, ModArchiveRequest.ARTIST, searchText);
+            request.setOnResponseListener(this).send();
+        } catch (UnsupportedEncodingException e) {
+            handleQueryError();
+        }
+    }
 
-		if (artistList.isEmpty()) {
-			errorMessage.setText(R.string.search_no_result);
-			list.setVisibility(View.GONE);
-		}
+    @Override
+    public void onResponse(final ModArchiveResponse response) {
+        final ArtistResponse artistList = (ArtistResponse) response;
+        final ArtistArrayAdapter adapter = new ArtistArrayAdapter(this, android.R.layout.simple_list_item_1, artistList.getList());
+        list.setAdapter(adapter);
 
-		crossfade();
-	}
-	
-	@Override
-	public void onSoftError(final SoftErrorResponse response) {
-		final TextView errorMessage = (TextView)findViewById(R.id.error_message);
-		errorMessage.setText(response.getMessage());
-		list.setVisibility(View.GONE);
-		crossfade();
-	}
+        if (artistList.isEmpty()) {
+            errorMessage.setText(R.string.search_no_result);
+            list.setVisibility(View.GONE);
+        }
 
-	@Override
-	public void onHardError(final HardErrorResponse response) {
-		handleError(response.getError());
-	}
+        crossfade();
+    }
 
-	@Override
-	public void onItemClick(final AdapterView<?> parent, final View view, final int position, final long id) {
-		final ArtistArrayAdapter adapter = (ArtistArrayAdapter)parent.getAdapter();
-		final Intent intent = new Intent(this, ArtistModulesResult.class);
-		intent.putExtra(Search.ARTIST_ID, adapter.getItem(position).getId());
-		startActivity(intent);
-		overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
-	}
+    @Override
+    public void onSoftError(final SoftErrorResponse response) {
+        final TextView errorMessage = (TextView) findViewById(R.id.error_message);
+        errorMessage.setText(response.getMessage());
+        list.setVisibility(View.GONE);
+        crossfade();
+    }
+
+    @Override
+    public void onHardError(final HardErrorResponse response) {
+        handleError(response.getError());
+    }
+
+    @Override
+    public void onItemClick(final AdapterView<?> parent, final View view, final int position, final long id) {
+        final ArtistArrayAdapter adapter = (ArtistArrayAdapter) parent.getAdapter();
+        final Intent intent = new Intent(this, ArtistModulesResult.class);
+        intent.putExtra(Search.ARTIST_ID, adapter.getItem(position).getId());
+        startActivity(intent);
+        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+    }
 }

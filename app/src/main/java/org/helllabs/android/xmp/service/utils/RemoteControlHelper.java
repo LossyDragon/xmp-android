@@ -25,7 +25,7 @@ import java.lang.reflect.Method;
  * Contains methods to handle registering/unregistering remote control clients.  These methods only
  * run on ICS devices.  On previous devices, all methods are no-ops.
  */
-@SuppressWarnings({"unchecked", "rawtypes", "PMD"})
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class RemoteControlHelper {
     private static final String TAG = "RemoteControlHelper";
 
@@ -56,7 +56,7 @@ public class RemoteControlHelper {
     }
 
     public static void registerRemoteControlClient(AudioManager audioManager,
-            RemoteControlClientCompat remoteControlClient) {
+                                                   RemoteControlClientCompat remoteControlClient) {
         if (!sHasRemoteControlAPIs) {
             return;
         }
@@ -71,7 +71,7 @@ public class RemoteControlHelper {
 
 
     public static void unregisterRemoteControlClient(AudioManager audioManager,
-            RemoteControlClientCompat remoteControlClient) {
+                                                     RemoteControlClientCompat remoteControlClient) {
         if (!sHasRemoteControlAPIs) {
             return;
         }

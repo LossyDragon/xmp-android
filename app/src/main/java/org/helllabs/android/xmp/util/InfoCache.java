@@ -8,180 +8,179 @@ import java.io.IOException;
 import org.helllabs.android.xmp.Xmp;
 import org.helllabs.android.xmp.preferences.Preferences;
 
-
 public final class InfoCache {
-	
-	private InfoCache() {
-		
-	}
 
-	public static boolean clearCache(final String filename) {
-		final File cacheFile = new File(Preferences.CACHE_DIR, filename + ".cache");
-		final File skipFile = new File(Preferences.CACHE_DIR, filename + ".skip");
-		boolean ret = false;
+    private InfoCache() {
 
-		if (cacheFile.isFile()) {
-			cacheFile.delete();
-			ret = true;
-		}
+    }
 
-		if (skipFile.isFile()) {
-			skipFile.delete();
-			ret = true;
-		}
+    public static boolean clearCache(final String filename) {
+        final File cacheFile = new File(Preferences.CACHE_DIR, filename + ".cache");
+        final File skipFile = new File(Preferences.CACHE_DIR, filename + ".skip");
+        boolean ret = false;
 
-		return ret;
-	}
-	
-	private static boolean removeCacheDir(final String filename) {
-		final File cacheFile = new File(Preferences.CACHE_DIR, filename + ".cache");
-		boolean ret = false;
+        if (cacheFile.isFile()) {
+            cacheFile.delete();
+            ret = true;
+        }
 
-		if (cacheFile.isDirectory()) {
-			cacheFile.delete();
-			ret = true;
-		}
+        if (skipFile.isFile()) {
+            skipFile.delete();
+            ret = true;
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	public static boolean delete(final String filename) {
-		final File file = new File(filename);
-		clearCache(filename);
-		return file.delete();
-	}
-	
-	public static boolean deleteRecursive(final String filename) {
-		final File file = new File(filename);
-		if (file.isDirectory()) {
-			for (final File f : file.listFiles()) {
-				if (f.isDirectory()) {
-					deleteRecursive(f.getPath());
-				} else {
-					f.delete();
-				}
-			}
-			file.delete();
-			removeCacheDir(filename);
-			return true;
-		} else {
-			clearCache(filename);
-			return file.delete();
-		}
-	}
+    private static boolean removeCacheDir(final String filename) {
+        final File cacheFile = new File(Preferences.CACHE_DIR, filename + ".cache");
+        boolean ret = false;
 
-	public static boolean fileExists(final String filename) {
-		final File file = new File(filename);
+        if (cacheFile.isDirectory()) {
+            cacheFile.delete();
+            ret = true;
+        }
 
-		if (file.isFile()) {
-			return true;
-		}
+        return ret;
+    }
 
-		clearCache(filename);
+    public static boolean delete(final String filename) {
+        final File file = new File(filename);
+        clearCache(filename);
+        return file.delete();
+    }
 
-		return false;
-	}
+    public static boolean deleteRecursive(final String filename) {
+        final File file = new File(filename);
+        if (file.isDirectory()) {
+            for (final File f : file.listFiles()) {
+                if (f.isDirectory()) {
+                    deleteRecursive(f.getPath());
+                } else {
+                    f.delete();
+                }
+            }
+            file.delete();
+            removeCacheDir(filename);
+            return true;
+        } else {
+            clearCache(filename);
+            return file.delete();
+        }
+    }
 
-	public static boolean testModuleForceIfInvalid(final String filename) {
-		final File skipFile = new File(Preferences.CACHE_DIR, filename + ".skip");
+    public static boolean fileExists(final String filename) {
+        final File file = new File(filename);
 
-		if (skipFile.isFile()) {
-			skipFile.delete();
-		}
+        if (file.isFile()) {
+            return true;
+        }
 
-		return testModule(filename);
-	}
+        clearCache(filename);
 
-	public static boolean testModule(final String filename) {
-		return testModule(filename, new ModInfo());
-	}
-	
-	private static boolean checkIfCacheValid(final File file, final File cacheFile, final ModInfo info) throws IOException {
-		boolean ret = false;
-		final BufferedReader reader = new BufferedReader(new FileReader(cacheFile), 512);
+        return false;
+    }
 
-		final String line = reader.readLine();
-		if (line != null) {
-			try {
-				final int size = Integer.parseInt(line);
+    public static boolean testModuleForceIfInvalid(final String filename) {
+        final File skipFile = new File(Preferences.CACHE_DIR, filename + ".skip");
 
-				if (size == file.length()) {
-					info.name = reader.readLine();
-					if (info.name != null) {
-						reader.readLine();				// skip filename
-						info.type = reader.readLine();
-						if (info.type != null) {
-							ret = true;
-						}
-					}
-				}
-			} catch (NumberFormatException e) {
-				// Someone had binary contents in the cache file, breaking parseInt()
-				ret = false;
-			}
-		}
+        if (skipFile.isFile()) {
+            skipFile.delete();
+        }
 
-		reader.close();
-		return ret;
-	}
+        return testModule(filename);
+    }
 
-	private static boolean testModule(final String filename, final ModInfo info) {
-		if (!Preferences.CACHE_DIR.isDirectory() && !Preferences.CACHE_DIR.mkdirs()) {
-			// Can't use cache
-			return Xmp.testModule(filename, info);
-		}
+    public static boolean testModule(final String filename) {
+        return testModule(filename, new ModInfo());
+    }
 
-		final File file = new File(filename);
-		final File cacheFile = new File(Preferences.CACHE_DIR, filename + ".cache");
-		final File skipFile = new File(Preferences.CACHE_DIR, filename + ".skip");
+    private static boolean checkIfCacheValid(final File file, final File cacheFile, final ModInfo info) throws IOException {
+        boolean ret = false;
+        final BufferedReader reader = new BufferedReader(new FileReader(cacheFile), 512);
 
-		try {
-			// If cache file exists and size matches, file is mod
-			if (cacheFile.isFile()) {
+        final String line = reader.readLine();
+        if (line != null) {
+            try {
+                final int size = Integer.parseInt(line);
 
-				// If we have cache and skip, delete skip
-				if (skipFile.isFile()) {
-					skipFile.delete();
-				}
+                if (size == file.length()) {
+                    info.name = reader.readLine();
+                    if (info.name != null) {
+                        reader.readLine();                // skip filename
+                        info.type = reader.readLine();
+                        if (info.type != null) {
+                            ret = true;
+                        }
+                    }
+                }
+            } catch (NumberFormatException e) {
+                // Someone had binary contents in the cache file, breaking parseInt()
+                ret = false;
+            }
+        }
 
-				// Check if our cache data is good
-				if (checkIfCacheValid(file, cacheFile, info)) {
-					return true;
-				}
-				
-				cacheFile.delete();		// Invalid or outdated cache file
-			}
+        reader.close();
+        return ret;
+    }
 
-			if (skipFile.isFile()) {
-				return false;
-			}
+    private static boolean testModule(final String filename, final ModInfo info) {
+        if (!Preferences.CACHE_DIR.isDirectory() && !Preferences.CACHE_DIR.mkdirs()) {
+            // Can't use cache
+            return Xmp.testModule(filename, info);
+        }
 
-			final boolean isMod = Xmp.testModule(filename, info);
-			if (isMod) {
-				final String[] lines = {
-						Long.toString(file.length()),
-						info.name,
-						filename,
-						info.type,
-				};
+        final File file = new File(filename);
+        final File cacheFile = new File(Preferences.CACHE_DIR, filename + ".cache");
+        final File skipFile = new File(Preferences.CACHE_DIR, filename + ".skip");
 
-				final File dir = cacheFile.getParentFile();
-				if (!dir.isDirectory()) {
-					dir.mkdirs();
-				}
-				cacheFile.createNewFile();
-				FileUtils.writeToFile(cacheFile, lines);
-			} else {
-				final File dir = skipFile.getParentFile();
-				if (!dir.isDirectory()) {
-					dir.mkdirs();
-				}
-				skipFile.createNewFile();
-			}
+        try {
+            // If cache file exists and size matches, file is mod
+            if (cacheFile.isFile()) {
 
-			return isMod;
-		} catch (IOException e) {
-			return Xmp.testModule(filename, info);
-		}	
-	}
+                // If we have cache and skip, delete skip
+                if (skipFile.isFile()) {
+                    skipFile.delete();
+                }
+
+                // Check if our cache data is good
+                if (checkIfCacheValid(file, cacheFile, info)) {
+                    return true;
+                }
+
+                cacheFile.delete();        // Invalid or outdated cache file
+            }
+
+            if (skipFile.isFile()) {
+                return false;
+            }
+
+            final boolean isMod = Xmp.testModule(filename, info);
+            if (isMod) {
+                final String[] lines = {
+                        Long.toString(file.length()),
+                        info.name,
+                        filename,
+                        info.type,
+                };
+
+                final File dir = cacheFile.getParentFile();
+                if (!dir.isDirectory()) {
+                    dir.mkdirs();
+                }
+                cacheFile.createNewFile();
+                FileUtils.writeToFile(cacheFile, lines);
+            } else {
+                final File dir = skipFile.getParentFile();
+                if (!dir.isDirectory()) {
+                    dir.mkdirs();
+                }
+                skipFile.createNewFile();
+            }
+
+            return isMod;
+        } catch (IOException e) {
+            return Xmp.testModule(filename, info);
+        }
+    }
 }

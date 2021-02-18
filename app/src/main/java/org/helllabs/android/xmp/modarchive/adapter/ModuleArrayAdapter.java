@@ -13,36 +13,36 @@ import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
 public class ModuleArrayAdapter extends ArrayAdapter<Module> {
-	private final Context context;
+    private final Context context;
 
-	public ModuleArrayAdapter(final Context context, final int resource, final List<Module> items) {
-		super(context, resource, items);
-		this.context = context;
-	}
+    public ModuleArrayAdapter(final Context context, final int resource, final List<Module> items) {
+        super(context, resource, items);
+        this.context = context;
+    }
 
-	@Override
-	public View getView(final int position, final View convertView, final ViewGroup parent) {
-		View view = convertView;
-    	if (view == null) {
-    		final LayoutInflater inflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-    		view = inflater.inflate(R.layout.search_list_item, null);
-    	}
+    @Override
+    public View getView(final int position, final View convertView, final ViewGroup parent) {
+        View view = convertView;
+        if (view == null) {
+            final LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            view = inflater.inflate(R.layout.search_list_item, null);
+        }
 
-    	final Module module = getItem(position);
-    	if (module != null) {
-    		final TextView fmt = (TextView)view.findViewById(R.id.search_list_fmt);
-    		final TextView line1 = (TextView)view.findViewById(R.id.search_list_line1);
-    		final TextView line2 = (TextView)view.findViewById(R.id.search_list_line2);
-    		final TextView size = (TextView)view.findViewById(R.id.search_list_size);
-    		
-    		fmt.setText(module.getFormat());
-    		line1.setText(module.getSongTitle());
-    		line2.setText("by " + module.getArtist());
-    		size.setText((module.getBytes() / 1024) + " KB");
-    	}
-    	
-    	return view;
-	}
+        final Module module = getItem(position);
+        if (module != null) {
+            final TextView fmt = (TextView) view.findViewById(R.id.search_list_fmt);
+            final TextView line1 = (TextView) view.findViewById(R.id.search_list_line1);
+            final TextView line2 = (TextView) view.findViewById(R.id.search_list_line2);
+            final TextView size = (TextView) view.findViewById(R.id.search_list_size);
+
+            fmt.setText(module.getFormat());
+            line1.setText(module.getSongTitle());
+            line2.setText("by " + module.getArtist());
+            size.setText((module.getBytes() / 1024) + " KB");
+        }
+
+        return view;
+    }
 
 
 }

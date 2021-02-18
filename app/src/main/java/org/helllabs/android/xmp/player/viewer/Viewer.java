@@ -4,6 +4,7 @@ import org.helllabs.android.xmp.player.ScreenSizeHelper;
 import org.helllabs.android.xmp.service.ModInterface;
 import org.helllabs.android.xmp.util.Log;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.RemoteException;
 import android.view.GestureDetector;
@@ -15,206 +16,203 @@ import android.view.View;
 
 
 public abstract class Viewer extends SurfaceView implements SurfaceHolder.Callback, View.OnClickListener {
-	private static final String TAG = "Viewer";
-	protected final Context context;
-	protected SurfaceHolder surfaceHolder;
-	protected int canvasHeight, canvasWidth;
-	protected int[] modVars;
-	protected ModInterface modPlayer;
-	protected boolean[] isMuted;
-	protected int rotation;
-	protected final int screenSize;
-	private final GestureDetector gestureDetector;
+    private static final String TAG = "Viewer";
+    protected final Context context;
+    protected SurfaceHolder surfaceHolder;
+    protected int canvasHeight, canvasWidth;
+    protected int[] modVars;
+    protected ModInterface modPlayer;
+    protected boolean[] isMuted;
+    protected int rotation;
+    protected final int screenSize;
+    private final GestureDetector gestureDetector;
 
-	// Touch tracking
-	protected float posX, posY, velX, velY;
-	protected boolean isDown;
-	private int maxX, maxY;
-	
-	public static class Info {
-		public int time;
-		public final int[] values = new int[7];	// order pattern row num_rows frame speed bpm
-		public final int[] volumes = new int[64];
-		public final int[] finalvols = new int[64];
-		public final int[] pans = new int[64];
-		public final int[] instruments = new int[64];
-		public final int[] keys = new int[64];
-		public final int[] periods = new int[64];
-	}
-	
-	private void limitPosition() {
-		if (posX > maxX - canvasWidth) {
-			posX = maxX - canvasWidth;
-		}
-		if (posX < 0) {
-			posX = 0;
-		}
+    // Touch tracking
+    protected float posX, posY, velX, velY;
+    protected boolean isDown;
+    private int maxX, maxY;
 
-		if (posY > maxY - canvasHeight) {
-			posY = maxY - canvasHeight;
-		}
-		if (posY < 0) {
-			posY = 0;
-		}
-	}
+    public static class Info {
+        public int time;
+        public final int[] values = new int[7];    // order pattern row num_rows frame speed bpm
+        public final int[] volumes = new int[64];
+        public final int[] finalvols = new int[64];
+        public final int[] pans = new int[64];
+        public final int[] instruments = new int[64];
+        public final int[] keys = new int[64];
+        public final int[] periods = new int[64];
+    }
 
-	private class MyGestureDetector extends SimpleOnGestureListener {
+    private void limitPosition() {
+        if (posX > maxX - canvasWidth) {
+            posX = maxX - canvasWidth;
+        }
+        if (posX < 0) {
+            posX = 0;
+        }
 
-		public boolean onScroll(final MotionEvent e1, final MotionEvent e2, final float distanceX, final float distanceY) {
-			synchronized (this) {
-				posX += distanceX;
-				posY += distanceY;
+        if (posY > maxY - canvasHeight) {
+            posY = maxY - canvasHeight;
+        }
+        if (posY < 0) {
+            posY = 0;
+        }
+    }
 
-				limitPosition();
+    private class MyGestureDetector extends SimpleOnGestureListener {
 
-				velX = velY = 0;
-			}
-			return true;
-		}
+        public boolean onScroll(final MotionEvent e1, final MotionEvent e2, final float distanceX, final float distanceY) {
+            synchronized (this) {
+                posX += distanceX;
+                posY += distanceY;
 
-		public boolean onFling(final MotionEvent e1, final MotionEvent e2, final float velocityX, final float velocityY) {
-			velX = velocityX / 25;
-			velY = velocityY / 25;
-			return true;
-		}
+                limitPosition();
 
-		public boolean onSingleTapUp(final MotionEvent e) {
-			onClick((int)e.getX(), (int)e.getY());
-			return true;
-		}
+                velX = velY = 0;
+            }
+            return true;
+        }
 
-		public void onLongPress(final MotionEvent e) {
-			onLongClick((int)e.getX(), (int)e.getY());
-		}
+        public boolean onFling(final MotionEvent e1, final MotionEvent e2, final float velocityX, final float velocityY) {
+            velX = velocityX / 25;
+            velY = velocityY / 25;
+            return true;
+        }
 
-		public boolean onDown(final MotionEvent e) {
-			velX = velY = 0;		// stop fling
-			return true;
-		}
-	}
+        public boolean onSingleTapUp(final MotionEvent e) {
+            onClick((int) e.getX(), (int) e.getY());
+            return true;
+        }
 
-	protected void updateScroll() {		// Hmpf, reinventing the wheel instead of using Scroller
-		posX -= velX;
-		posY -= velY;
+        public void onLongPress(final MotionEvent e) {
+            onLongClick((int) e.getX(), (int) e.getY());
+        }
 
-		limitPosition();
+        public boolean onDown(final MotionEvent e) {
+            velX = velY = 0;        // stop fling
+            return true;
+        }
+    }
 
-		velX *= 0.9;
-		if (Math.abs(velX) < 0.5) {
-			velX = 0;
-		}
+    // Hmpf, reinventing the wheel instead of using Scroller
+    protected void updateScroll() {
+        posX -= velX;
+        posY -= velY;
 
-		velY *= 0.9;
-		if (Math.abs(velY) < 0.5) {
-			velY = 0;
-		}
-	}
+        limitPosition();
 
-	public Viewer(final Context context) {
-		super(context);
-		this.context = context;
+        velX *= 0.9;
+        if (Math.abs(velX) < 0.5) {
+            velX = 0;
+        }
 
-		// register our interest in hearing about changes to our surface
-		final SurfaceHolder holder = getHolder();
-		holder.addCallback(this);
+        velY *= 0.9;
+        if (Math.abs(velY) < 0.5) {
+            velY = 0;
+        }
+    }
 
-		surfaceHolder = holder;
+    public Viewer(final Context context) {
+        super(context);
+        this.context = context;
 
-		posX = posY = 0;
-		isDown = false;
+        // register our interest in hearing about changes to our surface
+        final SurfaceHolder holder = getHolder();
+        holder.addCallback(this);
 
-		// Gesture detection
-		gestureDetector = new GestureDetector(context, new MyGestureDetector());
-		final View.OnTouchListener gestureListener = new View.OnTouchListener() {
-			public boolean onTouch(final View v, final MotionEvent event) {
-				return gestureDetector.onTouchEvent(event);
-			}
-		};
+        surfaceHolder = holder;
 
-		setOnClickListener(Viewer.this); 
-		setOnTouchListener(gestureListener);
+        posX = posY = 0;
+        isDown = false;
 
-		final ScreenSizeHelper screenSizeHelper = new ScreenSizeHelper();
-		screenSize = screenSizeHelper.getScreenSize(context);
-	}
+        // Gesture detection
+        gestureDetector = new GestureDetector(context, new MyGestureDetector());
+        @SuppressLint("ClickableViewAccessibility") final View.OnTouchListener gestureListener = (v, event) -> gestureDetector.onTouchEvent(event);
+
+        setOnClickListener(Viewer.this);
+        setOnTouchListener(gestureListener);
+
+        final ScreenSizeHelper screenSizeHelper = new ScreenSizeHelper();
+        screenSize = screenSizeHelper.getScreenSize(context);
+    }
 
 
-	@Override
-	public void onClick(final View view) {
-		// do nothing
-	}
+    @Override
+    public void onClick(final View view) {
+        // do nothing
+    }
 
-	protected void onClick(final int x, final int y) {
-		final View parent = (View)getParent();
-		if (parent != null) {
-			parent.performClick();
-		}
-	}
+    protected void onClick(final int x, final int y) {
+        final View parent = (View) getParent();
+        if (parent != null) {
+            parent.performClick();
+        }
+    }
 
-	protected void onLongClick(final int x, final int y) {
-		// do nothing
-	}
+    protected void onLongClick(final int x, final int y) {
+        // do nothing
+    }
 
-	public void setRotation(final int val) {
-		rotation = val;
-	}
+    public void setRotation(final int val) {
+        rotation = val;
+    }
 
-	public void update(final Info info, final boolean paused) {
-		updateScroll();
-	}
+    public void update(final Info info, final boolean paused) {
+        updateScroll();
+    }
 
-	public void setup(final ModInterface modPlayer, final int[] modVars) {
-		Log.i(TAG, "Viewer setup");
-		
-		final int chn = modVars[3];
-		this.modVars = modVars;
-		this.modPlayer = modPlayer;
+    public void setup(final ModInterface modPlayer, final int[] modVars) {
+        Log.i(TAG, "Viewer setup");
 
-		isMuted = new boolean[chn];
-		for (int i = 0; i < chn; i++) {
-			try {
-				isMuted[i] = modPlayer.mute(i, -1) == 1;
-			} catch (RemoteException e) {
-				Log.e(TAG, "Can't read channel mute status");
-			}
-		}
+        final int chn = modVars[3];
+        this.modVars = modVars;
+        this.modPlayer = modPlayer;
 
-		posX = posY = 0;
-	}
+        isMuted = new boolean[chn];
+        for (int i = 0; i < chn; i++) {
+            try {
+                isMuted[i] = modPlayer.mute(i, -1) == 1;
+            } catch (RemoteException e) {
+                Log.e(TAG, "Can't read channel mute status");
+            }
+        }
 
-	public void setMaxX(final int x) {
-		synchronized (this) {
-			maxX = x;
-		}
-	}
+        posX = posY = 0;
+    }
 
-	public void setMaxY(final int y) {		
-		synchronized (this) {
-			maxY = y;
-		}
-	}
+    public void setMaxX(final int x) {
+        synchronized (this) {
+            maxX = x;
+        }
+    }
 
-	/* Callback invoked when the surface dimensions change. */
-	public void setSurfaceSize(final int width, final int height) {
-		// synchronized to make sure these all change atomically
-		synchronized (surfaceHolder) {
-			canvasWidth = width;
-			canvasHeight = height;
-		}
-	}
+    public void setMaxY(final int y) {
+        synchronized (this) {
+            maxY = y;
+        }
+    }
 
-	@Override
-	public void surfaceChanged(final SurfaceHolder holder, final int format, final int width, final int height) {
-		setSurfaceSize(width, height);
-	}
+    /* Callback invoked when the surface dimensions change. */
+    public void setSurfaceSize(final int width, final int height) {
+        // synchronized to make sure these all change atomically
+        synchronized (surfaceHolder) {
+            canvasWidth = width;
+            canvasHeight = height;
+        }
+    }
 
-	@Override
-	public void surfaceCreated(final SurfaceHolder holder) {		
-		surfaceHolder = holder;
-	}
+    @Override
+    public void surfaceChanged(final SurfaceHolder holder, final int format, final int width, final int height) {
+        setSurfaceSize(width, height);
+    }
 
-	@Override
-	public void surfaceDestroyed(final SurfaceHolder holder) {
-		// do nothing
-	}
+    @Override
+    public void surfaceCreated(final SurfaceHolder holder) {
+        surfaceHolder = holder;
+    }
+
+    @Override
+    public void surfaceDestroyed(final SurfaceHolder holder) {
+        // do nothing
+    }
 }

@@ -27,7 +27,6 @@ import android.os.RemoteCallbackList;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
 
-
 public final class PlayerService extends Service implements OnAudioFocusChangeListener {
 	private static final String TAG = "PlayerService";
 	
@@ -79,7 +78,6 @@ public final class PlayerService extends Service implements OnAudioFocusChangeLi
 
 	public static boolean isAlive;
 	public static boolean isLoaded;
-	
 
 	@Override
 	public void onCreate() {
@@ -133,12 +131,10 @@ public final class PlayerService extends Service implements OnAudioFocusChangeLi
 		}
 
 		watchdog = new Watchdog(10);
-		watchdog.setOnTimeoutListener(new Watchdog.OnTimeoutListener() {
-			public void onTimeout() {
-				Log.e(TAG, "Stopped by watchdog");
-				audioManager.abandonAudioFocus(PlayerService.this);
-				stopSelf();
-			}
+		watchdog.setOnTimeoutListener(() -> {
+			Log.e(TAG, "Stopped by watchdog");
+			audioManager.abandonAudioFocus(PlayerService.this);
+			stopSelf();
 		});
 		watchdog.start();
 	}
@@ -241,7 +237,6 @@ public final class PlayerService extends Service implements OnAudioFocusChangeLi
 		}
 		cmd = CMD_NEXT;
 	}
-
 
 	//	private int playFrame() {
 	//		// Synchronize frame play with data gathering so we don't change playing variables
@@ -409,7 +404,9 @@ public final class PlayerService extends Service implements OnAudioFocusChangeLi
 						while (!Xmp.hasFreeBuffer() && !paused && cmd == CMD_NONE) {
 							try {
 								Thread.sleep(40);
-							} catch (InterruptedException e) {	}
+							} catch (InterruptedException e) {
+								/* no-op */
+							}
 						}
 
 						// Fill a new buffer
@@ -665,7 +662,6 @@ public final class PlayerService extends Service implements OnAudioFocusChangeLi
 		}
 
 		// for Reconnection
-
 		public String getFileName() {
 			return fileName;
 		}
@@ -689,15 +685,12 @@ public final class PlayerService extends Service implements OnAudioFocusChangeLi
 		}
 
 		// File management
-
 		public boolean deleteFile() {
 			Log.i(TAG, "Delete file " + fileName);
 			return InfoCache.delete(fileName);
 		}
 
-
 		// Callback
-
 		public void registerCallback(final PlayerCallback callback) {
 			if (callback != null) {
 				callbacks.register(callback);
@@ -711,9 +704,7 @@ public final class PlayerService extends Service implements OnAudioFocusChangeLi
 		}
 	};
 
-
 	// for audio focus loss
-
 	private boolean autoPause(final boolean pause) {
 		Log.i(TAG, "Auto pause changed to " + pause + ", previously " + receiverHelper.isAutoPaused());
 		if (pause) {
