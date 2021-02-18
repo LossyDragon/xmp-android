@@ -1,4 +1,6 @@
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
 
 // https://developer.android.com/ndk/downloads
 android {
@@ -33,9 +35,15 @@ android {
     externalNativeBuild {
         ndkBuild.path 'src/main/cpp/Android.mk'
     }
+
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
 }
 
 dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+
     // Included .jars
     implementation files('libs/groundy-1.5.jar')
 
