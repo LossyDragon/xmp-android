@@ -14,8 +14,7 @@ public class RandomResult extends ModuleResult implements ModuleRequest.OnRespon
 
     @Override
     protected void makeRequest(final String query) {
-        final String key = getString(R.string.modarchive_apikey);
-        final ModuleRequest request = new ModuleRequest(key, ModuleRequest.RANDOM);
+        final ModuleRequest request = new ModuleRequest(apiKey, ModuleRequest.RANDOM);
         request.setOnResponseListener(this).send();
     }
 }

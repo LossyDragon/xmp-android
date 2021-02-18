@@ -13,6 +13,10 @@ android {
         externalNativeBuild.cmake {
             abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
         }
+
+        // ModArchive API Key
+        // Must be in your global gradle.properties. ex: C:\Users\<name>\.gradle
+        buildConfigField("String", "API_KEY", "$modArchiveApiKey")
     }
     buildTypes {
         release {

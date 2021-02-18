@@ -39,10 +39,9 @@ public class TitleResult extends Result implements ModuleRequest.OnResponseListe
         errorMessage = (TextView) findViewById(R.id.error_message);
 
         final String searchText = getIntent().getStringExtra(Search.SEARCH_TEXT);
-        final String key = getString(R.string.modarchive_apikey);
 
         try {
-            final ModuleRequest request = new ModuleRequest(key, ModuleRequest.FILENAME_OR_TITLE, searchText);
+            final ModuleRequest request = new ModuleRequest(apiKey, ModuleRequest.FILENAME_OR_TITLE, searchText);
             request.setOnResponseListener(this).send();
         } catch (UnsupportedEncodingException e) {
             handleQueryError();

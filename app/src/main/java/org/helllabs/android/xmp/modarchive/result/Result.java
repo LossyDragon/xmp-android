@@ -1,5 +1,6 @@
 package org.helllabs.android.xmp.modarchive.result;
 
+import org.helllabs.android.xmp.BuildConfig;
 import org.helllabs.android.xmp.R;
 import org.helllabs.android.xmp.modarchive.Search;
 import org.helllabs.android.xmp.modarchive.SearchError;
@@ -11,6 +12,8 @@ import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 
 public abstract class Result extends AppCompatActivity {
+
+    public static String apiKey = BuildConfig.API_KEY;
 
     private Crossfader crossfader;
 

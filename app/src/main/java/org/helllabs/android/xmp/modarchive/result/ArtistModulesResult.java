@@ -37,10 +37,9 @@ public class ArtistModulesResult extends Result implements ModuleRequest.OnRespo
         errorMessage = (TextView) findViewById(R.id.error_message);
 
         final long artistId = getIntent().getLongExtra(Search.ARTIST_ID, -1);
-        final String key = getString(R.string.modarchive_apikey);
 
         try {
-            final ModuleRequest request = new ModuleRequest(key, ModuleRequest.ARTIST_MODULES, artistId);
+            final ModuleRequest request = new ModuleRequest(apiKey, ModuleRequest.ARTIST_MODULES, artistId);
             request.setOnResponseListener(this).send();
         } catch (UnsupportedEncodingException e) {
             handleQueryError();

@@ -89,9 +89,8 @@ public class ModuleResult extends Result implements ModuleRequest.OnResponseList
     }
 
     protected void makeRequest(final String query) {
-        final String key = getString(R.string.modarchive_apikey);
         try {
-            final ModuleRequest request = new ModuleRequest(key, ModuleRequest.MODULE, query);
+            final ModuleRequest request = new ModuleRequest(apiKey, ModuleRequest.MODULE, query);
             request.setOnResponseListener(this).send();
         } catch (UnsupportedEncodingException e) {
             handleQueryError();

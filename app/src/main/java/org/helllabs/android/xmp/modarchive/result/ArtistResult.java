@@ -38,10 +38,9 @@ public class ArtistResult extends Result implements ArtistRequest.OnResponseList
         errorMessage = (TextView) findViewById(R.id.error_message);
 
         final String searchText = getIntent().getStringExtra(Search.SEARCH_TEXT);
-        final String key = getString(R.string.modarchive_apikey);
 
         try {
-            final ArtistRequest request = new ArtistRequest(key, ModArchiveRequest.ARTIST, searchText);
+            final ArtistRequest request = new ArtistRequest(apiKey, ModArchiveRequest.ARTIST, searchText);
             request.setOnResponseListener(this).send();
         } catch (UnsupportedEncodingException e) {
             handleQueryError();
