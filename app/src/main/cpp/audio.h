@@ -12,6 +12,7 @@
 int open_audio(int, int);
 void close_audio(void);
 int play_audio(void);
+void drop_audio(void);
 int stop_audio(void);
 int restart_audio(void);
 int play_buffer(void *, int, int);

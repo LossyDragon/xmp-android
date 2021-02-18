@@ -54,7 +54,7 @@ public final class Xmp {
 
     public static native int playAudio();
 
-    public static native int dropAudio();
+    public static native void dropAudio();
 
     public static native boolean stopAudio();
 
