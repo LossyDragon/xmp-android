@@ -1,15 +1,17 @@
 apply plugin: 'com.android.application'
 
+// https://developer.android.com/ndk/downloads
 android {
     compileSdkVersion 27
     buildToolsVersion '27.0.3'
+    ndkVersion "21.4.7075529"
     defaultConfig {
         applicationId "org.helllabs.android.xmp"
         minSdkVersion 14
         targetSdkVersion 27
 
-        ndk {
-            moduleName "xmp-prebuilt"
+        externalNativeBuild.cmake {
+            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
         }
     }
     buildTypes {
@@ -18,16 +20,14 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-project.txt'
         }
     }
-    // Temporarily disable ndk build
-    sourceSets.main {
-        jni.srcDirs = []
-        jniLibs.srcDir 'src/main/libs'
-    }
-    productFlavors {
-    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    externalNativeBuild {
+        ndkBuild.path 'src/main/cpp/Android.mk'
     }
 }
 
@@ -47,4 +47,17 @@ dependencies {
     }
     implementation 'com.fnp:material-preferences:0.1.4'
     implementation 'com.github.pluscubed:recycler-fast-scroll:0.3.0@aar'
+}
+
+// Completely remove libxmp folder and clone a new copy.
+task getLibxmp(type: Exec) {
+    workingDir '/app/src/main/cpp'
+    commandLine 'bash', '-c', 'rm -r libxmp && git clone https://github.com/libxmp/libxmp.git && exit'
+}
+
+// Build libxmp's object files
+task buildLibXmp(type: Exec) {
+    def args = "autoconf && ./configure && make && make check && (cd test-dev; autoconf && ./configure && make) && exit"
+    workingDir '../app/src/main/cpp/libxmp'
+    commandLine 'bash', '-c', args
 }
