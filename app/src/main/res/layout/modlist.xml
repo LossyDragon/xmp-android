@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:layout_weight="1.0"
-              android:gravity="top"
-              android:orientation="vertical">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_weight="1.0"
+    android:gravity="top"
+    android:orientation="vertical">
 
     <LinearLayout
         android:id="@+id/status_area"
@@ -17,26 +17,26 @@
             android:id="@+id/current_path"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            android:layout_marginLeft="4dp"
+            android:layout_marginStart="4dp"
             android:layout_marginTop="12dp"
+            android:layout_marginBottom="12dp"
             android:layout_weight="1.0"
             android:focusable="true"
             android:longClickable="true"
             android:textSize="16sp"
-            android:textStyle="bold"/>
+            android:textStyle="bold" />
 
         <ImageButton
             android:id="@+id/up_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:layout_marginLeft="4dp"
-            android:layout_marginRight="12dp"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="12dp"
             android:background="@android:color/transparent"
             android:contentDescription="@string/button_parent_dir"
             android:onClick="upButtonClick"
-            android:src="@drawable/parent_selector"/>
+            android:src="@drawable/parent_selector" />
     </LinearLayout>
 
     <FrameLayout
@@ -63,7 +63,7 @@
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/modlist_listview"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"/>
+                        android:layout_height="match_parent" />
 
                 </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
@@ -71,16 +71,16 @@
                     android:id="@+id/fast_scroller"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
-                    android:layout_gravity="end"/>
+                    android:layout_gravity="end" />
 
             </FrameLayout>
 
             <TextView
-                android:id="@id/android:empty"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="top"
-                android:text="@string/msg_no_modules"/>
+                android:text="@string/msg_no_modules" />
+
         </LinearLayout>
 
         <ProgressBar
@@ -88,7 +88,7 @@
             style="?android:progressBarStyleLarge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"/>
+            android:layout_gravity="center" />
     </FrameLayout>
 
     <LinearLayout
@@ -103,7 +103,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="0.34"
-            android:contentDescription="@string/button_play_all"/>
+            android:contentDescription="@string/button_play_all" />
 
         <ImageButton
             android:id="@+id/toggle_loop"
@@ -111,7 +111,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="0.33"
-            android:contentDescription="@string/button_toggle_loop"/>
+            android:contentDescription="@string/button_toggle_loop" />
 
         <ImageButton
             android:id="@+id/toggle_shuffle"
@@ -119,7 +119,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="0.33"
-            android:contentDescription="@string/button_toggle_shuffle"/>
+            android:contentDescription="@string/button_toggle_shuffle" />
     </LinearLayout>
 
 </LinearLayout>

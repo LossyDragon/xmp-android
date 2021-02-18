@@ -18,7 +18,7 @@
     <!-- Application theme. -->
     <style name="AppTheme" parent="AppBaseTheme">
         <!-- All customizations that are NOT specific to a particular API-level can go here. -->
-        
+
         <item name="android:windowBackground">@color/black</item>
         <item name="android:buttonStyle">@style/ButtonTheme</item>
         <item name="android:checkboxStyle">@style/CheckboxTheme</item>
@@ -26,7 +26,7 @@
         <item name="colorPrimaryDark">@color/primary_dark</item>
         <item name="colorAccent">@color/accent</item>
     </style>
-    
+
     <style name="AppTheme.NoActionBar" parent="AppTheme">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
@@ -35,7 +35,7 @@
     <style name="AppTheme.Preferences" parent="AppTheme.NoActionBar">
 
     </style>
-    
+
     <style name="ButtonTheme" parent="AppTheme">
         <item name="android:background">@android:drawable/btn_default</item>
     </style>
@@ -43,17 +43,17 @@
     <style name="CheckboxTheme">
         <item name="android:button">@drawable/checkbox_selector</item>
     </style>
-    
+
     <style name="StatusTheme" parent="AppTheme">
         <item name="android:background">@color/primary_dark</item>
     </style>
-    
+
     <style name="SidebarTheme" parent="AppTheme">
         <item name="android:padding">4dp</item>
         <item name="android:background">@color/gray</item>
         <item name="android:textColor">@color/lightgray</item>
     </style>
-    
+
     <style name="SidebarDetailsTheme" parent="AppTheme">
         <item name="android:paddingLeft">4dp</item>
         <item name="android:paddingRight">4dp</item>
@@ -65,7 +65,7 @@
         <item name="android:textSize">15sp</item>
         <item name="android:textColor">@color/lightgray</item>
     </style>
-    
+
     <style name="SidebarSectionTheme" parent="AppTheme">
         <item name="android:textSize">16sp</item>
         <item name="android:background">@drawable/section_background</item>

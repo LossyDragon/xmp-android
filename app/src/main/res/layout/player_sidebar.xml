@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:xmp="http://schemas.android.com/apk/res-auto"
     style="@style/SidebarTheme"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical" >
+    android:orientation="vertical">
 
     <TextView
         style="@style/SidebarSectionTheme"
@@ -15,7 +14,7 @@
     <GridLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:columnCount="2" >
+        android:columnCount="2">
 
         <TextView
             style="@style/SidebarDetailsTheme"
@@ -28,7 +27,7 @@
             style="@style/SidebarDetailsTheme"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="right" />
+            android:layout_gravity="end" />
 
         <TextView
             style="@style/SidebarDetailsTheme"
@@ -41,7 +40,7 @@
             style="@style/SidebarDetailsTheme"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="right" />
+            android:layout_gravity="end" />
 
         <TextView
             style="@style/SidebarDetailsTheme"
@@ -54,7 +53,7 @@
             style="@style/SidebarDetailsTheme"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="right" />
+            android:layout_gravity="end" />
 
         <TextView
             style="@style/SidebarDetailsTheme"
@@ -67,7 +66,7 @@
             style="@style/SidebarDetailsTheme"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="right" />
+            android:layout_gravity="end" />
     </GridLayout>
 
     <View
@@ -78,7 +77,7 @@
         style="@style/SidebarSectionTheme"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal" >
+        android:orientation="horizontal">
 
         <TextView
             android:layout_width="0dp"
@@ -88,23 +87,22 @@
 
         <ImageButton
             android:id="@+id/sidebar_allseqs_button"
-            android:background="@android:color/transparent"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
             android:contentDescription="@string/sidebar_button_allseqs"
             android:src="@drawable/sub_off" />
     </LinearLayout>
 
     <ScrollView
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content" >
+        android:layout_height="wrap_content">
 
         <RadioGroup
             android:id="@+id/sidebar_sequences"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical" >
-        </RadioGroup>
+            android:orientation="vertical" />
     </ScrollView>
 
 </LinearLayout>

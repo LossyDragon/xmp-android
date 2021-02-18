@@ -4,12 +4,12 @@
     android:layout_height="match_parent"
     android:layout_weight="1.0"
     android:gravity="top"
-    android:orientation="vertical" >
+    android:orientation="vertical">
 
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1.0" >
+        android:layout_weight="1.0">
 
         <ProgressBar
             android:id="@+id/result_spinner"
@@ -23,17 +23,17 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="top"
-            android:orientation="vertical" >
+            android:orientation="vertical">
 
             <ScrollView
                 android:id="@+id/result_data"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" >
+                android:layout_height="match_parent">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical" >
+                    android:orientation="vertical">
 
                     <TextView
                         android:id="@+id/module_title"
@@ -71,7 +71,7 @@
                         android:textColor="@android:color/tertiary_text_dark"
                         android:textSize="11sp"
                         android:textStyle="italic" />
-                    
+
                     <TextView
                         android:id="@+id/module_instruments"
                         android:layout_width="wrap_content"
@@ -80,16 +80,16 @@
                         android:text="instruments"
                         android:textSize="11sp"
                         android:typeface="monospace" />
-                    
+
                     <TextView
                         android:id="@+id/module_sponsor"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
-                        android:textColor="@android:color/tertiary_text_dark"
                         android:layout_marginBottom="20dp"
                         android:text="sponsor"
-                    	android:textSize="11sp" />
+                        android:textColor="@android:color/tertiary_text_dark"
+                        android:textSize="11sp" />
                 </LinearLayout>
             </ScrollView>
 
@@ -101,7 +101,7 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:gravity="bottom"
-        android:orientation="horizontal" >
+        android:orientation="horizontal">
 
         <Button
             android:id="@+id/module_download"
