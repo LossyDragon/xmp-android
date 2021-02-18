@@ -2,8 +2,8 @@ package org.helllabs.android.xmp.browser.playlist;
 
 import android.content.Context;
 import android.graphics.Typeface;
-import android.support.v4.view.ViewCompat;
-import android.support.v7.widget.RecyclerView;
+import androidx.core.view.ViewCompat;
+import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;

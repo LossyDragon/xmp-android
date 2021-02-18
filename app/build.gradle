@@ -2,13 +2,13 @@ apply plugin: 'com.android.application'
 
 // https://developer.android.com/ndk/downloads
 android {
-    compileSdkVersion 27
-    buildToolsVersion '27.0.3'
+    compileSdkVersion 29
     ndkVersion "21.4.7075529"
     defaultConfig {
         applicationId "org.helllabs.android.xmp"
-        minSdkVersion 14
-        targetSdkVersion 27
+        minSdkVersion 21
+        //noinspection OldTargetApi
+        targetSdkVersion 29
 
         externalNativeBuild.cmake {
             abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
@@ -36,9 +36,10 @@ dependencies {
     implementation files('libs/groundy-1.5.jar')
 
     // Android Support Libs
-    implementation 'com.android.support:appcompat-v7:27.1.1'
-    implementation 'com.android.support:cardview-v7:27.1.1'
-    implementation 'com.android.support:recyclerview-v7:27.1.1'
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation 'androidx.cardview:cardview:1.0.0'
+    implementation 'androidx.recyclerview:recyclerview:1.1.0'
+    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
 
     // Other Libs
     implementation 'com.android.volley:volley:1.1.1'
