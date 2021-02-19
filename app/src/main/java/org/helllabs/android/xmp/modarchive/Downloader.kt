@@ -13,10 +13,10 @@ import com.telly.groundy.annotations.OnProgress
 import com.telly.groundy.annotations.OnSuccess
 import com.telly.groundy.annotations.Param
 import com.telly.groundy.util.DownloadUtils
+import java.io.File
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.util.Log.d
 import org.helllabs.android.xmp.util.Message.yesNoDialog
-import java.io.File
 
 /*
  * Based on the Groundy download example
@@ -79,8 +79,13 @@ class Downloader(private val mActivity: Activity) {
                 val name = File(url).name
                 val start = name.indexOf('#') + 1
                 val dest = File(path, name.substring(start))
-                DownloadUtils.downloadFile(context, url, dest,
-                    DownloadUtils.getDownloadListenerForTask(this), { isQuitting })
+                DownloadUtils.downloadFile(
+                    context,
+                    url,
+                    dest,
+                    DownloadUtils.getDownloadListenerForTask(this),
+                    { isQuitting }
+                )
                 if (isQuitting) {
                     cancelled()
                 } else succeeded()
@@ -102,7 +107,11 @@ class Downloader(private val mActivity: Activity) {
     fun download(url: String?, path: String, size: Int) {
         mSize = size / 1024
         if (localFile(url, path).exists()) {
-            yesNoDialog(mActivity, "File exists!", "This module already exists. Do you want to overwrite?") {
+            yesNoDialog(
+                mActivity,
+                "File exists!",
+                "This module already exists. Do you want to overwrite?"
+            ) {
                 downloadUrl(url, path)
             }
         } else {

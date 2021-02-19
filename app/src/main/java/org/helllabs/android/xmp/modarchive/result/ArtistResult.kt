@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.*
 import android.widget.*
+import java.io.UnsupportedEncodingException
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.modarchive.Search
 import org.helllabs.android.xmp.modarchive.adapter.ArtistArrayAdapter
@@ -14,7 +15,6 @@ import org.helllabs.android.xmp.modarchive.response.ArtistResponse
 import org.helllabs.android.xmp.modarchive.response.HardErrorResponse
 import org.helllabs.android.xmp.modarchive.response.ModArchiveResponse
 import org.helllabs.android.xmp.modarchive.response.SoftErrorResponse
-import java.io.UnsupportedEncodingException
 
 class ArtistResult : Result(), OnResponseListener, AdapterView.OnItemClickListener {
 
@@ -40,7 +40,11 @@ class ArtistResult : Result(), OnResponseListener, AdapterView.OnItemClickListen
 
     override fun onResponse(response: ModArchiveResponse) {
         val artistList = response as ArtistResponse
-        val adapter = ArtistArrayAdapter(this, android.R.layout.simple_list_item_1, artistList.getList())
+        val adapter = ArtistArrayAdapter(
+            this,
+            android.R.layout.simple_list_item_1,
+            artistList.getList()
+        )
         list!!.adapter = adapter
         if (artistList.isEmpty) {
             errorMessage!!.setText(R.string.search_no_result)

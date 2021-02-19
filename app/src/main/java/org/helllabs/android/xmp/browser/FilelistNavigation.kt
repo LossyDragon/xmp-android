@@ -2,9 +2,9 @@ package org.helllabs.android.xmp.browser
 
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import org.helllabs.android.xmp.util.Log.d
 import java.io.File
 import java.util.*
+import org.helllabs.android.xmp.util.Log.d
 
 class FilelistNavigation {
 
@@ -115,5 +115,4 @@ class FilelistNavigation {
     companion object {
         private const val TAG = "FilelistNavigation"
     }
-
 }

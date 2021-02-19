@@ -8,31 +8,6 @@ import android.media.AudioManager.OnAudioFocusChangeListener
 import android.os.*
 import androidx.preference.PreferenceManager
 import org.helllabs.android.xmp.Xmp
-import org.helllabs.android.xmp.Xmp.deinit
-import org.helllabs.android.xmp.Xmp.dropAudio
-import org.helllabs.android.xmp.Xmp.endPlayer
-import org.helllabs.android.xmp.Xmp.fillBuffer
-import org.helllabs.android.xmp.Xmp.getComment
-import org.helllabs.android.xmp.Xmp.getModName
-import org.helllabs.android.xmp.Xmp.getModType
-import org.helllabs.android.xmp.Xmp.getModVars
-import org.helllabs.android.xmp.Xmp.getPlayer
-import org.helllabs.android.xmp.Xmp.getVolume
-import org.helllabs.android.xmp.Xmp.hasFreeBuffer
-import org.helllabs.android.xmp.Xmp.init
-import org.helllabs.android.xmp.Xmp.loadModule
-import org.helllabs.android.xmp.Xmp.mute
-import org.helllabs.android.xmp.Xmp.playAudio
-import org.helllabs.android.xmp.Xmp.releaseModule
-import org.helllabs.android.xmp.Xmp.restartAudio
-import org.helllabs.android.xmp.Xmp.seek
-import org.helllabs.android.xmp.Xmp.setPlayer
-import org.helllabs.android.xmp.Xmp.setSequence
-import org.helllabs.android.xmp.Xmp.setVolume
-import org.helllabs.android.xmp.Xmp.startPlayer
-import org.helllabs.android.xmp.Xmp.stopAudio
-import org.helllabs.android.xmp.Xmp.stopModule
-import org.helllabs.android.xmp.Xmp.time
 import org.helllabs.android.xmp.preferences.Preferences
 import org.helllabs.android.xmp.service.notifier.LegacyNotifier
 import org.helllabs.android.xmp.service.notifier.LollipopNotifier
@@ -95,19 +70,19 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
             bufferMs = MAX_BUFFER_MS
         }
         sampleRate = prefs.getString(Preferences.SAMPLING_RATE, "44100")!!.toInt()
-        if (init(sampleRate, bufferMs)) {
+        if (Xmp.init(sampleRate, bufferMs)) {
             audioInitialized = true
         } else {
             Log.e(TAG, "error initializing audio")
         }
-        volume = getVolume()
+        volume = Xmp.getVolume()
         isAlive = false
         isLoaded = false
         isPlayerPaused = false
         playerAllSequences = prefs.getBoolean(Preferences.ALL_SEQUENCES, false)
 
-        //session = new MediaSessionCompat(this, getPackageName());
-        //session.setActive(true);
+        // session = new MediaSessionCompat(this, getPackageName());
+        // session.setActive(true);
 
         notifier = when {
             Build.VERSION.SDK_INT >= 26 -> OreoNotifier(this)
@@ -116,12 +91,13 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         }
 
         watchdog = Watchdog(10)
-        watchdog!!.setOnTimeoutListener(object : Watchdog.OnTimeoutListener {
-            override fun onTimeout() {
-                stopSelf()
-
+        watchdog!!.setOnTimeoutListener(
+            object : Watchdog.OnTimeoutListener {
+                override fun onTimeout() {
+                    stopSelf()
+                }
             }
-        })
+        )
         watchdog!!.start()
     }
 
@@ -134,7 +110,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         watchdog!!.stop()
         notifier!!.cancel()
 
-        //session.setActive(false);
+        // session.setActive(false);
         if (audioInitialized) {
             end(if (hasAudioFocus) RESULT_OK else RESULT_NO_AUDIO_FOCUS)
         } else {
@@ -148,17 +124,23 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
     }
 
     private fun requestAudioFocus(): Boolean {
-        return audioManager!!.requestAudioFocus(this, AudioManager.STREAM_MUSIC,
-            AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
+        return audioManager!!.requestAudioFocus(
+            this,
+            AudioManager.STREAM_MUSIC,
+            AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK
+        ) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
     }
 
     private fun updateNotification() {
-        if (queue != null) {    // It seems that queue can be null if we're called from PhoneStateListener
-            var name = getModName()
+        // It seems that queue can be null if we're called from PhoneStateListener
+        if (queue != null) {
+            var name = Xmp.getModName()
             if (name.isEmpty()) {
                 name = basename(queue!!.filename)
             }
-            notifier!!.notify(name, getModType(), queue!!.index, if (isPlayerPaused) Notifier.TYPE_PAUSE else 0)
+
+            val ticker = if (isPlayerPaused) Notifier.TYPE_PAUSE else 0
+            notifier!!.notify(name, Xmp.getModType(), queue!!.index, ticker)
         }
     }
 
@@ -166,16 +148,16 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         isPlayerPaused = isPlayerPaused xor true
         updateNotification()
         if (isPlayerPaused) {
-            stopAudio()
+            Xmp.stopAudio()
             remoteControl!!.setStatePaused()
         } else {
             remoteControl!!.setStatePlaying()
-            restartAudio()
+            Xmp.restartAudio()
         }
     }
 
     fun actionStop() {
-        stopModule()
+        Xmp.stopModule()
         if (isPlayerPaused) {
             doPauseAndNotify()
         }
@@ -198,10 +180,10 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
     }
 
     fun actionPrev() {
-        if (time() > 2000) {
-            seek(0)
+        if (Xmp.time() > 2000) {
+            Xmp.seek(0)
         } else {
-            stopModule()
+            Xmp.stopModule()
             cmd = CMD_PREV
         }
         if (isPlayerPaused) {
@@ -211,7 +193,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
     }
 
     fun actionNext() {
-        stopModule()
+        Xmp.stopModule()
         if (isPlayerPaused) {
             doPauseAndNotify()
             discardBuffer = true
@@ -219,14 +201,14 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         cmd = CMD_NEXT
     }
 
-    //	private int playFrame() {
-    //		// Synchronize frame play with data gathering so we don't change playing variables
-    //		// in the middle of e.g. sample data reading, which results in a segfault in C code
+    // private int playFrame() {
+    // 	// Synchronize frame play with data gathering so we don't change playing variables
+    // 	// in the middle of e.g. sample data reading, which results in a segfault in C code
     //
-    //		synchronized (playThread) {
-    //			return Xmp.playBuffer();
-    //		}
-    //	}
+    // 	synchronized (playThread) {
+    // 		return Xmp.playBuffer();
+    // 	}
+    // }
 
     private fun notifyNewSequence() {
         val numClients = callbacks.beginBroadcast()
@@ -255,7 +237,8 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                     Log.w(TAG, "$currentFileName: unrecognized format")
                     if (cmd == CMD_PREV) {
                         if (queue!!.index <= 0) {
-                            queue!!.index = lastRecognized - 1 // -1 because we have queue.next() in the while condition
+                            // -1 because we have queue.next() in the while condition
+                            queue!!.index = lastRecognized - 1
                             continue
                         }
                         queue!!.previous()
@@ -266,11 +249,11 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                 // Set default pan before we load the module
                 val defpan = prefs.getInt(Preferences.DEFAULT_PAN, 50)
                 Log.i(TAG, "Set default pan to $defpan")
-                setPlayer(Xmp.PLAYER_DEFPAN, defpan)
+                Xmp.setPlayer(Xmp.PLAYER_DEFPAN, defpan)
 
                 // Ditto if we can't load the module
                 Log.i(TAG, "Load $currentFileName")
-                if (loadModule(currentFileName!!) < 0) {
+                if (Xmp.loadModule(currentFileName!!) < 0) {
                     Log.e(TAG, "Error loading $currentFileName")
                     if (cmd == CMD_PREV) {
                         if (queue!!.index <= 0) {
@@ -283,14 +266,18 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                 }
                 lastRecognized = queue!!.index
                 cmd = CMD_NONE
-                var name = getModName()
+                var name = Xmp.getModName()
                 if (name.isEmpty()) {
                     name = basename(currentFileName)
                 }
-                notifier!!.notify(name, getModType(), queue!!.index, Notifier.TYPE_TICKER)
+                notifier!!.notify(name, Xmp.getModType(), queue!!.index, Notifier.TYPE_TICKER)
                 isLoaded = true
                 val volBoost = prefs.getString(Preferences.VOL_BOOST, "1")
-                val interpTypes = intArrayOf(Xmp.INTERP_NEAREST, Xmp.INTERP_LINEAR, Xmp.INTERP_SPLINE)
+                val interpTypes = intArrayOf(
+                    Xmp.INTERP_NEAREST,
+                    Xmp.INTERP_LINEAR,
+                    Xmp.INTERP_SPLINE
+                )
                 val temp = prefs.getString(Preferences.INTERP_TYPE, "1")!!.toInt()
                 var interpType: Int
                 interpType = if (temp in 1..2) {
@@ -301,16 +288,16 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                 if (!prefs.getBoolean(Preferences.INTERPOLATE, true)) {
                     interpType = Xmp.INTERP_NEAREST
                 }
-                startPlayer(sampleRate)
+                Xmp.startPlayer(sampleRate)
                 synchronized(audioManager!!) {
                     if (ducking) {
-                        setPlayer(Xmp.PLAYER_VOLUME, DUCK_VOLUME)
+                        Xmp.setPlayer(Xmp.PLAYER_VOLUME, DUCK_VOLUME)
                     }
                 }
 
                 // Unmute all channels
                 for (i in 0..63) {
-                    mute(i, 0)
+                    Xmp.mute(i, 0)
                 }
                 var numClients = callbacks.beginBroadcast()
                 for (j in 0 until numClients) {
@@ -321,26 +308,30 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                     }
                 }
                 callbacks.finishBroadcast()
-                setPlayer(Xmp.PLAYER_AMP, volBoost!!.toInt())
-                setPlayer(Xmp.PLAYER_MIX, prefs.getInt(Preferences.STEREO_MIX, 100))
-                setPlayer(Xmp.PLAYER_INTERP, interpType)
-                setPlayer(Xmp.PLAYER_DSP, Xmp.DSP_LOWPASS)
-                var flags = getPlayer(Xmp.PLAYER_CFLAGS)
+                Xmp.setPlayer(Xmp.PLAYER_AMP, volBoost!!.toInt())
+                Xmp.setPlayer(Xmp.PLAYER_MIX, prefs.getInt(Preferences.STEREO_MIX, 100))
+                Xmp.setPlayer(Xmp.PLAYER_INTERP, interpType)
+                Xmp.setPlayer(Xmp.PLAYER_DSP, Xmp.DSP_LOWPASS)
+                var flags = Xmp.getPlayer(Xmp.PLAYER_CFLAGS)
                 flags = if (prefs.getBoolean(Preferences.AMIGA_MIXER, false)) {
                     flags or Xmp.FLAGS_A500
                 } else {
                     flags and Xmp.FLAGS_A500.inv()
                 }
-                setPlayer(Xmp.PLAYER_CFLAGS, flags)
+                Xmp.setPlayer(Xmp.PLAYER_CFLAGS, flags)
                 updateData = true
                 sequenceNumber = 0
                 var playNewSequence: Boolean
-                setSequence(sequenceNumber)
-                playAudio()
+                Xmp.setSequence(sequenceNumber)
+                Xmp.playAudio()
                 Log.i(TAG, "Enter play loop")
                 do {
-                    getModVars(vars)
-                    remoteControl!!.setMetadata(getModName(), getModType(), vars[0].toLong())
+                    Xmp.getModVars(vars)
+                    remoteControl!!.setMetadata(
+                        Xmp.getModName(),
+                        Xmp.getModType(),
+                        vars[0].toLong()
+                    )
                     while (cmd == CMD_NONE) {
                         discardBuffer = false
 
@@ -356,12 +347,12 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                         }
                         if (discardBuffer) {
                             Log.d(TAG, "discard buffer")
-                            dropAudio()
+                            Xmp.dropAudio()
                             break
                         }
 
                         // Wait if no buffers available
-                        while (!hasFreeBuffer() && !isPlayerPaused && cmd == CMD_NONE) {
+                        while (!Xmp.hasFreeBuffer() && !isPlayerPaused && cmd == CMD_NONE) {
                             try {
                                 Thread.sleep(40)
                             } catch (e: InterruptedException) {
@@ -370,7 +361,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                         }
 
                         // Fill a new buffer
-                        if (fillBuffer(looped) < 0) {
+                        if (Xmp.fillBuffer(looped) < 0) {
                             break
                         }
                         watchdog!!.refresh()
@@ -383,13 +374,13 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                     if (playerAllSequences && cmd == CMD_NONE) {
                         sequenceNumber++
                         Log.i(TAG, "Play sequence $sequenceNumber")
-                        if (setSequence(sequenceNumber)) {
+                        if (Xmp.setSequence(sequenceNumber)) {
                             playNewSequence = true
                             notifyNewSequence()
                         }
                     }
                 } while (playNewSequence)
-                endPlayer()
+                Xmp.endPlayer()
                 isLoaded = false
 
                 // notify end of module to our clients
@@ -420,9 +411,9 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                     callbacks.finishBroadcast()
                 }
                 Log.i(TAG, "Release module")
-                releaseModule()
+                Xmp.releaseModule()
 
-                //audio.stop();
+                // audio.stop();
 
                 // Used when current files are replaced by a new set
                 if (restart) {
@@ -432,7 +423,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                     restart = false
                 } else if (cmd == CMD_PREV) {
                     queue!!.previous()
-                    //returnToPrev = false;
+                    // returnToPrev = false;
                 }
             } while (cmd != CMD_STOP && queue!!.next())
             synchronized(playThread!!) {
@@ -460,23 +451,29 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         }
         callbacks.finishBroadcast()
         isAlive = false
-        stopModule()
+        Xmp.stopModule()
         if (isPlayerPaused) {
             doPauseAndNotify()
         }
-        deinit()
-        //audio.release();
+        Xmp.deinit()
+        // audio.release();
     }
 
     private val binder: ModInterface.Stub = object : ModInterface.Stub() {
-        override fun play(fileList: MutableList<String>, start: Int, shuffle: Boolean, loopList: Boolean, keepFirst: Boolean) {
+        override fun play(
+            fileList: MutableList<String>,
+            start: Int,
+            shuffle: Boolean,
+            loopList: Boolean,
+            keepFirst: Boolean
+        ) {
             if (!audioInitialized || !hasAudioFocus) {
                 stopSelf()
                 return
             }
             queue = QueueManager(fileList, start, shuffle, loopList, keepFirst)
             notifier!!.setQueue(queue)
-            //notifier.clean();
+            // notifier.clean();
             cmd = CMD_NONE
             if (isPlayerPaused) {
                 doPauseAndNotify()
@@ -497,7 +494,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         override fun add(fileList: List<String>) {
             queue!!.add(fileList)
             updateNotification()
-            //notifier.notification("Added to play queue");			
+            // notifier.notification("Added to play queue");
         }
 
         override fun stop() {
@@ -533,20 +530,39 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
             return Xmp.getModType()
         }
 
-        override fun getChannelData(volumes: IntArray, finalvols: IntArray, pans: IntArray, instruments: IntArray, keys: IntArray, periods: IntArray) {
+        override fun getChannelData(
+            volumes: IntArray,
+            finalvols: IntArray,
+            pans: IntArray,
+            instruments: IntArray,
+            keys: IntArray,
+            periods: IntArray
+        ) {
             if (updateData) {
-                synchronized(playThread!!) { Xmp.getChannelData(volumes, finalvols, pans, instruments, keys, periods) }
+                synchronized(playThread!!) {
+                    Xmp.getChannelData(volumes, finalvols, pans, instruments, keys, periods)
+                }
             }
         }
 
-        override fun getSampleData(trigger: Boolean, ins: Int, key: Int, period: Int, chn: Int, width: Int, buffer: ByteArray) {
+        override fun getSampleData(
+            trigger: Boolean,
+            ins: Int,
+            key: Int,
+            period: Int,
+            chn: Int,
+            width: Int,
+            buffer: ByteArray
+        ) {
             if (updateData) {
-                synchronized(playThread!!) { Xmp.getSampleData(trigger, ins, key, period, chn, width, buffer) }
+                synchronized(playThread!!) {
+                    Xmp.getSampleData(trigger, ins, key, period, chn, width, buffer)
+                }
             }
         }
 
         override fun nextSong() {
-            stopModule()
+            Xmp.stopModule()
             cmd = CMD_NEXT
             if (isPlayerPaused) {
                 doPauseAndNotify()
@@ -555,7 +571,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         }
 
         override fun prevSong() {
-            stopModule()
+            Xmp.stopModule()
             cmd = CMD_PREV
             if (isPlayerPaused) {
                 doPauseAndNotify()
@@ -615,7 +631,12 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
             return Xmp.getInstruments()
         }
 
-        override fun getPatternRow(pat: Int, row: Int, rowNotes: ByteArray, rowInstruments: ByteArray) {
+        override fun getPatternRow(
+            pat: Int,
+            row: Int,
+            rowNotes: ByteArray,
+            rowInstruments: ByteArray
+        ) {
             if (isAlive) {
                 Xmp.getPatternRow(pat, row, rowNotes, rowInstruments)
             }
@@ -626,7 +647,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         }
 
         override fun hasComment(): Boolean {
-            return getComment().isNotEmpty()
+            return Xmp.getComment().isNotEmpty()
         }
 
         // File management
@@ -647,7 +668,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
 
     // for audio focus loss
     private fun autoPause(pause: Boolean): Boolean {
-        Log.i(TAG, "Auto pause changed to " + pause + ", previously " + receiverHelper!!.isAutoPaused)
+        Log.i(TAG, "autoPause($pause), previously ${receiverHelper!!.isAutoPaused}")
         if (pause) {
             previousPaused = isPlayerPaused
             receiverHelper!!.isAutoPaused = true
@@ -674,8 +695,8 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                 Log.d(TAG, "AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK")
                 // Lower volume
                 synchronized(audioManager!!) {
-                    volume = getVolume()
-                    setVolume(DUCK_VOLUME)
+                    volume = Xmp.getVolume()
+                    Xmp.setVolume(DUCK_VOLUME)
                     ducking = true
                 }
             }
@@ -684,7 +705,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                 // Resume playback/raise volume
                 autoPause(false)
                 synchronized(audioManager!!) {
-                    setVolume(volume)
+                    Xmp.setVolume(volume)
                     ducking = false
                 }
             }

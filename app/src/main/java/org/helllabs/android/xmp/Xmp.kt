@@ -37,43 +37,66 @@ object Xmp {
         System.loadLibrary("xmp-jni")
     }
 
-    external fun init(rate: Int, ms: Int): Boolean
     external fun deinit()
-    external fun testModule(name: String, info: ModInfo): Boolean
-    external fun loadModule(name: String): Int
-    external fun releaseModule(): Int
-    external fun startPlayer(rate: Int): Int
-    external fun endPlayer(): Int
-    external fun playAudio(): Int
     external fun dropAudio()
-    external fun stopAudio(): Boolean
-    external fun restartAudio(): Boolean
-    external fun hasFreeBuffer(): Boolean
+    external fun endPlayer(): Int
     external fun fillBuffer(loop: Boolean): Int
-    external fun nextPosition(): Int
-    external fun prevPosition(): Int
-    external fun setPosition(num: Int): Int
-    external fun stopModule(): Int
-    external fun restartModule(): Int
-    external fun seek(time: Int): Int
-    external fun time(): Int
-    external fun mute(chn: Int, status: Int): Int
-    external fun getInfo(values: IntArray)
-    external fun getPlayer(parm: Int): Int
-    external fun setPlayer(parm: Int, value: Int)
-    external fun getLoopCount(): Int
-    external fun getModVars(vars: IntArray)
-    external fun getVersion(): String
-    external fun getModName(): String
-    external fun getModType(): String
     external fun getComment(): String
     external fun getFormats(): Array<String>
+    external fun getInfo(values: IntArray)
     external fun getInstruments(): Array<String>
-    external fun getChannelData(volumes: IntArray, finalVols: IntArray, pans: IntArray, instruments: IntArray, keys: IntArray, periods: IntArray)
-    external fun getPatternRow(pat: Int, row: Int, rowNotes: ByteArray, rowInstruments: ByteArray)
-    external fun getSampleData(trigger: Boolean, ins: Int, key: Int, period: Int, chn: Int, width: Int, buffer: ByteArray)
-    external fun setSequence(seq: Int): Boolean
+    external fun getLoopCount(): Int
+    external fun getModName(): String
+    external fun getModType(): String
+    external fun getModVars(vars: IntArray)
+    external fun getPlayer(parm: Int): Int
     external fun getSeqVars(vars: IntArray)
+    external fun getVersion(): String
     external fun getVolume(): Int
+    external fun hasFreeBuffer(): Boolean
+    external fun init(rate: Int, ms: Int): Boolean
+    external fun loadModule(name: String): Int
+    external fun mute(chn: Int, status: Int): Int
+    external fun nextPosition(): Int
+    external fun playAudio(): Int
+    external fun prevPosition(): Int
+    external fun releaseModule(): Int
+    external fun restartAudio(): Boolean
+    external fun restartModule(): Int
+    external fun seek(time: Int): Int
+    external fun setPlayer(parm: Int, value: Int)
+    external fun setPosition(num: Int): Int
+    external fun setSequence(seq: Int): Boolean
     external fun setVolume(vol: Int): Int
+    external fun startPlayer(rate: Int): Int
+    external fun stopAudio(): Boolean
+    external fun stopModule(): Int
+    external fun testModule(name: String, info: ModInfo): Boolean
+    external fun time(): Int
+
+    external fun getChannelData(
+        volumes: IntArray,
+        finalVols: IntArray,
+        pans: IntArray,
+        instruments: IntArray,
+        keys: IntArray,
+        periods: IntArray
+    )
+
+    external fun getPatternRow(
+        pat: Int,
+        row: Int,
+        rowNotes: ByteArray,
+        rowInstruments: ByteArray
+    )
+
+    external fun getSampleData(
+        trigger: Boolean,
+        ins: Int,
+        key: Int,
+        period: Int,
+        chn: Int,
+        width: Int,
+        buffer: ByteArray
+    )
 }

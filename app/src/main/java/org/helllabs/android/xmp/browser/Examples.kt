@@ -1,9 +1,9 @@
 package org.helllabs.android.xmp.browser
 
 import android.content.Context
+import java.io.*
 import org.helllabs.android.xmp.util.Log.d
 import org.helllabs.android.xmp.util.Log.e
-import java.io.*
 
 object Examples {
     private const val TAG = "Examples"

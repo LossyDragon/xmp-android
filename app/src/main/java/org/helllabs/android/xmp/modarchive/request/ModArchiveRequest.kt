@@ -4,6 +4,7 @@ import com.android.volley.RequestQueue
 import com.android.volley.Response
 import com.android.volley.VolleyError
 import com.android.volley.toolbox.StringRequest
+import java.net.URLEncoder
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.modarchive.response.HardErrorResponse
 import org.helllabs.android.xmp.modarchive.response.ModArchiveResponse
@@ -11,7 +12,6 @@ import org.helllabs.android.xmp.modarchive.response.SoftErrorResponse
 import org.helllabs.android.xmp.util.Log.d
 import org.helllabs.android.xmp.util.Log.e
 import org.helllabs.android.xmp.util.Log.i
-import java.net.URLEncoder
 
 abstract class ModArchiveRequest(
     key: String,

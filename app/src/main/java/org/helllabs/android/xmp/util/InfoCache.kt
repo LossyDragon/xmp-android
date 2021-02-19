@@ -1,11 +1,11 @@
 package org.helllabs.android.xmp.util
 
-import org.helllabs.android.xmp.Xmp
-import org.helllabs.android.xmp.preferences.Preferences
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileReader
 import java.io.IOException
+import org.helllabs.android.xmp.Xmp
+import org.helllabs.android.xmp.preferences.Preferences
 
 object InfoCache {
 
@@ -135,7 +135,8 @@ object InfoCache {
                     file.length().toString(),
                     info.name,
                     filename,
-                    info.type)
+                    info.type
+                )
                 val dir = cacheFile.parentFile
                 if (!dir.isDirectory) {
                     dir.mkdirs()

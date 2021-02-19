@@ -7,7 +7,9 @@ import android.app.Activity
 import android.view.View
 
 class Crossfader(private val activity: Activity) {
-    private val animationDuration: Int = activity.resources.getInteger(android.R.integer.config_shortAnimTime)
+
+    private val animationDuration: Int =
+        activity.resources.getInteger(android.R.integer.config_shortAnimTime)
     private var contentView: View? = null
     private var progressView: View? = null
 
@@ -38,11 +40,12 @@ class Crossfader(private val activity: Activity) {
         progressView!!.animate()
             .alpha(0f)
             .setDuration(animationDuration.toLong())
-            .setListener(object : AnimatorListenerAdapter() {
-                override fun onAnimationEnd(animation: Animator) {
-                    progressView!!.visibility = View.GONE
+            .setListener(
+                object : AnimatorListenerAdapter() {
+                    override fun onAnimationEnd(animation: Animator) {
+                        progressView!!.visibility = View.GONE
+                    }
                 }
-            })
+            )
     }
-
 }

@@ -61,11 +61,18 @@ class SeekBarPreference(
         mValueText!!.textSize = 32f
         val params: LinearLayout.LayoutParams = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT)
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        )
         layout.addView(mValueText, params)
         mSeekBar = SeekBar(mContext)
         mSeekBar!!.setOnSeekBarChangeListener(this)
-        layout.addView(mSeekBar, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
+        layout.addView(
+            mSeekBar,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        )
         if (shouldPersist()) {
             mValue = getPersistedInt(mDefault)
         }

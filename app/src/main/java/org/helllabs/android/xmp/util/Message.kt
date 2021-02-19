@@ -13,7 +13,10 @@ object Message {
             val alertDialog = AlertDialog.Builder(activity).create()
             alertDialog.setTitle(R.string.error)
             alertDialog.setMessage(message)
-            alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, activity.getString(R.string.exit)) { dialog: DialogInterface, _: Int ->
+            alertDialog.setButton(
+                AlertDialog.BUTTON_NEUTRAL,
+                activity.getString(R.string.exit)
+            ) { dialog: DialogInterface, _: Int ->
                 dialog.dismiss()
                 activity.finish()
             }
@@ -26,7 +29,12 @@ object Message {
             val alertDialog = AlertDialog.Builder(activity).create()
             alertDialog.setTitle(R.string.error)
             alertDialog.setMessage(message)
-            alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, activity.getString(R.string.dismiss)) { _: DialogInterface?, _: Int -> }
+            alertDialog.setButton(
+                AlertDialog.BUTTON_NEUTRAL,
+                activity.getString(R.string.dismiss)
+            ) { _: DialogInterface?, _: Int ->
+                /* no-op */
+            }
             alertDialog.show()
         }
     }

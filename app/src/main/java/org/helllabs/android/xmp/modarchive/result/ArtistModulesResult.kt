@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.*
 import android.widget.*
+import java.io.UnsupportedEncodingException
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.modarchive.Search
 import org.helllabs.android.xmp.modarchive.adapter.ModuleArrayAdapter
@@ -14,7 +15,6 @@ import org.helllabs.android.xmp.modarchive.response.HardErrorResponse
 import org.helllabs.android.xmp.modarchive.response.ModArchiveResponse
 import org.helllabs.android.xmp.modarchive.response.ModuleResponse
 import org.helllabs.android.xmp.modarchive.response.SoftErrorResponse
-import java.io.UnsupportedEncodingException
 
 class ArtistModulesResult : Result(), OnResponseListener, AdapterView.OnItemClickListener {
 

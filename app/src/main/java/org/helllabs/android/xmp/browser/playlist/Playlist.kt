@@ -3,6 +3,8 @@ package org.helllabs.android.xmp.browser.playlist
 import android.app.Activity
 import android.content.*
 import androidx.preference.PreferenceManager
+import java.io.*
+import java.util.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.preferences.Preferences
 import org.helllabs.android.xmp.util.FileUtils.readFromFile
@@ -12,8 +14,6 @@ import org.helllabs.android.xmp.util.InfoCache.fileExists
 import org.helllabs.android.xmp.util.Log.e
 import org.helllabs.android.xmp.util.Log.i
 import org.helllabs.android.xmp.util.Message.error
-import java.io.*
-import java.util.*
 
 class Playlist(context: Context?, val name: String?) {
 
@@ -27,12 +27,14 @@ class Playlist(context: Context?, val name: String?) {
 
     private class ListFile : File {
         constructor(name: String?) : super(Preferences.DATA_DIR, name + PLAYLIST_SUFFIX)
-        constructor(name: String?, suffix: String) : super(Preferences.DATA_DIR, name + PLAYLIST_SUFFIX + suffix)
+        constructor(name: String?, suffix: String) :
+            super(Preferences.DATA_DIR, name + PLAYLIST_SUFFIX + suffix)
     }
 
     private class CommentFile : File {
         constructor(name: String?) : super(Preferences.DATA_DIR, name + COMMENT_SUFFIX)
-        constructor(name: String?, suffix: String) : super(Preferences.DATA_DIR, name + COMMENT_SUFFIX + suffix)
+        constructor(name: String?, suffix: String) :
+            super(Preferences.DATA_DIR, name + COMMENT_SUFFIX + suffix)
     }
 
     init {
@@ -88,25 +90,25 @@ class Playlist(context: Context?, val name: String?) {
             editor.apply()
         }
     }
-    //	/**
-    //	 * Add a new item to the playlist.
-    //	 * 
-    //	 * @param item The item to be added
-    //	 */
-    //	public void add(final PlaylistItem item) {
-    //		mList.add(item);
-    //	}
-    //	
-    //	/**
-    //	 * Add new items to the playlist.
-    //	 * 
-    //	 * @param items The items to be added
-    //	 */
-    //	public void add(final PlaylistItem[] items) {
-    //		for (final PlaylistItem item : items) {
-    //			add(item);
-    //		}
-    //	}
+    // /**
+    //  * Add a new item to the playlist.
+    //  *
+    //  * @param item The item to be added
+    //  */
+    // public void add(final PlaylistItem item) {
+    // 	mList.add(item);
+    // }
+    //
+    // /**
+    //  * Add new items to the playlist.
+    //  *
+    //  * @param items The items to be added
+    //  */
+    // public void add(final PlaylistItem[] items) {
+    // 	for (final PlaylistItem item : items) {
+    // 		add(item);
+    // 	}
+    // }
     /**
      * Remove an item from the playlist.
      *
@@ -246,8 +248,14 @@ class Playlist(context: Context?, val name: String?) {
             }
             val prefs = PreferenceManager.getDefaultSharedPreferences(context)
             val editor = prefs.edit()
-            editor.putBoolean(optionName(newName, SHUFFLE_MODE), prefs.getBoolean(optionName(oldName, SHUFFLE_MODE), DEFAULT_SHUFFLE_MODE))
-            editor.putBoolean(optionName(newName, LOOP_MODE), prefs.getBoolean(optionName(oldName, LOOP_MODE), DEFAULT_LOOP_MODE))
+            editor.putBoolean(
+                optionName(newName, SHUFFLE_MODE),
+                prefs.getBoolean(optionName(oldName, SHUFFLE_MODE), DEFAULT_SHUFFLE_MODE)
+            )
+            editor.putBoolean(
+                optionName(newName, LOOP_MODE),
+                prefs.getBoolean(optionName(oldName, LOOP_MODE), DEFAULT_LOOP_MODE)
+            )
             editor.remove(optionName(oldName, SHUFFLE_MODE))
             editor.remove(optionName(oldName, LOOP_MODE))
             editor.apply()
@@ -270,14 +278,15 @@ class Playlist(context: Context?, val name: String?) {
             editor.apply()
         }
 
-        ///**
-        // * Add an item to the specified playlist file.
-        // *
-        // * @param context The context we're running in
-        // * @param name The playlist name
-        // * @param item The playlist item to add
-        // */
-        /*public static void addToList(final Context context, final String name, final PlaylistItem item) {
+        // /**
+        //  * Add an item to the specified playlist file.
+        //  *
+        //  * @param context The context we're running in
+        //  * @param name The playlist name
+        //  * @param item The playlist item to add
+        //  */
+        /*
+        public static void addToList(final Context context, final String name, final PlaylistItem item) {
 		try {
 			FileUtils.writeToFile(new File(Preferences.DATA_DIR, name + PLAYLIST_SUFFIX), item.toString());
 		} catch (IOException e) {

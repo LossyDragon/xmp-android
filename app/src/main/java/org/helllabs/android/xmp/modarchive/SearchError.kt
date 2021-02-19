@@ -7,8 +7,8 @@ import android.view.KeyEvent
 import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import org.helllabs.android.xmp.R
 import java.util.*
+import org.helllabs.android.xmp.R
 
 class SearchError : AppCompatActivity(), Runnable {
 
@@ -18,7 +18,7 @@ class SearchError : AppCompatActivity(), Runnable {
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        //		// Hide the status bar
+        // 		// Hide the status bar
         //        if (Build.VERSION.SDK_INT < 16) {
         //            getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         //        } else {
@@ -30,7 +30,7 @@ class SearchError : AppCompatActivity(), Runnable {
         title = "Search error"
         val error = intent.getSerializableExtra(Search.ERROR) as Throwable
         msg = findViewById<View>(R.id.error_message) as TextView
-        //msg.getPaint().setAntiAlias(false);
+        // msg.getPaint().setAntiAlias(false);
         var message = error.message
 
         if (message == null) {
@@ -44,7 +44,8 @@ class SearchError : AppCompatActivity(), Runnable {
             message = if (message.trim { it <= ' ' }.isEmpty()) {
                 UNKNOWN_ERROR
             } else {
-                message.substring(0, 1).toUpperCase(Locale.US) + message.substring(1) + ".  Press back button to continue."
+                message.substring(0, 1).toUpperCase(Locale.US) + message.substring(1) +
+                    ".  Press back button to continue."
             }
         }
         msg!!.text = message
@@ -73,13 +74,18 @@ class SearchError : AppCompatActivity(), Runnable {
 
     override fun run() {
         // Guru frame blink
-        msg!!.setBackgroundDrawable(resources.getDrawable(if (frameBlink) R.drawable.guru_frame else R.drawable.guru_frame_2))
+        msg!!.setBackgroundDrawable(
+            resources.getDrawable(
+                if (frameBlink) R.drawable.guru_frame else R.drawable.guru_frame_2
+            )
+        )
         frameBlink = frameBlink xor true
         msg!!.postDelayed(this, PERIOD.toLong())
     }
 
     companion object {
         private const val PERIOD = 1337
-        private const val UNKNOWN_ERROR = "Software Failure.   Press back to continue.\n\nGuru Meditation #35068035.48454C50"
+        private const val UNKNOWN_ERROR = "Software Failure.   " +
+            "Press back to continue.\n\nGuru Meditation #35068035.48454C50"
     }
 }

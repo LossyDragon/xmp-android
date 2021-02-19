@@ -10,6 +10,11 @@ import android.view.*
 import android.widget.*
 import android.widget.SeekBar.OnSeekBarChangeListener
 import androidx.preference.PreferenceManager
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.OutputStream
+import java.util.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.browser.PlaylistMenu
@@ -27,11 +32,6 @@ import org.helllabs.android.xmp.util.Log.e
 import org.helllabs.android.xmp.util.Log.i
 import org.helllabs.android.xmp.util.Message.toast
 import org.helllabs.android.xmp.util.Message.yesNoDialog
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
-import java.io.OutputStream
-import java.util.*
 
 class PlayerActivity : Activity() {
     /* actual mod player */
@@ -110,7 +110,7 @@ class PlayerActivity : Activity() {
             saveAllSeqPreference()
             synchronized(playerLock) {
                 stopUpdate = true
-                //modPlayer = null;
+                // modPlayer = null;
                 i(TAG, "Service disconnected")
                 finish()
             }
@@ -218,8 +218,14 @@ class PlayerActivity : Activity() {
                         try {
                             modPlayer!!.getInfo(info!!.values)
                             info!!.time = modPlayer!!.time() / 1000
-                            modPlayer!!.getChannelData(info!!.volumes, info!!.finalvols, info!!.pans,
-                                info!!.instruments, info!!.keys, info!!.periods)
+                            modPlayer!!.getChannelData(
+                                info!!.volumes,
+                                info!!.finalvols,
+                                info!!.pans,
+                                info!!.instruments,
+                                info!!.keys,
+                                info!!.periods
+                            )
                         } catch (e: RemoteException) {
                             // fail silently
                         }
@@ -227,7 +233,11 @@ class PlayerActivity : Activity() {
                 }
 
                 // display frame info
-                if (info!!.values[5] != oldSpd || info!!.values[6] != oldBpm || info!!.values[0] != oldPos || info!!.values[1] != oldPat) {
+                if (info!!.values[5] != oldSpd ||
+                    info!!.values[6] != oldBpm ||
+                    info!!.values[0] != oldPos ||
+                    info!!.values[1] != oldPat
+                ) {
                     // Ugly code to avoid expensive String.format()
                     s.delete(0, s.length)
                     s.append("Speed:")
@@ -308,7 +318,9 @@ class PlayerActivity : Activity() {
                     handler.post(updateInfoRunnable)
                 }
                 try {
-                    while (System.nanoTime().also { now = it } - lastTimer < frameTime && !stopUpdate) {
+                    while (
+                        System.nanoTime().also { now = it } - lastTimer < frameTime && !stopUpdate
+                    ) {
                         sleep(10)
                     }
                     lastTimer = now
@@ -322,7 +334,8 @@ class PlayerActivity : Activity() {
                     if (modPlayer != null) {
                         i(TAG, "Flush interface update")
                         try {
-                            modPlayer!!.allowRelease() // finished playing, we can release the module
+                            // finished playing, we can release the module
+                            modPlayer!!.allowRelease()
                         } catch (e: RemoteException) {
                             e(TAG, "Can't allow module release")
                         }
@@ -366,7 +379,7 @@ class PlayerActivity : Activity() {
             }
         }
 
-        //fileArray = null;
+        // fileArray = null;
         if (path != null) {
             // from intent filter
             i(TAG, "Player started from intent filter")
@@ -387,7 +400,7 @@ class PlayerActivity : Activity() {
         } else {
             val extras = intent.extras
             if (extras != null) {
-                //fileArray = extras.getStringArray("files");
+                // fileArray = extras.getStringArray("files");
                 val app = application as XmpApplication
                 fileList = app.fileList
                 shuffleMode = extras.getBoolean(PARM_SHUFFLE)
@@ -444,10 +457,10 @@ class PlayerActivity : Activity() {
         return output.path
     }
 
-    //private void setFont(final TextView name, final String path, final int res) {
+    // private void setFont(final TextView name, final String path, final int res) {
     //    final Typeface typeface = Typeface.createFromAsset(this.getAssets(), path);
     //    name.setTypeface(typeface);
-    //}
+    // }
     private fun changeViewer() {
         currentViewer++
         currentViewer %= 3
@@ -512,7 +525,7 @@ class PlayerActivity : Activity() {
     }
 
     fun playButtonListener(view: View?) {
-        //Debug.startMethodTracing("xmp");
+        // Debug.startMethodTracing("xmp");
         synchronized(playerLock) {
             d(TAG, "Play/pause button pressed (paused=$paused)")
             if (modPlayer != null) {
@@ -531,7 +544,7 @@ class PlayerActivity : Activity() {
     }
 
     fun stopButtonListener(view: View?) {
-        //Debug.stopMethodTracing();
+        // Debug.stopMethodTracing();
         synchronized(playerLock) {
             d(TAG, "Stop button pressed")
             if (modPlayer != null) {
@@ -544,11 +557,11 @@ class PlayerActivity : Activity() {
         }
         paused = false
 
-//		if (progressThread != null && progressThread.isAlive()) {
-//			try {
-//				progressThread.join();
-//			} catch (InterruptedException e) { }
-//		}
+        // if (progressThread != null && progressThread.isAlive()) {
+        // 	try {
+        // 		progressThread.join();
+        // 	} catch (InterruptedException e) { }
+        // }
     }
 
     fun backButtonListener(view: View?) {
@@ -644,30 +657,34 @@ class PlayerActivity : Activity() {
         playButton = findViewById<View>(R.id.play) as ImageButton
         loopButton = findViewById<View>(R.id.loop) as ImageButton
         loopButton!!.setImageResource(R.drawable.loop_off)
-        elapsedTime!!.setOnClickListener { showElapsed = showElapsed xor true }
+        elapsedTime!!.setOnClickListener {
+            showElapsed = showElapsed xor true
+        }
         seekBar = findViewById<View>(R.id.seek) as SeekBar
         seekBar!!.progress = 0
-        seekBar!!.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
-            override fun onProgressChanged(s: SeekBar, p: Int, b: Boolean) {
-                // do nothing
-            }
-
-            override fun onStartTrackingTouch(s: SeekBar) {
-                seeking = true
-            }
-
-            override fun onStopTrackingTouch(s: SeekBar) {
-                if (modPlayer != null) {
-                    try {
-                        modPlayer!!.seek(s.progress * 100)
-                        playTime = modPlayer!!.time() / 100
-                    } catch (e: RemoteException) {
-                        e(TAG, "Can't seek to time")
-                    }
+        seekBar!!.setOnSeekBarChangeListener(
+            object : OnSeekBarChangeListener {
+                override fun onProgressChanged(s: SeekBar, p: Int, b: Boolean) {
+                    // do nothing
                 }
-                seeking = false
+
+                override fun onStartTrackingTouch(s: SeekBar) {
+                    seeking = true
+                }
+
+                override fun onStopTrackingTouch(s: SeekBar) {
+                    if (modPlayer != null) {
+                        try {
+                            modPlayer!!.seek(s.progress * 100)
+                            playTime = modPlayer!!.time() / 100
+                        } catch (e: RemoteException) {
+                            e(TAG, "Can't seek to time")
+                        }
+                    }
+                    seeking = false
+                }
             }
-        })
+        )
         instrumentViewer = InstrumentViewer(this)
         channelViewer = ChannelViewer(this)
         patternViewer = PatternViewer(this)
@@ -693,9 +710,9 @@ class PlayerActivity : Activity() {
     }
 
     public override fun onDestroy() {
-        //if (deleteDialog != null) {
-        //	deleteDialog.cancel();
-        //}
+        // if (deleteDialog != null) {
+        // 	deleteDialog.cancel();
+        // }
         saveAllSeqPreference()
         synchronized(playerLock) {
             if (modPlayer != null) {
@@ -728,9 +745,9 @@ class PlayerActivity : Activity() {
         // Screen is about to turn off
         if (ScreenReceiver.wasScreenOn) {
             screenOn = false
-        } //else {
+        } // else {
         // Screen state not changed
-        //}
+        // }
         super.onPause()
     }
 
@@ -770,15 +787,16 @@ class PlayerActivity : Activity() {
         totalTime = time / 1000
         seekBar!!.progress = 0
         seekBar!!.max = time / 100
-        toast(activity, "New sequence duration: " + String.format("%d:%02d", time / 60000, time / 1000 % 60))
+        val formattedTime = String.format("%d:%02d", time / 60000, time / 1000 % 60)
+        toast(activity, "New sequence duration: $formattedTime")
         val sequence = modVars[7]
         sidebar!!.selectSequence(sequence)
     }
 
     private fun showNewMod() {
-        //if (deleteDialog != null) {
-        //	deleteDialog.cancel();
-        //}
+        // if (deleteDialog != null) {
+        // 	deleteDialog.cancel();
+        // }
         handler.post(showNewModRunnable)
     }
 
@@ -910,8 +928,9 @@ class PlayerActivity : Activity() {
         const val PARM_START = "start"
         const val PARM_KEEPFIRST = "keepFirst"
         private const val FRAME_RATE = 25
-        private var stopUpdate // this MUST be static (volatile doesn't work!)
-            = false
+
+        // this MUST be static (volatile doesn't work!)
+        private var stopUpdate = false
         private var canChangeViewer = false
     }
 }

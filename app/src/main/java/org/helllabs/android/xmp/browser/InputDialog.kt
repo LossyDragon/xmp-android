@@ -17,7 +17,8 @@ class InputDialog(context: Context) : AlertDialog.Builder(context) {
         input = EditText(context)
         input.layoutParams = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT)
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        )
         input.transformationMethod = SingleLineTransformationMethod()
         layout.addView(input)
         setView(layout)

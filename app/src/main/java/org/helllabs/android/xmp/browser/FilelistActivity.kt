@@ -11,6 +11,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.h6ah4i.android.widget.advrecyclerview.decoration.SimpleListDividerDecorator
 import com.pluscubed.recyclerfastscroll.RecyclerFastScroller
+import java.io.File
+import java.text.DateFormat
+import java.util.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter
 import org.helllabs.android.xmp.browser.playlist.PlaylistItem
@@ -25,9 +28,6 @@ import org.helllabs.android.xmp.util.Log.i
 import org.helllabs.android.xmp.util.Message.error
 import org.helllabs.android.xmp.util.Message.toast
 import org.helllabs.android.xmp.util.Message.yesNoDialog
-import java.io.File
-import java.text.DateFormat
-import java.util.*
 
 class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickListener {
 
@@ -45,8 +45,11 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
      */
     private val addCurrentRecursiveChoice: PlaylistChoice = object : PlaylistChoice {
         override fun execute(fileSelection: Int, playlistSelection: Int) {
-            PlaylistUtils.filesToPlaylist(this@FilelistActivity, recursiveList(mNavigation!!.currentDir),
-                PlaylistUtils.getPlaylistName(playlistSelection))
+            PlaylistUtils.filesToPlaylist(
+                this@FilelistActivity,
+                recursiveList(mNavigation!!.currentDir),
+                PlaylistUtils.getPlaylistName(playlistSelection)
+            )
         }
     }
 
@@ -55,8 +58,11 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
      */
     private val addRecursiveToPlaylistChoice: PlaylistChoice = object : PlaylistChoice {
         override fun execute(fileSelection: Int, playlistSelection: Int) {
-            PlaylistUtils.filesToPlaylist(this@FilelistActivity, recursiveList(mPlaylistAdapter!!.getFile(fileSelection)),
-                PlaylistUtils.getPlaylistName(playlistSelection))
+            PlaylistUtils.filesToPlaylist(
+                this@FilelistActivity,
+                recursiveList(mPlaylistAdapter!!.getFile(fileSelection)),
+                PlaylistUtils.getPlaylistName(playlistSelection)
+            )
         }
     }
 
@@ -65,8 +71,11 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
      */
     private val addFileToPlaylistChoice: PlaylistChoice = object : PlaylistChoice {
         override fun execute(fileSelection: Int, playlistSelection: Int) {
-            PlaylistUtils.filesToPlaylist(this@FilelistActivity, mPlaylistAdapter!!.getFilename(fileSelection),
-                PlaylistUtils.getPlaylistName(playlistSelection))
+            PlaylistUtils.filesToPlaylist(
+                this@FilelistActivity,
+                mPlaylistAdapter!!.getFilename(fileSelection),
+                PlaylistUtils.getPlaylistName(playlistSelection)
+            )
         }
     }
 
@@ -75,8 +84,11 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
      */
     private val addFileListToPlaylistChoice: PlaylistChoice = object : PlaylistChoice {
         override fun execute(fileSelection: Int, playlistSelection: Int) {
-            PlaylistUtils.filesToPlaylist(this@FilelistActivity, mPlaylistAdapter!!.filenameList,
-                PlaylistUtils.getPlaylistName(playlistSelection))
+            PlaylistUtils.filesToPlaylist(
+                this@FilelistActivity,
+                mPlaylistAdapter!!.filenameList,
+                PlaylistUtils.getPlaylistName(playlistSelection)
+            )
         }
     }
 
@@ -100,19 +112,33 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         }
     }
 
-    private fun pathNotFound(media_path: String) {
+    private fun pathNotFound(mediaPath: String) {
         val alertDialog = AlertDialog.Builder(this).create()
         alertDialog.setTitle("Path not found")
-        alertDialog.setMessage("$media_path not found. Create this directory or change the module path.")
-        alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, getString(R.string.create)) { _: DialogInterface?, _: Int ->
-            val ret = Examples.install(this@FilelistActivity, media_path, mPrefs!!.getBoolean(Preferences.EXAMPLES, true))
+        alertDialog.setMessage(
+            "$mediaPath not found. Create this directory or change the module path."
+        )
+        alertDialog.setButton(
+            AlertDialog.BUTTON_POSITIVE,
+            getString(R.string.create)
+        ) { _: DialogInterface?, _: Int ->
+            val ret = Examples.install(
+                this,
+                mediaPath,
+                mPrefs!!.getBoolean(Preferences.EXAMPLES, true)
+            )
             if (ret < 0) {
-                error(this@FilelistActivity, "Error creating directory $media_path.")
+                error(this, "Error creating directory $mediaPath.")
             }
-            mNavigation!!.startNavigation(File(media_path))
+            mNavigation!!.startNavigation(File(mediaPath))
             updateModlist()
         }
-        alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, getString(R.string.cancel)) { _: DialogInterface?, _: Int -> finish() }
+        alertDialog.setButton(
+            AlertDialog.BUTTON_NEGATIVE,
+            getString(R.string.cancel)
+        ) { _: DialogInterface?, _: Int ->
+            finish()
+        }
         alertDialog.show()
     }
 
@@ -136,8 +162,9 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         mPlaylistAdapter = PlaylistAdapter(this, ArrayList(), false, PlaylistAdapter.LAYOUT_LIST)
         mPlaylistAdapter!!.setOnItemClickListener(this)
         recyclerView!!.adapter = mPlaylistAdapter
-        recyclerView!!.addItemDecoration(SimpleListDividerDecorator(resources.getDrawable(R.drawable.list_divider), true))
-
+        recyclerView!!.addItemDecoration(
+            SimpleListDividerDecorator(resources.getDrawable(R.drawable.list_divider), true)
+        )
         // fast scroll
         val fastScroller = findViewById<View>(R.id.fast_scroller) as RecyclerFastScroller
         fastScroller.attachRecyclerView(recyclerView)
@@ -188,13 +215,13 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
-            //if (mBackButtonParentdir) {
+            // if (mBackButtonParentdir) {
             // Return to parent dir up to the starting level, then act as regular back
             if (!mNavigation!!.isAtTopDir) {
                 parentDir()
                 return true
             }
-            //}
+            // }
         }
         return super.onKeyDown(keyCode, event)
     }
@@ -231,9 +258,14 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
             for (file in dirFiles) {
                 var item: PlaylistItem
                 item = if (file.isDirectory) {
-                    PlaylistItem(PlaylistItem.TYPE_DIRECTORY, file.name, getString(R.string.directory))
+                    PlaylistItem(
+                        PlaylistItem.TYPE_DIRECTORY,
+                        file.name,
+                        getString(R.string.directory)
+                    )
                 } else {
-                    val date = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM).format(file.lastModified())
+                    val date = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM)
+                        .format(file.lastModified())
                     val comment = date + String.format(" (%d kB)", file.length() / 1024)
                     PlaylistItem(PlaylistItem.TYPE_FILE, file.name, comment)
                 }
@@ -252,8 +284,12 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         val deleteName = mPlaylistAdapter!!.getFilename(position)
         val mediaPath = mPrefs!!.getString(Preferences.MEDIA_PATH, Preferences.DEFAULT_MEDIA_PATH)
         if (deleteName.startsWith(mediaPath!!) && deleteName != mediaPath) {
-            yesNoDialog(this, "Delete directory", "Are you sure you want to delete directory \"" +
-                basename(deleteName) + "\" and all its contents?") {
+            yesNoDialog(
+                this,
+                "Delete directory",
+                "Are you sure you want to delete directory" +
+                    " \"${basename(deleteName)}\" and all its contents?"
+            ) {
                 if (deleteRecursive(deleteName)) {
                     updateModlist()
                     toast(this@FilelistActivity, getString(R.string.msg_dir_deleted))
@@ -283,7 +319,12 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         builder.setTitle(R.string.msg_select_playlist)
             .setPositiveButton(R.string.ok, listener)
             .setNegativeButton(R.string.cancel, listener)
-            .setSingleChoiceItems(PlaylistUtils.listNoSuffix(), 0) { _: DialogInterface?, which: Int -> playlistSelection[0] = which }.show()
+            .setSingleChoiceItems(
+                PlaylistUtils.listNoSuffix(),
+                0
+            ) { _: DialogInterface?, which: Int ->
+                playlistSelection[0] = which
+            }.show()
     }
 
     private fun clearCachedEntries(fileList: List<String?>?) {
@@ -306,13 +347,15 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         }
         isPathMenu = false
         val position = mPlaylistAdapter!!.position
-        if (mPlaylistAdapter!!.getFile(position).isDirectory) {            // For directory
+        if (mPlaylistAdapter!!.getFile(position).isDirectory) {
+            // For directory
             menu.setHeaderTitle("This directory")
             menu.add(Menu.NONE, 0, 0, "Add to playlist")
             menu.add(Menu.NONE, 1, 1, "Add to play queue")
             menu.add(Menu.NONE, 2, 2, "Play contents")
             menu.add(Menu.NONE, 3, 3, "Delete directory")
-        } else {                                            // For files
+        } else {
+            // For files
             val mode = mPrefs!!.getString(Preferences.PLAYLIST_MODE, "1")!!.toInt()
             menu.setHeaderTitle("This file")
             menu.add(Menu.NONE, 0, 0, "Add to playlist")
@@ -347,14 +390,16 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
             return true
         }
         val position = mPlaylistAdapter!!.position
-        if (mPlaylistAdapter!!.getFile(position).isDirectory) {        // Directories
+        if (mPlaylistAdapter!!.getFile(position).isDirectory) {
+            // Directories
             when (id) {
                 0 -> choosePlaylist(position, addRecursiveToPlaylistChoice)
                 1 -> addToQueue(recursiveList(mPlaylistAdapter!!.getFile(position)))
                 2 -> playModule(recursiveList(mPlaylistAdapter!!.getFile(position)))
                 3 -> deleteDirectory(position)
             }
-        } else {                                        // Files
+        } else {
+            // Files
             when (id) {
                 0 -> choosePlaylist(position, addFileToPlaylistChoice)
                 1 -> addToQueue(mPlaylistAdapter!!.getFilename(position))
@@ -362,7 +407,11 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
                 3 -> playModule(mPlaylistAdapter!!.filenameList, position)
                 4 -> {
                     val deleteName = mPlaylistAdapter!!.getFilename(position)
-                    yesNoDialog(this, "Delete", "Are you sure you want to delete " + basename(deleteName) + "?") {
+                    yesNoDialog(
+                        this,
+                        "Delete",
+                        "Are you sure you want to delete " + basename(deleteName) + "?"
+                    ) {
                         if (delete(deleteName)) {
                             updateModlist()
                             toast(this@FilelistActivity, getString(R.string.msg_file_deleted))
@@ -389,7 +438,8 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
             }
             if (file.isDirectory) {
                 val fileArray = file.listFiles()
-                if (fileArray != null) {            // prevent crash reported in dev console
+                // prevent crash reported in dev console
+                if (fileArray != null) {
                     for (f in fileArray) {
                         if (f.isDirectory) {
                             list.addAll(recursiveList(f))

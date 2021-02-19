@@ -51,7 +51,8 @@ class ReceiverHelper(private val player: PlayerService) {
         if (headsetPlugReceiver != null) {
             player.unregisterReceiver(headsetPlugReceiver)
         }
-        if (bluetoothConnectionReceiver != null) {        // Z933 (glaucus) needs this test
+        if (bluetoothConnectionReceiver != null) {
+            // Z933 (glaucus) needs this test
             player.unregisterReceiver(bluetoothConnectionReceiver)
         }
         if (mediaButtons != null) {
@@ -206,5 +207,4 @@ class ReceiverHelper(private val player: PlayerService) {
     companion object {
         private const val TAG = "ReceiverHelper"
     }
-
 }

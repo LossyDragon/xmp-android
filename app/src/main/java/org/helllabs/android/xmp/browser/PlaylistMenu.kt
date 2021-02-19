@@ -5,6 +5,8 @@ import android.app.Activity
 import android.content.*
 import android.content.pm.PackageManager
 import android.os.*
+import android.os.Environment.MEDIA_MOUNTED
+import android.os.Environment.MEDIA_MOUNTED_READ_ONLY
 import android.view.*
 import android.view.ContextMenu.ContextMenuInfo
 import android.widget.TextView
@@ -17,6 +19,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.OnItemTouchListener
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import java.io.File
+import java.io.IOException
+import java.util.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.browser.playlist.Playlist
 import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter
@@ -33,11 +38,9 @@ import org.helllabs.android.xmp.util.Log.i
 import org.helllabs.android.xmp.util.Message.error
 import org.helllabs.android.xmp.util.Message.fatalError
 import org.helllabs.android.xmp.util.Message.yesNoDialog
-import java.io.File
-import java.io.IOException
-import java.util.*
 
-class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
+class
+PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
     private var prefs: SharedPreferences? = null
     private var mediaPath: String? = null
     private var deletePosition = 0
@@ -48,7 +51,7 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
         i(TAG, "start application")
         val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
-        //getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        // getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         supportActionBar!!.elevation = 0f // or other
         title = ""
         val title = findViewById<View>(R.id.toolbar_title) as TextView
@@ -62,30 +65,37 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
         }
         swipeRefresh.setColorSchemeResources(R.color.refresh_color)
         val recyclerView = findViewById<View>(R.id.plist_menu_list) as RecyclerView
-        recyclerView.addOnItemTouchListener(object : OnItemTouchListener {
-            override fun onInterceptTouchEvent(rv: RecyclerView, e: MotionEvent): Boolean {
-                if (e.action == MotionEvent.ACTION_DOWN) {
-                    var enable = false
-                    if (recyclerView.childCount > 0) {
-                        enable = !recyclerView.canScrollVertically(-1)
+        recyclerView.addOnItemTouchListener(
+            object : OnItemTouchListener {
+                override fun onInterceptTouchEvent(rv: RecyclerView, e: MotionEvent): Boolean {
+                    if (e.action == MotionEvent.ACTION_DOWN) {
+                        var enable = false
+                        if (recyclerView.childCount > 0) {
+                            enable = !recyclerView.canScrollVertically(-1)
+                        }
+                        swipeRefresh.isEnabled = enable
                     }
-                    swipeRefresh.isEnabled = enable
+                    return false
                 }
-                return false
-            }
 
-            override fun onTouchEvent(rv: RecyclerView, e: MotionEvent) {
-                // do nothing
-            }
+                override fun onTouchEvent(rv: RecyclerView, e: MotionEvent) {
+// do nothing
+                }
 
-            override fun onRequestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
-                // do nothing
+                override fun onRequestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
+// do nothing
+                }
             }
-        })
+        )
         val layoutManager = LinearLayoutManager(this)
         layoutManager.orientation = LinearLayoutManager.VERTICAL
         recyclerView.layoutManager = layoutManager
-        playlistAdapter = PlaylistAdapter(this@PlaylistMenu, ArrayList(), false, PlaylistAdapter.LAYOUT_CARD)
+        playlistAdapter = PlaylistAdapter(
+            this@PlaylistMenu,
+            ArrayList(),
+            false,
+            PlaylistAdapter.LAYOUT_CARD
+        )
         playlistAdapter!!.setOnItemClickListener(this)
         recyclerView.adapter = playlistAdapter
         registerForContextMenu(recyclerView)
@@ -104,8 +114,8 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
             startPlayerActivity()
         }
 
-        //enableHomeButton();
-        //updateList();
+        // enableHomeButton();
+        // updateList();
     }
 
     public override fun onResume() {
@@ -115,18 +125,27 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
 
     private val storagePermissions: Unit
         get() {
-            val hasPermission = ContextCompat.checkSelfPermission(this,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+            val hasPermission = ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED
             if (hasPermission) {
                 setupDataDir()
                 updateList()
             } else {
-                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
-                    REQUEST_WRITE_STORAGE)
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                    REQUEST_WRITE_STORAGE
+                )
             }
         }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_WRITE_STORAGE) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -140,7 +159,11 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
     private fun setupDataDir() {
         if (!Preferences.DATA_DIR.isDirectory) {
             if (Preferences.DATA_DIR.mkdirs()) {
-                PlaylistUtils.createEmptyPlaylist(this, getString(R.string.empty_playlist), getString(R.string.empty_comment))
+                PlaylistUtils.createEmptyPlaylist(
+                    this,
+                    getString(R.string.empty_playlist),
+                    getString(R.string.empty_comment)
+                )
             } else {
                 fatalError(this, getString(R.string.error_datadir))
             }
@@ -186,11 +209,19 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
     private fun updateList() {
         mediaPath = prefs!!.getString(Preferences.MEDIA_PATH, Preferences.DEFAULT_MEDIA_PATH)
         playlistAdapter!!.clear()
-        val browserItem = PlaylistItem(PlaylistItem.TYPE_SPECIAL, "File browser", "Files in $mediaPath")
+        val browserItem = PlaylistItem(
+            PlaylistItem.TYPE_SPECIAL,
+            "File browser",
+            "Files in $mediaPath"
+        )
         browserItem.imageRes = R.drawable.browser
         playlistAdapter!!.add(browserItem)
         for (name in PlaylistUtils.listNoSuffix()) {
-            val item = PlaylistItem(PlaylistItem.TYPE_PLAYLIST, name, Playlist.readComment(this, name))
+            val item = PlaylistItem(
+                PlaylistItem.TYPE_PLAYLIST,
+                name,
+                Playlist.readComment(this, name)
+            )
             item.imageRes = R.drawable.list
             playlistAdapter!!.add(item)
         }
@@ -200,13 +231,13 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
 
     // Playlist context menu
     override fun onCreateContextMenu(menu: ContextMenu, view: View, menuInfo: ContextMenuInfo) {
-        //final AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)menuInfo;
+        // final AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)menuInfo;
         menu.setHeaderTitle("Playlist options")
         val position = playlistAdapter!!.position
-        if (position == 0) {                    // Module list
+        if (position == 0) { // Module list
             menu.add(Menu.NONE, 0, 0, "Change directory")
-            //menu.add(Menu.NONE, 1, 1, "Add to playlist");
-        } else {                                    // Playlists
+            // menu.add(Menu.NONE, 1, 1, "Add to playlist");
+        } else { // Playlists
             menu.add(Menu.NONE, 0, 0, "Rename")
             menu.add(Menu.NONE, 1, 1, "Edit comment")
             menu.add(Menu.NONE, 2, 2, "Delete playlist")
@@ -214,11 +245,11 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
     }
 
     override fun onContextItemSelected(item: MenuItem): Boolean {
-        //final AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)item.getMenuInfo();
+        // final AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)item.getMenuInfo();
         val index = item.itemId
         val position = playlistAdapter!!.position
-        if (position == 0) {        // First item of list
-            if (index == 0) {            // First item of context menu
+        if (position == 0) { // First item of list
+            if (index == 0) { // First item of context menu
                 changeDir(this)
                 return true
             }
@@ -236,9 +267,16 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
                 }
                 2 -> {
                     deletePosition = position - 1
-                    yesNoDialog(this, "Delete", "Are you sure to delete playlist " +
-                        PlaylistUtils.listNoSuffix()[deletePosition] + "?") {
-                        Playlist.delete(this@PlaylistMenu, PlaylistUtils.listNoSuffix()[deletePosition])
+                    yesNoDialog(
+                        this,
+                        "Delete",
+                        "Are you sure to delete playlist " +
+                            PlaylistUtils.listNoSuffix()[deletePosition] + "?"
+                    ) {
+                        Playlist.delete(
+                            this@PlaylistMenu,
+                            PlaylistUtils.listNoSuffix()[deletePosition]
+                        )
                         updateList()
                     }
                     return true
@@ -333,7 +371,10 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
         when (item.itemId) {
             android.R.id.home -> startPlayerActivity()
             R.id.menu_new_playlist -> PlaylistUtils.newPlaylistDialog(this) { updateList() }
-            R.id.menu_prefs -> startActivityForResult(Intent(this, Preferences::class.java), SETTINGS_REQUEST)
+            R.id.menu_prefs -> startActivityForResult(
+                Intent(this, Preferences::class.java),
+                SETTINGS_REQUEST
+            )
             R.id.menu_refresh -> updateList()
             R.id.menu_download -> startActivity(Intent(this, Search::class.java))
             else -> {
@@ -353,7 +394,7 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
         private const val REQUEST_WRITE_STORAGE = 112
         private fun checkStorage(): Boolean {
             val state = Environment.getExternalStorageState()
-            return if (Environment.MEDIA_MOUNTED == state || Environment.MEDIA_MOUNTED_READ_ONLY == state) {
+            return if (MEDIA_MOUNTED == state || MEDIA_MOUNTED_READ_ONLY == state) {
                 true
             } else {
                 e(TAG, "External storage state error: $state")

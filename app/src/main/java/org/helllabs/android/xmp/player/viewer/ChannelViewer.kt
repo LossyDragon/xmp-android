@@ -225,11 +225,12 @@ class ChannelViewer(context: Context) : Viewer(context) {
                     2
                 }
             }
-            Configuration.SCREENLAYOUT_SIZE_LARGE -> cols = if (rotation == Surface.ROTATION_0 || rotation == Surface.ROTATION_180) {
-                1
-            } else {
-                2
-            }
+            Configuration.SCREENLAYOUT_SIZE_LARGE ->
+                cols = if (rotation == Surface.ROTATION_0 || rotation == Surface.ROTATION_180) {
+                    1
+                } else {
+                    2
+                }
             Configuration.SCREENLAYOUT_SIZE_XLARGE -> cols = 2
             else -> cols = 1
         }
@@ -287,13 +288,23 @@ class ChannelViewer(context: Context) : Viewer(context) {
             }
 
             // Draw channel number
-            canvas.drawText(channelNumber[chn]!!, x.toFloat(), (y + (scopeHeight + font2Height) / 2).toFloat(), numPaint)
+            canvas.drawText(
+                channelNumber[chn]!!,
+                x.toFloat(),
+                (y + (scopeHeight + font2Height) / 2).toFloat(),
+                numPaint
+            )
 
             // Draw scopes
             rect[x + scopeLeft, y + 1, x + scopeLeft + scopeWidth] = y + scopeHeight
             if (isMuted[chn]) {
                 canvas.drawRect(rect, scopeMutePaint)
-                canvas.drawText("MUTE", (x + scopeLeft + 2 * fontWidth).toFloat(), (y + fontHeight + fontSize).toFloat(), insPaint)
+                canvas.drawText(
+                    "MUTE",
+                    (x + scopeLeft + 2 * fontWidth).toFloat(),
+                    (y + fontHeight + fontSize).toFloat(),
+                    insPaint
+                )
             } else {
                 canvas.drawRect(rect, scopePaint)
                 if (!paused) {
@@ -303,15 +314,25 @@ class ChannelViewer(context: Context) : Viewer(context) {
                         // Our variables are latency-compensated but sample data is current
                         // so caution is needed to avoid retrieving data using old variables
                         // from a module with sample data from a newly loaded one.
-                        modPlayer.getSampleData(key >= 0, ins, holdKey[chn], period, chn, scopeWidth, buffer[chn])
+                        modPlayer.getSampleData(
+                            key >= 0,
+                            ins,
+                            holdKey[chn],
+                            period,
+                            chn,
+                            scopeWidth,
+                            buffer[chn]
+                        )
                     } catch (e: RemoteException) {
                         // fail silently
                     }
                 }
                 val h = scopeHeight / 2
                 for (j in 0 until scopeWidth) {
-                    bufferXY[j * 2] = (x + scopeLeft + j).toFloat()
-                    bufferXY[j * 2 + 1] = (y + h + buffer[chn][j] * h * finalvol / (64 * 180)).toFloat()
+                    bufferXY[j * 2] =
+                        (x + scopeLeft + j).toFloat()
+                    bufferXY[j * 2 + 1] =
+                        (y + h + buffer[chn][j] * h * finalvol / (64 * 180)).toFloat()
                 }
 
                 // Using drawPoints() instead of drawing each point saves a lot of CPU
@@ -320,7 +341,12 @@ class ChannelViewer(context: Context) : Viewer(context) {
 
             // Draw instrument name
             if (ins in 0 until numInstruments) {
-                canvas.drawText(insNameTrim[ins]!!, (x + volLeft).toFloat(), (y + fontHeight).toFloat(), insPaint)
+                canvas.drawText(
+                    insNameTrim[ins]!!,
+                    (x + volLeft).toFloat(),
+                    (y + fontHeight).toFloat(),
+                    insPaint
+                )
             }
 
             // Draw volumes

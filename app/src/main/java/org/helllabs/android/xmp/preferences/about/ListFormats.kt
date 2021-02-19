@@ -3,9 +3,9 @@ package org.helllabs.android.xmp.preferences.about
 import android.app.ListActivity
 import android.os.Bundle
 import android.widget.ArrayAdapter
+import java.util.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp.getFormats
-import java.util.*
 
 class ListFormats : ListActivity() {
     private val formats = getFormats()

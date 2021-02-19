@@ -1,5 +1,8 @@
 package org.helllabs.android.xmp.modarchive.request
 
+import java.io.ByteArrayInputStream
+import java.io.IOException
+import java.io.InputStream
 import org.helllabs.android.xmp.modarchive.model.Artist
 import org.helllabs.android.xmp.modarchive.model.Sponsor
 import org.helllabs.android.xmp.modarchive.response.ArtistResponse
@@ -10,15 +13,16 @@ import org.helllabs.android.xmp.util.Log.e
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import org.xmlpull.v1.XmlPullParserFactory
-import java.io.ByteArrayInputStream
-import java.io.IOException
-import java.io.InputStream
 
 class ArtistRequest : ModArchiveRequest {
 
     constructor(key: String, request: String) : super(key, request)
     constructor(key: String, request: String, parameter: String?) : super(key, request, parameter)
-    constructor(key: String, request: String, parameter: Long) : this(key, request, parameter.toString())
+    constructor(key: String, request: String, parameter: Long) : this(
+        key,
+        request,
+        parameter.toString()
+    )
 
     override fun xmlParse(result: String): ModArchiveResponse {
         val artistList = ArtistResponse()

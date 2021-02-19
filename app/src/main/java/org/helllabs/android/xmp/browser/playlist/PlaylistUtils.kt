@@ -7,15 +7,15 @@ import android.app.ProgressDialog
 import android.content.*
 import android.view.*
 import android.widget.EditText
+import java.io.File
+import java.io.IOException
+import java.util.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp.testModule
 import org.helllabs.android.xmp.preferences.Preferences
 import org.helllabs.android.xmp.util.Message.error
 import org.helllabs.android.xmp.util.Message.toast
 import org.helllabs.android.xmp.util.ModInfo
-import java.io.File
-import java.io.IOException
-import java.util.*
 
 object PlaylistUtils {
     fun newPlaylistDialog(activity: Activity) {
@@ -75,7 +75,12 @@ object PlaylistUtils {
     }
 
     fun filesToPlaylist(activity: Activity, fileList: List<String?>?, playlistName: String?) {
-        val progressDialog = ProgressDialog.show(activity, "Please wait", "Scanning module files...", true)
+        val progressDialog = ProgressDialog.show(
+            activity,
+            "Please wait",
+            "Scanning module files...",
+            true
+        )
         object : Thread() {
             override fun run() {
                 addFiles(activity, fileList, playlistName)

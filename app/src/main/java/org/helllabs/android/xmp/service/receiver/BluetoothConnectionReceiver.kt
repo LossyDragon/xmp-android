@@ -15,7 +15,9 @@ class BluetoothConnectionReceiver : BroadcastReceiver() {
         if (intent.action == BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED) {
             val bluetoothState = intent.getIntExtra(BluetoothA2dp.EXTRA_STATE, -1)
             i(TAG, "Extra state: $bluetoothState")
-            if (bluetoothState == BluetoothProfile.STATE_DISCONNECTING || bluetoothState == BluetoothProfile.STATE_DISCONNECTED) {
+            if (bluetoothState == BluetoothProfile.STATE_DISCONNECTING ||
+                bluetoothState == BluetoothProfile.STATE_DISCONNECTED
+            ) {
                 i(TAG, "Bluetooth state changed to disconnected")
                 state = DISCONNECTED
             } else if (bluetoothState == BluetoothProfile.STATE_CONNECTED) {

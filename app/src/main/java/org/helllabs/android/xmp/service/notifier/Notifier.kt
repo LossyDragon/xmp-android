@@ -5,11 +5,11 @@ import android.app.Service
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import java.util.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.player.PlayerActivity
 import org.helllabs.android.xmp.service.receiver.NotificationActionReceiver
 import org.helllabs.android.xmp.service.utils.QueueManager
-import java.util.*
 
 abstract class Notifier(protected val service: Service) {
 

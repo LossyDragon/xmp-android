@@ -15,7 +15,8 @@ import org.helllabs.android.xmp.util.Log.w
 @TargetApi(19)
 class RemoteControl(context: Context, private val audioManager: AudioManager?) {
 
-    private val remoteControlReceiver: ComponentName = ComponentName(context.packageName, RemoteControlReceiver::class.java.name)
+    private val remoteControlReceiver: ComponentName =
+        ComponentName(context.packageName, RemoteControlReceiver::class.java.name)
     private var remoteControlClient: RemoteControlClientCompat? = null
 
     init {
@@ -30,7 +31,8 @@ class RemoteControl(context: Context, private val audioManager: AudioManager?) {
                 RemoteControlClient.FLAG_KEY_MEDIA_PLAY_PAUSE or
                     RemoteControlClient.FLAG_KEY_MEDIA_STOP or
                     RemoteControlClient.FLAG_KEY_MEDIA_NEXT or
-                    RemoteControlClient.FLAG_KEY_MEDIA_PREVIOUS)
+                    RemoteControlClient.FLAG_KEY_MEDIA_PREVIOUS
+            )
             RemoteControlHelper.registerRemoteControlClient(audioManager, remoteControlClient!!)
         }
     }
@@ -69,7 +71,7 @@ class RemoteControl(context: Context, private val audioManager: AudioManager?) {
     fun setMetadata(title: String?, type: String?, duration: Long) {
         if (remoteControlClient != null) {
             val editor = remoteControlClient!!.editMetadata(true)
-            //editor.putBitmap(MetadataEditor.BITMAP_KEY_ARTWORK, dummyAlbumArt);
+            // editor.putBitmap(MetadataEditor.BITMAP_KEY_ARTWORK, dummyAlbumArt);
             editor.putLong(MediaMetadataRetriever.METADATA_KEY_DURATION, duration)
             editor.putString(MediaMetadataRetriever.METADATA_KEY_ARTIST, type)
             editor.putString(MediaMetadataRetriever.METADATA_KEY_TITLE, title)

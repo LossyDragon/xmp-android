@@ -1,5 +1,8 @@
 package org.helllabs.android.xmp.modarchive.request
 
+import java.io.ByteArrayInputStream
+import java.io.IOException
+import java.io.InputStream
 import org.helllabs.android.xmp.modarchive.model.Artist
 import org.helllabs.android.xmp.modarchive.model.Module
 import org.helllabs.android.xmp.modarchive.model.Sponsor
@@ -11,15 +14,16 @@ import org.helllabs.android.xmp.util.Log.e
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import org.xmlpull.v1.XmlPullParserFactory
-import java.io.ByteArrayInputStream
-import java.io.IOException
-import java.io.InputStream
 
 class ModuleRequest : ModArchiveRequest {
 
     constructor(key: String, request: String) : super(key, request)
     constructor(key: String, request: String, parameter: String?) : super(key, request, parameter)
-    constructor(key: String, request: String, parameter: Long) : this(key, request, parameter.toString())
+    constructor(key: String, request: String, parameter: Long) : this(
+        key,
+        request,
+        parameter.toString()
+    )
 
     override fun xmlParse(result: String): ModArchiveResponse {
         val moduleList = ModuleResponse()
@@ -46,7 +50,7 @@ class ModuleRequest : ModArchiveRequest {
                     XmlPullParser.TEXT -> text = myparser.text.trim { it <= ' ' }
                     XmlPullParser.END_TAG -> {
                         val end = myparser.name
-                        //Log.d(TAG, "name=" + name + " text=" + text);
+                        // Log.d(TAG, "name=" + name + " text=" + text);
                         when {
                             sponsor != null -> {
                                 when (end) {
@@ -71,7 +75,7 @@ class ModuleRequest : ModArchiveRequest {
                                     "url" -> module.url = text
                                     "bytes" -> module.bytes = text.toInt()
                                     "songtitle" -> module.setSongTitle(text)
-                                    "alias" ->                                     // Use non-guessed artist if available
+                                    "alias" -> // Use non-guessed artist if available
                                         if (module.artist == Artist.UNKNOWN) {
                                             module.artist = text
                                         }
@@ -107,7 +111,9 @@ class ModuleRequest : ModArchiveRequest {
     companion object {
         private const val TAG = "ModuleRequest"
         private val UNSUPPORTED = arrayOf(
-            "AHX", "HVL", "MO3"
+            "AHX",
+            "HVL",
+            "MO3"
         )
     }
 }

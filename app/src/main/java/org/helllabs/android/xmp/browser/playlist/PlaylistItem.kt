@@ -1,9 +1,13 @@
 package org.helllabs.android.xmp.browser.playlist
 
-import org.helllabs.android.xmp.R
 import java.io.File
+import org.helllabs.android.xmp.R
 
-class PlaylistItem(val type: Int, val name: String?, val comment: String) : Comparable<PlaylistItem> {
+class PlaylistItem(
+    val type: Int,
+    val name: String?,
+    val comment: String
+) : Comparable<PlaylistItem> {
     // Accessors
     var id = 0
     var file: File? = null

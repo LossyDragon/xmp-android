@@ -4,14 +4,13 @@ import android.content.*
 import android.graphics.Typeface
 import android.view.*
 import android.widget.*
-import androidx.core.view.ViewCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.h6ah4i.android.widget.advrecyclerview.draggable.DraggableItemAdapter
 import com.h6ah4i.android.widget.advrecyclerview.draggable.ItemDraggableRange
 import com.h6ah4i.android.widget.advrecyclerview.utils.AbstractDraggableItemViewHolder
-import org.helllabs.android.xmp.R
 import java.io.File
 import java.util.*
+import org.helllabs.android.xmp.R
 
 class PlaylistAdapter :
     RecyclerView.Adapter<PlaylistAdapter.ViewHolder>,
@@ -30,7 +29,11 @@ class PlaylistAdapter :
         fun onItemClick(adapter: PlaylistAdapter, view: View?, position: Int)
     }
 
-    class ViewHolder(itemView: View, adapter: PlaylistAdapter) : AbstractDraggableItemViewHolder(itemView), View.OnClickListener {
+    class ViewHolder(itemView: View, adapter: PlaylistAdapter) :
+        AbstractDraggableItemViewHolder(
+            itemView
+        ),
+        View.OnClickListener {
         val container: View
         val handle: View?
         val titleText: TextView
@@ -95,7 +98,7 @@ class PlaylistAdapter :
         }
         if (layoutType == LAYOUT_DRAG) {
             holder.handle?.setBackgroundColor(context.resources.getColor(R.color.drag_handle_color))
-            //holder.image.setAlpha(0.5f);
+            // holder.image.setAlpha(0.5f);
         }
 
         // See http://stackoverflow.com/questions/26466877/how-to-create-context-menu-for-recyclerview
@@ -124,7 +127,12 @@ class PlaylistAdapter :
         }*/
     }
 
-    constructor(context: Context, items: MutableList<PlaylistItem>, useFilename: Boolean, layoutType: Int) {
+    constructor(
+        context: Context,
+        items: MutableList<PlaylistItem>,
+        useFilename: Boolean,
+        layoutType: Int
+    ) {
         playlist = null
         this.items = items
         this.context = context
@@ -181,9 +189,9 @@ class PlaylistAdapter :
         this.useFilename = useFilename
     }
 
-    //public List<PlaylistItem> getItems() {
-    //	return items;
-    //}
+    // public List<PlaylistItem> getItems() {
+    // 	return items;
+    // }
     fun getFilename(location: Int): String {
         return items[location].file!!.path
     }
@@ -220,14 +228,14 @@ class PlaylistAdapter :
 
     // Advanced RecyclerView
     override fun onMoveItem(fromPosition: Int, toPosition: Int) {
-        //Log.d(TAG, "onMoveItem(fromPosition = " + fromPosition + ", toPosition = " + toPosition + ")");
+        // Log.d(TAG, "onMoveItem(fromPosition = " + fromPosition + ", toPosition = " + toPosition + ")");
         if (fromPosition == toPosition) {
             return
         }
         val item = items[fromPosition]
         items.remove(item)
         items.add(toPosition, item)
-        //playlist.setListChanged(true);
+        // playlist.setListChanged(true);
         notifyItemMoved(fromPosition, toPosition)
         playlist?.setListChanged(true)
     }
@@ -236,9 +244,8 @@ class PlaylistAdapter :
         // x, y --- relative from the itemView's top-left
         val containerView = holder.container
         val dragHandleView = holder.handle
-        val offsetX = containerView.left + (ViewCompat.getTranslationX(containerView) + 0.5f).toInt()
-        //final int offsetY = containerView.getTop() + (int) (ViewCompat.getTranslationY(containerView) + 0.5f);
-        return hitTest(dragHandleView!!, x - offsetX, y /*- offsetY*/)
+        val offsetX = containerView.left + (containerView.translationX + 0.5f).toInt()
+        return hitTest(dragHandleView!!, x - offsetX, y)
     }
 
     override fun onGetItemDraggableRange(holder: ViewHolder, position: Int): ItemDraggableRange? {
@@ -253,8 +260,8 @@ class PlaylistAdapter :
         private const val TAG = "PlaylistAdapter"
 
         private fun hitTest(v: View, x: Int, y: Int): Boolean {
-            val tx = (ViewCompat.getTranslationX(v) + 0.5f).toInt()
-            val ty = (ViewCompat.getTranslationY(v) + 0.5f).toInt()
+            val tx = (v.translationX + 0.5f).toInt()
+            val ty = (v.translationY + 0.5f).toInt()
             val left = v.left + tx
             val right = v.right + tx
             val top = v.top + ty

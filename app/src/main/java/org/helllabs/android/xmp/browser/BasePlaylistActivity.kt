@@ -12,6 +12,7 @@ import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.OnItemTouchListener
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import java.util.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter
@@ -25,7 +26,6 @@ import org.helllabs.android.xmp.util.InfoCache.testModule
 import org.helllabs.android.xmp.util.InfoCache.testModuleForceIfInvalid
 import org.helllabs.android.xmp.util.Log.i
 import org.helllabs.android.xmp.util.Message.toast
-import java.util.*
 
 abstract class BasePlaylistActivity : AppCompatActivity() {
     private var mShowToasts = false
@@ -45,7 +45,12 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     private val toggleLoopButtonListener = View.OnClickListener { view ->
         var loopMode = isLoopMode
         loopMode = loopMode xor true
-        (view as ImageButton).setImageResource(if (loopMode) R.drawable.list_loop_on else R.drawable.list_loop_off)
+        (view as ImageButton).setImageResource(
+            if (loopMode)
+                R.drawable.list_loop_on
+            else
+                R.drawable.list_loop_off
+        )
         if (mShowToasts) {
             toast(view.getContext(), if (loopMode) R.string.msg_loop_on else R.string.msg_loop_off)
         }
@@ -54,9 +59,17 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     private val toggleShuffleButtonListener = View.OnClickListener { view ->
         var shuffleMode = isShuffleMode
         shuffleMode = shuffleMode xor true
-        (view as ImageButton).setImageResource(if (shuffleMode) R.drawable.list_shuffle_on else R.drawable.list_shuffle_off)
+        (view as ImageButton).setImageResource(
+            if (shuffleMode)
+                R.drawable.list_shuffle_on
+            else
+                R.drawable.list_shuffle_off
+        )
         if (mShowToasts) {
-            toast(view.getContext(), if (shuffleMode) R.string.msg_shuffle_on else R.string.msg_shuffle_off)
+            toast(
+                view.getContext(),
+                if (shuffleMode) R.string.msg_shuffle_on else R.string.msg_shuffle_off
+            )
         }
         isShuffleMode = shuffleMode
     }
@@ -106,26 +119,28 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
             swipeRefresh.isRefreshing = false
         }
         swipeRefresh.setColorSchemeResources(R.color.refresh_color)
-        recyclerView.addOnItemTouchListener(object : OnItemTouchListener {
-            override fun onInterceptTouchEvent(rv: RecyclerView, e: MotionEvent): Boolean {
-                if (e.action == MotionEvent.ACTION_DOWN) {
-                    var enable = false
-                    if (recyclerView.childCount > 0) {
-                        enable = !recyclerView.canScrollVertically(-1)
+        recyclerView.addOnItemTouchListener(
+            object : OnItemTouchListener {
+                override fun onInterceptTouchEvent(rv: RecyclerView, e: MotionEvent): Boolean {
+                    if (e.action == MotionEvent.ACTION_DOWN) {
+                        var enable = false
+                        if (recyclerView.childCount > 0) {
+                            enable = !recyclerView.canScrollVertically(-1)
+                        }
+                        swipeRefresh.isEnabled = enable
                     }
-                    swipeRefresh.isEnabled = enable
+                    return false
                 }
-                return false
-            }
 
-            override fun onTouchEvent(rv: RecyclerView, e: MotionEvent) {
-                // do nothing
-            }
+                override fun onTouchEvent(rv: RecyclerView, e: MotionEvent) {
+// do nothing
+                }
 
-            override fun onRequestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
-                // do nothing
+                override fun onRequestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
+// do nothing
+                }
             }
-        })
+        )
     }
 
     protected fun setupButtons() {
@@ -134,9 +149,13 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         val toggleShuffleButton = findViewById<View>(R.id.toggle_shuffle) as ImageButton
         playAllButton.setImageResource(R.drawable.list_play)
         playAllButton.setOnClickListener(playAllButtonListener)
-        toggleLoopButton.setImageResource(if (isLoopMode) R.drawable.list_loop_on else R.drawable.list_loop_off)
+        toggleLoopButton.setImageResource(
+            if (isLoopMode) R.drawable.list_loop_on else R.drawable.list_loop_off
+        )
         toggleLoopButton.setOnClickListener(toggleLoopButtonListener)
-        toggleShuffleButton.setImageResource(if (isShuffleMode) R.drawable.list_shuffle_on else R.drawable.list_shuffle_off)
+        toggleShuffleButton.setImageResource(
+            if (isShuffleMode) R.drawable.list_shuffle_on else R.drawable.list_shuffle_off
+        )
         toggleShuffleButton.setOnClickListener(toggleShuffleButtonListener)
     }
 
@@ -146,7 +165,8 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
 
         /* Test module again if invalid, in case a new file format is added to the
          * player library and the file was previously unrecognized and cached as invalid.
-         */if (testModuleForceIfInvalid(filename)) {
+         */
+        if (testModuleForceIfInvalid(filename)) {
             when (mode) {
                 1 -> {
                     val count = position - adapter.directoryCount
@@ -199,7 +219,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         intent.putExtra(PlayerActivity.PARM_LOOP, isLoopMode)
         intent.putExtra(PlayerActivity.PARM_START, start)
         intent.putExtra(PlayerActivity.PARM_KEEPFIRST, keepFirst)
-        //intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);	// prevent screen flicker when starting player activity
+        // intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);	// prevent screen flicker when starting player activity
         i(TAG, "Start Player activity")
         startActivityForResult(intent, PLAY_MOD_REQUEST)
     }
@@ -277,9 +297,15 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
                 return true
             }
             R.id.menu_new_playlist -> PlaylistUtils.newPlaylistDialog(this)
-            R.id.menu_prefs -> startActivityForResult(Intent(this, Preferences::class.java), SETTINGS_REQUEST)
+            R.id.menu_prefs -> startActivityForResult(
+                Intent(this, Preferences::class.java),
+                SETTINGS_REQUEST
+            )
             R.id.menu_refresh -> update()
-            R.id.menu_download -> startActivityForResult(Intent(this, Search::class.java), SEARCH_REQUEST)
+            R.id.menu_download -> startActivityForResult(
+                Intent(this, Search::class.java),
+                SEARCH_REQUEST
+            )
         }
         return super.onOptionsItemSelected(item)
     }

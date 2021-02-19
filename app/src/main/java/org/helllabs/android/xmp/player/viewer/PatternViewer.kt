@@ -89,7 +89,7 @@ class PatternViewer(context: Context) : Viewer(context) {
         }
         val numRows = info.values[3]
         var canvas: Canvas? = null
-        if (numRows != 0) {        // Skip first invalid infos
+        if (numRows != 0) { // Skip first invalid infos
             oldRow = row
             oldOrd = ord
             oldPosX = posX.toInt()
@@ -128,7 +128,12 @@ class PatternViewer(context: Context) : Viewer(context) {
             val adj = if (i + 1 < 10) 1 else 0
             val x = (3 + i * 6 + 1 + adj) * fontWidth - posX.toInt()
             if (x > -2 * fontWidth && x < canvasWidth) {
-                canvas.drawText((i + 1).toString(), x.toFloat(), fontSize.toFloat(), headerTextPaint)
+                canvas.drawText(
+                    (i + 1).toString(),
+                    x.toFloat(),
+                    fontSize.toFloat(),
+                    headerTextPaint
+                )
             }
         }
 
@@ -184,7 +189,12 @@ class PatternViewer(context: Context) : Viewer(context) {
                 }
                 x = (3 + j * 6 + 3) * fontWidth - posX.toInt()
                 if (rowInstruments[j] > 0) {
-                    canvas.drawText(hexByte[rowInstruments[j].toInt()]!!, x.toFloat(), y.toFloat(), paint2)
+                    canvas.drawText(
+                        hexByte[rowInstruments[j].toInt()]!!,
+                        x.toFloat(),
+                        y.toFloat(),
+                        paint2
+                    )
                 } else {
                     canvas.drawText("--", x.toFloat(), y.toFloat(), paint2)
                 }

@@ -6,10 +6,10 @@ import android.os.RemoteException
 import android.view.*
 import android.view.GestureDetector.SimpleOnGestureListener
 import android.view.View.OnTouchListener
+import kotlin.math.abs
 import org.helllabs.android.xmp.player.ScreenSizeHelper
 import org.helllabs.android.xmp.service.ModInterface
 import org.helllabs.android.xmp.util.Log
-import kotlin.math.abs
 
 abstract class Viewer(
     context: Context
@@ -89,7 +89,12 @@ abstract class Viewer(
     }
 
     private inner class MyGestureDetector : SimpleOnGestureListener() {
-        override fun onScroll(e1: MotionEvent, e2: MotionEvent, distanceX: Float, distanceY: Float): Boolean {
+        override fun onScroll(
+            e1: MotionEvent,
+            e2: MotionEvent,
+            distanceX: Float,
+            distanceY: Float
+        ): Boolean {
             synchronized(this) {
                 posX += distanceX
                 posY += distanceY
@@ -100,7 +105,12 @@ abstract class Viewer(
             return true
         }
 
-        override fun onFling(e1: MotionEvent, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
+        override fun onFling(
+            e1: MotionEvent,
+            e2: MotionEvent,
+            velocityX: Float,
+            velocityY: Float
+        ): Boolean {
             velX = velocityX / 25
             velY = velocityY / 25
             return true

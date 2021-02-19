@@ -3,17 +3,20 @@ package org.helllabs.android.xmp.service
 import android.content.ComponentName
 import android.content.Context
 import android.media.AudioManager
-import org.helllabs.android.xmp.service.receiver.MediaButtonsReceiver
-import org.helllabs.android.xmp.util.Log.e
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
+import org.helllabs.android.xmp.service.receiver.MediaButtonsReceiver
+import org.helllabs.android.xmp.util.Log.e
 
 // for media buttons
 // see http://android-developers.blogspot.com/2010/06/allowing-applications-to-play-nicer.html
 internal class MediaButtons(context: Context) {
 
-    private val audioManager: AudioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-    private val mediaButtonsResponder: ComponentName = ComponentName(context.packageName, MediaButtonsReceiver::class.java.name)
+    private val audioManager: AudioManager =
+        context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+
+    private val mediaButtonsResponder: ComponentName =
+        ComponentName(context.packageName, MediaButtonsReceiver::class.java.name)
 
     fun register() {
         try {
@@ -26,7 +29,7 @@ internal class MediaButtons(context: Context) {
             when (val cause = ite.cause) {
                 is RuntimeException -> throw (cause as RuntimeException?)!!
                 is Error -> throw (cause as Error?)!!
-                else -> throw RuntimeException(ite)  // unexpected checked exception; wrap and re-throw
+                else -> throw RuntimeException(ite)
             }
         } catch (ie: IllegalAccessException) {
             e(TAG, "Unexpected $ie")
@@ -44,8 +47,7 @@ internal class MediaButtons(context: Context) {
             when (val cause = ite.cause) {
                 is RuntimeException -> throw (cause as RuntimeException?)!!
                 is Error -> throw (cause as Error?)!!
-                else -> throw RuntimeException(ite) // unexpected checked exception; wrap and re-throw
-
+                else -> throw RuntimeException(ite)
             }
         } catch (ie: IllegalAccessException) {
             e(TAG, "Unexpected $ie")

@@ -8,6 +8,10 @@ import android.text.method.LinkMovementMethod
 import android.view.*
 import android.widget.*
 import androidx.preference.PreferenceManager
+import java.io.File
+import java.io.IOException
+import java.io.UnsupportedEncodingException
+import java.util.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.modarchive.Downloader
@@ -28,10 +32,6 @@ import org.helllabs.android.xmp.util.Log.e
 import org.helllabs.android.xmp.util.Log.i
 import org.helllabs.android.xmp.util.Message.toast
 import org.helllabs.android.xmp.util.Message.yesNoDialog
-import java.io.File
-import java.io.IOException
-import java.io.UnsupportedEncodingException
-import java.util.*
 
 open class ModuleResult : Result(), OnResponseListener, DownloaderListener {
 
@@ -100,7 +100,9 @@ open class ModuleResult : Result(), OnResponseListener, DownloaderListener {
             filename!!.text = module.filename
             val size = module.bytes / 1024
             info!!.text = String.format("%s by %s (%d KB)", module.format, module.artist, size)
-            license!!.text = Html.fromHtml("License: <a href=\"" + module.legalUrl + "\">" + module.license + "</a>")
+            license!!.text = Html.fromHtml(
+                "License: <a href=\"" + module.legalUrl + "\">" + module.license + "</a>"
+            )
             license!!.movementMethod = LinkMovementMethod.getInstance()
             licenseDescription!!.text = module.licenseDescription
             instruments!!.text = module.instruments
@@ -109,7 +111,10 @@ open class ModuleResult : Result(), OnResponseListener, DownloaderListener {
         }
         val sponsor = response.sponsor
         if (sponsor != null) {
-            sponsorText!!.text = Html.fromHtml("Download mirrors provided by <a href=\"" + sponsor.link + "\">" + sponsor.name + "</a>")
+            sponsorText!!.text = Html.fromHtml(
+                "Download mirrors provided by " +
+                    "<a href=\"" + sponsor.link + "\">" + sponsor.name + "</a>"
+            )
             sponsorText!!.movementMethod = LinkMovementMethod.getInstance()
         }
         crossfade()
@@ -144,7 +149,11 @@ open class ModuleResult : Result(), OnResponseListener, DownloaderListener {
 
     fun deleteClick(view: View?) {
         val file = localFile(module)
-        yesNoDialog(this, "Delete file", "Are you sure you want to delete " + module!!.filename + "?") {
+        yesNoDialog(
+            this,
+            "Delete file",
+            "Are you sure you want to delete " + module!!.filename + "?"
+        ) {
             i(TAG, "Delete " + file.path)
             if (file.delete()) {
                 updateButtons(module)
@@ -158,7 +167,12 @@ open class ModuleResult : Result(), OnResponseListener, DownloaderListener {
                 val contents = parent.listFiles()
                 if (contents != null && contents.isEmpty()) {
                     try {
-                        val mediaPath = File(mPrefs!!.getString(Preferences.MEDIA_PATH, Preferences.DEFAULT_MEDIA_PATH)).canonicalPath
+                        val mediaPath = File(
+                            mPrefs!!.getString(
+                                Preferences.MEDIA_PATH,
+                                Preferences.DEFAULT_MEDIA_PATH
+                            )
+                        ).canonicalPath
                         val parentPath = parent.canonicalPath
                         if (parentPath.startsWith(mediaPath) && parentPath != mediaPath) {
                             i(TAG, "Remove empty directory " + parent.path)

@@ -11,11 +11,18 @@ import org.helllabs.android.xmp.R
 
 class OreoNotifier(service: Service) : Notifier(service) {
 
+    init {
+        createNotificationChannel(service)
+    }
+
     @TargetApi(26)
     private fun createNotificationChannel(service: Service) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(CHANNEL_ID,
-                service.getString(R.string.notif_channel_name), NotificationManager.IMPORTANCE_LOW)
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                service.getString(R.string.notif_channel_name),
+                NotificationManager.IMPORTANCE_LOW
+            )
             channel.description = service.getString(R.string.notif_channel_desc)
             val notificationManager = service.getSystemService(NotificationManager::class.java)
             notificationManager.createNotificationChannel(channel)
@@ -74,9 +81,5 @@ class OreoNotifier(service: Service) : Notifier(service) {
 
     companion object {
         private const val CHANNEL_ID = "xmp"
-    }
-
-    init {
-        createNotificationChannel(service)
     }
 }
