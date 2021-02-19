@@ -1,52 +1,50 @@
-package org.helllabs.android.xmp.modarchive.result;
+package org.helllabs.android.xmp.modarchive.result
 
-import org.helllabs.android.xmp.BuildConfig;
-import org.helllabs.android.xmp.R;
-import org.helllabs.android.xmp.modarchive.Search;
-import org.helllabs.android.xmp.modarchive.SearchError;
-import org.helllabs.android.xmp.util.Crossfader;
+import android.content.Intent
+import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
+import org.helllabs.android.xmp.BuildConfig
+import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.modarchive.Search
+import org.helllabs.android.xmp.modarchive.SearchError
+import org.helllabs.android.xmp.util.Crossfader
 
-import android.content.Intent;
-import android.os.Bundle;
+abstract class Result : AppCompatActivity() {
 
-import androidx.appcompat.app.AppCompatActivity;
+    private var crossfader: Crossfader? = null
 
-public abstract class Result extends AppCompatActivity {
-
-    public static String apiKey = BuildConfig.API_KEY;
-
-    private Crossfader crossfader;
-
-    @Override
-    public void onCreate(final Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setTitle(R.string.search_result_title);
-        crossfader = new Crossfader(this);
+    public override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setTitle(R.string.search_result_title)
+        crossfader = Crossfader(this)
     }
 
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+    override fun onBackPressed() {
+        super.onBackPressed()
+        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
     }
 
-    protected void setupCrossfade() {
-        crossfader.setup(R.id.result_content, R.id.result_spinner);
+    protected fun setupCrossfade() {
+        crossfader!!.setup(R.id.result_content, R.id.result_spinner)
     }
 
-    protected void crossfade() {
-        crossfader.crossfade();
+    protected fun crossfade() {
+        crossfader!!.crossfade()
     }
 
-    protected void handleError(final Throwable error) {
-        final Intent intent = new Intent(this, SearchError.class);
-        intent.putExtra(Search.ERROR, error);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-        startActivity(intent);
-        overridePendingTransition(0, 0);
+    protected fun handleError(error: Throwable?) {
+        val intent = Intent(this, SearchError::class.java)
+        intent.putExtra(Search.Companion.ERROR, error)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+        startActivity(intent)
+        overridePendingTransition(0, 0)
     }
 
-    protected void handleQueryError() {
-        handleError(new Throwable("Bad search string. "));
+    protected fun handleQueryError() {
+        handleError(Throwable("Bad search string. "))
+    }
+
+    companion object {
+        var apiKey = BuildConfig.API_KEY
     }
 }

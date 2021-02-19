@@ -1,46 +1,35 @@
-package org.helllabs.android.xmp.browser;
+package org.helllabs.android.xmp.browser
 
-import android.graphics.drawable.NinePatchDrawable;
-import android.os.Build;
-import android.os.Bundle;
+import org.helllabs.android.xmp.util.Log.e
+import org.helllabs.android.xmp.R
+import android.widget.TextView
+import android.os.Bundle
+import org.helllabs.android.xmp.browser.playlist.Playlist
+import androidx.recyclerview.widget.RecyclerView
+import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter
+import androidx.recyclerview.widget.LinearLayoutManager
+import android.os.Build
+import android.view.ContextMenu.ContextMenuInfo
+import com.h6ah4i.android.widget.advrecyclerview.decoration.SimpleListDividerDecorator
+import com.pluscubed.recyclerfastscroll.RecyclerFastScroller
+import com.h6ah4i.android.widget.advrecyclerview.draggable.RecyclerViewDragDropManager
+import android.graphics.drawable.NinePatchDrawable
+import com.h6ah4i.android.widget.advrecyclerview.animator.GeneralItemAnimator
+import com.h6ah4i.android.widget.advrecyclerview.animator.RefactoredDefaultItemAnimator
+import com.h6ah4i.android.widget.advrecyclerview.decoration.ItemShadowDecorator
+import com.h6ah4i.android.widget.advrecyclerview.utils.WrapperAdapterUtils
+import android.view.*
+import org.helllabs.android.xmp.preferences.Preferences
+import java.io.IOException
 
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
-import android.view.ContextMenu;
-import android.view.ContextMenu.ContextMenuInfo;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.TextView;
-
-import com.h6ah4i.android.widget.advrecyclerview.animator.GeneralItemAnimator;
-import com.h6ah4i.android.widget.advrecyclerview.animator.RefactoredDefaultItemAnimator;
-import com.h6ah4i.android.widget.advrecyclerview.decoration.ItemShadowDecorator;
-import com.h6ah4i.android.widget.advrecyclerview.decoration.SimpleListDividerDecorator;
-import com.h6ah4i.android.widget.advrecyclerview.draggable.RecyclerViewDragDropManager;
-import com.h6ah4i.android.widget.advrecyclerview.utils.WrapperAdapterUtils;
-import com.pluscubed.recyclerfastscroll.RecyclerFastScroller;
-
-import org.helllabs.android.xmp.R;
-import org.helllabs.android.xmp.browser.playlist.Playlist;
-import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter;
-import org.helllabs.android.xmp.preferences.Preferences;
-import org.helllabs.android.xmp.util.Log;
-
-import java.io.IOException;
-import java.util.List;
-
-public class PlaylistActivity extends BasePlaylistActivity implements PlaylistAdapter.OnItemClickListener {
-    private static final String TAG = "PlaylistActivity";
-    private Playlist mPlaylist;
-    private RecyclerView mRecyclerView;
-    private RecyclerView.Adapter mWrappedAdapter;
-    private RecyclerViewDragDropManager mRecyclerViewDragDropManager;
+class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickListener {
+    private var mPlaylist: Playlist? = null
+    private var mRecyclerView: RecyclerView? = null
+    private var mWrappedAdapter: RecyclerView.Adapter<*>? = null
+    private var mRecyclerViewDragDropManager: RecyclerViewDragDropManager? = null
 
     // List reorder
-
-	/*private final TouchListView.DropListener onDrop = new TouchListView.DropListener() {
+    /*private final TouchListView.DropListener onDrop = new TouchListView.DropListener() {
 		@Override
 		public void drop(final int from, final int to) {
 			final PlaylistItem item = playlistAdapter.getItem(from);
@@ -57,187 +46,138 @@ public class PlaylistActivity extends BasePlaylistActivity implements PlaylistAd
 		}
 	};	*/
 
-    @Override
-    public void onCreate(final Bundle icicle) {
-        super.onCreate(icicle);
-        setContentView(R.layout.playlist);
-
-        final Bundle extras = getIntent().getExtras();
-        if (extras == null) {
-            return;
-        }
-
-        setTitle(R.string.browser_playlist_title);
-
-        final String name = extras.getString("name");
-        final boolean useFilename = mPrefs.getBoolean(Preferences.USE_FILENAME, false);
-
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.playlist)
+        val extras = intent.extras ?: return
+        setTitle(R.string.browser_playlist_title)
+        val name = extras.getString("name")
+        val useFilename = mPrefs!!.getBoolean(Preferences.USE_FILENAME, false)
         try {
-            mPlaylist = new Playlist(this, name);
-        } catch (IOException e) {
-            Log.e(TAG, "Can't read playlist " + name);
+            mPlaylist = Playlist(this, name)
+        } catch (e: IOException) {
+            e(TAG, "Can't read playlist $name")
         }
-
-        mRecyclerView = (RecyclerView) findViewById(R.id.plist_list);
-        setSwipeRefresh(mRecyclerView);
+        mRecyclerView = findViewById<View>(R.id.plist_list) as RecyclerView
+        setSwipeRefresh(mRecyclerView!!)
 
         // layout manager
-        final LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-        layoutManager.setOrientation(LinearLayoutManager.VERTICAL);
+        val layoutManager = LinearLayoutManager(this)
+        layoutManager.orientation = LinearLayoutManager.VERTICAL
 
         // drag & drop manager
-        mRecyclerViewDragDropManager = new RecyclerViewDragDropManager();
-        mRecyclerViewDragDropManager.setDraggingItemShadowDrawable((NinePatchDrawable) getResources().getDrawable(R.drawable.material_shadow_z3));
+        mRecyclerViewDragDropManager = RecyclerViewDragDropManager()
+        mRecyclerViewDragDropManager!!.setDraggingItemShadowDrawable(resources.getDrawable(R.drawable.material_shadow_z3) as NinePatchDrawable)
 
         // adapter
-        mPlaylistAdapter = new PlaylistAdapter(this, mPlaylist, useFilename, PlaylistAdapter.LAYOUT_DRAG);
-        mWrappedAdapter = mRecyclerViewDragDropManager.createWrappedAdapter(mPlaylistAdapter);
-
-        final GeneralItemAnimator animator = new RefactoredDefaultItemAnimator();
-
-        mRecyclerView.setLayoutManager(layoutManager);
-        mRecyclerView.setAdapter(mWrappedAdapter);
-        mRecyclerView.setItemAnimator(animator);
+        mPlaylistAdapter = PlaylistAdapter(this, mPlaylist!!, useFilename, PlaylistAdapter.LAYOUT_DRAG)
+        mWrappedAdapter = mRecyclerViewDragDropManager!!.createWrappedAdapter(mPlaylistAdapter!!)
+        val animator: GeneralItemAnimator = RefactoredDefaultItemAnimator()
+        mRecyclerView!!.layoutManager = layoutManager
+        mRecyclerView!!.adapter = mWrappedAdapter
+        mRecyclerView!!.itemAnimator = animator
 
         // fast scroll
-        RecyclerFastScroller fastScroller = (RecyclerFastScroller) findViewById(R.id.fast_scroller);
-        fastScroller.attachRecyclerView(mRecyclerView);
+        val fastScroller = findViewById<View>(R.id.fast_scroller) as RecyclerFastScroller
+        fastScroller.attachRecyclerView(mRecyclerView)
 
         // additional decorations
-        //noinspection StatementWithEmptyBody
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             // Lollipop or later has native drop shadow feature. ItemShadowDecorator is not required.
         } else {
-            mRecyclerView.addItemDecoration(new ItemShadowDecorator((NinePatchDrawable) getResources().getDrawable(R.drawable.material_shadow_z1)));
+            mRecyclerView!!.addItemDecoration(ItemShadowDecorator((resources.getDrawable(R.drawable.material_shadow_z1) as NinePatchDrawable)))
         }
-        mRecyclerView.addItemDecoration(new SimpleListDividerDecorator(getResources().getDrawable(R.drawable.list_divider), true));
-
-        mRecyclerViewDragDropManager.attachRecyclerView(mRecyclerView);
-
-        mPlaylistAdapter.setOnItemClickListener(this);
-
-        final TextView curListName = (TextView) findViewById(R.id.current_list_name);
-        final TextView curListDesc = (TextView) findViewById(R.id.current_list_description);
-
-        curListName.setText(name);
-        curListDesc.setText(mPlaylist.getComment());
-        registerForContextMenu(mRecyclerView);
-
-        setupButtons();
+        mRecyclerView!!.addItemDecoration(SimpleListDividerDecorator(resources.getDrawable(R.drawable.list_divider), true))
+        mRecyclerViewDragDropManager!!.attachRecyclerView(mRecyclerView!!)
+        mPlaylistAdapter!!.setOnItemClickListener(this)
+        val curListName = findViewById<View>(R.id.current_list_name) as TextView
+        val curListDesc = findViewById<View>(R.id.current_list_description) as TextView
+        curListName.text = name
+        curListDesc.text = mPlaylist!!.comment
+        registerForContextMenu(mRecyclerView)
+        setupButtons()
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-
-        mPlaylistAdapter.setUseFilename(mPrefs.getBoolean(Preferences.USE_FILENAME, false));
-        update();
+    override fun onResume() {
+        super.onResume()
+        mPlaylistAdapter!!.setUseFilename(mPrefs!!.getBoolean(Preferences.USE_FILENAME, false))
+        update()
     }
 
-    @Override
-    public void onPause() {
-        super.onPause();
-
-        mRecyclerViewDragDropManager.cancelDrag();
-        mPlaylist.commit();
+    public override fun onPause() {
+        super.onPause()
+        mRecyclerViewDragDropManager!!.cancelDrag()
+        mPlaylist!!.commit()
     }
 
-    @Override
-    public void onDestroy() {
+    public override fun onDestroy() {
         if (mRecyclerViewDragDropManager != null) {
-            mRecyclerViewDragDropManager.release();
-            mRecyclerViewDragDropManager = null;
+            mRecyclerViewDragDropManager!!.release()
+            mRecyclerViewDragDropManager = null
         }
-
         if (mRecyclerView != null) {
-            mRecyclerView.setItemAnimator(null);
-            mRecyclerView.setAdapter(null);
-            mRecyclerView = null;
+            mRecyclerView!!.itemAnimator = null
+            mRecyclerView!!.adapter = null
+            mRecyclerView = null
         }
-
         if (mWrappedAdapter != null) {
-            WrapperAdapterUtils.releaseAll(mWrappedAdapter);
-            mWrappedAdapter = null;
+            WrapperAdapterUtils.releaseAll(mWrappedAdapter)
+            mWrappedAdapter = null
         }
-        mPlaylistAdapter = null;
-
-        super.onDestroy();
+        mPlaylistAdapter = null
+        super.onDestroy()
     }
 
-    @Override
-    protected void setShuffleMode(final boolean shuffleMode) {
-        mPlaylist.setShuffleMode(shuffleMode);
-    }
+    override var isShuffleMode: Boolean
+        get() = mPlaylist!!.isShuffleMode
+        set(shuffleMode) {
+            mPlaylist!!.isShuffleMode = shuffleMode
+        }
+    override var isLoopMode: Boolean
+        get() = mPlaylist!!.isLoopMode
+        set(loopMode) {
+            mPlaylist!!.isLoopMode = loopMode
+        }
+    override val allFiles: List<String>
+        get() = mPlaylistAdapter!!.filenameList
 
-    @Override
-    protected void setLoopMode(final boolean loopMode) {
-        mPlaylist.setLoopMode(loopMode);
-    }
-
-    @Override
-    protected boolean isShuffleMode() {
-        return mPlaylist.isShuffleMode();
-    }
-
-    @Override
-    protected boolean isLoopMode() {
-        return mPlaylist.isLoopMode();
-    }
-
-    @Override
-    protected List<String> getAllFiles() {
-        return mPlaylistAdapter.getFilenameList();
-    }
-
-    @Override
-    public void update() {
-        mPlaylistAdapter.notifyDataSetChanged();
+    public override fun update() {
+        mPlaylistAdapter!!.notifyDataSetChanged()
     }
 
     // Playlist context menu
-
-    @Override
-    public void onCreateContextMenu(final ContextMenu menu, final View view, final ContextMenuInfo menuInfo) {
-
-        final int mode = Integer.parseInt(mPrefs.getString(Preferences.PLAYLIST_MODE, "1"));
-
-        menu.setHeaderTitle("Edit playlist");
-        menu.add(Menu.NONE, 0, 0, "Remove from playlist");
-        menu.add(Menu.NONE, 1, 1, "Add to play queue");
-        menu.add(Menu.NONE, 2, 2, "Add all to play queue");
+    override fun onCreateContextMenu(menu: ContextMenu, view: View, menuInfo: ContextMenuInfo) {
+        val mode = mPrefs!!.getString(Preferences.PLAYLIST_MODE, "1")!!.toInt()
+        menu.setHeaderTitle("Edit playlist")
+        menu.add(Menu.NONE, 0, 0, "Remove from playlist")
+        menu.add(Menu.NONE, 1, 1, "Add to play queue")
+        menu.add(Menu.NONE, 2, 2, "Add all to play queue")
         if (mode != 2) {
-            menu.add(Menu.NONE, 3, 3, "Play this module");
+            menu.add(Menu.NONE, 3, 3, "Play this module")
         }
         if (mode != 1) {
-            menu.add(Menu.NONE, 4, 4, "Play all starting here");
+            menu.add(Menu.NONE, 4, 4, "Play all starting here")
         }
     }
 
-    @Override
-    public boolean onContextItemSelected(final MenuItem item) {
-        final int itemId = item.getItemId();
-        final int position = mPlaylistAdapter.getPosition();
-
-        switch (itemId) {
-            case 0:                                        // Remove from playlist
-                mPlaylist.remove(position);
-                mPlaylist.commit();
-                update();
-                break;
-            case 1:                                        // Add to play queue
-                addToQueue(mPlaylistAdapter.getFilename(position));
-                break;
-            case 2:                                        // Add all to play queue
-                addToQueue(mPlaylistAdapter.getFilenameList());
-                break;
-            case 3:                                        // Play only this module
-                playModule(mPlaylistAdapter.getFilename(position));
-                break;
-            case 4:                                        // Play all starting here
-                playModule(mPlaylistAdapter.getFilenameList(), position);
-                break;
+    override fun onContextItemSelected(item: MenuItem): Boolean {
+        val itemId = item.itemId
+        val position = mPlaylistAdapter!!.position
+        when (itemId) {
+            0 -> {
+                mPlaylist!!.remove(position)
+                mPlaylist!!.commit()
+                update()
+            }
+            1 -> addToQueue(mPlaylistAdapter!!.getFilename(position))
+            2 -> addToQueue(mPlaylistAdapter!!.filenameList)
+            3 -> playModule(mPlaylistAdapter!!.getFilename(position))
+            4 -> playModule(mPlaylistAdapter!!.filenameList, position)
         }
+        return true
+    }
 
-        return true;
+    companion object {
+        private const val TAG = "PlaylistActivity"
     }
 }

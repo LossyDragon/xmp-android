@@ -1,81 +1,79 @@
-package org.helllabs.android.xmp.modarchive.request;
+package org.helllabs.android.xmp.modarchive.request
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
+import com.android.volley.RequestQueue
+import com.android.volley.Response
+import com.android.volley.VolleyError
+import com.android.volley.toolbox.StringRequest
+import org.helllabs.android.xmp.XmpApplication
+import org.helllabs.android.xmp.modarchive.response.HardErrorResponse
+import org.helllabs.android.xmp.modarchive.response.ModArchiveResponse
+import org.helllabs.android.xmp.modarchive.response.SoftErrorResponse
+import org.helllabs.android.xmp.util.Log.d
+import org.helllabs.android.xmp.util.Log.e
+import org.helllabs.android.xmp.util.Log.i
+import java.net.URLEncoder
 
-import org.helllabs.android.xmp.XmpApplication;
-import org.helllabs.android.xmp.modarchive.response.HardErrorResponse;
-import org.helllabs.android.xmp.modarchive.response.ModArchiveResponse;
-import org.helllabs.android.xmp.modarchive.response.SoftErrorResponse;
-import org.helllabs.android.xmp.util.Log;
+abstract class ModArchiveRequest(
+    key: String,
+    request: String
+) : Response.Listener<String>,
+    Response.ErrorListener {
 
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
+    private val mKey: String
+    private val mRequest: String
+    private var mOnResponseListener: OnResponseListener? = null
 
-public abstract class ModArchiveRequest implements Response.Listener<String>, Response.ErrorListener {
-
-    private static final String TAG = "ModArchiveRequest";
-    private static final String SERVER = "https://api.modarchive.org";
-
-    public static final String ARTIST = "search_artist&query=";
-    public static final String ARTIST_MODULES = "view_modules_by_artistid&query=";
-    public static final String MODULE = "view_by_moduleid&query=";
-    public static final String RANDOM = "random";
-    public static final String FILENAME_OR_TITLE = "search&type=filename_or_songtitle&query=";
-
-    private final String mKey;
-    private final String mRequest;
-    private OnResponseListener mOnResponseListener;
-
-    public interface OnResponseListener {
-        void onResponse(ModArchiveResponse response);
-
-        void onSoftError(SoftErrorResponse response);
-
-        void onHardError(HardErrorResponse response);
+    interface OnResponseListener {
+        fun onResponse(response: ModArchiveResponse)
+        fun onSoftError(response: SoftErrorResponse)
+        fun onHardError(response: HardErrorResponse)
     }
 
-    public ModArchiveRequest(final String key, final String request) {
-        Log.d(TAG, "request=" + request);
-        mKey = key;
-        mRequest = request;
+    init {
+        d(TAG, "request=$request")
+        mKey = key
+        mRequest = request
     }
 
-    public ModArchiveRequest(final String key, final String request, final String parameter) throws UnsupportedEncodingException {
-        this(key, request + URLEncoder.encode(parameter, "UTF-8"));
+    constructor(key: String, request: String, parameter: String?) :
+        this(key, request + URLEncoder.encode(parameter, "UTF-8"))
+
+    protected abstract fun xmlParse(result: String): ModArchiveResponse
+
+    fun setOnResponseListener(listener: OnResponseListener?): ModArchiveRequest {
+        mOnResponseListener = listener
+        return this
     }
 
-    public ModArchiveRequest setOnResponseListener(final OnResponseListener listener) {
-        mOnResponseListener = listener;
-        return this;
+    fun send() {
+        val url = "$SERVER/xml-tools.php?key=$mKey&request=$mRequest"
+        val queue: RequestQueue = XmpApplication.instance!!.requestQueue
+        val jsObjRequest = StringRequest(url, this, this)
+        queue.add(jsObjRequest)
     }
 
-    public void send() {
-        final String url = SERVER + "/xml-tools.php?key=" + mKey + "&request=" + mRequest;
-        final RequestQueue queue = XmpApplication.getInstance().getRequestQueue();
-        final StringRequest jsObjRequest = new StringRequest(url, this, this);
-        queue.add(jsObjRequest);
+    override fun onErrorResponse(error: VolleyError) {
+        e(TAG, "Volley error: " + error.message)
+        mOnResponseListener!!.onHardError(HardErrorResponse(error))
     }
 
-    @Override
-    public void onErrorResponse(final VolleyError error) {
-        Log.e(TAG, "Volley error: " + error.getMessage());
-        mOnResponseListener.onHardError(new HardErrorResponse(error));
-    }
-
-    @Override
-    public void onResponse(final String result) {
-        Log.i(TAG, "Volley: get response");
-        final ModArchiveResponse response = xmlParse(result);
-        if (response instanceof SoftErrorResponse) {
-            mOnResponseListener.onSoftError((SoftErrorResponse) response);
+    override fun onResponse(result: String) {
+        i(TAG, "Volley: get response")
+        val response = xmlParse(result)
+        if (response is SoftErrorResponse) {
+            mOnResponseListener!!.onSoftError(response)
         } else {
-            mOnResponseListener.onResponse(response);
+            mOnResponseListener!!.onResponse(response)
         }
     }
 
-    protected abstract ModArchiveResponse xmlParse(String result);
-
+    companion object {
+        private const val TAG = "ModArchiveRequest"
+        private const val SERVER = "https://api.modarchive.org"
+        const val ARTIST = "search_artist&query="
+        const val ARTIST_MODULES = "view_modules_by_artistid&query="
+        const val MODULE = "view_by_moduleid&query="
+        const val RANDOM = "random"
+        const val FILENAME_OR_TITLE = "search&type=filename_or_songtitle&query="
+    }
 }

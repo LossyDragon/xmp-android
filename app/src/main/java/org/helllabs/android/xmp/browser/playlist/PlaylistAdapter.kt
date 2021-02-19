@@ -1,134 +1,108 @@
-package org.helllabs.android.xmp.browser.playlist;
+package org.helllabs.android.xmp.browser.playlist
 
-import android.content.Context;
-import android.graphics.Typeface;
+import android.content.*
+import android.graphics.Typeface
+import android.view.*
+import android.widget.*
+import androidx.core.view.ViewCompat
+import androidx.recyclerview.widget.RecyclerView
+import com.h6ah4i.android.widget.advrecyclerview.draggable.DraggableItemAdapter
+import com.h6ah4i.android.widget.advrecyclerview.draggable.ItemDraggableRange
+import com.h6ah4i.android.widget.advrecyclerview.utils.AbstractDraggableItemViewHolder
+import org.helllabs.android.xmp.R
+import java.io.File
+import java.util.*
 
-import androidx.core.view.ViewCompat;
-import androidx.recyclerview.widget.RecyclerView;
+class PlaylistAdapter :
+    RecyclerView.Adapter<PlaylistAdapter.ViewHolder>,
+    DraggableItemAdapter<PlaylistAdapter.ViewHolder> {
 
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.TextView;
+    private val typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
+    private val playlist: Playlist?
+    private val items: MutableList<PlaylistItem>
+    private val context: Context
+    private var useFilename: Boolean
+    var position = 0
+    private var onItemClickListener: OnItemClickListener? = null
+    private val layoutType: Int
 
-import com.h6ah4i.android.widget.advrecyclerview.draggable.DraggableItemAdapter;
-import com.h6ah4i.android.widget.advrecyclerview.draggable.ItemDraggableRange;
-import com.h6ah4i.android.widget.advrecyclerview.utils.AbstractDraggableItemViewHolder;
-
-import org.helllabs.android.xmp.R;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-
-public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHolder> implements DraggableItemAdapter<PlaylistAdapter.ViewHolder> {
-    public static final int LAYOUT_LIST = 0;
-    public static final int LAYOUT_CARD = 1;
-    public static final int LAYOUT_DRAG = 2;
-
-    private static final String TAG = "PlaylistAdapter";
-    private final Typeface typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL);
-    private final Playlist playlist;
-    private final List<PlaylistItem> items;
-    private final Context context;
-    private boolean useFilename;
-    private int position;
-    private OnItemClickListener onItemClickListener;
-    private final int layoutType;
-
-    public interface OnItemClickListener {
-        void onItemClick(PlaylistAdapter adapter, View view, int position);
+    interface OnItemClickListener {
+        fun onItemClick(adapter: PlaylistAdapter, view: View?, position: Int)
     }
 
-    public static class ViewHolder extends AbstractDraggableItemViewHolder implements View.OnClickListener {
-        public final View container;
-        public final View handle;
-        public final TextView titleText;
-        public final TextView infoText;
-        public final ImageView image;
-        private OnItemClickListener onItemClickListener;
-        private final PlaylistAdapter adapter;
+    class ViewHolder(itemView: View, adapter: PlaylistAdapter) : AbstractDraggableItemViewHolder(itemView), View.OnClickListener {
+        val container: View
+        val handle: View?
+        val titleText: TextView
+        val infoText: TextView
+        val image: ImageView
+        private var onItemClickListener: OnItemClickListener? = null
+        private val adapter: PlaylistAdapter
 
-        public ViewHolder(final View itemView, final PlaylistAdapter adapter) {
-            super(itemView);
-            itemView.setOnClickListener(this);
-            container = itemView.findViewById(R.id.plist_container);
-            handle = itemView.findViewById(R.id.plist_handle);
-            titleText = (TextView) itemView.findViewById(R.id.plist_title);
-            infoText = (TextView) itemView.findViewById(R.id.plist_info);
-            image = (ImageView) itemView.findViewById(R.id.plist_image);
-            this.adapter = adapter;
+        init {
+            itemView.setOnClickListener(this)
+            container = itemView.findViewById(R.id.plist_container)
+            handle = itemView.findViewById(R.id.plist_handle)
+            titleText = itemView.findViewById<View>(R.id.plist_title) as TextView
+            infoText = itemView.findViewById<View>(R.id.plist_info) as TextView
+            image = itemView.findViewById<View>(R.id.plist_image) as ImageView
+            this.adapter = adapter
         }
 
-        public void setOnItemClickListener(final OnItemClickListener listener) {
-            onItemClickListener = listener;
+        fun setOnItemClickListener(listener: OnItemClickListener?) {
+            onItemClickListener = listener
         }
 
-        @Override
-        public void onClick(final View view) {
+        override fun onClick(view: View) {
             if (onItemClickListener != null) {
-                onItemClickListener.onItemClick(adapter, view, getPosition());
+                onItemClickListener!!.onItemClick(adapter, view, position)
             }
         }
     }
 
-    public void setOnItemClickListener(final OnItemClickListener listener) {
-        onItemClickListener = listener;
+    fun setOnItemClickListener(listener: OnItemClickListener?) {
+        onItemClickListener = listener
     }
 
-    @Override
-    public ViewHolder onCreateViewHolder(final ViewGroup parent, final int viewType) {
-        final int layout;
-
-        switch (layoutType) {
-            case LAYOUT_CARD:
-                layout = R.layout.playlist_card;
-                break;
-            case LAYOUT_DRAG:
-                layout = R.layout.playlist_item_drag;
-                break;
-            default:
-                layout = R.layout.playlist_item;
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val layout: Int = when (layoutType) {
+            LAYOUT_CARD -> R.layout.playlist_card
+            LAYOUT_DRAG -> R.layout.playlist_item_drag
+            else -> R.layout.playlist_item
         }
-        final View view = LayoutInflater.from(parent.getContext()).inflate(layout, parent, false);
-        final ViewHolder holder = new ViewHolder(view, this);
-        holder.setOnItemClickListener(onItemClickListener);
-        return holder;
+        val view = LayoutInflater.from(parent.context).inflate(layout, parent, false)
+        val holder = ViewHolder(view, this)
+        holder.setOnItemClickListener(onItemClickListener)
+        return holder
     }
 
-    @Override
-    public void onBindViewHolder(final ViewHolder holder, final int position) {
-        final PlaylistItem item = items.get(position);
-        final int imageRes = item.getImageRes();
-        final int type = item.getType();
-
+    override fun onBindViewHolder(holder: ViewHolder, pos: Int) {
+        val item = items[pos]
+        val imageRes = item.imageRes
+        val type = item.type
         if (type == PlaylistItem.TYPE_DIRECTORY) {
-            holder.infoText.setTypeface(typeface, Typeface.ITALIC);
+            holder.infoText.setTypeface(typeface, Typeface.ITALIC)
         } else {
-            holder.infoText.setTypeface(typeface, Typeface.NORMAL);
+            holder.infoText.setTypeface(typeface, Typeface.NORMAL)
         }
-
-        holder.titleText.setText(useFilename ? item.getFilename() : item.getName());
-        holder.infoText.setText(item.getComment());
-
+        holder.titleText.text = if (useFilename) item.filename else item.name
+        holder.infoText.text = item.comment
         if (imageRes > 0) {
-            holder.image.setImageResource(imageRes);
-            holder.image.setVisibility(View.VISIBLE);
+            holder.image.setImageResource(imageRes)
+            holder.image.visibility = View.VISIBLE
         } else {
-            holder.image.setVisibility(View.GONE);
+            holder.image.visibility = View.GONE
         }
-
         if (layoutType == LAYOUT_DRAG) {
-            holder.handle.setBackgroundColor(context.getResources().getColor(R.color.drag_handle_color));
+            holder.handle?.setBackgroundColor(context.resources.getColor(R.color.drag_handle_color))
             //holder.image.setAlpha(0.5f);
         }
 
         // See http://stackoverflow.com/questions/26466877/how-to-create-context-menu-for-recyclerview
-        holder.itemView.setOnLongClickListener(v -> {
-            setPosition(holder.getPosition());
-            return false;
-        });
+        holder.itemView.setOnLongClickListener {
+            position = holder.position
+            false
+        }
 
         // Advanced RecyclerView
         // set background resource (target view ID: container)
@@ -150,158 +124,142 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
         }*/
     }
 
-    public PlaylistAdapter(final Context context, final List<PlaylistItem> items, final boolean useFilename, final int layoutType) {
-        this.playlist = null;
-        this.items = items;
-        this.context = context;
-        this.useFilename = useFilename;
-        this.layoutType = layoutType;
+    constructor(context: Context, items: MutableList<PlaylistItem>, useFilename: Boolean, layoutType: Int) {
+        playlist = null
+        this.items = items
+        this.context = context
+        this.useFilename = useFilename
+        this.layoutType = layoutType
 
         // DraggableItemAdapter requires stable ID, and also
         // have to implement the getItemId() method appropriately.
-        setHasStableIds(true);
+        setHasStableIds(true)
     }
 
-    public PlaylistAdapter(final Context context, final Playlist playlist, final boolean useFilename, final int layoutType) {
-        this.playlist = playlist;
-        this.items = playlist.getList();
-        this.context = context;
-        this.useFilename = useFilename;
-        this.layoutType = layoutType;
+    constructor(context: Context, playlist: Playlist, useFilename: Boolean, layoutType: Int) {
+        this.playlist = playlist
+        items = playlist.list
+        this.context = context
+        this.useFilename = useFilename
+        this.layoutType = layoutType
 
         // DraggableItemAdapter requires stable ID, and also
         // have to implement the getItemId() method appropriately.
-        setHasStableIds(true);
+        setHasStableIds(true)
     }
 
-    @Override
-    public void onViewRecycled(ViewHolder holder) {
-        holder.itemView.setOnLongClickListener(null);
-        super.onViewRecycled(holder);
+    override fun onViewRecycled(holder: ViewHolder) {
+        holder.itemView.setOnLongClickListener(null)
+        super.onViewRecycled(holder)
     }
 
-    @Override
-    public int getItemCount() {
-        return items.size();
+    override fun getItemCount(): Int {
+        return items.size
     }
 
-    @Override
-    public long getItemId(final int position) {
-        return items.get(position).getId();
+    override fun getItemId(position: Int): Long {
+        return items[position].id.toLong()
     }
 
-    public PlaylistItem getItem(final int num) {
-        return items.get(num);
+    fun getItem(num: Int): PlaylistItem {
+        return items[num]
     }
 
-    public List<PlaylistItem> getItems() {
-        return items;
+    fun getItems(): List<PlaylistItem> {
+        return items
     }
 
-    public void clear() {
-        items.clear();
+    fun clear() {
+        items.clear()
     }
 
-    public void add(final PlaylistItem item) {
-        items.add(item);
+    fun add(item: PlaylistItem) {
+        items.add(item)
     }
 
-    public int getPosition() {
-        return position;
-    }
-
-    public void setPosition(int position) {
-        this.position = position;
-    }
-
-    public void setUseFilename(final boolean useFilename) {
-        this.useFilename = useFilename;
+    fun setUseFilename(useFilename: Boolean) {
+        this.useFilename = useFilename
     }
 
     //public List<PlaylistItem> getItems() {
     //	return items;
     //}
-
-    public String getFilename(final int location) {
-        return items.get(location).getFile().getPath();
+    fun getFilename(location: Int): String {
+        return items[location].file!!.path
     }
 
-    public File getFile(final int location) {
-        return items.get(location).getFile();
+    fun getFile(location: Int): File {
+        return items[location].file!!
     }
 
-    public List<String> getFilenameList() {
-        final List<String> list = new ArrayList<>();
-        for (final PlaylistItem item : items) {
-            if (item.getType() == PlaylistItem.TYPE_FILE) {
-                list.add(item.getFile().getPath());
+    val filenameList: List<String>
+        get() {
+            val list: MutableList<String> = ArrayList()
+            for (item in items) {
+                if (item.type == PlaylistItem.TYPE_FILE) {
+                    list.add(item.file!!.path)
+                }
             }
+            return list
         }
-        return list;
-    }
-
-    public int getDirectoryCount() {
-        int count = 0;
-        for (final PlaylistItem item : items) {
-            if (item.getType() != PlaylistItem.TYPE_DIRECTORY) {
-                break;
+    val directoryCount: Int
+        get() {
+            var count = 0
+            for (item in items) {
+                if (item.type != PlaylistItem.TYPE_DIRECTORY) {
+                    break
+                }
+                count++
             }
-            count++;
+            return count
         }
-        return count;
-    }
 
-    public void addList(final List<PlaylistItem> list) {
-        items.addAll(list);
+    fun addList(list: List<PlaylistItem>) {
+        items.addAll(list)
     }
 
     // Advanced RecyclerView
-
-    @Override
-    public void onMoveItem(final int fromPosition, final int toPosition) {
+    override fun onMoveItem(fromPosition: Int, toPosition: Int) {
         //Log.d(TAG, "onMoveItem(fromPosition = " + fromPosition + ", toPosition = " + toPosition + ")");
-
         if (fromPosition == toPosition) {
-            return;
+            return
         }
-
-        final PlaylistItem item = items.get(fromPosition);
-        items.remove(item);
-        items.add(toPosition, item);
+        val item = items[fromPosition]
+        items.remove(item)
+        items.add(toPosition, item)
         //playlist.setListChanged(true);
-
-        notifyItemMoved(fromPosition, toPosition);
-        if (playlist != null) {
-            playlist.setListChanged(true);
-        }
+        notifyItemMoved(fromPosition, toPosition)
+        playlist?.setListChanged(true)
     }
 
-    @Override
-    public boolean onCheckCanStartDrag(final ViewHolder holder, final int position, final int x, final int y) {
+    override fun onCheckCanStartDrag(holder: ViewHolder, position: Int, x: Int, y: Int): Boolean {
         // x, y --- relative from the itemView's top-left
-        final View containerView = holder.container;
-        final View dragHandleView = holder.handle;
-
-        final int offsetX = containerView.getLeft() + (int) (ViewCompat.getTranslationX(containerView) + 0.5f);
+        val containerView = holder.container
+        val dragHandleView = holder.handle
+        val offsetX = containerView.left + (ViewCompat.getTranslationX(containerView) + 0.5f).toInt()
         //final int offsetY = containerView.getTop() + (int) (ViewCompat.getTranslationY(containerView) + 0.5f);
-
-        return hitTest(dragHandleView, x - offsetX, y /*- offsetY*/);
+        return hitTest(dragHandleView!!, x - offsetX, y /*- offsetY*/)
     }
 
-    @Override
-    public ItemDraggableRange onGetItemDraggableRange(final ViewHolder holder, final int position) {
+    override fun onGetItemDraggableRange(holder: ViewHolder, position: Int): ItemDraggableRange? {
         // no drag-sortable range specified
-        return null;
+        return null
     }
 
-    private static boolean hitTest(final View v, final int x, final int y) {
-        final int tx = (int) (ViewCompat.getTranslationX(v) + 0.5f);
-        final int ty = (int) (ViewCompat.getTranslationY(v) + 0.5f);
-        final int left = v.getLeft() + tx;
-        final int right = v.getRight() + tx;
-        final int top = v.getTop() + ty;
-        final int bottom = v.getBottom() + ty;
+    companion object {
+        const val LAYOUT_LIST = 0
+        const val LAYOUT_CARD = 1
+        const val LAYOUT_DRAG = 2
+        private const val TAG = "PlaylistAdapter"
 
-        return (x >= left) && (x <= right) && (y >= top) && (y <= bottom);
+        private fun hitTest(v: View, x: Int, y: Int): Boolean {
+            val tx = (ViewCompat.getTranslationX(v) + 0.5f).toInt()
+            val ty = (ViewCompat.getTranslationY(v) + 0.5f).toInt()
+            val left = v.left + tx
+            val right = v.right + tx
+            val top = v.top + ty
+            val bottom = v.bottom + ty
+            return x in left..right && y >= top && y <= bottom
+        }
     }
 }

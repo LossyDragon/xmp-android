@@ -1,48 +1,37 @@
-package org.helllabs.android.xmp.modarchive.adapter;
+package org.helllabs.android.xmp.modarchive.adapter
 
-import java.util.List;
+import android.content.Context
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.ArrayAdapter
+import android.widget.TextView
+import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.modarchive.model.Module
 
-import org.helllabs.android.xmp.R;
-import org.helllabs.android.xmp.modarchive.model.Module;
+class ModuleArrayAdapter(
+    context: Context,
+    resource: Int,
+    items: List<Module?>?
+) : ArrayAdapter<Module?>(context, resource, items!!) {
 
-import android.content.Context;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.TextView;
-
-public class ModuleArrayAdapter extends ArrayAdapter<Module> {
-    private final Context context;
-
-    public ModuleArrayAdapter(final Context context, final int resource, final List<Module> items) {
-        super(context, resource, items);
-        this.context = context;
-    }
-
-    @Override
-    public View getView(final int position, final View convertView, final ViewGroup parent) {
-        View view = convertView;
+    override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+        var view = convertView
         if (view == null) {
-            final LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            view = inflater.inflate(R.layout.search_list_item, null);
+            val inflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+            view = inflater.inflate(R.layout.search_list_item, null)
         }
-
-        final Module module = getItem(position);
+        val module = getItem(position)
         if (module != null) {
-            final TextView fmt = (TextView) view.findViewById(R.id.search_list_fmt);
-            final TextView line1 = (TextView) view.findViewById(R.id.search_list_line1);
-            final TextView line2 = (TextView) view.findViewById(R.id.search_list_line2);
-            final TextView size = (TextView) view.findViewById(R.id.search_list_size);
-
-            fmt.setText(module.getFormat());
-            line1.setText(module.getSongTitle());
-            line2.setText("by " + module.getArtist());
-            size.setText((module.getBytes() / 1024) + " KB");
+            val fmt = view!!.findViewById<View>(R.id.search_list_fmt) as TextView
+            val line1 = view.findViewById<View>(R.id.search_list_line1) as TextView
+            val line2 = view.findViewById<View>(R.id.search_list_line2) as TextView
+            val size = view.findViewById<View>(R.id.search_list_size) as TextView
+            fmt.text = module.format
+            line1.text = module.songTitle
+            line2.text = "by " + module.artist
+            size.text = (module.bytes / 1024).toString() + " KB"
         }
-
-        return view;
+        return view!!
     }
-
-
 }

@@ -1,32 +1,27 @@
-package org.helllabs.android.xmp.modarchive.model;
+package org.helllabs.android.xmp.modarchive.model
 
-public class Artist {
-    public static final String UNKNOWN = "unknown";
-    private String alias;
-    private long id;
+class Artist {
 
-    public String getAlias() {
-        return alias;
+    private var alias: String? = null
+    var id: Long = 0
+
+    fun getAlias(): String? {
+        return alias
     }
 
-    public void setAlias(final String alias) {
+    fun setAlias(alias: String?) {
         if (alias == null || alias.isEmpty()) {
-            this.alias = Artist.UNKNOWN;
+            this.alias = UNKNOWN
         } else {
-            this.alias = alias;
+            this.alias = alias
         }
     }
 
-    public long getId() {
-        return id;
+    override fun toString(): String {
+        return alias!!
     }
 
-    public void setId(final long id) {
-        this.id = id;
-    }
-
-    @Override
-    public String toString() {
-        return alias;
+    companion object {
+        const val UNKNOWN = "unknown"
     }
 }

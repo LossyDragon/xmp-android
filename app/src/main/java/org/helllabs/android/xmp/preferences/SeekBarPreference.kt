@@ -1,130 +1,108 @@
-package org.helllabs.android.xmp.preferences;
+package org.helllabs.android.xmp.preferences
+
+import android.content.Context
+import android.preference.DialogPreference
+import android.util.AttributeSet
+import android.view.Gravity
+import android.view.View
+import android.widget.LinearLayout
+import android.widget.SeekBar
+import android.widget.SeekBar.OnSeekBarChangeListener
+import android.widget.TextView
+import org.helllabs.android.xmp.R
 
 /* The following code was written by Matthew Wiggins
  * and is released under the APACHE 2.0 license
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  */
+class SeekBarPreference(
+    private val mContext: Context,
+    attrs: AttributeSet?
+) : DialogPreference(mContext, attrs), OnSeekBarChangeListener {
 
-import org.helllabs.android.xmp.R;
+    private var mSeekBar: SeekBar? = null
+    private var mValueText: TextView? = null
+    private val mDialogMessage: String?
+    private val mSuffix: String?
+    private val mDefault: Int
+    var max: Int
+    private var mValue = 0
 
-import android.content.Context;
-import android.content.res.TypedArray;
-import android.preference.DialogPreference;
-import android.util.AttributeSet;
-import android.view.Gravity;
-import android.view.View;
-import android.widget.LinearLayout;
-import android.widget.SeekBar;
-import android.widget.TextView;
+    var progress: Int
+        get() = mValue
+        set(progress) {
+            mValue = progress
+            if (mSeekBar != null) {
+                mSeekBar!!.progress = progress
+            }
+        }
 
-
-public class SeekBarPreference extends DialogPreference implements SeekBar.OnSeekBarChangeListener {
-    private SeekBar mSeekBar;
-    private TextView mValueText;
-    private final Context mContext;
-
-    private final String mDialogMessage, mSuffix;
-    private final int mDefault;
-    private int mMax, mValue;
-
-    public SeekBarPreference(final Context context, final AttributeSet attrs) {
-        super(context, attrs);
-        mContext = context;
-
-        final TypedArray styledAttrs = context.obtainStyledAttributes(attrs, R.styleable.SeekBarPreference);
-        mDialogMessage = styledAttrs.getString(R.styleable.SeekBarPreference_android_dialogMessage);
-        mSuffix = styledAttrs.getString(R.styleable.SeekBarPreference_android_text);
-        mDefault = styledAttrs.getInt(R.styleable.SeekBarPreference_android_defaultValue, 0);
-        mMax = styledAttrs.getInt(R.styleable.SeekBarPreference_android_max, 100);
-        styledAttrs.recycle();
+    init {
+        val styledAttrs = mContext.obtainStyledAttributes(attrs, R.styleable.SeekBarPreference)
+        mDialogMessage = styledAttrs.getString(R.styleable.SeekBarPreference_android_dialogMessage)
+        mSuffix = styledAttrs.getString(R.styleable.SeekBarPreference_android_text)
+        mDefault = styledAttrs.getInt(R.styleable.SeekBarPreference_android_defaultValue, 0)
+        max = styledAttrs.getInt(R.styleable.SeekBarPreference_android_max, 100)
+        styledAttrs.recycle()
     }
 
-    @Override
-    protected View onCreateDialogView() {
-        LinearLayout.LayoutParams params;
-        final LinearLayout layout = new LinearLayout(mContext);
-        layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(6, 6, 6, 6);
-
-        final TextView splashText = new TextView(mContext);
+    override fun onCreateDialogView(): View {
+        val layout = LinearLayout(mContext)
+        layout.orientation = LinearLayout.VERTICAL
+        layout.setPadding(6, 6, 6, 6)
+        val splashText = TextView(mContext)
         if (mDialogMessage != null) {
-            splashText.setText(mDialogMessage);
+            splashText.text = mDialogMessage
         }
-        layout.addView(splashText);
-
-        mValueText = new TextView(mContext);
-        mValueText.setGravity(Gravity.CENTER_HORIZONTAL);
-        mValueText.setTextSize(32);
-        params = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
-        layout.addView(mValueText, params);
-
-        mSeekBar = new SeekBar(mContext);
-        mSeekBar.setOnSeekBarChangeListener(this);
-        layout.addView(mSeekBar, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-
+        layout.addView(splashText)
+        mValueText = TextView(mContext)
+        mValueText!!.gravity = Gravity.CENTER_HORIZONTAL
+        mValueText!!.textSize = 32f
+        val params: LinearLayout.LayoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT)
+        layout.addView(mValueText, params)
+        mSeekBar = SeekBar(mContext)
+        mSeekBar!!.setOnSeekBarChangeListener(this)
+        layout.addView(mSeekBar, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
         if (shouldPersist()) {
-            mValue = getPersistedInt(mDefault);
+            mValue = getPersistedInt(mDefault)
         }
-
-        mSeekBar.setMax(mMax);
-        mSeekBar.setProgress(mValue);
-
-        return layout;
+        mSeekBar!!.max = max
+        mSeekBar!!.progress = mValue
+        return layout
     }
 
-    @Override
-    protected void onBindDialogView(final View view) {
-        super.onBindDialogView(view);
-        mSeekBar.setMax(mMax);
-        mSeekBar.setProgress(mValue);
+    override fun onBindDialogView(view: View) {
+        super.onBindDialogView(view)
+        mSeekBar!!.max = max
+        mSeekBar!!.progress = mValue
     }
 
-    @Override
-    protected void onSetInitialValue(final boolean restore, final Object defaultValue) {
-        super.onSetInitialValue(restore, defaultValue);
-        if (restore) {
-            mValue = shouldPersist() ? getPersistedInt(mDefault) : 0;
+    override fun onSetInitialValue(restore: Boolean, defaultValue: Any) {
+        super.onSetInitialValue(restore, defaultValue)
+        mValue = if (restore) {
+            if (shouldPersist()) getPersistedInt(mDefault) else 0
         } else {
-            mValue = (Integer) defaultValue;
+            defaultValue as Int
         }
     }
 
-    public void onProgressChanged(final SeekBar seek, final int value, final boolean fromTouch) {
-        final String str = String.valueOf(value);
-        mValueText.setText(mSuffix == null ? str : str.concat(mSuffix));
+    override fun onProgressChanged(seek: SeekBar, value: Int, fromTouch: Boolean) {
+        val str = value.toString()
+        mValueText!!.text = if (mSuffix == null) str else str + mSuffix
         if (shouldPersist()) {
-            persistInt(value);
+            persistInt(value)
         }
-        callChangeListener(value);
+        callChangeListener(value)
     }
 
-    public void onStartTrackingTouch(final SeekBar seek) {
+    override fun onStartTrackingTouch(seek: SeekBar) {
         // do nothing
     }
 
-    public void onStopTrackingTouch(final SeekBar seek) {
+    override fun onStopTrackingTouch(seek: SeekBar) {
         // do nothing
-    }
-
-    public void setMax(final int max) {
-        mMax = max;
-    }
-
-    public int getMax() {
-        return mMax;
-    }
-
-    public void setProgress(final int progress) {
-        mValue = progress;
-        if (mSeekBar != null) {
-            mSeekBar.setProgress(progress);
-        }
-    }
-
-    public int getProgress() {
-        return mValue;
     }
 }

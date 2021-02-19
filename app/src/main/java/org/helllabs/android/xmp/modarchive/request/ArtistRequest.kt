@@ -1,111 +1,83 @@
-package org.helllabs.android.xmp.modarchive.request;
+package org.helllabs.android.xmp.modarchive.request
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
+import org.helllabs.android.xmp.modarchive.model.Artist
+import org.helllabs.android.xmp.modarchive.model.Sponsor
+import org.helllabs.android.xmp.modarchive.response.ArtistResponse
+import org.helllabs.android.xmp.modarchive.response.HardErrorResponse
+import org.helllabs.android.xmp.modarchive.response.ModArchiveResponse
+import org.helllabs.android.xmp.modarchive.response.SoftErrorResponse
+import org.helllabs.android.xmp.util.Log.e
+import org.xmlpull.v1.XmlPullParser
+import org.xmlpull.v1.XmlPullParserException
+import org.xmlpull.v1.XmlPullParserFactory
+import java.io.ByteArrayInputStream
+import java.io.IOException
+import java.io.InputStream
 
-import org.helllabs.android.xmp.modarchive.model.Artist;
-import org.helllabs.android.xmp.modarchive.model.Sponsor;
-import org.helllabs.android.xmp.modarchive.response.ArtistResponse;
-import org.helllabs.android.xmp.modarchive.response.HardErrorResponse;
-import org.helllabs.android.xmp.modarchive.response.ModArchiveResponse;
-import org.helllabs.android.xmp.modarchive.response.SoftErrorResponse;
-import org.helllabs.android.xmp.util.Log;
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserException;
-import org.xmlpull.v1.XmlPullParserFactory;
+class ArtistRequest : ModArchiveRequest {
 
-public class ArtistRequest extends ModArchiveRequest {
+    constructor(key: String, request: String) : super(key, request)
+    constructor(key: String, request: String, parameter: String?) : super(key, request, parameter)
+    constructor(key: String, request: String, parameter: Long) : this(key, request, parameter.toString())
 
-    private static final String TAG = "ArtistListRequest";
-
-    public ArtistRequest(final String key, final String request) {
-        super(key, request);
-    }
-
-    public ArtistRequest(final String key, final String request, final String parameter) throws UnsupportedEncodingException {
-        super(key, request, parameter);
-    }
-
-    public ArtistRequest(final String key, final String request, final long parameter) throws UnsupportedEncodingException {
-        this(key, request, String.valueOf(parameter));
-    }
-
-    @Override
-    protected ModArchiveResponse xmlParse(final String result) {
-        final ArtistResponse artistList = new ArtistResponse();
-        Artist artist = null;
-        Sponsor sponsor = null;
-
+    override fun xmlParse(result: String): ModArchiveResponse {
+        val artistList = ArtistResponse()
+        var artist: Artist? = null
+        var sponsor: Sponsor? = null
         try {
-            final XmlPullParserFactory xmlFactoryObject = XmlPullParserFactory.newInstance();
-            final XmlPullParser myparser = xmlFactoryObject.newPullParser();
-            final InputStream stream = new ByteArrayInputStream(result.getBytes());
-            myparser.setInput(stream, null);
-
-            int event = myparser.getEventType();
-            String text = "";
+            val xmlFactoryObject = XmlPullParserFactory.newInstance()
+            val myparser = xmlFactoryObject.newPullParser()
+            val stream: InputStream = ByteArrayInputStream(result.toByteArray())
+            myparser.setInput(stream, null)
+            var event = myparser.eventType
+            var text = ""
             while (event != XmlPullParser.END_DOCUMENT) {
-                switch (event) {
-                    case XmlPullParser.START_TAG: {
-                        final String start = myparser.getName();
-                        if (start.equals("item")) {
-                            artist = new Artist();
-                        } else if (start.equals("sponsor")) {
-                            sponsor = new Sponsor();
+                when (event) {
+                    XmlPullParser.START_TAG -> {
+                        val start = myparser.name
+                        if (start == "item") {
+                            artist = Artist()
+                        } else if (start == "sponsor") {
+                            sponsor = Sponsor()
                         }
-                        break;
                     }
-                    case XmlPullParser.TEXT:
-                        text = myparser.getText().trim();
-                        break;
-                    case XmlPullParser.END_TAG: {
-                        final String end = myparser.getName();
+                    XmlPullParser.TEXT -> text = myparser.text.trim { it <= ' ' }
+                    XmlPullParser.END_TAG -> {
+                        val end = myparser.name
                         if (sponsor != null) {
-                            switch (end) {
-                                case "text":
-                                    sponsor.setName(text);
-                                    break;
-                                case "link":
-                                    sponsor.setLink(text);
-                                    break;
-                                case "sponsor":
-                                    artistList.setSponsor(sponsor);
-                                    sponsor = null;
-                                    break;
+                            when (end) {
+                                "text" -> sponsor.name = text
+                                "link" -> sponsor.link = text
+                                "sponsor" -> {
+                                    artistList.sponsor = sponsor
+                                    sponsor = null
+                                }
                             }
                         } else {
-                            switch (end) {
-                                case "error":
-                                    return new SoftErrorResponse(text);
-                                case "id":
-                                    artist.setId(Long.parseLong(text));
-                                    break;
-                                case "alias":
-                                    artist.setAlias(text);
-                                    break;
-                                case "item":
-                                    artistList.add(artist);
-                                    break;
+                            when (end) {
+                                "error" -> return SoftErrorResponse(text)
+                                "id" -> artist!!.id = text.toLong()
+                                "alias" -> artist!!.setAlias(text)
+                                "item" -> artistList.add(artist)
                             }
                         }
-                        break;
                     }
-                    default:
-                        break;
+                    else -> {
+                    }
                 }
-                event = myparser.next();
+                event = myparser.next()
             }
-        } catch (XmlPullParserException e) {
-            Log.e(TAG, "XmlPullParserException: " + e.getMessage());
-            return new HardErrorResponse(e);
-        } catch (IOException e) {
-            Log.e(TAG, "IOException: " + e.getMessage());
-            return new HardErrorResponse(e);
+        } catch (e: XmlPullParserException) {
+            e(TAG, "XmlPullParserException: " + e.message)
+            return HardErrorResponse(e)
+        } catch (e: IOException) {
+            e(TAG, "IOException: " + e.message)
+            return HardErrorResponse(e)
         }
-
-        return artistList;
+        return artistList
     }
 
+    companion object {
+        private const val TAG = "ArtistListRequest"
+    }
 }

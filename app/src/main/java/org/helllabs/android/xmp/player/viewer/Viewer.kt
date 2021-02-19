@@ -1,218 +1,210 @@
-package org.helllabs.android.xmp.player.viewer;
+package org.helllabs.android.xmp.player.viewer
 
-import org.helllabs.android.xmp.player.ScreenSizeHelper;
-import org.helllabs.android.xmp.service.ModInterface;
-import org.helllabs.android.xmp.util.Log;
+import android.annotation.SuppressLint
+import android.content.Context
+import android.os.RemoteException
+import android.view.*
+import android.view.GestureDetector.SimpleOnGestureListener
+import android.view.View.OnTouchListener
+import org.helllabs.android.xmp.player.ScreenSizeHelper
+import org.helllabs.android.xmp.service.ModInterface
+import org.helllabs.android.xmp.util.Log
+import kotlin.math.abs
 
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.os.RemoteException;
-import android.view.GestureDetector;
-import android.view.GestureDetector.SimpleOnGestureListener;
-import android.view.MotionEvent;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
-import android.view.View;
+abstract class Viewer(
+    context: Context
+) :
+    SurfaceView(context),
+    SurfaceHolder.Callback,
+    View.OnClickListener {
 
-
-public abstract class Viewer extends SurfaceView implements SurfaceHolder.Callback, View.OnClickListener {
-    private static final String TAG = "Viewer";
-    protected final Context context;
-    protected SurfaceHolder surfaceHolder;
-    protected int canvasHeight, canvasWidth;
-    protected int[] modVars;
-    protected ModInterface modPlayer;
-    protected boolean[] isMuted;
-    protected int rotation;
-    protected final int screenSize;
-    private final GestureDetector gestureDetector;
+    internal var surfaceHolder: SurfaceHolder
+    internal var canvasHeight = 0
+    internal var canvasWidth = 0
+    internal lateinit var modVars: IntArray
+    internal var modPlayer: ModInterface? = null
+    internal lateinit var isMuted: BooleanArray
+    internal var rotation: Int = 0
+    internal val screenSize: Int
+    private val gestureDetector: GestureDetector
 
     // Touch tracking
-    protected float posX, posY, velX, velY;
-    protected boolean isDown;
-    private int maxX, maxY;
+    internal var posX: Float
+    internal var posY: Float
+    internal var velX = 0f
+    internal var velY = 0f
+    private var isDown: Boolean
+    private var maxX = 0
+    private var maxY = 0
 
-    public static class Info {
-        public int time;
-        public final int[] values = new int[7];    // order pattern row num_rows frame speed bpm
-        public final int[] volumes = new int[64];
-        public final int[] finalvols = new int[64];
-        public final int[] pans = new int[64];
-        public final int[] instruments = new int[64];
-        public final int[] keys = new int[64];
-        public final int[] periods = new int[64];
+    class Info {
+        var time = 0
+        val values = IntArray(7) // order pattern row num_rows frame speed bpm
+        val volumes = IntArray(64)
+        val finalvols = IntArray(64)
+        val pans = IntArray(64)
+        val instruments = IntArray(64)
+        val keys = IntArray(64)
+        val periods = IntArray(64)
     }
 
-    private void limitPosition() {
+    init {
+        // register our interest in hearing about changes to our surface
+        val holder = holder
+        @Suppress("LeakingThis") // Its because it's in the init block.
+        holder.addCallback(this)
+
+        surfaceHolder = holder
+        posY = 0f
+        posX = posY
+        isDown = false
+
+        // Gesture detection
+        gestureDetector = GestureDetector(context, MyGestureDetector())
+        initGestureListener()
+        val screenSizeHelper = ScreenSizeHelper()
+        screenSize = screenSizeHelper.getScreenSize(context)
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private fun initGestureListener() {
+        val gestureListener = OnTouchListener { _, event -> gestureDetector.onTouchEvent(event) }
+        setOnClickListener(this@Viewer)
+        setOnTouchListener(gestureListener)
+    }
+
+    private fun limitPosition() {
         if (posX > maxX - canvasWidth) {
-            posX = maxX - canvasWidth;
+            posX = (maxX - canvasWidth).toFloat()
         }
         if (posX < 0) {
-            posX = 0;
+            posX = 0f
         }
-
         if (posY > maxY - canvasHeight) {
-            posY = maxY - canvasHeight;
+            posY = (maxY - canvasHeight).toFloat()
         }
         if (posY < 0) {
-            posY = 0;
+            posY = 0f
         }
     }
 
-    private class MyGestureDetector extends SimpleOnGestureListener {
-
-        public boolean onScroll(final MotionEvent e1, final MotionEvent e2, final float distanceX, final float distanceY) {
-            synchronized (this) {
-                posX += distanceX;
-                posY += distanceY;
-
-                limitPosition();
-
-                velX = velY = 0;
+    private inner class MyGestureDetector : SimpleOnGestureListener() {
+        override fun onScroll(e1: MotionEvent, e2: MotionEvent, distanceX: Float, distanceY: Float): Boolean {
+            synchronized(this) {
+                posX += distanceX
+                posY += distanceY
+                limitPosition()
+                velY = 0f
+                velX = velY
             }
-            return true;
+            return true
         }
 
-        public boolean onFling(final MotionEvent e1, final MotionEvent e2, final float velocityX, final float velocityY) {
-            velX = velocityX / 25;
-            velY = velocityY / 25;
-            return true;
+        override fun onFling(e1: MotionEvent, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
+            velX = velocityX / 25
+            velY = velocityY / 25
+            return true
         }
 
-        public boolean onSingleTapUp(final MotionEvent e) {
-            onClick((int) e.getX(), (int) e.getY());
-            return true;
+        override fun onSingleTapUp(e: MotionEvent): Boolean {
+            onClick(e.x.toInt(), e.y.toInt())
+            return true
         }
 
-        public void onLongPress(final MotionEvent e) {
-            onLongClick((int) e.getX(), (int) e.getY());
+        override fun onLongPress(e: MotionEvent) {
+            onLongClick(e.x.toInt(), e.y.toInt())
         }
 
-        public boolean onDown(final MotionEvent e) {
-            velX = velY = 0;        // stop fling
-            return true;
+        override fun onDown(e: MotionEvent): Boolean {
+            velY = 0f
+            velX = velY // stop fling
+            return true
         }
     }
 
     // Hmpf, reinventing the wheel instead of using Scroller
-    protected void updateScroll() {
-        posX -= velX;
-        posY -= velY;
-
-        limitPosition();
-
-        velX *= 0.9;
-        if (Math.abs(velX) < 0.5) {
-            velX = 0;
+    private fun updateScroll() {
+        posX -= velX
+        posY -= velY
+        limitPosition()
+        velX *= 0.9f
+        if (abs(velX) < 0.5) {
+            velX = 0f
         }
-
-        velY *= 0.9;
-        if (Math.abs(velY) < 0.5) {
-            velY = 0;
+        velY *= 0.9f
+        if (abs(velY) < 0.5) {
+            velY = 0f
         }
     }
 
-    public Viewer(final Context context) {
-        super(context);
-        this.context = context;
-
-        // register our interest in hearing about changes to our surface
-        final SurfaceHolder holder = getHolder();
-        holder.addCallback(this);
-
-        surfaceHolder = holder;
-
-        posX = posY = 0;
-        isDown = false;
-
-        // Gesture detection
-        gestureDetector = new GestureDetector(context, new MyGestureDetector());
-        @SuppressLint("ClickableViewAccessibility") final View.OnTouchListener gestureListener = (v, event) -> gestureDetector.onTouchEvent(event);
-
-        setOnClickListener(Viewer.this);
-        setOnTouchListener(gestureListener);
-
-        final ScreenSizeHelper screenSizeHelper = new ScreenSizeHelper();
-        screenSize = screenSizeHelper.getScreenSize(context);
-    }
-
-
-    @Override
-    public void onClick(final View view) {
+    override fun onClick(view: View) {
         // do nothing
     }
 
-    protected void onClick(final int x, final int y) {
-        final View parent = (View) getParent();
-        if (parent != null) {
-            parent.performClick();
-        }
+    protected open fun onClick(x: Int, y: Int) {
+        val parent = parent as View
+        parent.performClick()
     }
 
-    protected void onLongClick(final int x, final int y) {
+    protected open fun onLongClick(x: Int, y: Int) {
         // do nothing
     }
 
-    public void setRotation(final int val) {
-        rotation = val;
+    open fun setRotation(value: Int) {
+        rotation = value
     }
 
-    public void update(final Info info, final boolean paused) {
-        updateScroll();
+    open fun update(info: Info?, paused: Boolean) {
+        updateScroll()
     }
 
-    public void setup(final ModInterface modPlayer, final int[] modVars) {
-        Log.i(TAG, "Viewer setup");
-
-        final int chn = modVars[3];
-        this.modVars = modVars;
-        this.modPlayer = modPlayer;
-
-        isMuted = new boolean[chn];
-        for (int i = 0; i < chn; i++) {
+    open fun setup(modPlayer: ModInterface, modVars: IntArray) {
+        Log.i(TAG, "Viewer setup")
+        val chn = modVars[3]
+        this.modVars = modVars
+        this.modPlayer = modPlayer
+        isMuted = BooleanArray(chn)
+        for (i in 0 until chn) {
             try {
-                isMuted[i] = modPlayer.mute(i, -1) == 1;
-            } catch (RemoteException e) {
-                Log.e(TAG, "Can't read channel mute status");
+                isMuted[i] = modPlayer.mute(i, -1) == 1
+            } catch (e: RemoteException) {
+                Log.e(TAG, "Can't read channel mute status")
             }
         }
-
-        posX = posY = 0;
+        posY = 0f
+        posX = posY
     }
 
-    public void setMaxX(final int x) {
-        synchronized (this) {
-            maxX = x;
-        }
+    fun setMaxX(x: Int) {
+        synchronized(this) { maxX = x }
     }
 
-    public void setMaxY(final int y) {
-        synchronized (this) {
-            maxY = y;
-        }
+    fun setMaxY(y: Int) {
+        synchronized(this) { maxY = y }
     }
 
     /* Callback invoked when the surface dimensions change. */
-    public void setSurfaceSize(final int width, final int height) {
+    private fun setSurfaceSize(width: Int, height: Int) {
         // synchronized to make sure these all change atomically
-        synchronized (surfaceHolder) {
-            canvasWidth = width;
-            canvasHeight = height;
+        synchronized(surfaceHolder) {
+            canvasWidth = width
+            canvasHeight = height
         }
     }
 
-    @Override
-    public void surfaceChanged(final SurfaceHolder holder, final int format, final int width, final int height) {
-        setSurfaceSize(width, height);
+    override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
+        setSurfaceSize(width, height)
     }
 
-    @Override
-    public void surfaceCreated(final SurfaceHolder holder) {
-        surfaceHolder = holder;
+    override fun surfaceCreated(holder: SurfaceHolder) {
+        surfaceHolder = holder
     }
 
-    @Override
-    public void surfaceDestroyed(final SurfaceHolder holder) {
+    override fun surfaceDestroyed(holder: SurfaceHolder) {
         // do nothing
+    }
+
+    companion object {
+        private const val TAG = "Viewer"
     }
 }

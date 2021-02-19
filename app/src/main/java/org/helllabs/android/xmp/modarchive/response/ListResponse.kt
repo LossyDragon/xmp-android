@@ -1,25 +1,23 @@
-package org.helllabs.android.xmp.modarchive.response;
+package org.helllabs.android.xmp.modarchive.response
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*
 
-public abstract class ListResponse<T> extends ModArchiveResponse {
+abstract class ListResponse<T> : ModArchiveResponse() {
 
-    private final List<T> list = new ArrayList<>();
+    private val list: MutableList<T> = ArrayList()
 
-    public void add(final T item) {
-        list.add(item);
+    fun add(item: T) {
+        list.add(item)
     }
 
-    public List<T> getList() {
-        return list;
+    fun getList(): List<T> {
+        return list
     }
 
-    public boolean isEmpty() {
-        return list.isEmpty();
-    }
+    val isEmpty: Boolean
+        get() = list.isEmpty()
 
-    public T get(final int location) {
-        return list.get(location);
+    operator fun get(location: Int): T {
+        return list[location]
     }
 }

@@ -1,125 +1,54 @@
-package org.helllabs.android.xmp.modarchive.model;
+package org.helllabs.android.xmp.modarchive.model
 
-import android.text.Html;
+import android.text.Html
 
-public class Module {
-    private static final String UNTITLED = "(untitled)";
-    private String artist;
-    private String filename;
-    private String format;
-    private String url;
-    private int bytes;
-    private String songTitle;
-    private String license;
-    private String licenseDescription;
-    private String legalUrl;
-    private String instruments;
-    private long id;
-
-    public Module() {
-        artist = Artist.UNKNOWN;
-    }
-
-    public String getArtist() {
-        return artist;
-    }
-
-    public void setArtist(final String artist) {
-        this.artist = artist;
-    }
-
-    public int getBytes() {
-        return bytes;
-    }
-
-    public void setBytes(final int bytes) {
-        this.bytes = bytes;
-    }
-
-    public String getFilename() {
-        return filename;
-    }
-
-    public void setFilename(final String filename) {
-        this.filename = filename;
-    }
-
-    public String getFormat() {
-        return format;
-    }
-
-    public void setFormat(final String format) {
-        this.format = format;
-    }
-
-    public String getInstruments() {
-        return instruments;
-    }
-
-    public void setInstruments(final String instruments) {
-        final String[] lines = instruments.split("\n");
-        final StringBuilder buffer = new StringBuilder();
-        for (final String line : lines) {
-            buffer.append(Html.fromHtml(line).toString());
-            buffer.append('\n');
+class Module {
+    var artist: String = Artist.UNKNOWN
+    var filename: String? = null
+    var format: String? = null
+    var url: String? = null
+    var bytes = 0
+    var songTitle: String? = null
+        private set
+    var license: String? = null
+        set(license) {
+            field = Html.fromHtml(license).toString()
         }
-        this.instruments = buffer.toString();
+    var licenseDescription: String? = null
+        set(licenseDescription) {
+            field = Html.fromHtml(licenseDescription).toString()
+        }
+    var legalUrl: String? = null
+        set(legalUrl) {
+            field = Html.fromHtml(legalUrl).toString()
+        }
+    var instruments: String? = null
+        private set
+    var id: Long = 0
+
+    fun setInstruments(instruments: String) {
+        val lines = instruments.split("\n").toTypedArray()
+        val buffer = StringBuilder()
+        for (line in lines) {
+            buffer.append(Html.fromHtml(line).toString())
+            buffer.append('\n')
+        }
+        this.instruments = buffer.toString()
     }
 
-    public String getLicense() {
-        return license;
-    }
-
-    public void setLicense(final String license) {
-        this.license = Html.fromHtml(license).toString();
-    }
-
-    public String getLicenseDescription() {
-        return licenseDescription;
-    }
-
-    public void setLicenseDescription(final String licenseDescription) {
-        this.licenseDescription = Html.fromHtml(licenseDescription).toString();
-    }
-
-    public String getLegalUrl() {
-        return legalUrl;
-    }
-
-    public void setLegalUrl(final String legalUrl) {
-        this.legalUrl = Html.fromHtml(legalUrl).toString();
-    }
-
-    public String getSongTitle() {
-        return songTitle;
-    }
-
-    public void setSongTitle(final String songtitle) {
-        if (songtitle.isEmpty()) {
-            this.songTitle = Module.UNTITLED;
+    fun setSongTitle(songtitle: String) {
+        songTitle = if (songtitle.isEmpty()) {
+            UNTITLED
         } else {
-            this.songTitle = Html.fromHtml(songtitle).toString();
+            Html.fromHtml(songtitle).toString()
         }
     }
 
-    public String getUrl() {
-        return url;
+    override fun toString(): String {
+        return songTitle!!
     }
 
-    public void setUrl(final String url) {
-        this.url = url;
-    }
-
-    public long getId() {
-        return id;
-    }
-
-    public void setId(final long id) {
-        this.id = id;
-    }
-
-    @Override
-    public String toString() {
-        return songTitle;
+    companion object {
+        private const val UNTITLED = "(untitled)"
     }
 }

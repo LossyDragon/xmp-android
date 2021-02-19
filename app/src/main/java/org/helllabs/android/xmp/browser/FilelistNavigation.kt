@@ -1,43 +1,40 @@
-package org.helllabs.android.xmp.browser;
+package org.helllabs.android.xmp.browser
 
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import org.helllabs.android.xmp.util.Log.d
+import java.io.File
+import java.util.*
 
-import android.view.View;
+class FilelistNavigation {
 
-import org.helllabs.android.xmp.util.Log;
+    private val mPathStack: Stack<ListState> = Stack()
 
-import java.io.File;
-import java.util.Stack;
-
-public class FilelistNavigation {
-
-    private static final String TAG = "FilelistNavigation";
-    private final Stack<ListState> mPathStack;
-    private File mCurrentDir;
+    /**
+     * Get the current directory.
+     *
+     * @return The current directory pathname.
+     */
+    var currentDir: File? = null
+        private set
 
     /**
      * To restore list position when traversing directories.
      */
-    private static class ListState {
-        private final int index;
-        private final int top;
-
-        public ListState(final RecyclerView recyclerView) {
-            final LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
-            this.index = layoutManager.findFirstVisibleItemPosition();
-            final View view = recyclerView.getChildAt(0);
-            this.top = view == null ? 0 : view.getTop();
+    private class ListState(recyclerView: RecyclerView?) {
+        private val index: Int
+        private val top: Int
+        fun restoreState(recyclerView: RecyclerView?) {
+            val layoutManager = recyclerView!!.layoutManager as LinearLayoutManager?
+            recyclerView.post { layoutManager!!.scrollToPositionWithOffset(index, top) }
         }
 
-        public void restoreState(final RecyclerView recyclerView) {
-            final LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
-            recyclerView.post(() -> layoutManager.scrollToPositionWithOffset(index, top));
+        init {
+            val layoutManager = recyclerView!!.layoutManager as LinearLayoutManager?
+            index = layoutManager!!.findFirstVisibleItemPosition()
+            val view = recyclerView.getChildAt(0)
+            top = view?.top ?: 0
         }
-    }
-
-    public FilelistNavigation() {
-        mPathStack = new Stack<>();
     }
 
     /**
@@ -46,24 +43,19 @@ public class FilelistNavigation {
      * @param file The name of the directory to change to.
      * @return True if current directory was changed.
      */
-    public boolean changeDirectory(File file) {
-        if (file == null) {
-            return false;
-        }
-
-        final boolean isDir = file.isDirectory();
-
+    fun changeDirectory(file: File?): Boolean {
+        var dirFile: File? = file ?: return false
+        val isDir = dirFile!!.isDirectory
         if (isDir) {
-            if (file.getName().equals("..")) {
-                file = file.getParentFile().getParentFile();
-                if (file == null) {
-                    file = new File("/");
+            if (dirFile.name == "..") {
+                dirFile = dirFile.parentFile.parentFile
+                if (dirFile == null) {
+                    dirFile = File("/")
                 }
             }
-            mCurrentDir = file;
+            currentDir = file
         }
-
-        return isDir;
+        return isDir
     }
 
     /**
@@ -71,8 +63,8 @@ public class FilelistNavigation {
      *
      * @param recyclerView The RecyclerView whose position is to be saved.
      */
-    public void saveListPosition(final RecyclerView recyclerView) {
-        mPathStack.push(new ListState(recyclerView));
+    fun saveListPosition(recyclerView: RecyclerView?) {
+        mPathStack.push(ListState(recyclerView))
     }
 
     /**
@@ -80,10 +72,10 @@ public class FilelistNavigation {
      *
      * @param recyclerView The RecyclerView whose position is to be restored.
      */
-    public void restoreListPosition(final RecyclerView recyclerView) {
+    fun restoreListPosition(recyclerView: RecyclerView?) {
         if (!mPathStack.isEmpty()) {
-            final ListState state = mPathStack.pop();
-            state.restoreState(recyclerView);
+            val state = mPathStack.pop()
+            state.restoreState(recyclerView)
         }
     }
 
@@ -92,19 +84,10 @@ public class FilelistNavigation {
      *
      * @param currentDir The directory to start navigation at.
      */
-    public void startNavigation(final File currentDir) {
-        Log.d(TAG, "start navigation at " + currentDir.getPath());
-        mCurrentDir = currentDir;
-        mPathStack.clear();
-    }
-
-    /**
-     * Get the current directory.
-     *
-     * @return The current directory pathname.
-     */
-    public File getCurrentDir() {
-        return mCurrentDir;
+    fun startNavigation(currentDir: File) {
+        d(TAG, "start navigation at " + currentDir.path)
+        this.currentDir = currentDir
+        mPathStack.clear()
     }
 
     /**
@@ -112,18 +95,13 @@ public class FilelistNavigation {
      *
      * @return True if the current directory was changed.
      */
-    public boolean parentDir() {
-        if (mCurrentDir == null) {
-            return false;
+    fun parentDir(): Boolean {
+        if (currentDir == null) {
+            return false
         }
-
-        final File parent = mCurrentDir.getParentFile();
-        if (parent == null) {
-            return false;
-        }
-
-        mCurrentDir = parent;
-        return true;
+        val parent = currentDir!!.parentFile ?: return false
+        currentDir = parent
+        return true
     }
 
     /**
@@ -131,7 +109,11 @@ public class FilelistNavigation {
      *
      * @return True if we're at the file system root.
      */
-    public boolean isAtTopDir() {
-        return mPathStack.isEmpty();
+    val isAtTopDir: Boolean
+        get() = mPathStack.isEmpty()
+
+    companion object {
+        private const val TAG = "FilelistNavigation"
     }
+
 }

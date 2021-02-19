@@ -1,72 +1,51 @@
-package org.helllabs.android.xmp.browser;
+package org.helllabs.android.xmp.browser
 
-import android.content.Context;
-import android.content.res.AssetManager;
+import android.content.Context
+import org.helllabs.android.xmp.util.Log.d
+import org.helllabs.android.xmp.util.Log.e
+import java.io.*
 
-import org.helllabs.android.xmp.util.Log;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-
-public final class Examples {
-
-    private static final String TAG = "Examples";
-
-    private Examples() {
-
-    }
-
-    public static int install(final Context context, final String path, final boolean examples) {
-        final File dir = new File(path);
-
-        if (dir.isDirectory()) {
-            Log.d(TAG, "install: " + path + " directory not found");
-            return 0;
+object Examples {
+    private const val TAG = "Examples"
+    fun install(context: Context, path: String?, examples: Boolean): Int {
+        val dir = File(path)
+        if (dir.isDirectory) {
+            d(TAG, "install: $path directory not found")
+            return 0
         }
-
         if (!dir.mkdirs()) {
-            Log.e(TAG, "can't create directory: " + path);
-            return -1;
+            e(TAG, "can't create directory: $path")
+            return -1
         }
-
-        final AssetManager am = context.getResources().getAssets();
-        String assets[];
-
+        val am = context.resources.assets
+        val assets: Array<String>?
         try {
-            assets = am.list("mod");
-
+            assets = am.list("mod")
             if (!examples || assets == null) {
-                return 0;
+                return 0
             }
-
-            for (final String a : assets) {
-                copyAsset(am.open("mod/" + a), path + "/" + a);
+            for (a in assets) {
+                copyAsset(am.open("mod/$a"), "$path/$a")
             }
-        } catch (IOException e) {
-            return -1;
+        } catch (e: IOException) {
+            return -1
         }
-
-        return 0;
+        return 0
     }
 
-    private static int copyAsset(final InputStream in, final String dst) {
-        final byte[] buf = new byte[1024];
-        int len;
-
+    private fun copyAsset(`in`: InputStream, dst: String): Int {
+        val buf = ByteArray(1024)
+        var len: Int
         try {
-            final OutputStream out = new FileOutputStream(dst);
-            while ((len = in.read(buf)) > 0) {
-                out.write(buf, 0, len);
+            val out: OutputStream = FileOutputStream(dst)
+            while (`in`.read(buf).also { len = it } > 0) {
+                out.write(buf, 0, len)
             }
-            in.close();
-            out.close();
-        } catch (IOException e) {
-            return -1;
+            `in`.close()
+            out.close()
+        } catch (e: IOException) {
+            return -1
         }
-
-        return 0;
+        return 0
     }
 }

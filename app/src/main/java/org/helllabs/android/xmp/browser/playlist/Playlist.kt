@@ -1,408 +1,333 @@
-package org.helllabs.android.xmp.browser.playlist;
+package org.helllabs.android.xmp.browser.playlist
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import android.app.Activity
+import android.content.*
+import androidx.preference.PreferenceManager
+import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.preferences.Preferences
+import org.helllabs.android.xmp.util.FileUtils.readFromFile
+import org.helllabs.android.xmp.util.FileUtils.removeLineFromFile
+import org.helllabs.android.xmp.util.FileUtils.writeToFile
+import org.helllabs.android.xmp.util.InfoCache.fileExists
+import org.helllabs.android.xmp.util.Log.e
+import org.helllabs.android.xmp.util.Log.i
+import org.helllabs.android.xmp.util.Message.error
+import java.io.*
+import java.util.*
 
-import org.helllabs.android.xmp.R;
-import org.helllabs.android.xmp.preferences.Preferences;
-import org.helllabs.android.xmp.util.FileUtils;
-import org.helllabs.android.xmp.util.InfoCache;
-import org.helllabs.android.xmp.util.Log;
-import org.helllabs.android.xmp.util.Message;
+class Playlist(context: Context?, val name: String?) {
 
-import android.app.Activity;
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
+    var comment: String? = null
+    private var mListChanged = false
+    private var mCommentChanged = false
+    var isShuffleMode = false
+    var isLoopMode = false
+    val list: MutableList<PlaylistItem>
+    private val mPrefs: SharedPreferences
 
-public class Playlist {
-    private static final String TAG = "Playlist";
-    public static final String COMMENT_SUFFIX = ".comment";
-    public static final String PLAYLIST_SUFFIX = ".playlist";
-    private static final String OPTIONS_PREFIX = "options_";
-    private static final String SHUFFLE_MODE = "_shuffleMode";
-    private static final String LOOP_MODE = "_loopMode";
-    private static final boolean DEFAULT_SHUFFLE_MODE = true;
-    private static final boolean DEFAULT_LOOP_MODE = false;
-
-    private final String mName;
-    private String mComment;
-    private boolean mListChanged;
-    private boolean mCommentChanged;
-    private boolean mShuffleMode;
-    private boolean mLoopMode;
-    private final List<PlaylistItem> mList;
-    private final SharedPreferences mPrefs;
-
-    private static class ListFile extends File {
-        public ListFile(final String name) {
-            super(Preferences.DATA_DIR, name + PLAYLIST_SUFFIX);
-        }
-
-        public ListFile(final String name, final String suffix) {
-            super(Preferences.DATA_DIR, name + PLAYLIST_SUFFIX + suffix);
-        }
+    private class ListFile : File {
+        constructor(name: String?) : super(Preferences.DATA_DIR, name + PLAYLIST_SUFFIX)
+        constructor(name: String?, suffix: String) : super(Preferences.DATA_DIR, name + PLAYLIST_SUFFIX + suffix)
     }
 
-    private static class CommentFile extends File {
-        public CommentFile(final String name) {
-            super(Preferences.DATA_DIR, name + COMMENT_SUFFIX);
-        }
-
-        public CommentFile(final String name, final String suffix) {
-            super(Preferences.DATA_DIR, name + COMMENT_SUFFIX + suffix);
-        }
+    private class CommentFile : File {
+        constructor(name: String?) : super(Preferences.DATA_DIR, name + COMMENT_SUFFIX)
+        constructor(name: String?, suffix: String) : super(Preferences.DATA_DIR, name + COMMENT_SUFFIX + suffix)
     }
 
-    public Playlist(final Context context, final String name) throws IOException {
-        mName = name;
-        mList = new ArrayList<>();
-        mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
-
-        final File file = new ListFile(name);
+    init {
+        list = ArrayList()
+        mPrefs = PreferenceManager.getDefaultSharedPreferences(context)
+        val file: File = ListFile(name)
         if (file.exists()) {
-            Log.i(TAG, "Read playlist " + name);
-            final String comment = FileUtils.readFromFile(new CommentFile(name));
+            i(TAG, "Read playlist $name")
+            val comment = readFromFile(CommentFile(name))
 
             // read list contents
             if (readList(name)) {
-                mComment = comment;
-                mShuffleMode = readShuffleModePref(name);
-                mLoopMode = readLoopModePref(name);
+                this.comment = comment
+                isShuffleMode = readShuffleModePref(name)
+                isLoopMode = readLoopModePref(name)
             }
         } else {
-            Log.i(TAG, "New playlist " + name);
-            mShuffleMode = DEFAULT_SHUFFLE_MODE;
-            mLoopMode = DEFAULT_LOOP_MODE;
-            mListChanged = true;
-            mCommentChanged = true;
+            i(TAG, "New playlist $name")
+            isShuffleMode = DEFAULT_SHUFFLE_MODE
+            isLoopMode = DEFAULT_LOOP_MODE
+            mListChanged = true
+            mCommentChanged = true
         }
-
-        if (mComment == null) {
-            mComment = "";
+        if (comment == null) {
+            comment = ""
         }
     }
 
     /**
      * Save the current playlist.
      */
-    public void commit() {
-        Log.i(TAG, "Commit playlist " + mName);
+    fun commit() {
+        i(TAG, "Commit playlist $name")
         if (mListChanged) {
-            writeList(mName);
-            mListChanged = false;
+            writeList(name)
+            mListChanged = false
         }
         if (mCommentChanged) {
-            writeComment(mName);
-            mCommentChanged = false;
+            writeComment(name)
+            mCommentChanged = false
         }
-
-        boolean saveModes = false;
-        if (mShuffleMode != readShuffleModePref(mName)) {
-            saveModes = true;
+        var saveModes = false
+        if (isShuffleMode != readShuffleModePref(name)) {
+            saveModes = true
         }
-        if (mLoopMode != readLoopModePref(mName)) {
-            saveModes = true;
+        if (isLoopMode != readLoopModePref(name)) {
+            saveModes = true
         }
         if (saveModes) {
-            final SharedPreferences.Editor editor = mPrefs.edit();
-            editor.putBoolean(optionName(mName, SHUFFLE_MODE), mShuffleMode);
-            editor.putBoolean(optionName(mName, LOOP_MODE), mLoopMode);
-            editor.apply();
+            val editor = mPrefs.edit()
+            editor.putBoolean(optionName(name, SHUFFLE_MODE), isShuffleMode)
+            editor.putBoolean(optionName(name, LOOP_MODE), isLoopMode)
+            editor.apply()
         }
     }
-
-//	/**
-//	 * Add a new item to the playlist.
-//	 * 
-//	 * @param item The item to be added
-//	 */
-//	public void add(final PlaylistItem item) {
-//		mList.add(item);
-//	}
-//	
-//	/**
-//	 * Add new items to the playlist.
-//	 * 
-//	 * @param items The items to be added
-//	 */
-//	public void add(final PlaylistItem[] items) {
-//		for (final PlaylistItem item : items) {
-//			add(item);
-//		}
-//	}
-
+    //	/**
+    //	 * Add a new item to the playlist.
+    //	 * 
+    //	 * @param item The item to be added
+    //	 */
+    //	public void add(final PlaylistItem item) {
+    //		mList.add(item);
+    //	}
+    //	
+    //	/**
+    //	 * Add new items to the playlist.
+    //	 * 
+    //	 * @param items The items to be added
+    //	 */
+    //	public void add(final PlaylistItem[] items) {
+    //		for (final PlaylistItem item : items) {
+    //			add(item);
+    //		}
+    //	}
     /**
      * Remove an item from the playlist.
      *
      * @param index The index of the item to be removed
      */
-    public void remove(final int index) {
-        Log.i(TAG, "Remove item #" + index + ": " + mList.get(index).getName());
-        mList.remove(index);
-        mListChanged = true;
+    fun remove(index: Int) {
+        i(TAG, "Remove item #" + index + ": " + list[index].name)
+        list.removeAt(index)
+        mListChanged = true
     }
 
+    // Helper methods
+    private fun readList(name: String?): Boolean {
+        list.clear()
+        val file: File = ListFile(name)
+        var lineNum: Int
+        val invalidList: MutableList<Int> = ArrayList()
+        try {
+            val reader = BufferedReader(FileReader(file), 512)
+            lineNum = 0
 
-    // Static utilities
+            reader.forEachLine {
+                val fields = it.split(":".toRegex(), 3).toTypedArray()
+                val filename = fields[0]
+                val comment = if (fields.size > 1) fields[1] else ""
+                val title = if (fields.size > 2) fields[2] else ""
 
-    /**
-     * Rename a playlist.
-     *
-     * @param context The context we're running in
-     * @param oldName The current name of the playlist
-     * @param newName The new name of the playlist
-     * @return Whether the rename was successful
-     */
-    public static boolean rename(final Context context, final String oldName, final String newName) {
-        final File old1 = new ListFile(oldName);
-        final File old2 = new CommentFile(oldName);
-        final File new1 = new ListFile(newName);
-        final File new2 = new CommentFile(newName);
+                if (fileExists(filename)) {
+                    val item = PlaylistItem(PlaylistItem.TYPE_FILE, title, comment)
+                    item.file = File(filename)
+                    item.imageRes = R.drawable.grabber
+                    list.add(item)
+                } else {
+                    invalidList.add(lineNum)
+                }
+                lineNum++
+            }
+            reader.close()
+            PlaylistUtils.renumberIds(list)
+        } catch (e: IOException) {
+            e(TAG, "Error reading playlist " + file.path)
+            return false
+        }
+        if (invalidList.isNotEmpty()) {
+            val array = IntArray(invalidList.size)
+            val iterator: Iterator<Int> = invalidList.iterator()
+            for (i in array.indices) {
+                array[i] = iterator.next()
+            }
+            try {
+                removeLineFromFile(file, array)
+            } catch (e: FileNotFoundException) {
+                e(TAG, "Playlist file " + file.path + " not found")
+            } catch (e: IOException) {
+                e(TAG, "I/O error removing invalid lines from " + file.path)
+            }
+        }
+        return true
+    }
 
-        boolean error = false;
+    private fun writeList(name: String?) {
+        i(TAG, "Write list")
+        val file: File = ListFile(name, ".new")
+        file.delete()
+        try {
+            val out = BufferedWriter(FileWriter(file), 512)
+            for (item in list) {
+                out.write(item.toString())
+            }
+            out.close()
+            val oldFile: File = ListFile(name)
+            oldFile.delete()
+            file.renameTo(oldFile)
+        } catch (e: IOException) {
+            e(TAG, "Error writing playlist file " + file.path)
+        }
+    }
 
-        if (!old1.renameTo(new1)) {
-            error = true;
-        } else if (!old2.renameTo(new2)) {
-            new1.renameTo(old1);
-            error = true;
+    private fun writeComment(name: String?) {
+        i(TAG, "Write comment")
+        val file: File = CommentFile(name, ".new")
+        file.delete()
+        try {
+            writeToFile(file, comment!!)
+            val oldFile: File = CommentFile(name)
+            oldFile.delete()
+            file.renameTo(oldFile)
+        } catch (e: IOException) {
+            e(TAG, "Error writing comment file " + file.path)
+        }
+    }
+
+    private fun readShuffleModePref(name: String?): Boolean {
+        return mPrefs.getBoolean(optionName(name, SHUFFLE_MODE), DEFAULT_SHUFFLE_MODE)
+    }
+
+    private fun readLoopModePref(name: String?): Boolean {
+        return mPrefs.getBoolean(optionName(name, LOOP_MODE), DEFAULT_LOOP_MODE)
+    }
+
+    fun setListChanged(listChanged: Boolean) {
+        mListChanged = listChanged
+    }
+
+    companion object {
+        private const val TAG = "Playlist"
+        const val COMMENT_SUFFIX = ".comment"
+        const val PLAYLIST_SUFFIX = ".playlist"
+        private const val OPTIONS_PREFIX = "options_"
+        private const val SHUFFLE_MODE = "_shuffleMode"
+        private const val LOOP_MODE = "_loopMode"
+        private const val DEFAULT_SHUFFLE_MODE = true
+        private const val DEFAULT_LOOP_MODE = false
+        // Static utilities
+        /**
+         * Rename a playlist.
+         *
+         * @param context The context we're running in
+         * @param oldName The current name of the playlist
+         * @param newName The new name of the playlist
+         * @return Whether the rename was successful
+         */
+        fun rename(context: Context?, oldName: String?, newName: String?): Boolean {
+            val old1: File = ListFile(oldName)
+            val old2: File = CommentFile(oldName)
+            val new1: File = ListFile(newName)
+            val new2: File = CommentFile(newName)
+            var error = false
+            if (!old1.renameTo(new1)) {
+                error = true
+            } else if (!old2.renameTo(new2)) {
+                new1.renameTo(old1)
+                error = true
+            }
+            if (error) {
+                return false
+            }
+            val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+            val editor = prefs.edit()
+            editor.putBoolean(optionName(newName, SHUFFLE_MODE), prefs.getBoolean(optionName(oldName, SHUFFLE_MODE), DEFAULT_SHUFFLE_MODE))
+            editor.putBoolean(optionName(newName, LOOP_MODE), prefs.getBoolean(optionName(oldName, LOOP_MODE), DEFAULT_LOOP_MODE))
+            editor.remove(optionName(oldName, SHUFFLE_MODE))
+            editor.remove(optionName(oldName, LOOP_MODE))
+            editor.apply()
+            return true
         }
 
-        if (error) {
-            return false;
+        /**
+         * Delete the specified playlist.
+         *
+         * @param context The context the playlist is being created in
+         * @param name    The playlist name
+         */
+        fun delete(context: Context?, name: String?) {
+            ListFile(name).delete()
+            CommentFile(name).delete()
+            val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+            val editor = prefs.edit()
+            editor.remove(optionName(name, SHUFFLE_MODE))
+            editor.remove(optionName(name, LOOP_MODE))
+            editor.apply()
         }
 
-        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        final SharedPreferences.Editor editor = prefs.edit();
-        editor.putBoolean(optionName(newName, SHUFFLE_MODE), prefs.getBoolean(optionName(oldName, SHUFFLE_MODE), DEFAULT_SHUFFLE_MODE));
-        editor.putBoolean(optionName(newName, LOOP_MODE), prefs.getBoolean(optionName(oldName, LOOP_MODE), DEFAULT_LOOP_MODE));
-        editor.remove(optionName(oldName, SHUFFLE_MODE));
-        editor.remove(optionName(oldName, LOOP_MODE));
-        editor.apply();
-
-        return true;
-    }
-
-    /**
-     * Delete the specified playlist.
-     *
-     * @param context The context the playlist is being created in
-     * @param name    The playlist name
-     */
-    public static void delete(final Context context, final String name) {
-        (new ListFile(name)).delete();
-        (new CommentFile(name)).delete();
-
-        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        final SharedPreferences.Editor editor = prefs.edit();
-        editor.remove(optionName(name, SHUFFLE_MODE));
-        editor.remove(optionName(name, LOOP_MODE));
-        editor.apply();
-    }
-
-    /**
-     * Add an item to the specified playlist file.
-     *
-     * @param context The context we're running in
-     * @param name The playlist name
-     * @param item The playlist item to add
-     */
-	/*public static void addToList(final Context context, final String name, final PlaylistItem item) {
+        ///**
+        // * Add an item to the specified playlist file.
+        // *
+        // * @param context The context we're running in
+        // * @param name The playlist name
+        // * @param item The playlist item to add
+        // */
+        /*public static void addToList(final Context context, final String name, final PlaylistItem item) {
 		try {
 			FileUtils.writeToFile(new File(Preferences.DATA_DIR, name + PLAYLIST_SUFFIX), item.toString());
 		} catch (IOException e) {
 			Message.error(context, context.getString(R.string.error_write_to_playlist));
 		}
-	}*/
+	    }
+	    */
 
-    /**
-     * Add a list of items to the specified playlist file.
-     *
-     * @param activity The activity we're running
-     * @param name     The playlist name
-     * @param items    The list of playlist items to add
-     */
-    public static void addToList(final Activity activity, final String name, final List<PlaylistItem> items) {
-        final String[] lines = new String[items.size()];
-
-        int i = 0;
-        for (final PlaylistItem item : items) {
-            lines[i++] = item.toString();
-        }
-        try {
-            FileUtils.writeToFile(new File(Preferences.DATA_DIR, name + PLAYLIST_SUFFIX), lines);
-        } catch (IOException e) {
-            Message.error(activity, activity.getString(R.string.error_write_to_playlist));
-        }
-    }
-
-    /**
-     * Read comment from a playlist file.
-     *
-     * @param activity The activity we're running
-     * @param name     The playlist name
-     * @return The playlist comment
-     */
-    public static String readComment(final Activity activity, final String name) {
-        String comment = null;
-        try {
-            comment = FileUtils.readFromFile(new CommentFile(name));
-        } catch (IOException e) {
-            Message.error(activity, activity.getString(R.string.error_read_comment));
-        }
-        if (comment == null || comment.trim().isEmpty()) {
-            comment = activity.getString(R.string.no_comment);
-        }
-        return comment;
-    }
-
-
-    // Helper methods
-
-    private boolean readList(final String name) {
-        mList.clear();
-
-        final File file = new ListFile(name);
-        String line;
-        int lineNum;
-
-        final List<Integer> invalidList = new ArrayList<>();
-
-        try {
-            final BufferedReader reader = new BufferedReader(new FileReader(file), 512);
-            lineNum = 0;
-            while ((line = reader.readLine()) != null) {
-                final String[] fields = line.split(":", 3);
-                final String filename = fields[0];
-                final String comment = fields.length > 1 ? fields[1] : "";
-                final String title = fields.length > 2 ? fields[2] : "";
-                if (InfoCache.fileExists(filename)) {
-                    final PlaylistItem item = new PlaylistItem(PlaylistItem.TYPE_FILE, title, comment);    // NOPMD
-                    item.setFile(new File(filename));    // NOPMD
-                    item.setImageRes(R.drawable.grabber);
-                    mList.add(item);
-                } else {
-                    invalidList.add(lineNum);
-                }
-                lineNum++;
+        /**
+         * Add a list of items to the specified playlist file.
+         *
+         * @param activity The activity we're running
+         * @param name     The playlist name
+         * @param items    The list of playlist items to add
+         */
+        fun addToList(activity: Activity, name: String?, items: List<PlaylistItem>) {
+            val lines = mutableListOf<String>()
+            var i = 0
+            for (item in items) {
+                lines[i++] = item.toString()
             }
-            reader.close();
-            PlaylistUtils.renumberIds(mList);
-        } catch (IOException e) {
-            Log.e(TAG, "Error reading playlist " + file.getPath());
-            return false;
-        }
-
-        if (!invalidList.isEmpty()) {
-            final int[] array = new int[invalidList.size()];
-            final Iterator<Integer> iterator = invalidList.iterator();
-            for (int i = 0; i < array.length; i++) {
-                array[i] = iterator.next();
-            }
-
             try {
-                FileUtils.removeLineFromFile(file, array);
-            } catch (FileNotFoundException e) {
-                Log.e(TAG, "Playlist file " + file.getPath() + " not found");
-            } catch (IOException e) {
-                Log.e(TAG, "I/O error removing invalid lines from " + file.getPath());
+                writeToFile(File(Preferences.DATA_DIR, name + PLAYLIST_SUFFIX), lines)
+            } catch (e: IOException) {
+                error(activity, activity.getString(R.string.error_write_to_playlist))
             }
         }
 
-        return true;
-    }
-
-    private void writeList(final String name) {
-        Log.i(TAG, "Write list");
-        final File file = new ListFile(name, ".new");
-        file.delete();
-
-        try {
-            final BufferedWriter out = new BufferedWriter(new FileWriter(file), 512);
-            for (final PlaylistItem item : mList) {
-                out.write(item.toString());
+        /**
+         * Read comment from a playlist file.
+         *
+         * @param activity The activity we're running
+         * @param name     The playlist name
+         * @return The playlist comment
+         */
+        fun readComment(activity: Activity, name: String?): String {
+            var comment: String? = null
+            try {
+                comment = readFromFile(CommentFile(name))
+            } catch (e: IOException) {
+                error(activity, activity.getString(R.string.error_read_comment))
             }
-            out.close();
-
-            final File oldFile = new ListFile(name);
-            oldFile.delete();
-            file.renameTo(oldFile);
-        } catch (IOException e) {
-            Log.e(TAG, "Error writing playlist file " + file.getPath());
+            if (comment == null || comment.trim { it <= ' ' }.isEmpty()) {
+                comment = activity.getString(R.string.no_comment)
+            }
+            return comment
         }
-    }
 
-    private void writeComment(final String name) {
-        Log.i(TAG, "Write comment");
-        final File file = new CommentFile(name, ".new");
-        file.delete();
-        try {
-            FileUtils.writeToFile(file, mComment);
-            final File oldFile = new CommentFile(name);
-            oldFile.delete();
-            file.renameTo(oldFile);
-        } catch (IOException e) {
-            Log.e(TAG, "Error writing comment file " + file.getPath());
+        private fun optionName(name: String?, option: String): String {
+            return OPTIONS_PREFIX + name + option
         }
-    }
-
-    private static String optionName(final String name, final String option) {
-        return OPTIONS_PREFIX + name + option;
-    }
-
-    private boolean readShuffleModePref(final String name) {
-        return mPrefs.getBoolean(optionName(name, SHUFFLE_MODE), DEFAULT_SHUFFLE_MODE);
-    }
-
-    private boolean readLoopModePref(final String name) {
-        return mPrefs.getBoolean(optionName(name, LOOP_MODE), DEFAULT_LOOP_MODE);
-    }
-
-
-    // Accessors
-
-    public String getName() {
-        return mName;
-    }
-
-    public String getComment() {
-        return mComment;
-    }
-
-    public List<PlaylistItem> getList() {
-        return mList;
-    }
-
-    public boolean isLoopMode() {
-        return mLoopMode;
-    }
-
-    public boolean isShuffleMode() {
-        return mShuffleMode;
-    }
-
-    public void setComment(final String comment) {
-        mComment = comment;
-    }
-
-    public void setLoopMode(final boolean loopMode) {
-        mLoopMode = loopMode;
-    }
-
-    public void setShuffleMode(final boolean shuffleMode) {
-        mShuffleMode = shuffleMode;
-    }
-
-    public void setListChanged(final boolean listChanged) {
-        mListChanged = listChanged;
     }
 }

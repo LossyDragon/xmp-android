@@ -1,129 +1,107 @@
-package org.helllabs.android.xmp.player.viewer;
+package org.helllabs.android.xmp.player.viewer
 
-import org.helllabs.android.xmp.R;
-import org.helllabs.android.xmp.service.ModInterface;
-import org.helllabs.android.xmp.util.Log;
+import android.content.Context
+import android.graphics.*
+import android.os.RemoteException
+import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.service.ModInterface
+import org.helllabs.android.xmp.util.Log
 
-import android.content.Context;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.Rect;
-import android.graphics.Typeface;
-import android.os.RemoteException;
+class InstrumentViewer(context: Context) : Viewer(context) {
 
-public class InstrumentViewer extends Viewer {
-    private static final String TAG = "InstrumentViewer";
-    private final Paint[] insPaint, barPaint;
-    private final int fontSize, fontHeight, fontWidth;
-    private String[] insName;
-    private final Rect rect = new Rect();
+    private lateinit var insName: Array<String>
+    private val insPaint: Array<Paint?> = arrayOfNulls(8)
+    private val barPaint: Array<Paint?> = arrayOfNulls(8)
+    private val fontSize: Int = resources.getDimensionPixelSize(R.dimen.instrumentview_font_size)
+    private val fontHeight: Int
+    private val fontWidth: Int
+    private val rect = Rect()
 
-    public InstrumentViewer(final Context context) {
-        super(context);
-
-        fontSize = getResources().getDimensionPixelSize(R.dimen.instrumentview_font_size);
-
-        insPaint = new Paint[8];
-        for (int i = 0; i < 8; i++) {
-            final int val = 120 + 10 * i;
-            insPaint[i] = new Paint();
-            insPaint[i].setARGB(255, val, val, val);
-            insPaint[i].setTypeface(Typeface.MONOSPACE);
-            insPaint[i].setTextSize(fontSize);
-            insPaint[i].setAntiAlias(true);
+    init {
+        for (i in 0..7) {
+            val `val` = 120 + 10 * i
+            insPaint[i] = Paint()
+            insPaint[i]!!.setARGB(255, `val`, `val`, `val`)
+            insPaint[i]!!.typeface = Typeface.MONOSPACE
+            insPaint[i]!!.textSize = fontSize.toFloat()
+            insPaint[i]!!.isAntiAlias = true
         }
-
-        barPaint = new Paint[8];
-        for (int i = 0; i < 8; i++) {
-            final int val = 15 * i;
-            barPaint[i] = new Paint();
-            barPaint[i].setARGB(255, val / 4, val / 2, val);
+        for (i in 0..7) {
+            val `val` = 15 * i
+            barPaint[i] = Paint()
+            barPaint[i]!!.setARGB(255, `val` / 4, `val` / 2, `val`)
         }
-
-        fontWidth = (int) insPaint[0].measureText("X");
-        fontHeight = fontSize * 14 / 10;
+        fontWidth = insPaint[0]!!.measureText("X").toInt()
+        fontHeight = fontSize * 14 / 10
     }
 
-    @Override
-    public void setup(final ModInterface modPlayer, final int[] modVars) {
-        super.setup(modPlayer, modVars);
-
-        final int insNum = modVars[4];
-
+    override fun setup(modPlayer: ModInterface, modVars: IntArray) {
+        super.setup(modPlayer, modVars)
+        val insNum = modVars[4]
         try {
-            insName = modPlayer.getInstruments();
-        } catch (RemoteException e) {
-            Log.e(TAG, "Can't get instrument name");
+            insName = modPlayer.instruments
+        } catch (e: RemoteException) {
+            Log.e(TAG, "Can't get instrument name")
         }
-
-        setMaxY(insNum * fontHeight + fontHeight / 2);
+        setMaxY(insNum * fontHeight + fontHeight / 2)
     }
 
-    @Override
-    public void update(final Info info, final boolean paused) {
-        super.update(info, paused);
-
-        Canvas canvas = null;
-
+    override fun update(info: Info?, paused: Boolean) {
+        super.update(info, paused)
+        var canvas: Canvas? = null
         try {
-            canvas = surfaceHolder.lockCanvas(null);
+            canvas = surfaceHolder.lockCanvas(null)
             if (canvas != null) {
-                synchronized (surfaceHolder) {
-                    doDraw(canvas, modPlayer, info);
-                }
+                synchronized(surfaceHolder) { doDraw(canvas, modPlayer!!, info) }
             }
         } finally {
             // do this in a finally so that if an exception is thrown
             // during the above, we don't leave the Surface in an
             // inconsistent state
             if (canvas != null) {
-                surfaceHolder.unlockCanvasAndPost(canvas);
+                surfaceHolder.unlockCanvasAndPost(canvas)
             }
         }
     }
 
-    private void doDraw(final Canvas canvas, final ModInterface modPlayer, final Info info) {
-        final int chn = modVars[3];
-        final int ins = modVars[4];
+    private fun doDraw(canvas: Canvas, modPlayer: ModInterface, info: Info?) {
+        val chn = modVars[3]
+        val ins = modVars[4]
 
         // Clear screen
-        canvas.drawColor(Color.BLACK);
-
-        for (int i = 0; i < ins; i++) {
-            final int y = (i + 1) * fontHeight - (int) posY;
-            final int width = (canvasWidth - 3 * fontWidth) / chn;
-            int maxVol;
+        canvas.drawColor(Color.BLACK)
+        for (i in 0 until ins) {
+            val y = (i + 1) * fontHeight - posY.toInt()
+            val width = (canvasWidth - 3 * fontWidth) / chn
+            var maxVol: Int
 
             // Don't draw if not visible
             if (y < 0 || y > canvasHeight + fontHeight) {
-                continue;
+                continue
             }
-
-            maxVol = 0;
-            for (int j = 0; j < chn; j++) {
-
+            maxVol = 0
+            for (j in 0 until chn) {
                 if (isMuted[j]) {
-                    continue;
+                    continue
                 }
-
-                if (info.instruments[j] == i) {
-                    final int x = 3 * fontWidth + width * j;
-                    int vol = info.volumes[j] / 8;
+                if (info!!.instruments[j] == i) {
+                    val x = 3 * fontWidth + width * j
+                    var vol = info.volumes[j] / 8
                     if (vol > 7) {
-                        vol = 7;
+                        vol = 7
                     }
-                    rect.set(x, y - fontSize + 1, x + width * 8 / 10, y + 1);
-                    canvas.drawRect(rect, barPaint[vol]);
+                    rect[x, y - fontSize + 1, x + width * 8 / 10] = y + 1
+                    canvas.drawRect(rect, barPaint[vol]!!)
                     if (vol > maxVol) {
-                        maxVol = vol;
+                        maxVol = vol
                     }
                 }
             }
-
-            if (insName != null) {
-                canvas.drawText(insName[i], 0, y, insPaint[maxVol]);
-            }
+            canvas.drawText(insName[i], 0f, y.toFloat(), insPaint[maxVol]!!)
         }
+    }
+
+    companion object {
+        private const val TAG = "InstrumentViewer"
     }
 }

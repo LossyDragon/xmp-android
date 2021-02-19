@@ -1,154 +1,144 @@
-package org.helllabs.android.xmp.modarchive;
+package org.helllabs.android.xmp.modarchive
 
-import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.app.ProgressDialog;
-import android.widget.Toast;
-
-import com.telly.groundy.Groundy;
-import com.telly.groundy.GroundyTask;
-import com.telly.groundy.TaskHandler;
-import com.telly.groundy.TaskResult;
-import com.telly.groundy.annotations.OnFailure;
-import com.telly.groundy.annotations.OnProgress;
-import com.telly.groundy.annotations.OnSuccess;
-import com.telly.groundy.annotations.Param;
-import com.telly.groundy.util.DownloadUtils;
-
-import org.helllabs.android.xmp.R;
-import org.helllabs.android.xmp.util.Log;
-import org.helllabs.android.xmp.util.Message;
-
-import java.io.File;
+import android.annotation.SuppressLint
+import android.app.Activity
+import android.app.ProgressDialog
+import android.widget.Toast
+import com.telly.groundy.Groundy
+import com.telly.groundy.GroundyTask
+import com.telly.groundy.TaskHandler
+import com.telly.groundy.TaskResult
+import com.telly.groundy.annotations.OnFailure
+import com.telly.groundy.annotations.OnProgress
+import com.telly.groundy.annotations.OnSuccess
+import com.telly.groundy.annotations.Param
+import com.telly.groundy.util.DownloadUtils
+import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.util.Log.d
+import org.helllabs.android.xmp.util.Message.yesNoDialog
+import java.io.File
 
 /*
  * Based on the Groundy download example
  */
-public class Downloader {
+class Downloader(private val mActivity: Activity) {
 
-    private static final String TAG = "Downloader";
-    private final Activity mActivity;
-    private ProgressDialog mProgressDialog;
-    private TaskHandler mTaskHandler;
-    private int mSize;
-    private DownloaderListener listener;
+    private var mProgressDialog: ProgressDialog? = null
+    private var mTaskHandler: TaskHandler? = null
+    private var mSize = 0
+    private var listener: DownloaderListener? = null
 
-    private final Object mCallback = new Object() {
+    private val mCallback: Any = object : Any() {
         @SuppressLint("NewApi")
-        @OnProgress(DownloadTask.class)
-        public void onProgress(@Param(Groundy.PROGRESS) final int progress) {
+        @OnProgress(DownloadTask::class)
+        fun onProgress(@Param(Groundy.PROGRESS) progress: Int) {
             if (progress == Groundy.NO_SIZE_AVAILABLE) {
-                mProgressDialog.setIndeterminate(true);
-                mProgressDialog.setProgressNumberFormat(null);
-                mProgressDialog.setProgressPercentFormat(null);
+                mProgressDialog!!.isIndeterminate = true
+                mProgressDialog!!.setProgressNumberFormat(null)
+                mProgressDialog!!.setProgressPercentFormat(null)
             } else {
-                mProgressDialog.setProgress(mSize * progress / 100);
+                mProgressDialog!!.progress = mSize * progress / 100
             }
         }
 
-        @OnSuccess(DownloadTask.class)
-        public void onSuccess() {
-            Log.d(TAG, "download success");
-            Toast.makeText(mActivity, R.string.file_downloaded, Toast.LENGTH_LONG).show();
-            mProgressDialog.dismiss();
+        @OnSuccess(DownloadTask::class)
+        fun onSuccess() {
+            d(TAG, "download success")
+            Toast.makeText(mActivity, R.string.file_downloaded, Toast.LENGTH_LONG).show()
+            mProgressDialog!!.dismiss()
             if (listener != null) {
-                listener.onSuccess();
+                listener!!.onSuccess()
             }
         }
 
-        @OnFailure(DownloadTask.class)
-        public void onFailure(@Param(Groundy.CRASH_MESSAGE) String error) {
-            Log.d(TAG, "download fail: " + error);
-            if (error == null) {
-                error = "Download failed";
+        @OnFailure(DownloadTask::class)
+        fun onFailure(@Param(Groundy.CRASH_MESSAGE) error: String?) {
+            var errorMsg = error
+            d(TAG, "download fail: $error")
+            if (errorMsg == null) {
+                errorMsg = "Download failed"
             }
-            Toast.makeText(mActivity, error, Toast.LENGTH_LONG).show();
-            mProgressDialog.dismiss();
+            Toast.makeText(mActivity, errorMsg, Toast.LENGTH_LONG).show()
+            mProgressDialog!!.dismiss()
             if (listener != null) {
-                listener.onFailure();
-            }
-        }
-    };
-
-    public interface DownloaderListener {
-        void onSuccess();
-
-        void onFailure();
-    }
-
-
-    public static class DownloadTask extends GroundyTask {
-        public static final String PARAM_URL = "org.helllabs.android.xmp.modarchive.URL";
-        public static final String PARAM_PATH = "org.helllabs.android.xmp.modarchive.PATH";
-
-        @Override
-        protected TaskResult doInBackground() {
-            try {
-                final String url = getStringArg(PARAM_URL);
-                final String path = getStringArg(PARAM_PATH);
-                final String name = new File(url).getName();
-                final int start = name.indexOf('#') + 1;
-                final File dest = new File(path, name.substring(start));
-                DownloadUtils.downloadFile(getContext(), url, dest,
-                        DownloadUtils.getDownloadListenerForTask(this), () -> isQuitting());
-
-                if (isQuitting()) {
-                    return cancelled();
-                }
-                return succeeded();
-            } catch (Exception e) {
-                return failed();
+                listener!!.onFailure()
             }
         }
     }
 
-
-    public Downloader(final Activity activity) {
-        this.mActivity = activity;
+    interface DownloaderListener {
+        fun onSuccess()
+        fun onFailure()
     }
 
-    public void setDownloaderListener(final DownloaderListener listener) {
-        this.listener = listener;
+    class DownloadTask : GroundyTask() {
+        override fun doInBackground(): TaskResult {
+            return try {
+                val url = getStringArg(PARAM_URL)
+                val path = getStringArg(PARAM_PATH)
+                val name = File(url).name
+                val start = name.indexOf('#') + 1
+                val dest = File(path, name.substring(start))
+                DownloadUtils.downloadFile(context, url, dest,
+                    DownloadUtils.getDownloadListenerForTask(this), { isQuitting })
+                if (isQuitting) {
+                    cancelled()
+                } else succeeded()
+            } catch (e: Exception) {
+                failed()
+            }
+        }
+
+        companion object {
+            const val PARAM_URL = "org.helllabs.android.xmp.modarchive.URL"
+            const val PARAM_PATH = "org.helllabs.android.xmp.modarchive.PATH"
+        }
     }
 
-    public void download(final String url, final String path, final int size) {
+    fun setDownloaderListener(listener: DownloaderListener?) {
+        this.listener = listener
+    }
 
-        mSize = size / 1024;
-
+    fun download(url: String?, path: String, size: Int) {
+        mSize = size / 1024
         if (localFile(url, path).exists()) {
-            Message.yesNoDialog(mActivity, "File exists!", "This module already exists. Do you want to overwrite?", () -> downloadUrl(url, path));
+            yesNoDialog(mActivity, "File exists!", "This module already exists. Do you want to overwrite?") {
+                downloadUrl(url, path)
+            }
         } else {
-            downloadUrl(url, path);
+            downloadUrl(url, path)
         }
     }
 
     @SuppressLint("NewApi")
-    private void downloadUrl(final String url, final String path) {
-
-        final File pathFile = new File(path);
-        pathFile.mkdirs();
-
-        mProgressDialog = new ProgressDialog(mActivity);
-        mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-        mProgressDialog.setCancelable(true);
-        mProgressDialog.setMax(mSize);
-        mProgressDialog.setProgressNumberFormat("%d KB");
-        mProgressDialog.setOnCancelListener(dialogInterface -> {
+    private fun downloadUrl(url: String?, path: String) {
+        val pathFile = File(path)
+        pathFile.mkdirs()
+        mProgressDialog = ProgressDialog(mActivity)
+        mProgressDialog!!.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
+        mProgressDialog!!.setCancelable(true)
+        mProgressDialog!!.max = mSize
+        mProgressDialog!!.setProgressNumberFormat("%d KB")
+        mProgressDialog!!.setOnCancelListener {
             if (mTaskHandler != null) {
-                mTaskHandler.cancel(mActivity, 0, (id, result) -> Toast.makeText(mActivity, R.string.download_cancelled, Toast.LENGTH_LONG).show());
+                mTaskHandler!!.cancel(mActivity, 0) { _: Long, _: Int ->
+                    Toast.makeText(mActivity, R.string.download_cancelled, Toast.LENGTH_LONG).show()
+                }
             }
-        });
-        mProgressDialog.show();
-
-        mTaskHandler = Groundy.create(Downloader.DownloadTask.class)
-                .callback(mCallback)
-                .arg(DownloadTask.PARAM_URL, url)
-                .arg(DownloadTask.PARAM_PATH, path)
-                .queueUsing(mActivity);
+        }
+        mProgressDialog!!.show()
+        mTaskHandler = Groundy.create(DownloadTask::class.java)
+            .callback(mCallback)
+            .arg(DownloadTask.PARAM_URL, url)
+            .arg(DownloadTask.PARAM_PATH, path)
+            .queueUsing(mActivity)
     }
 
-    private static File localFile(final String url, final String path) {
-        final String filename = url.substring(url.lastIndexOf('#') + 1);
-        return new File(path, filename);
+    companion object {
+        private const val TAG = "Downloader"
+        private fun localFile(url: String?, path: String): File {
+            val filename = url!!.substring(url.lastIndexOf('#') + 1)
+            return File(path, filename)
+        }
     }
 }

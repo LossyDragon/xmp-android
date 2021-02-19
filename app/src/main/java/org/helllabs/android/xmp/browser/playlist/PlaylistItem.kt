@@ -1,99 +1,44 @@
-package org.helllabs.android.xmp.browser.playlist;
+package org.helllabs.android.xmp.browser.playlist
 
-import java.io.File;
+import org.helllabs.android.xmp.R
+import java.io.File
 
-import org.helllabs.android.xmp.R;
+class PlaylistItem(val type: Int, val name: String?, val comment: String) : Comparable<PlaylistItem> {
+    // Accessors
+    var id = 0
+    var file: File? = null
+    var imageRes = 0
+    val filename: String
+        get() = file!!.name
 
-public class PlaylistItem implements Comparable<PlaylistItem> {
-    public static final int TYPE_DIRECTORY = 1;
-    public static final int TYPE_PLAYLIST = 2;
-    public static final int TYPE_FILE = 3;
-    public static final int TYPE_SPECIAL = 4;
-
-    private int id;
-    private final int type;
-    private final String name;
-    private final String comment;
-    private File file;
-    private int imageRes;
-
-    public PlaylistItem(final int type, final String name, final String comment) {
-        this.type = type;
-        this.name = name;
-        this.comment = comment;
-
-        switch (type) {
-            case TYPE_DIRECTORY:
-                imageRes = R.drawable.folder;
-                break;
-            case TYPE_PLAYLIST:
-                imageRes = R.drawable.list;
-                break;
-            case TYPE_FILE:
-                imageRes = R.drawable.file;
-                break;
-            default:
-                imageRes = -1;
-                break;
+    init {
+        imageRes = when (type) {
+            TYPE_DIRECTORY -> R.drawable.folder
+            TYPE_PLAYLIST -> R.drawable.list
+            TYPE_FILE -> R.drawable.file
+            else -> -1
         }
     }
 
-    public String toString() {
-        return String.format("%s:%s:%s\n", file.getPath(), comment, name);
+    override fun toString(): String {
+        return String.format("%s:%s:%s\n", file!!.path, comment, name)
     }
 
     // Comparable
-
-    public int compareTo(final PlaylistItem info) {
-        final boolean d1 = this.file.isDirectory();
-        final boolean d2 = info.file.isDirectory();
-
-        if (d1 ^ d2) {
-            return d1 ? -1 : 1;
+    override fun compareTo(other: PlaylistItem): Int {
+        val d1 = file!!.isDirectory
+        val d2 = other.file!!.isDirectory
+        return if (d1 xor d2) {
+            if (d1) -1 else 1
         } else {
-            return this.name.compareTo(info.name);
+            name!!.compareTo(other.name!!)
         }
     }
 
-    // Accessors
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(final int id) {
-        this.id = id;
-    }
-
-    public int getType() {
-        return type;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getFilename() {
-        return file.getName();
-    }
-
-    public String getComment() {
-        return comment;
-    }
-
-    public File getFile() {
-        return file;
-    }
-
-    public void setFile(final File file) {
-        this.file = file;
-    }
-
-    public int getImageRes() {
-        return imageRes;
-    }
-
-    public void setImageRes(final int imageRes) {
-        this.imageRes = imageRes;
+    companion object {
+        const val TYPE_DIRECTORY = 1
+        const val TYPE_PLAYLIST = 2
+        const val TYPE_FILE = 3
+        const val TYPE_SPECIAL = 4
     }
 }

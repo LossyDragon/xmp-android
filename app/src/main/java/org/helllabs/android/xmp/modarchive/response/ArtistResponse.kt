@@ -1,7 +1,5 @@
-package org.helllabs.android.xmp.modarchive.response;
+package org.helllabs.android.xmp.modarchive.response
 
-import org.helllabs.android.xmp.modarchive.model.Artist;
+import org.helllabs.android.xmp.modarchive.model.Artist
 
-public class ArtistResponse extends ListResponse<Artist> {
-
-}
+class ArtistResponse : ListResponse<Artist?>()

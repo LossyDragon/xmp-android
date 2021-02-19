@@ -1,247 +1,221 @@
-package org.helllabs.android.xmp.modarchive.result;
+package org.helllabs.android.xmp.modarchive.result
 
-import java.io.File;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.List;
+import android.content.Intent
+import android.content.SharedPreferences
+import android.os.Bundle
+import android.text.Html
+import android.text.method.LinkMovementMethod
+import android.view.*
+import android.widget.*
+import androidx.preference.PreferenceManager
+import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.XmpApplication
+import org.helllabs.android.xmp.modarchive.Downloader
+import org.helllabs.android.xmp.modarchive.Downloader.DownloaderListener
+import org.helllabs.android.xmp.modarchive.Search
+import org.helllabs.android.xmp.modarchive.model.Module
+import org.helllabs.android.xmp.modarchive.request.ModArchiveRequest
+import org.helllabs.android.xmp.modarchive.request.ModArchiveRequest.OnResponseListener
+import org.helllabs.android.xmp.modarchive.request.ModuleRequest
+import org.helllabs.android.xmp.modarchive.response.HardErrorResponse
+import org.helllabs.android.xmp.modarchive.response.ModArchiveResponse
+import org.helllabs.android.xmp.modarchive.response.ModuleResponse
+import org.helllabs.android.xmp.modarchive.response.SoftErrorResponse
+import org.helllabs.android.xmp.player.PlayerActivity
+import org.helllabs.android.xmp.preferences.Preferences
+import org.helllabs.android.xmp.util.Log.d
+import org.helllabs.android.xmp.util.Log.e
+import org.helllabs.android.xmp.util.Log.i
+import org.helllabs.android.xmp.util.Message.toast
+import org.helllabs.android.xmp.util.Message.yesNoDialog
+import java.io.File
+import java.io.IOException
+import java.io.UnsupportedEncodingException
+import java.util.*
 
-import org.helllabs.android.xmp.R;
-import org.helllabs.android.xmp.XmpApplication;
-import org.helllabs.android.xmp.modarchive.Downloader;
-import org.helllabs.android.xmp.modarchive.Search;
-import org.helllabs.android.xmp.modarchive.model.Module;
-import org.helllabs.android.xmp.modarchive.model.Sponsor;
-import org.helllabs.android.xmp.modarchive.request.ModuleRequest;
-import org.helllabs.android.xmp.modarchive.response.HardErrorResponse;
-import org.helllabs.android.xmp.modarchive.response.ModArchiveResponse;
-import org.helllabs.android.xmp.modarchive.response.ModuleResponse;
-import org.helllabs.android.xmp.modarchive.response.SoftErrorResponse;
-import org.helllabs.android.xmp.player.PlayerActivity;
-import org.helllabs.android.xmp.preferences.Preferences;
-import org.helllabs.android.xmp.util.Log;
-import org.helllabs.android.xmp.util.Message;
+open class ModuleResult : Result(), OnResponseListener, DownloaderListener {
 
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.os.Bundle;
-import android.preference.PreferenceManager;
-import android.text.Html;
-import android.text.method.LinkMovementMethod;
-import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
+    private var title: TextView? = null
+    private var filename: TextView? = null
+    private var info: TextView? = null
+    private var instruments: TextView? = null
+    private var license: TextView? = null
+    private var licenseDescription: TextView? = null
+    private var sponsorText: TextView? = null
+    private var module: Module? = null
+    private var downloader: Downloader? = null
+    private var downloadButton: Button? = null
+    private var deleteButton: Button? = null
+    private var playButton: Button? = null
+    private var errorMessage: TextView? = null
+    private var dataView: View? = null
+    private var mPrefs: SharedPreferences? = null
 
-public class ModuleResult extends Result implements ModuleRequest.OnResponseListener, Downloader.DownloaderListener {
-    private static final String TAG = "ModuleResult";
-    private static final String MODARCHIVE_DIRNAME = "TheModArchive";
-    private TextView title;
-    private TextView filename;
-    private TextView info;
-    private TextView instruments;
-    private TextView license;
-    private TextView licenseDescription;
-    private TextView sponsorText;
-    private Module module;
-    private Downloader downloader;
-    private Button downloadButton;
-    private Button deleteButton;
-    private Button playButton;
-    private TextView errorMessage;
-    private View dataView;
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.result_module)
+        setupCrossfade()
 
-    private SharedPreferences mPrefs;
-
-    @Override
-    public void onCreate(final Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.result_module);
-        setupCrossfade();
-
-        mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-
-        title = (TextView) findViewById(R.id.module_title);
-        filename = (TextView) findViewById(R.id.module_filename);
-        info = (TextView) findViewById(R.id.module_info);
-        instruments = (TextView) findViewById(R.id.module_instruments);
-        license = (TextView) findViewById(R.id.module_license);
-        licenseDescription = (TextView) findViewById(R.id.module_license_description);
-        sponsorText = (TextView) findViewById(R.id.module_sponsor);
-
-        downloadButton = (Button) findViewById(R.id.module_download);
-        downloadButton.setEnabled(false);
-
-        deleteButton = (Button) findViewById(R.id.module_delete);
-        deleteButton.setEnabled(false);
-
-        playButton = (Button) findViewById(R.id.module_play);
-        playButton.setEnabled(false);
-
-        errorMessage = (TextView) findViewById(R.id.error_message);
-        dataView = findViewById(R.id.result_data);
-
-        downloader = new Downloader(this);
-        downloader.setDownloaderListener(this);
-
-        final long id = getIntent().getLongExtra(Search.MODULE_ID, -1);
-        Log.d(TAG, "request module ID " + id);
-        makeRequest(String.valueOf(id));
+        mPrefs = PreferenceManager.getDefaultSharedPreferences(this)
+        title = findViewById<View>(R.id.module_title) as TextView
+        filename = findViewById<View>(R.id.module_filename) as TextView
+        info = findViewById<View>(R.id.module_info) as TextView
+        instruments = findViewById<View>(R.id.module_instruments) as TextView
+        license = findViewById<View>(R.id.module_license) as TextView
+        licenseDescription = findViewById<View>(R.id.module_license_description) as TextView
+        sponsorText = findViewById<View>(R.id.module_sponsor) as TextView
+        downloadButton = findViewById<View>(R.id.module_download) as Button
+        downloadButton!!.isEnabled = false
+        deleteButton = findViewById<View>(R.id.module_delete) as Button
+        deleteButton!!.isEnabled = false
+        playButton = findViewById<View>(R.id.module_play) as Button
+        playButton!!.isEnabled = false
+        errorMessage = findViewById<View>(R.id.error_message) as TextView
+        dataView = findViewById(R.id.result_data)
+        downloader = Downloader(this)
+        downloader!!.setDownloaderListener(this)
+        val id = intent.getLongExtra(Search.MODULE_ID, -1)
+        d(TAG, "request module ID $id")
+        makeRequest(id.toString())
     }
 
-    protected void makeRequest(final String query) {
+    protected open fun makeRequest(query: String?) {
         try {
-            final ModuleRequest request = new ModuleRequest(apiKey, ModuleRequest.MODULE, query);
-            request.setOnResponseListener(this).send();
-        } catch (UnsupportedEncodingException e) {
-            handleQueryError();
+            val request = ModuleRequest(apiKey, ModArchiveRequest.MODULE, query)
+            request.setOnResponseListener(this).send()
+        } catch (e: UnsupportedEncodingException) {
+            handleQueryError()
         }
     }
-
 
     // ModuleRequest callbacks
-
-    @Override
-    public void onResponse(final ModArchiveResponse response) {
-
-        final ModuleResponse moduleList = (ModuleResponse) response;
-        if (moduleList.isEmpty()) {
-            dataView.setVisibility(View.GONE);
+    override fun onResponse(response: ModArchiveResponse) {
+        val moduleList = response as ModuleResponse
+        if (moduleList.isEmpty) {
+            dataView!!.visibility = View.GONE
         } else {
-            final Module module = moduleList.get(0);
-            Log.i(TAG, "Response: title=" + module.getSongTitle());
-            title.setText(module.getSongTitle());
-            filename.setText(module.getFilename());
-            final int size = module.getBytes() / 1024;
-            info.setText(String.format("%s by %s (%d KB)", module.getFormat(), module.getArtist(), size));
-            license.setText(Html.fromHtml("License: <a href=\"" + module.getLegalUrl() + "\">" + module.getLicense() + "</a>"));
-            license.setMovementMethod(LinkMovementMethod.getInstance());
-            licenseDescription.setText(module.getLicenseDescription());
-            instruments.setText(module.getInstruments());
-            this.module = module;
-
-            updateButtons(module);
+            val module = moduleList[0]
+            i(TAG, "Response: title=" + module!!.songTitle)
+            title!!.text = module.songTitle
+            filename!!.text = module.filename
+            val size = module.bytes / 1024
+            info!!.text = String.format("%s by %s (%d KB)", module.format, module.artist, size)
+            license!!.text = Html.fromHtml("License: <a href=\"" + module.legalUrl + "\">" + module.license + "</a>")
+            license!!.movementMethod = LinkMovementMethod.getInstance()
+            licenseDescription!!.text = module.licenseDescription
+            instruments!!.text = module.instruments
+            this.module = module
+            updateButtons(module)
         }
-
-        final Sponsor sponsor = response.getSponsor();
+        val sponsor = response.sponsor
         if (sponsor != null) {
-            sponsorText.setText(Html.fromHtml("Download mirrors provided by <a href=\"" + sponsor.getLink() + "\">" + sponsor.getName() + "</a>"));
-            sponsorText.setMovementMethod(LinkMovementMethod.getInstance());
+            sponsorText!!.text = Html.fromHtml("Download mirrors provided by <a href=\"" + sponsor.link + "\">" + sponsor.name + "</a>")
+            sponsorText!!.movementMethod = LinkMovementMethod.getInstance()
         }
-
-        crossfade();
+        crossfade()
     }
 
-    @Override
-    public void onSoftError(final SoftErrorResponse response) {
-        errorMessage.setText(response.getMessage());
-        dataView.setVisibility(View.GONE);
-        crossfade();
+    override fun onSoftError(response: SoftErrorResponse) {
+        errorMessage!!.text = response.message
+        dataView!!.visibility = View.GONE
+        crossfade()
     }
 
-    @Override
-    public void onHardError(final HardErrorResponse response) {
-        handleError(response.getError());
+    override fun onHardError(response: HardErrorResponse) {
+        handleError(response.error)
     }
 
     // DownloaderListener callbacks
-
-    @Override
-    public void onSuccess() {
-        updateButtons(module);
+    override fun onSuccess() {
+        updateButtons(module)
     }
 
-    @Override
-    public void onFailure() {
+    override fun onFailure() {
         // do nothing
     }
 
     // Button click handlers
-
-    public void downloadClick(final View view) {
-        final String modDir = getDownloadPath(module);
-        final String url = module.getUrl();
-
-        Log.i(TAG, "Download " + url + " to " + modDir);
-        downloader.download(url, modDir, module.getBytes());
+    fun downloadClick(view: View?) {
+        val modDir = getDownloadPath(module)
+        val url = module!!.url
+        i(TAG, "Download $url to $modDir")
+        downloader!!.download(url, modDir, module!!.bytes)
     }
 
-    public void deleteClick(final View view) {
-        final File file = localFile(module);
-
-        Message.yesNoDialog(this, "Delete file", "Are you sure you want to delete " + module.getFilename() + "?", () -> {
-            Log.i(TAG, "Delete " + file.getPath());
+    fun deleteClick(view: View?) {
+        val file = localFile(module)
+        yesNoDialog(this, "Delete file", "Are you sure you want to delete " + module!!.filename + "?") {
+            i(TAG, "Delete " + file.path)
             if (file.delete()) {
-                updateButtons(module);
+                updateButtons(module)
             } else {
-                Message.toast(ModuleResult.this, "Error");
+                toast(this@ModuleResult, "Error")
             }
 
             // Delete parent directory if empty
-            if (mPrefs.getBoolean(Preferences.ARTIST_FOLDER, true)) {
-                final File parent = file.getParentFile();
-                final File[] contents = parent.listFiles();
-                if (contents != null && contents.length == 0) {
+            if (mPrefs!!.getBoolean(Preferences.ARTIST_FOLDER, true)) {
+                val parent = file.parentFile
+                val contents = parent.listFiles()
+                if (contents != null && contents.isEmpty()) {
                     try {
-                        final String mediaPath = new File(mPrefs.getString(Preferences.MEDIA_PATH, Preferences.DEFAULT_MEDIA_PATH)).getCanonicalPath();
-                        final String parentPath = parent.getCanonicalPath();
-
-                        if (parentPath.startsWith(mediaPath) && !parentPath.equals(mediaPath)) {
-                            Log.i(TAG, "Remove empty directory " + parent.getPath());
+                        val mediaPath = File(mPrefs!!.getString(Preferences.MEDIA_PATH, Preferences.DEFAULT_MEDIA_PATH)).canonicalPath
+                        val parentPath = parent.canonicalPath
+                        if (parentPath.startsWith(mediaPath) && parentPath != mediaPath) {
+                            i(TAG, "Remove empty directory " + parent.path)
                             if (!parent.delete()) {
-                                Message.toast(ModuleResult.this, "Error removing directory");
-                                Log.e(TAG, "error removing directory");
+                                toast(this@ModuleResult, "Error removing directory")
+                                e(TAG, "error removing directory")
                             }
                         }
-                    } catch (IOException e) {
-                        Log.e(TAG, e.getMessage());
+                    } catch (e: IOException) {
+                        e(TAG, e.message!!)
                     }
                 }
             }
-        });
-    }
-
-    public void playClick(final View view) {
-        final String path = localFile(module).getPath();
-        final List<String> modList = new ArrayList<>();
-
-        modList.add(path);
-
-        final Intent intent = new Intent(this, PlayerActivity.class);
-        ((XmpApplication) getApplication()).setFileList(modList);
-        intent.putExtra(PlayerActivity.PARM_START, 0);
-        Log.i(TAG, "Play " + path);
-        startActivity(intent);
-    }
-
-    private String getDownloadPath(final Module module) {
-        final StringBuilder sb = new StringBuilder();
-
-        sb.append(mPrefs.getString(Preferences.MEDIA_PATH, Preferences.DEFAULT_MEDIA_PATH));
-
-        if (mPrefs.getBoolean(Preferences.MODARCHIVE_FOLDER, true)) {
-            sb.append(File.separatorChar);
-            sb.append(MODARCHIVE_DIRNAME);
         }
+    }
 
-        if (mPrefs.getBoolean(Preferences.ARTIST_FOLDER, true)) {
-            sb.append(File.separatorChar);
-            sb.append(module.getArtist());
+    fun playClick(view: View?) {
+        val path = localFile(module).path
+        val modList: MutableList<String> = ArrayList()
+        modList.add(path)
+        val intent = Intent(this, PlayerActivity::class.java)
+        (application as XmpApplication).fileList = modList
+        intent.putExtra(PlayerActivity.PARM_START, 0)
+        i(TAG, "Play $path")
+        startActivity(intent)
+    }
+
+    private fun getDownloadPath(module: Module?): String {
+        val sb = StringBuilder()
+        sb.append(mPrefs!!.getString(Preferences.MEDIA_PATH, Preferences.DEFAULT_MEDIA_PATH))
+        if (mPrefs!!.getBoolean(Preferences.MODARCHIVE_FOLDER, true)) {
+            sb.append(File.separatorChar)
+            sb.append(MODARCHIVE_DIRNAME)
         }
-
-        return sb.toString();
+        if (mPrefs!!.getBoolean(Preferences.ARTIST_FOLDER, true)) {
+            sb.append(File.separatorChar)
+            sb.append(module!!.artist)
+        }
+        return sb.toString()
     }
 
-    private void updateButtons(final Module module) {
-        final boolean exists = localFile(module).exists();
-        downloadButton.setEnabled(true);
-        deleteButton.setEnabled(exists);
-        playButton.setEnabled(exists);
+    private fun updateButtons(module: Module?) {
+        val exists = localFile(module).exists()
+        downloadButton!!.isEnabled = true
+        deleteButton!!.isEnabled = exists
+        playButton!!.isEnabled = exists
     }
 
-    private File localFile(final Module module) {
-        final String path = getDownloadPath(module);
-        final String url = module.getUrl();
-        final String filename = url.substring(url.lastIndexOf('#') + 1);
-        return new File(path, filename);
+    private fun localFile(module: Module?): File {
+        val path = getDownloadPath(module)
+        val url = module!!.url
+        val filename = url!!.substring(url.lastIndexOf('#') + 1)
+        return File(path, filename)
+    }
+
+    companion object {
+        private const val TAG = "ModuleResult"
+        private const val MODARCHIVE_DIRNAME = "TheModArchive"
     }
 }
