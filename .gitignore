@@ -32,3 +32,5 @@ app/app.iml
 *~
 *.swp
 
+# libxmp
+/app/src/main/cpp/libxmp/
