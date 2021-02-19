@@ -1,6 +1,7 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
+apply plugin: "org.jlleitschuh.gradle.ktlint"
 
 // https://developer.android.com/ndk/downloads
 android {
@@ -64,6 +65,25 @@ dependencies {
     }
     implementation 'com.fnp:material-preferences:0.1.4'
     implementation 'com.github.pluscubed:recycler-fast-scroll:0.3.0@aar'
+}
+
+ktlint {
+    description = "Checking Kotlin formatting style..."
+    android = true
+    // Ignore: wildcard imports
+    disabledRules = ["no-wildcard-imports"]
+}
+
+// Run KtLint checker
+task runKtlintCheck(type: Exec) {
+    workingDir '../'
+    commandLine 'cmd', '/c', 'gradlew ktlintCheck'
+}
+
+// Run KtLint formatter
+task runKtlintFormat(type: Exec) {
+    workingDir '../'
+    commandLine 'cmd', '/c', 'gradlew ktlintFormat'
 }
 
 // Completely remove libxmp folder and clone a new copy.
