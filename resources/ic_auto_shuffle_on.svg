@@ -1,0 +1,4 @@
+<svg version="1.1" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+ <path d="m14.3 13.146-1.1456 1.1456 2.5431 2.5431-1.6656 1.6656h4.4688v-4.4688l-1.6575 1.6575-2.5431-2.5431m-0.26812-7.6456 1.6575 1.6575-10.189 10.197 1.1456 1.1456 10.197-10.189 1.6575 1.6575v-4.4688m-7.6456 4.2006-4.2088-4.2006-1.1456 1.1456 4.2006 4.2006z"/>
+ <circle transform="scale(-1,1)" cx="-12" cy="12" r="11.433" fill="none" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.1339" style="paint-order:normal"/>
+</svg>
