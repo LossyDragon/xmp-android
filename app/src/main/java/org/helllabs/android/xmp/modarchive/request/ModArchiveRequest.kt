@@ -9,9 +9,9 @@ import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.modarchive.response.HardErrorResponse
 import org.helllabs.android.xmp.modarchive.response.ModArchiveResponse
 import org.helllabs.android.xmp.modarchive.response.SoftErrorResponse
-import org.helllabs.android.xmp.util.Log.d
-import org.helllabs.android.xmp.util.Log.e
-import org.helllabs.android.xmp.util.Log.i
+import org.helllabs.android.xmp.util.logD
+import org.helllabs.android.xmp.util.logE
+import org.helllabs.android.xmp.util.logI
 
 abstract class ModArchiveRequest(
     key: String,
@@ -30,7 +30,7 @@ abstract class ModArchiveRequest(
     }
 
     init {
-        d(TAG, "request=$request")
+        logD("request=$request")
         mKey = key
         mRequest = request
     }
@@ -53,12 +53,12 @@ abstract class ModArchiveRequest(
     }
 
     override fun onErrorResponse(error: VolleyError) {
-        e(TAG, "Volley error: " + error.message)
+        logE("Volley error: " + error.message)
         mOnResponseListener!!.onHardError(HardErrorResponse(error))
     }
 
     override fun onResponse(result: String) {
-        i(TAG, "Volley: get response")
+       logI("Volley: get response")
         val response = xmlParse(result)
         if (response is SoftErrorResponse) {
             mOnResponseListener!!.onSoftError(response)
@@ -68,7 +68,6 @@ abstract class ModArchiveRequest(
     }
 
     companion object {
-        private const val TAG = "ModArchiveRequest"
         private const val SERVER = "https://api.modarchive.org"
         const val ARTIST = "search_artist&query="
         const val ARTIST_MODULES = "view_modules_by_artistid&query="

@@ -2,22 +2,14 @@ package org.helllabs.android.xmp.util
 
 import android.util.Log
 
-object Log {
-    private const val TAG = "Xmp"
+inline fun <reified T : Any> T.logD(message: String) =
+    Log.d("Xmp", "[${this::class.java.simpleName}] $message")
 
-    fun d(tag: String, message: String) {
-        Log.d(TAG, "[$tag] $message")
-    }
+inline fun <reified T : Any> T.logI(message: String) =
+    Log.i("Xmp", "[${this::class.java.simpleName}] $message")
 
-    fun i(tag: String, message: String) {
-        Log.i(TAG, "[$tag] $message")
-    }
+inline fun <reified T : Any> T.logW(message: String) =
+    Log.w("Xmp", "[${this::class.java.simpleName}] $message")
 
-    fun w(tag: String, message: String) {
-        Log.w(TAG, "[$tag] $message")
-    }
-
-    fun e(tag: String, message: String) {
-        Log.e(TAG, "[$tag] $message")
-    }
-}
+inline fun <reified T : Any> T.logE(message: String) =
+    Log.e("Xmp", "[${this::class.java.simpleName}] $message")

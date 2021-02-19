@@ -4,7 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.view.KeyEvent
-import org.helllabs.android.xmp.util.Log.i
+import org.helllabs.android.xmp.util.logI
 
 open class MediaButtonsReceiver : BroadcastReceiver() {
 
@@ -12,7 +12,7 @@ open class MediaButtonsReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         val action = intent.action
-        i(TAG, "Action $action")
+        logI("Action $action")
         if (action == Intent.ACTION_MEDIA_BUTTON) {
             val event = intent.extras!![Intent.EXTRA_KEY_EVENT] as KeyEvent?
             if (event!!.action != KeyEvent.ACTION_DOWN) {
@@ -26,11 +26,11 @@ open class MediaButtonsReceiver : BroadcastReceiver() {
                 KeyEvent.KEYCODE_MEDIA_PAUSE,
                 KeyEvent.KEYCODE_MEDIA_PLAY,
                 KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> {
-                    i(TAG, "Key code $code")
+                    logI("Key code $code")
                     keyCode = code
                 }
                 else ->
-                    i(TAG, "Unhandled key code $code")
+                    logI("Unhandled key code $code")
             }
             if (ordered) {
                 abortBroadcast()
@@ -39,7 +39,6 @@ open class MediaButtonsReceiver : BroadcastReceiver() {
     }
 
     companion object {
-        private const val TAG = "MediaButtonsReceiver"
         const val NO_KEY = -1
         private var keyCode = NO_KEY
 

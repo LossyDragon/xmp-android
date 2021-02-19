@@ -17,7 +17,10 @@ import org.helllabs.android.xmp.service.utils.*
 import org.helllabs.android.xmp.util.FileUtils.basename
 import org.helllabs.android.xmp.util.InfoCache.delete
 import org.helllabs.android.xmp.util.InfoCache.testModule
-import org.helllabs.android.xmp.util.Log
+import org.helllabs.android.xmp.util.logE
+import org.helllabs.android.xmp.util.logI
+import org.helllabs.android.xmp.util.logD
+import org.helllabs.android.xmp.util.logW
 
 class PlayerService : Service(), OnAudioFocusChangeListener {
     private var audioManager: AudioManager? = null
@@ -53,13 +56,13 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
     private var receiverHelper: ReceiverHelper? = null
     override fun onCreate() {
         super.onCreate()
-        Log.i(TAG, "Create service")
+        logI("Create service")
         prefs = PreferenceManager.getDefaultSharedPreferences(this)
         audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
         remoteControl = RemoteControl(this, audioManager)
         hasAudioFocus = requestAudioFocus()
         if (!hasAudioFocus) {
-            Log.e(TAG, "Can't get audio focus")
+            logE("Can't get audio focus")
         }
         receiverHelper = ReceiverHelper(this)
         receiverHelper!!.registerReceivers()
@@ -73,7 +76,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         if (Xmp.init(sampleRate, bufferMs)) {
             audioInitialized = true
         } else {
-            Log.e(TAG, "error initializing audio")
+            logE("error initializing audio")
         }
         volume = Xmp.getVolume()
         isAlive = false
@@ -173,7 +176,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
             try {
                 callbacks.getBroadcastItem(i).pauseCallback()
             } catch (e: RemoteException) {
-                Log.e(TAG, "Error notifying pause to client")
+                logE("Error notifying pause to client")
             }
         }
         callbacks.finishBroadcast()
@@ -216,7 +219,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
             try {
                 callbacks.getBroadcastItem(j).newSequenceCallback()
             } catch (e: RemoteException) {
-                Log.e(TAG, "Error notifying end of module to client")
+                logE("Error notifying end of module to client")
             }
         }
         callbacks.finishBroadcast()
@@ -234,7 +237,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                 // If this file is unrecognized, and we're going backwards, go to previous
                 // If we're at the start of the list, go to the last recognized file
                 if (currentFileName == null || !testModule(currentFileName!!)) {
-                    Log.w(TAG, "$currentFileName: unrecognized format")
+                    logW("$currentFileName: unrecognized format")
                     if (cmd == CMD_PREV) {
                         if (queue!!.index <= 0) {
                             // -1 because we have queue.next() in the while condition
@@ -248,13 +251,13 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
 
                 // Set default pan before we load the module
                 val defpan = prefs.getInt(Preferences.DEFAULT_PAN, 50)
-                Log.i(TAG, "Set default pan to $defpan")
+                logI("Set default pan to $defpan")
                 Xmp.setPlayer(Xmp.PLAYER_DEFPAN, defpan)
 
                 // Ditto if we can't load the module
-                Log.i(TAG, "Load $currentFileName")
+                logI("Load $currentFileName")
                 if (Xmp.loadModule(currentFileName!!) < 0) {
-                    Log.e(TAG, "Error loading $currentFileName")
+                    logE("Error loading $currentFileName")
                     if (cmd == CMD_PREV) {
                         if (queue!!.index <= 0) {
                             queue!!.index = lastRecognized - 1
@@ -304,7 +307,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                     try {
                         callbacks.getBroadcastItem(j).newModCallback()
                     } catch (e: RemoteException) {
-                        Log.e(TAG, "Error notifying new module to client")
+                        logE("Error notifying new module to client")
                     }
                 }
                 callbacks.finishBroadcast()
@@ -324,7 +327,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                 var playNewSequence: Boolean
                 Xmp.setSequence(sequenceNumber)
                 Xmp.playAudio()
-                Log.i(TAG, "Enter play loop")
+                logI("Enter play loop")
                 do {
                     Xmp.getModVars(vars)
                     remoteControl!!.setMetadata(
@@ -346,7 +349,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                             receiverHelper!!.checkReceivers()
                         }
                         if (discardBuffer) {
-                            Log.d(TAG, "discard buffer")
+                            logD("discard buffer")
                             Xmp.dropAudio()
                             break
                         }
@@ -373,7 +376,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                     playNewSequence = false
                     if (playerAllSequences && cmd == CMD_NONE) {
                         sequenceNumber++
-                        Log.i(TAG, "Play sequence $sequenceNumber")
+                        logI("Play sequence $sequenceNumber")
                         if (Xmp.setSequence(sequenceNumber)) {
                             playNewSequence = true
                             notifyNewSequence()
@@ -389,10 +392,10 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                     canRelease = false
                     for (j in 0 until numClients) {
                         try {
-                            Log.i(TAG, "Call end of module callback")
+                            logI("Call end of module callback")
                             callbacks.getBroadcastItem(j).endModCallback()
                         } catch (e: RemoteException) {
-                            Log.e(TAG, "Error notifying end of module to client")
+                            logE("Error notifying end of module to client")
                         }
                     }
                     callbacks.finishBroadcast()
@@ -405,19 +408,19 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                             timeout++
                         }
                     } catch (e: InterruptedException) {
-                        Log.e(TAG, "Sleep interrupted: $e")
+                        logE("Sleep interrupted: $e")
                     }
                 } else {
                     callbacks.finishBroadcast()
                 }
-                Log.i(TAG, "Release module")
+                logI("Release module")
                 Xmp.releaseModule()
 
                 // audio.stop();
 
                 // Used when current files are replaced by a new set
                 if (restart) {
-                    Log.i(TAG, "Restart")
+                    logI("Restart")
                     queue!!.index = startIndex - 1
                     cmd = CMD_NONE
                     restart = false
@@ -434,19 +437,19 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
             remoteControl!!.setStateStopped()
             audioManager!!.abandonAudioFocus(this@PlayerService)
 
-            Log.i(TAG, "Stop service")
+            logI("Stop service")
             stopSelf()
         }
     }
 
     private fun end(result: Int) {
-        Log.i(TAG, "End service")
+        logI("End service")
         val numClients = callbacks.beginBroadcast()
         for (i in 0 until numClients) {
             try {
                 callbacks.getBroadcastItem(i).endPlayCallback(result)
             } catch (e: RemoteException) {
-                Log.e(TAG, "Error notifying end of play to client")
+                logE("Error notifying end of play to client")
             }
         }
         callbacks.finishBroadcast()
@@ -479,12 +482,12 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                 doPauseAndNotify()
             }
             if (isAlive) {
-                Log.i(TAG, "Use existing player thread")
+                logI("Use existing player thread")
                 restart = true
                 startIndex = if (keepFirst) 0 else start
                 nextSong()
             } else {
-                Log.i(TAG, "Start player thread")
+                logI("Start player thread")
                 playThread = Thread(PlayRunnable())
                 playThread!!.start()
             }
@@ -652,7 +655,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
 
         // File management
         override fun deleteFile(): Boolean {
-            Log.i(TAG, "Delete file $currentFileName")
+            logI("Delete file $currentFileName")
             return delete(currentFileName!!)
         }
 
@@ -668,7 +671,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
 
     // for audio focus loss
     private fun autoPause(pause: Boolean): Boolean {
-        Log.i(TAG, "autoPause($pause), previously ${receiverHelper!!.isAutoPaused}")
+        logI("autoPause($pause), previously ${receiverHelper!!.isAutoPaused}")
         if (pause) {
             previousPaused = isPlayerPaused
             receiverHelper!!.isAutoPaused = true
@@ -687,12 +690,12 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
     override fun onAudioFocusChange(focusChange: Int) {
         when (focusChange) {
             AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
-                Log.d(TAG, "AUDIOFOCUS_LOSS_TRANSIENT")
+                logD("AUDIOFOCUS_LOSS_TRANSIENT")
                 // Pause playback
                 autoPause(true)
             }
             AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
-                Log.d(TAG, "AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK")
+                logD("AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK")
                 // Lower volume
                 synchronized(audioManager!!) {
                     volume = Xmp.getVolume()
@@ -701,7 +704,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                 }
             }
             AudioManager.AUDIOFOCUS_GAIN -> {
-                Log.d(TAG, "AUDIOFOCUS_GAIN")
+                logD("AUDIOFOCUS_GAIN")
                 // Resume playback/raise volume
                 autoPause(false)
                 synchronized(audioManager!!) {
@@ -710,7 +713,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                 }
             }
             AudioManager.AUDIOFOCUS_LOSS -> {
-                Log.d(TAG, "AUDIOFOCUS_LOSS")
+                logD("AUDIOFOCUS_LOSS")
                 // Stop playback
                 actionStop()
             }
@@ -720,7 +723,6 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
     }
 
     companion object {
-        private const val TAG = "PlayerService"
         const val RESULT_OK = 0
         const val RESULT_CANT_OPEN_AUDIO = 1
         const val RESULT_NO_AUDIO_FOCUS = 2

@@ -5,7 +5,7 @@ import android.graphics.*
 import android.os.RemoteException
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.service.ModInterface
-import org.helllabs.android.xmp.util.Log
+import org.helllabs.android.xmp.util.logE
 
 class InstrumentViewer(context: Context) : Viewer(context) {
 
@@ -41,7 +41,7 @@ class InstrumentViewer(context: Context) : Viewer(context) {
         try {
             insName = modPlayer.instruments
         } catch (e: RemoteException) {
-            Log.e(TAG, "Can't get instrument name")
+            logE("Can't get instrument name")
         }
         setMaxY(insNum * fontHeight + fontHeight / 2)
     }
@@ -99,9 +99,5 @@ class InstrumentViewer(context: Context) : Viewer(context) {
             }
             canvas.drawText(insName[i], 0f, y.toFloat(), insPaint[maxVol]!!)
         }
-    }
-
-    companion object {
-        private const val TAG = "InstrumentViewer"
     }
 }

@@ -20,7 +20,7 @@ import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.browser.playlist.Playlist
 import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter
 import org.helllabs.android.xmp.preferences.Preferences
-import org.helllabs.android.xmp.util.Log.e
+import org.helllabs.android.xmp.util.logE
 
 class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickListener {
     private var mPlaylist: Playlist? = null
@@ -56,7 +56,7 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         try {
             mPlaylist = Playlist(this, name)
         } catch (e: IOException) {
-            e(TAG, "Can't read playlist $name")
+            logE("Can't read playlist $name")
         }
         mRecyclerView = findViewById<View>(R.id.plist_list) as RecyclerView
         setSwipeRefresh(mRecyclerView!!)
@@ -188,9 +188,5 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
             4 -> playModule(mPlaylistAdapter!!.filenameList, position)
         }
         return true
-    }
-
-    companion object {
-        private const val TAG = "PlaylistActivity"
     }
 }

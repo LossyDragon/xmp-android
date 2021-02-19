@@ -6,10 +6,10 @@ import android.media.AudioManager
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import org.helllabs.android.xmp.service.receiver.MediaButtonsReceiver
-import org.helllabs.android.xmp.util.Log.e
+import org.helllabs.android.xmp.util.logE
 
-// for media buttons
-// see http://android-developers.blogspot.com/2010/06/allowing-applications-to-play-nicer.html
+// For media buttons
+// See http://android-developers.blogspot.com/2010/06/allowing-applications-to-play-nicer.html
 internal class MediaButtons(context: Context) {
 
     private val audioManager: AudioManager =
@@ -32,7 +32,7 @@ internal class MediaButtons(context: Context) {
                 else -> throw RuntimeException(ite)
             }
         } catch (ie: IllegalAccessException) {
-            e(TAG, "Unexpected $ie")
+            logE("Unexpected $ie")
         }
     }
 
@@ -50,12 +50,11 @@ internal class MediaButtons(context: Context) {
                 else -> throw RuntimeException(ite)
             }
         } catch (ie: IllegalAccessException) {
-            e(TAG, "Unexpected $ie")
+            logE("Unexpected $ie")
         }
     }
 
     companion object {
-        private const val TAG = "MediaButtons"
         private var registerMediaButtonEventReceiver: Method? = null
         private var unregisterMediaButtonEventReceiver: Method? = null
 
@@ -78,7 +77,7 @@ internal class MediaButtons(context: Context) {
             } catch (nsme: NoSuchMethodException) {
                 /* failure, still using the legacy behavior, but this app */
                 /* is future-proof! */
-                e(TAG, nsme.message!!)
+                logE(nsme.message!!)
             }
         }
     }

@@ -1,12 +1,12 @@
 package org.helllabs.android.xmp.preferences.about
 
-import android.app.Activity
 import android.os.Bundle
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp.getVersion
 
-class About : Activity() {
+class About : AppCompatActivity() {
     public override fun onCreate(icicle: Bundle?) {
         super.onCreate(icicle)
         setContentView(R.layout.about)

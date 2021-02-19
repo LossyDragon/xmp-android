@@ -27,11 +27,11 @@ import org.helllabs.android.xmp.modarchive.response.ModuleResponse
 import org.helllabs.android.xmp.modarchive.response.SoftErrorResponse
 import org.helllabs.android.xmp.player.PlayerActivity
 import org.helllabs.android.xmp.preferences.Preferences
-import org.helllabs.android.xmp.util.Log.d
-import org.helllabs.android.xmp.util.Log.e
-import org.helllabs.android.xmp.util.Log.i
 import org.helllabs.android.xmp.util.Message.toast
 import org.helllabs.android.xmp.util.Message.yesNoDialog
+import org.helllabs.android.xmp.util.logD
+import org.helllabs.android.xmp.util.logE
+import org.helllabs.android.xmp.util.logI
 
 open class ModuleResult : Result(), OnResponseListener, DownloaderListener {
 
@@ -75,7 +75,7 @@ open class ModuleResult : Result(), OnResponseListener, DownloaderListener {
         downloader = Downloader(this)
         downloader!!.setDownloaderListener(this)
         val id = intent.getLongExtra(Search.MODULE_ID, -1)
-        d(TAG, "request module ID $id")
+        logD("request module ID $id")
         makeRequest(id.toString())
     }
 
@@ -95,7 +95,7 @@ open class ModuleResult : Result(), OnResponseListener, DownloaderListener {
             dataView!!.visibility = View.GONE
         } else {
             val module = moduleList[0]
-            i(TAG, "Response: title=" + module!!.songTitle)
+            logI("Response: title=" + module!!.songTitle)
             title!!.text = module.songTitle
             filename!!.text = module.filename
             val size = module.bytes / 1024
@@ -143,7 +143,7 @@ open class ModuleResult : Result(), OnResponseListener, DownloaderListener {
     fun downloadClick(view: View?) {
         val modDir = getDownloadPath(module)
         val url = module!!.url
-        i(TAG, "Download $url to $modDir")
+        logI("Download $url to $modDir")
         downloader!!.download(url, modDir, module!!.bytes)
     }
 
@@ -154,7 +154,7 @@ open class ModuleResult : Result(), OnResponseListener, DownloaderListener {
             "Delete file",
             "Are you sure you want to delete " + module!!.filename + "?"
         ) {
-            i(TAG, "Delete " + file.path)
+            logI("Delete " + file.path)
             if (file.delete()) {
                 updateButtons(module)
             } else {
@@ -175,14 +175,14 @@ open class ModuleResult : Result(), OnResponseListener, DownloaderListener {
                         ).canonicalPath
                         val parentPath = parent.canonicalPath
                         if (parentPath.startsWith(mediaPath) && parentPath != mediaPath) {
-                            i(TAG, "Remove empty directory " + parent.path)
+                            logI("Remove empty directory " + parent.path)
                             if (!parent.delete()) {
                                 toast(this@ModuleResult, "Error removing directory")
-                                e(TAG, "error removing directory")
+                                logE("error removing directory")
                             }
                         }
                     } catch (e: IOException) {
-                        e(TAG, e.message!!)
+                        logE(e.message!!)
                     }
                 }
             }
@@ -196,7 +196,7 @@ open class ModuleResult : Result(), OnResponseListener, DownloaderListener {
         val intent = Intent(this, PlayerActivity::class.java)
         (application as XmpApplication).fileList = modList
         intent.putExtra(PlayerActivity.PARM_START, 0)
-        i(TAG, "Play $path")
+        logI("Play $path")
         startActivity(intent)
     }
 
@@ -229,7 +229,6 @@ open class ModuleResult : Result(), OnResponseListener, DownloaderListener {
     }
 
     companion object {
-        private const val TAG = "ModuleResult"
         private const val MODARCHIVE_DIRNAME = "TheModArchive"
     }
 }

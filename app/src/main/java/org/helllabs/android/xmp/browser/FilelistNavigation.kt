@@ -2,9 +2,9 @@ package org.helllabs.android.xmp.browser
 
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import org.helllabs.android.xmp.util.logD
 import java.io.File
 import java.util.*
-import org.helllabs.android.xmp.util.Log.d
 
 class FilelistNavigation {
 
@@ -85,7 +85,7 @@ class FilelistNavigation {
      * @param currentDir The directory to start navigation at.
      */
     fun startNavigation(currentDir: File) {
-        d(TAG, "start navigation at " + currentDir.path)
+        logD("start navigation at " + currentDir.path)
         this.currentDir = currentDir
         mPathStack.clear()
     }
@@ -111,8 +111,4 @@ class FilelistNavigation {
      */
     val isAtTopDir: Boolean
         get() = mPathStack.isEmpty()
-
-    companion object {
-        private const val TAG = "FilelistNavigation"
-    }
 }

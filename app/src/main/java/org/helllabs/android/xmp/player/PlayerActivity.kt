@@ -1,6 +1,5 @@
 package org.helllabs.android.xmp.player
 
-import android.app.Activity
 import android.content.*
 import android.content.res.Configuration
 import android.graphics.Typeface
@@ -9,6 +8,7 @@ import android.util.TypedValue
 import android.view.*
 import android.widget.*
 import android.widget.SeekBar.OnSeekBarChangeListener
+import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceManager
 import java.io.File
 import java.io.FileOutputStream
@@ -27,13 +27,13 @@ import org.helllabs.android.xmp.service.ModInterface
 import org.helllabs.android.xmp.service.PlayerCallback
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.util.FileUtils.basename
-import org.helllabs.android.xmp.util.Log.d
-import org.helllabs.android.xmp.util.Log.e
-import org.helllabs.android.xmp.util.Log.i
 import org.helllabs.android.xmp.util.Message.toast
 import org.helllabs.android.xmp.util.Message.yesNoDialog
+import org.helllabs.android.xmp.util.logD
+import org.helllabs.android.xmp.util.logE
+import org.helllabs.android.xmp.util.logI
 
-class PlayerActivity : Activity() {
+class PlayerActivity : AppCompatActivity() {
     /* actual mod player */
     private var modPlayer: ModInterface? = null
 
@@ -61,7 +61,6 @@ class PlayerActivity : Activity() {
     private val handler = Handler()
     private var totalTime = 0
     private var screenOn = false
-    private var activity: Activity? = null
     private var screenReceiver: BroadcastReceiver? = null
     private var viewer: Viewer? = null
     private var info: Viewer.Info? = null
@@ -78,14 +77,14 @@ class PlayerActivity : Activity() {
 
     private val connection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
-            i(TAG, "Service connected")
+            logI("Service connected")
             synchronized(playerLock) {
                 modPlayer = ModInterface.Stub.asInterface(service)
                 flipperPage = 0
                 try {
                     modPlayer?.registerCallback(playerCallback)
                 } catch (e: RemoteException) {
-                    e(TAG, "Can't register player callback")
+                    logE("Can't register player callback")
                 }
                 if (fileList != null && fileList!!.isNotEmpty()) {
                     // Start new queue
@@ -100,7 +99,7 @@ class PlayerActivity : Activity() {
                             unpause()
                         }
                     } catch (e: RemoteException) {
-                        e(TAG, "Can't get module file name")
+                        logE("Can't get module file name")
                     }
                 }
             }
@@ -111,7 +110,7 @@ class PlayerActivity : Activity() {
             synchronized(playerLock) {
                 stopUpdate = true
                 // modPlayer = null;
-                i(TAG, "Service disconnected")
+                logI("Service disconnected")
                 finish()
             }
         }
@@ -121,7 +120,7 @@ class PlayerActivity : Activity() {
         @Throws(RemoteException::class)
         override fun newModCallback() {
             synchronized(playerLock) {
-                d(TAG, "newModCallback: show module data")
+                logD("newModCallback: show module data")
                 showNewMod()
                 canChangeViewer = true
             }
@@ -130,7 +129,7 @@ class PlayerActivity : Activity() {
         @Throws(RemoteException::class)
         override fun endModCallback() {
             synchronized(playerLock) {
-                d(TAG, "endModCallback: end of module")
+                logD("endModCallback: end of module")
                 stopUpdate = true
                 canChangeViewer = false
             }
@@ -139,7 +138,7 @@ class PlayerActivity : Activity() {
         @Throws(RemoteException::class)
         override fun endPlayCallback(result: Int) {
             synchronized(playerLock) {
-                d(TAG, "endPlayCallback: End progress thread")
+                logD("endPlayCallback: End progress thread")
                 stopUpdate = true
                 if (result != PlayerService.RESULT_OK) {
                     runOnUiThread {
@@ -165,14 +164,14 @@ class PlayerActivity : Activity() {
 
         @Throws(RemoteException::class)
         override fun pauseCallback() {
-            d(TAG, "pauseCallback")
+            logD("pauseCallback")
             handler.post(setPauseStateRunnable)
         }
 
         @Throws(RemoteException::class)
         override fun newSequenceCallback() {
             synchronized(playerLock) {
-                d(TAG, "newSequenceCallback: show new sequence")
+                logD("newSequenceCallback: show new sequence")
                 showNewSequence()
             }
         }
@@ -189,7 +188,7 @@ class PlayerActivity : Activity() {
                         unpause()
                     }
                 } catch (e: RemoteException) {
-                    e(TAG, "Can't get pause status")
+                    logE("Can't get pause status")
                 }
             }
         }
@@ -295,14 +294,14 @@ class PlayerActivity : Activity() {
 
     private inner class ProgressThread : Thread() {
         override fun run() {
-            i(TAG, "Start progress thread")
+            logI("Start progress thread")
             val frameTime = (1000000000 / FRAME_RATE).toLong()
             var lastTimer = System.nanoTime()
             var now: Long
             playTime = 0
             do {
                 if (stopUpdate) {
-                    i(TAG, "Stop update")
+                    logI("Stop update")
                     break
                 }
                 synchronized(playerLock) {
@@ -332,12 +331,12 @@ class PlayerActivity : Activity() {
             handler.post {
                 synchronized(playerLock) {
                     if (modPlayer != null) {
-                        i(TAG, "Flush interface update")
+                        logI("Flush interface update")
                         try {
                             // finished playing, we can release the module
                             modPlayer!!.allowRelease()
                         } catch (e: RemoteException) {
-                            e(TAG, "Can't allow module release")
+                            logE("Can't allow module release")
                         }
                     }
                 }
@@ -363,11 +362,12 @@ class PlayerActivity : Activity() {
     }
 
     override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
         var reconnect = false
         var fromHistory = false
-        i(TAG, "New intent")
+        logI("New intent")
         if (intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY != 0) {
-            i(TAG, "Player started from history")
+            logI("Player started from history")
             fromHistory = true
         }
         var path: String? = null
@@ -382,7 +382,7 @@ class PlayerActivity : Activity() {
         // fileArray = null;
         if (path != null) {
             // from intent filter
-            i(TAG, "Player started from intent filter")
+            logI("Player started from intent filter")
             fileList = listOf(path)
             shuffleMode = false
             loopListMode = false
@@ -391,7 +391,7 @@ class PlayerActivity : Activity() {
         } else if (fromHistory) {
             // Oops. We don't want to start service if launched from history and service is not running
             // so run the browser instead.
-            i(TAG, "Start file browser")
+            logI("Start file browser")
             val browserIntent = Intent(this, PlaylistMenu::class.java)
             browserIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
             startActivity(browserIntent)
@@ -414,17 +414,17 @@ class PlayerActivity : Activity() {
         }
         val service = Intent(this, PlayerService::class.java)
         if (!reconnect) {
-            i(TAG, "Start service")
+            logI("Start service")
             startService(service)
         }
         if (!bindService(service, connection, 0)) {
-            e(TAG, "Can't bind to service")
+            logE("Can't bind to service")
             finish()
         }
     }
 
     private fun handleIntentAction(intent: Intent): String? {
-        d(TAG, "Handing incoming intent")
+        logD("Handing incoming intent")
         val uri = intent.data
         val uriString: String
         uriString = (uri?.toString() ?: return null)
@@ -434,9 +434,9 @@ class PlayerActivity : Activity() {
         // Lets delete  the temp file to ensure a clean copy.
         if (output.exists()) {
             if (output.delete()) {
-                d(TAG, "Temp file deleted.")
+                logD("Temp file deleted.")
             } else {
-                e(TAG, "Failed to delete temp file!")
+                logE("Failed to delete temp file!")
             }
         }
         try {
@@ -450,7 +450,7 @@ class PlayerActivity : Activity() {
             outputStream.close()
             inputStream.close()
         } catch (e: IOException) {
-            e(TAG, "Error creating temp file --Check Trace--")
+            logE("Error creating temp file --Check Trace--")
             e.printStackTrace()
             return null
         }
@@ -488,7 +488,7 @@ class PlayerActivity : Activity() {
                 try {
                     return modPlayer!!.toggleAllSequences()
                 } catch (e: RemoteException) {
-                    e(TAG, "Can't toggle all sequences status")
+                    logE("Can't toggle all sequences status")
                 }
             }
             return false
@@ -501,7 +501,7 @@ class PlayerActivity : Activity() {
                 try {
                     return modPlayer!!.allSequences
                 } catch (e: RemoteException) {
-                    e(TAG, "Can't get all sequences status")
+                    logE("Can't get all sequences status")
                 }
             }
             return false
@@ -518,7 +518,7 @@ class PlayerActivity : Activity() {
                         loopButton!!.setImageResource(R.drawable.loop_off)
                     }
                 } catch (e: RemoteException) {
-                    e(TAG, "Can't get loop status")
+                    logE("Can't get loop status")
                 }
             }
         }
@@ -527,7 +527,7 @@ class PlayerActivity : Activity() {
     fun playButtonListener(view: View?) {
         // Debug.startMethodTracing("xmp");
         synchronized(playerLock) {
-            d(TAG, "Play/pause button pressed (paused=$paused)")
+            logD("Play/pause button pressed (paused=$paused)")
             if (modPlayer != null) {
                 try {
                     modPlayer!!.pause()
@@ -537,7 +537,7 @@ class PlayerActivity : Activity() {
                         pause()
                     }
                 } catch (e: RemoteException) {
-                    e(TAG, "Can't pause/unpause module")
+                    logE("Can't pause/unpause module")
                 }
             }
         }
@@ -546,12 +546,12 @@ class PlayerActivity : Activity() {
     fun stopButtonListener(view: View?) {
         // Debug.stopMethodTracing();
         synchronized(playerLock) {
-            d(TAG, "Stop button pressed")
+            logD("Stop button pressed")
             if (modPlayer != null) {
                 try {
                     modPlayer!!.stop()
                 } catch (e1: RemoteException) {
-                    e(TAG, "Can't stop module")
+                    logE("Can't stop module")
                 }
             }
         }
@@ -566,7 +566,7 @@ class PlayerActivity : Activity() {
 
     fun backButtonListener(view: View?) {
         synchronized(playerLock) {
-            d(TAG, "Back button pressed")
+            logD("Back button pressed")
             if (modPlayer != null) {
                 try {
                     if (modPlayer!!.time() > 3000) {
@@ -580,7 +580,7 @@ class PlayerActivity : Activity() {
                     }
                     unpause()
                 } catch (e: RemoteException) {
-                    e(TAG, "Can't go to previous module")
+                    logE("Can't go to previous module")
                 }
             }
         }
@@ -588,13 +588,13 @@ class PlayerActivity : Activity() {
 
     fun forwardButtonListener(view: View?) {
         synchronized(playerLock) {
-            d(TAG, "Next button pressed")
+            logD("Next button pressed")
             if (modPlayer != null) {
                 try {
                     modPlayer!!.nextSong()
                     unpause()
                 } catch (e: RemoteException) {
-                    e(TAG, "Can't go to next module")
+                    logE("Can't go to next module")
                 }
             }
         }
@@ -605,9 +605,8 @@ class PlayerActivity : Activity() {
         super.onCreate(icicle)
         setContentView(R.layout.player_main)
         sidebar = Sidebar(this)
-        activity = this
         display = (getSystemService(WINDOW_SERVICE) as WindowManager).defaultDisplay
-        i(TAG, "Create player interface")
+        logI("Create player interface")
 
         // INITIALIZE RECEIVER by jwei512
         val filter = IntentFilter(Intent.ACTION_SCREEN_ON)
@@ -678,7 +677,7 @@ class PlayerActivity : Activity() {
                             modPlayer!!.seek(s.progress * 100)
                             playTime = modPlayer!!.time() / 100
                         } catch (e: RemoteException) {
-                            e(TAG, "Can't seek to time")
+                            logE("Can't seek to time")
                         }
                     }
                     seeking = false
@@ -697,13 +696,13 @@ class PlayerActivity : Activity() {
                     // Write our all sequences button status to shared prefs
                     val allSeq = modPlayer!!.allSequences
                     if (allSeq != prefs!!.getBoolean(Preferences.ALL_SEQUENCES, false)) {
-                        i(TAG, "Write all sequences preference")
+                        logD("Write all sequences preference")
                         val editor = prefs!!.edit()
                         editor.putBoolean(Preferences.ALL_SEQUENCES, allSeq)
                         editor.apply()
                     }
                 } catch (e: RemoteException) {
-                    e(TAG, "Can't save all sequences preference")
+                    logE("Can't save all sequences preference")
                 }
             }
         }
@@ -719,16 +718,16 @@ class PlayerActivity : Activity() {
                 try {
                     modPlayer!!.unregisterCallback(playerCallback)
                 } catch (e: RemoteException) {
-                    e(TAG, "Can't unregister player callback")
+                    logE("Can't unregister player callback")
                 }
             }
         }
         unregisterReceiver(screenReceiver)
         try {
             unbindService(connection)
-            i(TAG, "Unbind service")
+            logI("Unbind service")
         } catch (e: IllegalArgumentException) {
-            i(TAG, "Can't unbind unregistered service")
+            logI("Can't unbind unregistered service")
         }
         stopUpdate = true
         if (progressThread != null && progressThread!!.isAlive) {
@@ -760,10 +759,10 @@ class PlayerActivity : Activity() {
         synchronized(playerLock) {
             if (modPlayer != null) {
                 try {
-                    i(TAG, "Set sequence $num")
+                    logI("Set sequence $num")
                     modPlayer!!.setSequence(num)
                 } catch (e: RemoteException) {
-                    e(TAG, "Can't set sequence $num")
+                    logE("Can't set sequence $num")
                 }
             }
         }
@@ -775,7 +774,7 @@ class PlayerActivity : Activity() {
                 try {
                     modPlayer!!.getModVars(modVars)
                 } catch (e: RemoteException) {
-                    e(TAG, "Can't get new sequence data")
+                    logE("Can't get new sequence data")
                 }
                 handler.post(showNewSequenceRunnable)
             }
@@ -788,7 +787,7 @@ class PlayerActivity : Activity() {
         seekBar!!.progress = 0
         seekBar!!.max = time / 100
         val formattedTime = String.format("%d:%02d", time / 60000, time / 1000 % 60)
-        toast(activity, "New sequence duration: $formattedTime")
+        toast(this, "New sequence duration: $formattedTime")
         val sequence = modVars[7]
         sidebar!!.selectSequence(sequence)
     }
@@ -801,7 +800,7 @@ class PlayerActivity : Activity() {
     }
 
     private val showNewModRunnable = Runnable {
-        i(TAG, "Show new module")
+        logI("Show new module")
         synchronized(playerLock) {
             if (modPlayer != null) {
                 playTime = try {
@@ -809,7 +808,7 @@ class PlayerActivity : Activity() {
                     modPlayer!!.getSeqVars(seqVars)
                     modPlayer!!.time() / 100
                 } catch (e: RemoteException) {
-                    e(TAG, "Can't get module data")
+                    logE("Can't get module data")
                     return@Runnable
                 }
                 var name: String
@@ -829,7 +828,7 @@ class PlayerActivity : Activity() {
                     type = ""
                     allSeq = false
                     loop = false
-                    e(TAG, "Can't get module name and type")
+                    logE("Can't get module name and type")
                 }
                 val time = modVars[0]
                 /*int len = vars[1]; */
@@ -887,7 +886,7 @@ class PlayerActivity : Activity() {
                 try {
                     modPlayer!!.play(fileList, start, shuffleMode, loopListMode, keepFirst)
                 } catch (e: RemoteException) {
-                    e(TAG, "Can't play module")
+                    logE("Can't play module")
                 }
             }
         }
@@ -904,17 +903,17 @@ class PlayerActivity : Activity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == R.id.menu_delete) {
-            yesNoDialog(activity!!, "Delete", "Are you sure to delete this file?") {
+            yesNoDialog(this, "Delete", "Are you sure to delete this file?") {
                 try {
                     if (modPlayer!!.deleteFile()) {
-                        toast(activity, "File deleted")
+                        toast(this, "File deleted")
                         setResult(RESULT_FIRST_USER)
                         modPlayer!!.nextSong()
                     } else {
-                        toast(activity, "Can't delete file")
+                        toast(this, "Can't delete file")
                     }
                 } catch (e: RemoteException) {
-                    toast(activity, "Can't connect service")
+                    toast(this, "Can't connect service")
                 }
             }
         }
@@ -922,7 +921,6 @@ class PlayerActivity : Activity() {
     }
 
     companion object {
-        private const val TAG = "PlayerActivity"
         const val PARM_SHUFFLE = "shuffle"
         const val PARM_LOOP = "loop"
         const val PARM_START = "start"

@@ -33,22 +33,23 @@ import org.helllabs.android.xmp.preferences.Preferences
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.util.ChangeLog
 import org.helllabs.android.xmp.util.FileUtils.writeToFile
-import org.helllabs.android.xmp.util.Log.e
-import org.helllabs.android.xmp.util.Log.i
 import org.helllabs.android.xmp.util.Message.error
 import org.helllabs.android.xmp.util.Message.fatalError
 import org.helllabs.android.xmp.util.Message.yesNoDialog
+import org.helllabs.android.xmp.util.logE
+import org.helllabs.android.xmp.util.logI
 
-class
-PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
+class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
+
     private var prefs: SharedPreferences? = null
     private var mediaPath: String? = null
     private var deletePosition = 0
     private var playlistAdapter: PlaylistAdapter? = null
+
     public override fun onCreate(icicle: Bundle?) {
         super.onCreate(icicle)
         setContentView(R.layout.playlist_menu)
-        i(TAG, "start application")
+        logI("Start application")
         val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
         // getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -388,7 +389,6 @@ PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
     }
 
     companion object {
-        private const val TAG = "PlaylistMenu"
         private const val SETTINGS_REQUEST = 45
         private const val PLAYLIST_REQUEST = 46
         private const val REQUEST_WRITE_STORAGE = 112
@@ -397,7 +397,7 @@ PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
             return if (MEDIA_MOUNTED == state || MEDIA_MOUNTED_READ_ONLY == state) {
                 true
             } else {
-                e(TAG, "External storage state error: $state")
+                logE("External storage state error: $state")
                 false
             }
         }

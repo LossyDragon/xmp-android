@@ -9,8 +9,8 @@ import android.media.AudioManager
 import android.media.MediaMetadataRetriever
 import android.media.RemoteControlClient
 import org.helllabs.android.xmp.service.receiver.RemoteControlReceiver
-import org.helllabs.android.xmp.util.Log.i
-import org.helllabs.android.xmp.util.Log.w
+import org.helllabs.android.xmp.util.logI
+import org.helllabs.android.xmp.util.logW
 
 @TargetApi(19)
 class RemoteControl(context: Context, private val audioManager: AudioManager?) {
@@ -21,7 +21,7 @@ class RemoteControl(context: Context, private val audioManager: AudioManager?) {
 
     init {
         if (remoteControlClient == null) {
-            i(TAG, "Register remote control client")
+            logI("Register remote control client")
             audioManager!!.registerMediaButtonEventReceiver(remoteControlReceiver)
             val intent = Intent(Intent.ACTION_MEDIA_BUTTON)
             intent.component = remoteControlReceiver
@@ -38,7 +38,7 @@ class RemoteControl(context: Context, private val audioManager: AudioManager?) {
     }
 
     fun unregisterReceiver() {
-        w(TAG, "Unregister remote control client")
+        logW("Unregister remote control client")
         audioManager!!.unregisterMediaButtonEventReceiver(remoteControlReceiver)
         RemoteControlHelper.unregisterRemoteControlClient(audioManager, remoteControlClient)
     }
@@ -46,7 +46,7 @@ class RemoteControl(context: Context, private val audioManager: AudioManager?) {
     @TargetApi(14)
     fun setStatePlaying() {
         if (remoteControlClient != null) {
-            i(TAG, "Set state to playing")
+            logI("Set state to playing")
             remoteControlClient!!.setPlaybackState(RemoteControlClient.PLAYSTATE_PLAYING)
         }
     }
@@ -54,7 +54,7 @@ class RemoteControl(context: Context, private val audioManager: AudioManager?) {
     @TargetApi(14)
     fun setStatePaused() {
         if (remoteControlClient != null) {
-            i(TAG, "Set state to paused")
+            logI("Set state to paused")
             remoteControlClient!!.setPlaybackState(RemoteControlClient.PLAYSTATE_PAUSED)
         }
     }
@@ -62,7 +62,7 @@ class RemoteControl(context: Context, private val audioManager: AudioManager?) {
     @TargetApi(14)
     fun setStateStopped() {
         if (remoteControlClient != null) {
-            i(TAG, "Set state to stopped")
+            logI("Set state to stopped")
             remoteControlClient!!.setPlaybackState(RemoteControlClient.PLAYSTATE_STOPPED)
         }
     }

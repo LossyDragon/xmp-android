@@ -9,7 +9,8 @@ import android.view.View.OnTouchListener
 import kotlin.math.abs
 import org.helllabs.android.xmp.player.ScreenSizeHelper
 import org.helllabs.android.xmp.service.ModInterface
-import org.helllabs.android.xmp.util.Log
+import org.helllabs.android.xmp.util.logE
+import org.helllabs.android.xmp.util.logI
 
 abstract class Viewer(
     context: Context
@@ -169,7 +170,7 @@ abstract class Viewer(
     }
 
     open fun setup(modPlayer: ModInterface, modVars: IntArray) {
-        Log.i(TAG, "Viewer setup")
+        logI("Viewer setup")
         val chn = modVars[3]
         this.modVars = modVars
         this.modPlayer = modPlayer
@@ -178,7 +179,7 @@ abstract class Viewer(
             try {
                 isMuted[i] = modPlayer.mute(i, -1) == 1
             } catch (e: RemoteException) {
-                Log.e(TAG, "Can't read channel mute status")
+                logE("Can't read channel mute status")
             }
         }
         posY = 0f

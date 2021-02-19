@@ -1,20 +1,19 @@
 package org.helllabs.android.xmp.browser
 
 import android.content.Context
+import org.helllabs.android.xmp.util.logD
+import org.helllabs.android.xmp.util.logE
 import java.io.*
-import org.helllabs.android.xmp.util.Log.d
-import org.helllabs.android.xmp.util.Log.e
 
 object Examples {
-    private const val TAG = "Examples"
     fun install(context: Context, path: String?, examples: Boolean): Int {
         val dir = File(path)
         if (dir.isDirectory) {
-            d(TAG, "install: $path directory not found")
+            logD("install: $path directory not found")
             return 0
         }
         if (!dir.mkdirs()) {
-            e(TAG, "can't create directory: $path")
+            logE("can't create directory: $path")
             return -1
         }
         val am = context.resources.assets

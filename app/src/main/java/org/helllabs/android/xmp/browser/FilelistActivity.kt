@@ -24,10 +24,10 @@ import org.helllabs.android.xmp.util.FileUtils.basename
 import org.helllabs.android.xmp.util.InfoCache.clearCache
 import org.helllabs.android.xmp.util.InfoCache.delete
 import org.helllabs.android.xmp.util.InfoCache.deleteRecursive
-import org.helllabs.android.xmp.util.Log.i
 import org.helllabs.android.xmp.util.Message.error
 import org.helllabs.android.xmp.util.Message.toast
 import org.helllabs.android.xmp.util.Message.yesNoDialog
+import org.helllabs.android.xmp.util.logI
 
 class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickListener {
 
@@ -236,7 +236,7 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
             saveModes = true
         }
         if (saveModes) {
-            i(TAG, "Save new file list preferences")
+            logI("Save new file list preferences")
             val editor = mPrefs!!.edit()
             editor.putBoolean(OPTIONS_SHUFFLE_MODE, isShuffleMode)
             editor.putBoolean(OPTIONS_LOOP_MODE, isLoopMode)
@@ -426,7 +426,6 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
     }
 
     companion object {
-        private const val TAG = "BasePlaylistActivity"
         private const val OPTIONS_SHUFFLE_MODE = "options_shuffleMode"
         private const val OPTIONS_LOOP_MODE = "options_loopMode"
         private const val DEFAULT_SHUFFLE_MODE = true

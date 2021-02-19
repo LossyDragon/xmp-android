@@ -11,9 +11,9 @@ import org.helllabs.android.xmp.util.FileUtils.readFromFile
 import org.helllabs.android.xmp.util.FileUtils.removeLineFromFile
 import org.helllabs.android.xmp.util.FileUtils.writeToFile
 import org.helllabs.android.xmp.util.InfoCache.fileExists
-import org.helllabs.android.xmp.util.Log.e
-import org.helllabs.android.xmp.util.Log.i
 import org.helllabs.android.xmp.util.Message.error
+import org.helllabs.android.xmp.util.logE
+import org.helllabs.android.xmp.util.logI
 
 class Playlist(context: Context?, val name: String?) {
 
@@ -42,7 +42,7 @@ class Playlist(context: Context?, val name: String?) {
         mPrefs = PreferenceManager.getDefaultSharedPreferences(context)
         val file: File = ListFile(name)
         if (file.exists()) {
-            i(TAG, "Read playlist $name")
+            logI("Read playlist $name")
             val comment = readFromFile(CommentFile(name))
 
             // read list contents
@@ -52,7 +52,7 @@ class Playlist(context: Context?, val name: String?) {
                 isLoopMode = readLoopModePref(name)
             }
         } else {
-            i(TAG, "New playlist $name")
+            logI("New playlist $name")
             isShuffleMode = DEFAULT_SHUFFLE_MODE
             isLoopMode = DEFAULT_LOOP_MODE
             mListChanged = true
@@ -67,7 +67,7 @@ class Playlist(context: Context?, val name: String?) {
      * Save the current playlist.
      */
     fun commit() {
-        i(TAG, "Commit playlist $name")
+        logI("Commit playlist $name")
         if (mListChanged) {
             writeList(name)
             mListChanged = false
@@ -115,7 +115,7 @@ class Playlist(context: Context?, val name: String?) {
      * @param index The index of the item to be removed
      */
     fun remove(index: Int) {
-        i(TAG, "Remove item #" + index + ": " + list[index].name)
+        logI("Remove item #" + index + ": " + list[index].name)
         list.removeAt(index)
         mListChanged = true
     }
@@ -149,7 +149,7 @@ class Playlist(context: Context?, val name: String?) {
             reader.close()
             PlaylistUtils.renumberIds(list)
         } catch (e: IOException) {
-            e(TAG, "Error reading playlist " + file.path)
+            logE("Error reading playlist " + file.path)
             return false
         }
         if (invalidList.isNotEmpty()) {
@@ -161,16 +161,16 @@ class Playlist(context: Context?, val name: String?) {
             try {
                 removeLineFromFile(file, array)
             } catch (e: FileNotFoundException) {
-                e(TAG, "Playlist file " + file.path + " not found")
+                logE("Playlist file " + file.path + " not found")
             } catch (e: IOException) {
-                e(TAG, "I/O error removing invalid lines from " + file.path)
+                logE("I/O error removing invalid lines from " + file.path)
             }
         }
         return true
     }
 
     private fun writeList(name: String?) {
-        i(TAG, "Write list")
+        logI("Write list")
         val file: File = ListFile(name, ".new")
         file.delete()
         try {
@@ -183,12 +183,12 @@ class Playlist(context: Context?, val name: String?) {
             oldFile.delete()
             file.renameTo(oldFile)
         } catch (e: IOException) {
-            e(TAG, "Error writing playlist file " + file.path)
+            logE("Error writing playlist file " + file.path)
         }
     }
 
     private fun writeComment(name: String?) {
-        i(TAG, "Write comment")
+        logI("Write comment")
         val file: File = CommentFile(name, ".new")
         file.delete()
         try {
@@ -197,7 +197,7 @@ class Playlist(context: Context?, val name: String?) {
             oldFile.delete()
             file.renameTo(oldFile)
         } catch (e: IOException) {
-            e(TAG, "Error writing comment file " + file.path)
+            logE("Error writing comment file " + file.path)
         }
     }
 
@@ -214,7 +214,6 @@ class Playlist(context: Context?, val name: String?) {
     }
 
     companion object {
-        private const val TAG = "Playlist"
         const val COMMENT_SUFFIX = ".comment"
         const val PLAYLIST_SUFFIX = ".playlist"
         private const val OPTIONS_PREFIX = "options_"

@@ -12,7 +12,7 @@ import org.helllabs.android.xmp.service.receiver.BluetoothConnectionReceiver
 import org.helllabs.android.xmp.service.receiver.HeadsetPlugReceiver
 import org.helllabs.android.xmp.service.receiver.MediaButtonsReceiver
 import org.helllabs.android.xmp.service.receiver.NotificationActionReceiver
-import org.helllabs.android.xmp.util.Log.i
+import org.helllabs.android.xmp.util.logI
 
 class ReceiverHelper(private val player: PlayerService) {
 
@@ -27,14 +27,14 @@ class ReceiverHelper(private val player: PlayerService) {
 
     fun registerReceivers() {
         if (prefs.getBoolean(Preferences.HEADSET_PAUSE, true)) {
-            i(TAG, "Register headset receiver")
+            logI("Register headset receiver")
             // For listening to headset changes, the broadcast receiver cannot be
             // declared in the manifest, it must be dynamically registered.
             headsetPlugReceiver = HeadsetPlugReceiver()
             player.registerReceiver(headsetPlugReceiver, IntentFilter(Intent.ACTION_HEADSET_PLUG))
         }
         if (prefs.getBoolean(Preferences.BLUETOOTH_PAUSE, true)) {
-            i(TAG, "Register bluetooth receiver")
+            logI("Register bluetooth receiver")
             bluetoothConnectionReceiver = BluetoothConnectionReceiver()
             val filter = IntentFilter()
             filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED)
@@ -72,30 +72,30 @@ class ReceiverHelper(private val player: PlayerService) {
         if (key != MediaButtonsReceiver.NO_KEY) {
             when (key) {
                 KeyEvent.KEYCODE_MEDIA_NEXT -> {
-                    i(TAG, "Handle KEYCODE_MEDIA_NEXT")
+                    logI("Handle KEYCODE_MEDIA_NEXT")
                     player.actionNext()
                 }
                 KeyEvent.KEYCODE_MEDIA_PREVIOUS -> {
-                    i(TAG, "Handle KEYCODE_MEDIA_PREVIOUS")
+                    logI("Handle KEYCODE_MEDIA_PREVIOUS")
                     player.actionPrev()
                 }
                 KeyEvent.KEYCODE_MEDIA_STOP -> {
-                    i(TAG, "Handle KEYCODE_MEDIA_STOP")
+                    logI("Handle KEYCODE_MEDIA_STOP")
                     player.actionStop()
                 }
                 KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> {
-                    i(TAG, "Handle KEYCODE_MEDIA_PLAY_PAUSE")
+                    logI("Handle KEYCODE_MEDIA_PLAY_PAUSE")
                     player.actionPlayPause()
                     isHeadsetPaused = false
                 }
                 KeyEvent.KEYCODE_MEDIA_PLAY -> {
-                    i(TAG, "Handle KEYCODE_MEDIA_PLAY")
+                    logI("Handle KEYCODE_MEDIA_PLAY")
                     if (player.isPlayerPaused) {
                         player.actionPlayPause()
                     }
                 }
                 KeyEvent.KEYCODE_MEDIA_PAUSE -> {
-                    i(TAG, "Handle KEYCODE_MEDIA_PAUSE")
+                    logI("Handle KEYCODE_MEDIA_PAUSE")
                     if (!player.isPlayerPaused) {
                         player.actionPlayPause()
                         isHeadsetPaused = false
@@ -111,20 +111,20 @@ class ReceiverHelper(private val player: PlayerService) {
         if (key != NotificationActionReceiver.NO_KEY) {
             when (key) {
                 NotificationActionReceiver.STOP -> {
-                    i(TAG, "Handle notification stop")
+                    logI("Handle notification stop")
                     player.actionStop()
                 }
                 NotificationActionReceiver.PAUSE -> {
-                    i(TAG, "Handle notification pause")
+                    logI("Handle notification pause")
                     player.actionPlayPause()
                     isHeadsetPaused = false
                 }
                 NotificationActionReceiver.NEXT -> {
-                    i(TAG, "Handle notification next")
+                    logI("Handle notification next")
                     player.actionNext()
                 }
                 NotificationActionReceiver.PREV -> {
-                    i(TAG, "Handle notification prev")
+                    logI("Handle notification prev")
                     player.actionPrev()
                 }
             }
@@ -137,18 +137,18 @@ class ReceiverHelper(private val player: PlayerService) {
         if (state != HeadsetPlugReceiver.NO_STATE) {
             when (state) {
                 HeadsetPlugReceiver.HEADSET_UNPLUGGED -> {
-                    i(TAG, "Handle headset unplugged")
+                    logI("Handle headset unplugged")
 
                     // If not already paused
                     if (!player.isPlayerPaused && !isAutoPaused) {
                         isHeadsetPaused = true
                         player.actionPlayPause()
                     } else {
-                        i(TAG, "Already paused")
+                        logI("Already paused")
                     }
                 }
                 HeadsetPlugReceiver.HEADSET_PLUGGED -> {
-                    i(TAG, "Handle headset plugged")
+                    logI("Handle headset plugged")
 
                     // If paused by headset unplug
                     if (isHeadsetPaused) {
@@ -156,11 +156,11 @@ class ReceiverHelper(private val player: PlayerService) {
                         if (!isAutoPaused) {
                             player.actionPlayPause()
                         } else {
-                            i(TAG, "Paused by phone state, don't unpause")
+                            logI("Paused by phone state, don't unpause")
                         }
                         isHeadsetPaused = false
                     } else {
-                        i(TAG, "Manual pause, don't unpause")
+                        logI("Manual pause, don't unpause")
                     }
                 }
             }
@@ -173,18 +173,18 @@ class ReceiverHelper(private val player: PlayerService) {
         if (state != BluetoothConnectionReceiver.NO_STATE) {
             when (state) {
                 BluetoothConnectionReceiver.DISCONNECTED -> {
-                    i(TAG, "Handle bluetooth disconnection")
+                    logI("Handle bluetooth disconnection")
 
                     // If not already paused
                     if (!player.isPlayerPaused && !isAutoPaused) {
                         isHeadsetPaused = true
                         player.actionPlayPause()
                     } else {
-                        i(TAG, "Already paused")
+                        logI("Already paused")
                     }
                 }
                 BluetoothConnectionReceiver.CONNECTED -> {
-                    i(TAG, "Handle bluetooth connection")
+                    logI("Handle bluetooth connection")
 
                     // If paused by headset unplug
                     if (isHeadsetPaused) {
@@ -192,19 +192,15 @@ class ReceiverHelper(private val player: PlayerService) {
                         if (!isAutoPaused) {
                             player.actionPlayPause()
                         } else {
-                            i(TAG, "Paused by phone state, don't unpause")
+                            logI("Paused by phone state, don't unpause")
                         }
                         isHeadsetPaused = false
                     } else {
-                        i(TAG, "Manual pause, don't unpause")
+                        logI("Manual pause, don't unpause")
                     }
                 }
             }
             BluetoothConnectionReceiver.setState(BluetoothConnectionReceiver.NO_STATE)
         }
-    }
-
-    companion object {
-        private const val TAG = "ReceiverHelper"
     }
 }

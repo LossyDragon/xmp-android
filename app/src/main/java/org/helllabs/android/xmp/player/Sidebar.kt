@@ -4,8 +4,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.util.Log.e
-import org.helllabs.android.xmp.util.Log.i
+import org.helllabs.android.xmp.util.logE
+import org.helllabs.android.xmp.util.logI
 
 class Sidebar(private val activity: PlayerActivity) {
 
@@ -18,16 +18,15 @@ class Sidebar(private val activity: PlayerActivity) {
     private val seqGroupListener: RadioGroup.OnCheckedChangeListener
 
     init {
-        val contentView = activity.findViewById<View>(R.id.content_view) as LinearLayout
+        val contentView = activity.findViewById<LinearLayout>(R.id.content_view)
         activity.layoutInflater.inflate(R.layout.player, contentView, true)
-        val sidebarView = activity.findViewById<View>(R.id.sidebar_view) as LinearLayout
+        val sidebarView = activity.findViewById<LinearLayout>(R.id.sidebar_view)
         activity.layoutInflater.inflate(R.layout.player_sidebar, sidebarView, true)
-        // sidebarView.setShowDividers(LinearLayout.SHOW_DIVIDER_MIDDLE);
-        numPatText = activity.findViewById<View>(R.id.sidebar_num_pat) as TextView
-        numInsText = activity.findViewById<View>(R.id.sidebar_num_ins) as TextView
-        numSmpText = activity.findViewById<View>(R.id.sidebar_num_smp) as TextView
-        numChnText = activity.findViewById<View>(R.id.sidebar_num_chn) as TextView
-        allSequencesButton = activity.findViewById<View>(R.id.sidebar_allseqs_button) as ImageButton
+        numPatText = activity.findViewById(R.id.sidebar_num_pat)
+        numInsText = activity.findViewById(R.id.sidebar_num_ins)
+        numSmpText = activity.findViewById(R.id.sidebar_num_smp)
+        numChnText = activity.findViewById(R.id.sidebar_num_chn)
+        allSequencesButton = activity.findViewById(R.id.sidebar_allseqs_button)
         allSequencesButton.setOnClickListener {
             allSequencesButton.setImageResource(
                 if (activity.toggleAllSequences())
@@ -41,7 +40,7 @@ class Sidebar(private val activity: PlayerActivity) {
         )
         seqGroup = activity.findViewById<View>(R.id.sidebar_sequences) as RadioGroup
         seqGroupListener = RadioGroup.OnCheckedChangeListener { _: RadioGroup?, checkedId: Int ->
-            e(TAG, "Selection changed to sequence $checkedId")
+            logE("Selection changed to sequence $checkedId")
             activity.playNewSequence(checkedId)
         }
         seqGroup.setOnCheckedChangeListener(seqGroupListener)
@@ -83,7 +82,7 @@ class Sidebar(private val activity: PlayerActivity) {
 
     fun selectSequence(num: Int) {
         seqGroup.setOnCheckedChangeListener(null)
-        i(TAG, "Select sequence $num")
+        logI("Select sequence $num")
         seqGroup.check(-1) // force redraw
         seqGroup.check(num)
         seqGroup.setOnCheckedChangeListener(seqGroupListener)
@@ -98,8 +97,4 @@ class Sidebar(private val activity: PlayerActivity) {
     // 	}
     //
     // }
-
-    companion object {
-        private const val TAG = "Sidebar"
-    }
 }

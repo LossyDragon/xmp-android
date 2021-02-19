@@ -26,7 +26,7 @@ class ChangeLog(private val context: Context) {
                 -1
             }
         } catch (e: PackageManager.NameNotFoundException) {
-            Log.w(TAG, "Unable to get version code")
+            logW("Unable to get version code")
             -1
         }
     }

@@ -9,7 +9,7 @@ import org.helllabs.android.xmp.modarchive.response.ArtistResponse
 import org.helllabs.android.xmp.modarchive.response.HardErrorResponse
 import org.helllabs.android.xmp.modarchive.response.ModArchiveResponse
 import org.helllabs.android.xmp.modarchive.response.SoftErrorResponse
-import org.helllabs.android.xmp.util.Log.e
+import org.helllabs.android.xmp.util.logE
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import org.xmlpull.v1.XmlPullParserFactory
@@ -72,10 +72,10 @@ class ArtistRequest : ModArchiveRequest {
                 event = myparser.next()
             }
         } catch (e: XmlPullParserException) {
-            e(TAG, "XmlPullParserException: " + e.message)
+            logE("XmlPullParserException: " + e.message)
             return HardErrorResponse(e)
         } catch (e: IOException) {
-            e(TAG, "IOException: " + e.message)
+            logE("IOException: " + e.message)
             return HardErrorResponse(e)
         }
         return artistList

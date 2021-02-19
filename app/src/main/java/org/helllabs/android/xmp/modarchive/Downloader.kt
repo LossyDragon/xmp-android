@@ -15,8 +15,8 @@ import com.telly.groundy.annotations.Param
 import com.telly.groundy.util.DownloadUtils
 import java.io.File
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.util.Log.d
 import org.helllabs.android.xmp.util.Message.yesNoDialog
+import org.helllabs.android.xmp.util.logD
 
 /*
  * Based on the Groundy download example
@@ -43,7 +43,7 @@ class Downloader(private val mActivity: Activity) {
 
         @OnSuccess(DownloadTask::class)
         fun onSuccess() {
-            d(TAG, "download success")
+            logD("download success")
             Toast.makeText(mActivity, R.string.file_downloaded, Toast.LENGTH_LONG).show()
             mProgressDialog!!.dismiss()
             if (listener != null) {
@@ -54,7 +54,7 @@ class Downloader(private val mActivity: Activity) {
         @OnFailure(DownloadTask::class)
         fun onFailure(@Param(Groundy.CRASH_MESSAGE) error: String?) {
             var errorMsg = error
-            d(TAG, "download fail: $error")
+            logD("download fail: $error")
             if (errorMsg == null) {
                 errorMsg = "Download failed"
             }

@@ -10,7 +10,7 @@ import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.player.Util
 import org.helllabs.android.xmp.service.ModInterface
-import org.helllabs.android.xmp.util.Log
+import org.helllabs.android.xmp.util.logE
 
 class ChannelViewer(context: Context) : Viewer(context) {
 
@@ -84,7 +84,7 @@ class ChannelViewer(context: Context) : Viewer(context) {
         try {
             insName = modPlayer.instruments
         } catch (e: RemoteException) {
-            Log.e(TAG, "Can't get instrument name")
+            logE("Can't get instrument name")
         }
         if (insName == null) {
             insName = arrayOfNulls(ins)
@@ -163,7 +163,7 @@ class ChannelViewer(context: Context) : Viewer(context) {
                 modPlayer!!.mute(n, if (isMuted[n]) 0 else 1)
                 isMuted[n] = isMuted[n] xor true
             } catch (e: RemoteException) {
-                Log.e(TAG, "Can't mute channel $n")
+                logE("Can't mute channel $n")
             }
         } else {
             super.onClick(x, y)
@@ -192,7 +192,7 @@ class ChannelViewer(context: Context) : Viewer(context) {
                         isMuted[i] = false
                     }
                 } catch (e: RemoteException) {
-                    Log.e(TAG, "Can't mute channels")
+                    logE("Can't mute channels")
                 }
             } else {
                 try {
@@ -201,7 +201,7 @@ class ChannelViewer(context: Context) : Viewer(context) {
                         isMuted[i] = i != n
                     }
                 } catch (e: RemoteException) {
-                    Log.e(TAG, "Can't unmute channel $n")
+                    logE("Can't unmute channel $n")
                 }
             }
         } else {
@@ -368,9 +368,5 @@ class ChannelViewer(context: Context) : Viewer(context) {
             rect[x + panX, volY1, x + panX + fontWidth / 2] = volY2
             canvas.drawRect(rect, meterPaint)
         }
-    }
-
-    companion object {
-        private const val TAG = "ChannelViewer"
     }
 }

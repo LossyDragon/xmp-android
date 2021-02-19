@@ -4,13 +4,13 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import org.helllabs.android.xmp.service.notifier.Notifier
-import org.helllabs.android.xmp.util.Log.i
+import org.helllabs.android.xmp.util.logI
 
 class NotificationActionReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         val action = intent.action
-        i(TAG, "Action $action")
+        logI("Action $action")
         when (action) {
             Notifier.ACTION_STOP -> keyCode = STOP
             Notifier.ACTION_PAUSE -> keyCode = PAUSE
@@ -20,7 +20,6 @@ class NotificationActionReceiver : BroadcastReceiver() {
     }
 
     companion object {
-        private const val TAG = "NotificationActionReceiver"
         const val NO_KEY = -1
         const val STOP = 1
         const val PAUSE = 2
