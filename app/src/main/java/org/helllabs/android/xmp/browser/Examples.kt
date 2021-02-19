@@ -1,9 +1,9 @@
 package org.helllabs.android.xmp.browser
 
 import android.content.Context
+import java.io.*
 import org.helllabs.android.xmp.util.logD
 import org.helllabs.android.xmp.util.logE
-import java.io.*
 
 object Examples {
     fun install(context: Context, path: String?, examples: Boolean): Int {

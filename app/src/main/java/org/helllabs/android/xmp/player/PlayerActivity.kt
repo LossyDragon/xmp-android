@@ -2,19 +2,13 @@ package org.helllabs.android.xmp.player
 
 import android.content.*
 import android.content.res.Configuration
-import android.graphics.Typeface
 import android.os.*
 import android.util.TypedValue
 import android.view.*
 import android.widget.*
 import android.widget.SeekBar.OnSeekBarChangeListener
 import androidx.appcompat.app.AppCompatActivity
-import androidx.preference.PreferenceManager
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
-import java.io.OutputStream
-import java.util.*
+import androidx.core.content.res.ResourcesCompat
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.browser.PlaylistMenu
@@ -22,7 +16,7 @@ import org.helllabs.android.xmp.player.viewer.ChannelViewer
 import org.helllabs.android.xmp.player.viewer.InstrumentViewer
 import org.helllabs.android.xmp.player.viewer.PatternViewer
 import org.helllabs.android.xmp.player.viewer.Viewer
-import org.helllabs.android.xmp.preferences.Preferences
+import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.service.ModInterface
 import org.helllabs.android.xmp.service.PlayerCallback
 import org.helllabs.android.xmp.service.PlayerService
@@ -32,6 +26,11 @@ import org.helllabs.android.xmp.util.logD
 import org.helllabs.android.xmp.util.logE
 import org.helllabs.android.xmp.util.logI
 import org.helllabs.android.xmp.util.toast
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.OutputStream
+import java.util.*
 
 class PlayerActivity : AppCompatActivity() {
     /* actual mod player */
@@ -56,7 +55,6 @@ class PlayerActivity : AppCompatActivity() {
     private var flipperPage = 0
     private var fileList: List<String>? = null
     private var start = 0
-    private var prefs: SharedPreferences? = null
     private var viewerLayout: FrameLayout? = null
     private val handler = Handler()
     private var totalTime = 0
@@ -618,8 +616,7 @@ class PlayerActivity : AppCompatActivity() {
             canChangeViewer = true
         }
         setResult(RESULT_OK)
-        prefs = PreferenceManager.getDefaultSharedPreferences(this)
-        val showInfoLine = prefs!!.getBoolean(Preferences.SHOW_INFO_LINE, true)
+        val showInfoLine = PrefManager.showInfoLine
         showElapsed = true
         onNewIntent(intent)
         infoName[0] = findViewById<View>(R.id.info_name_0) as TextView
@@ -639,10 +636,11 @@ class PlayerActivity : AppCompatActivity() {
                 }
             }
         }
-        if (prefs!!.getBoolean(Preferences.KEEP_SCREEN_ON, false)) {
+        if (PrefManager.keepScreenOn) {
             titleFlipper!!.keepScreenOn = true
         }
-        val font = Typeface.createFromAsset(this.assets, "fonts/Michroma.ttf")
+
+        val font = ResourcesCompat.getFont(applicationContext, R.font.font_michroma)
         for (i in 0..1) {
             infoName[i]!!.typeface = font
             infoName[i]!!.includeFontPadding = false
@@ -695,11 +693,9 @@ class PlayerActivity : AppCompatActivity() {
                 try {
                     // Write our all sequences button status to shared prefs
                     val allSeq = modPlayer!!.allSequences
-                    if (allSeq != prefs!!.getBoolean(Preferences.ALL_SEQUENCES, false)) {
+                    if (allSeq != PrefManager.allSequences) {
                         logD("Write all sequences preference")
-                        val editor = prefs!!.edit()
-                        editor.putBoolean(Preferences.ALL_SEQUENCES, allSeq)
-                        editor.apply()
+                        PrefManager.allSequences = allSeq
                     }
                 } catch (e: RemoteException) {
                     logE("Can't save all sequences preference")
@@ -894,9 +890,8 @@ class PlayerActivity : AppCompatActivity() {
 
     // Menu
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        if (prefs!!.getBoolean(Preferences.ENABLE_DELETE, false)) {
-            val inflater = menuInflater
-            inflater.inflate(R.menu.player_menu, menu)
+        if (PrefManager.enableDelete) {
+            menuInflater.inflate(R.menu.player_menu, menu)
         }
         return true
     }

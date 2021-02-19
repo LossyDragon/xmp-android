@@ -1,6 +1,6 @@
 <resources>
 
-    <style name="AppTheme.Preferences" parent="AppTheme">
+    <style name="AppTheme.Preferences" parent="AppTheme.NoActionBar">
 
     </style>
 

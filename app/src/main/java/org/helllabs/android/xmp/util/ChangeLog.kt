@@ -5,21 +5,17 @@ import android.content.Context
 import android.content.DialogInterface
 import android.content.pm.PackageManager
 import android.view.LayoutInflater
-import androidx.preference.PreferenceManager
 import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.preferences.Preferences
+import org.helllabs.android.xmp.preferences.PrefManager
 
 class ChangeLog(private val context: Context) {
     fun show(): Int {
         return try {
             val versionCode = BuildConfig.VERSION_CODE
-            val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-            val lastViewed = prefs.getInt(Preferences.CHANGELOG_VERSION, 0)
+            val lastViewed = PrefManager.changelogVersion
             if (lastViewed < versionCode) {
-                val editor = prefs.edit()
-                editor.putInt(Preferences.CHANGELOG_VERSION, versionCode)
-                editor.apply()
+                PrefManager.changelogVersion = versionCode
                 showLog()
                 0
             } else {

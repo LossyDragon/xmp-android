@@ -2,9 +2,9 @@ package org.helllabs.android.xmp.browser
 
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import org.helllabs.android.xmp.util.logD
 import java.io.File
 import java.util.*
+import org.helllabs.android.xmp.util.logD
 
 class FilelistNavigation {
 

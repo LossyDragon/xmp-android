@@ -7,7 +7,7 @@ import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.view.KeyEvent
 import androidx.preference.PreferenceManager
-import org.helllabs.android.xmp.preferences.Preferences
+import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.service.receiver.BluetoothConnectionReceiver
 import org.helllabs.android.xmp.service.receiver.HeadsetPlugReceiver
 import org.helllabs.android.xmp.service.receiver.MediaButtonsReceiver
@@ -26,14 +26,14 @@ class ReceiverHelper(private val player: PlayerService) {
     var isHeadsetPaused = false
 
     fun registerReceivers() {
-        if (prefs.getBoolean(Preferences.HEADSET_PAUSE, true)) {
+        if (PrefManager.headsetPause) {
             logI("Register headset receiver")
             // For listening to headset changes, the broadcast receiver cannot be
             // declared in the manifest, it must be dynamically registered.
             headsetPlugReceiver = HeadsetPlugReceiver()
             player.registerReceiver(headsetPlugReceiver, IntentFilter(Intent.ACTION_HEADSET_PLUG))
         }
-        if (prefs.getBoolean(Preferences.BLUETOOTH_PAUSE, true)) {
+        if (PrefManager.bluetoothPause) {
             logI("Register bluetooth receiver")
             bluetoothConnectionReceiver = BluetoothConnectionReceiver()
             val filter = IntentFilter()

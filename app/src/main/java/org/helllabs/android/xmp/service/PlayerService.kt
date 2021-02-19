@@ -2,13 +2,12 @@ package org.helllabs.android.xmp.service
 
 import android.app.Service
 import android.content.Intent
-import android.content.SharedPreferences
 import android.media.AudioManager
 import android.media.AudioManager.OnAudioFocusChangeListener
 import android.os.*
-import androidx.preference.PreferenceManager
+import androidx.lifecycle.MutableLiveData
 import org.helllabs.android.xmp.Xmp
-import org.helllabs.android.xmp.preferences.Preferences
+import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.service.notifier.LegacyNotifier
 import org.helllabs.android.xmp.service.notifier.LollipopNotifier
 import org.helllabs.android.xmp.service.notifier.Notifier
@@ -17,19 +16,19 @@ import org.helllabs.android.xmp.service.utils.*
 import org.helllabs.android.xmp.util.FileUtils.basename
 import org.helllabs.android.xmp.util.InfoCache.delete
 import org.helllabs.android.xmp.util.InfoCache.testModule
+import org.helllabs.android.xmp.util.logD
 import org.helllabs.android.xmp.util.logE
 import org.helllabs.android.xmp.util.logI
-import org.helllabs.android.xmp.util.logD
 import org.helllabs.android.xmp.util.logW
 
 class PlayerService : Service(), OnAudioFocusChangeListener {
+
     private var audioManager: AudioManager? = null
     private var remoteControl: RemoteControl? = null
     private var hasAudioFocus = false
     private var ducking = false
     private var audioInitialized = false
     private var playThread: Thread? = null
-    private lateinit var prefs: SharedPreferences
     private var watchdog: Watchdog? = null
     private var sampleRate = 0
     private var volume = 0
@@ -54,10 +53,10 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
     private val callbacks = RemoteCallbackList<PlayerCallback>()
     private var sequenceNumber = 0
     private var receiverHelper: ReceiverHelper? = null
+
     override fun onCreate() {
         super.onCreate()
         logI("Create service")
-        prefs = PreferenceManager.getDefaultSharedPreferences(this)
         audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
         remoteControl = RemoteControl(this, audioManager)
         hasAudioFocus = requestAudioFocus()
@@ -66,23 +65,23 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         }
         receiverHelper = ReceiverHelper(this)
         receiverHelper!!.registerReceivers()
-        var bufferMs = prefs.getInt(Preferences.BUFFER_MS, DEFAULT_BUFFER_MS)
+        var bufferMs = PrefManager.bufferMs
         if (bufferMs < MIN_BUFFER_MS) {
             bufferMs = MIN_BUFFER_MS
         } else if (bufferMs > MAX_BUFFER_MS) {
             bufferMs = MAX_BUFFER_MS
         }
-        sampleRate = prefs.getString(Preferences.SAMPLING_RATE, "44100")!!.toInt()
+        sampleRate = PrefManager.samplingRate.toInt()
         if (Xmp.init(sampleRate, bufferMs)) {
             audioInitialized = true
         } else {
             logE("error initializing audio")
         }
         volume = Xmp.getVolume()
-        isAlive = false
+        isPlayerAlive.postValue(false)
         isLoaded = false
         isPlayerPaused = false
-        playerAllSequences = prefs.getBoolean(Preferences.ALL_SEQUENCES, false)
+        playerAllSequences = PrefManager.allSequences
 
         // session = new MediaSessionCompat(this, getPackageName());
         // session.setActive(true);
@@ -250,7 +249,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                 }
 
                 // Set default pan before we load the module
-                val defpan = prefs.getInt(Preferences.DEFAULT_PAN, 50)
+                val defpan = PrefManager.defaultPan
                 logI("Set default pan to $defpan")
                 Xmp.setPlayer(Xmp.PLAYER_DEFPAN, defpan)
 
@@ -275,20 +274,20 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                 }
                 notifier!!.notify(name, Xmp.getModType(), queue!!.index, Notifier.TYPE_TICKER)
                 isLoaded = true
-                val volBoost = prefs.getString(Preferences.VOL_BOOST, "1")
+                val volBoost = PrefManager.volumeBoost
                 val interpTypes = intArrayOf(
                     Xmp.INTERP_NEAREST,
                     Xmp.INTERP_LINEAR,
                     Xmp.INTERP_SPLINE
                 )
-                val temp = prefs.getString(Preferences.INTERP_TYPE, "1")!!.toInt()
+                val temp = PrefManager.interpType.toInt()
                 var interpType: Int
                 interpType = if (temp in 1..2) {
                     interpTypes[temp]
                 } else {
                     Xmp.INTERP_LINEAR
                 }
-                if (!prefs.getBoolean(Preferences.INTERPOLATE, true)) {
+                if (!PrefManager.interpolate) {
                     interpType = Xmp.INTERP_NEAREST
                 }
                 Xmp.startPlayer(sampleRate)
@@ -311,12 +310,12 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                     }
                 }
                 callbacks.finishBroadcast()
-                Xmp.setPlayer(Xmp.PLAYER_AMP, volBoost!!.toInt())
-                Xmp.setPlayer(Xmp.PLAYER_MIX, prefs.getInt(Preferences.STEREO_MIX, 100))
+                Xmp.setPlayer(Xmp.PLAYER_AMP, volBoost.toInt())
+                Xmp.setPlayer(Xmp.PLAYER_MIX, PrefManager.stereoMix)
                 Xmp.setPlayer(Xmp.PLAYER_INTERP, interpType)
                 Xmp.setPlayer(Xmp.PLAYER_DSP, Xmp.DSP_LOWPASS)
                 var flags = Xmp.getPlayer(Xmp.PLAYER_CFLAGS)
-                flags = if (prefs.getBoolean(Preferences.AMIGA_MIXER, false)) {
+                flags = if (PrefManager.amigaMixer) {
                     flags or Xmp.FLAGS_A500
                 } else {
                     flags and Xmp.FLAGS_A500.inv()
@@ -453,7 +452,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
             }
         }
         callbacks.finishBroadcast()
-        isAlive = false
+        isPlayerAlive.postValue(false)
         Xmp.stopModule()
         if (isPlayerPaused) {
             doPauseAndNotify()
@@ -481,7 +480,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
             if (isPlayerPaused) {
                 doPauseAndNotify()
             }
-            if (isAlive) {
+            if (isPlayerAlive.value == true) {
                 logI("Use existing player thread")
                 restart = true
                 startIndex = if (keepFirst) 0 else start
@@ -491,7 +490,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                 playThread = Thread(PlayRunnable())
                 playThread!!.start()
             }
-            isAlive = true
+            isPlayerAlive.postValue(true)
         }
 
         override fun add(fileList: List<String>) {
@@ -640,7 +639,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
             rowNotes: ByteArray,
             rowInstruments: ByteArray
         ) {
-            if (isAlive) {
+            if (isPlayerAlive.value == true) {
                 Xmp.getPatternRow(pat, row, rowNotes, rowInstruments)
             }
         }
@@ -736,7 +735,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         private const val DUCK_VOLUME = 0x500
 
         @JvmField
-        var isAlive = false
+        var isPlayerAlive: MutableLiveData<Boolean> = MutableLiveData(false)
 
         @JvmField
         var isLoaded = false

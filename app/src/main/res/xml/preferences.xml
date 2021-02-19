@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:key="settings"
     android:title="@string/settings">
 
     <PreferenceCategory android:title="@string/pref_category_preferences">
-        <PreferenceScreen android:title="@string/pref_category_files">
+        <PreferenceScreen
+            android:key="playlist_settings"
+            android:title="@string/pref_category_files">
             <PreferenceCategory android:title="@string/pref_category_file_general">
                 <EditTextPreference
                     android:defaultValue="/sdcard/mod"
@@ -63,7 +66,7 @@
                     android:summary="@string/pref_sampling_rate_summary"
                     android:title="@string/pref_sampling_rate_title" />
 
-                <org.helllabs.android.xmp.preferences.SeekBarPreference
+                <SeekBarPreference
                     android:defaultValue="400"
                     android:dialogMessage="@string/pref_buffer_ms_dialog"
                     android:key="buffer_ms_opensl"
@@ -71,7 +74,9 @@
                     android:persistent="true"
                     android:summary="@string/pref_buffer_ms_summary"
                     android:text="ms"
-                    android:title="@string/pref_buffer_ms_title" />
+                    android:title="@string/pref_buffer_ms_title"
+                    app:seekBarIncrement="10"
+                    app:showSeekBarValue="true" />
 
                 <ListPreference
                     android:defaultValue="1"
@@ -106,7 +111,7 @@
                     android:summary="@string/pref_interp_type_summary"
                     android:title="@string/pref_interp_type_title" />
 
-                <org.helllabs.android.xmp.preferences.SeekBarPreference
+                <SeekBarPreference
                     android:defaultValue="100"
                     android:dialogMessage="@string/preferences_pan_separation_dialog"
                     android:key="stereo_mix"
@@ -114,8 +119,11 @@
                     android:persistent="true"
                     android:summary="@string/pref_pan_separation_summary"
                     android:text="%"
-                    android:title="@string/pref_pan_separation_title" />
-                <org.helllabs.android.xmp.preferences.SeekBarPreference
+                    android:title="@string/pref_pan_separation_title"
+                    app:min="0"
+                    app:showSeekBarValue="true" />
+
+                <SeekBarPreference
                     android:defaultValue="50"
                     android:dialogMessage="@string/preferences_default_pan_dialog"
                     android:key="default_pan"
@@ -123,7 +131,10 @@
                     android:persistent="true"
                     android:summary="@string/pref_default_pan_summary"
                     android:text="%"
-                    android:title="@string/pref_default_pan_title" />
+                    android:title="@string/pref_default_pan_title"
+                    app:min="0"
+                    app:showSeekBarValue="true" />
+
             </PreferenceCategory>
 
             <PreferenceCategory android:title="@string/pref_category_player_control">
@@ -147,7 +158,9 @@
                     android:title="@string/pref_all_sequences_title" />
             </PreferenceCategory>
         </PreferenceScreen>
-        <PreferenceScreen android:title="@string/pref_category_interface">
+        <PreferenceScreen
+            android:key="interface_settings"
+            android:title="@string/pref_category_interface">
             <PreferenceCategory android:title="@string/pref_category_iface_info">
                 <CheckBoxPreference
                     android:defaultValue="true"
@@ -186,7 +199,9 @@
                     android:title="@string/pref_enable_delete_title" />
             </PreferenceCategory>
         </PreferenceScreen>
-        <PreferenceScreen android:title="@string/pref_category_modarchive">
+        <PreferenceScreen
+            android:key="download_settings"
+            android:title="@string/pref_category_modarchive">
             <PreferenceCategory android:title="@string/pref_category_download">
                 <CheckBoxPreference
                     android:defaultValue="true"
@@ -203,6 +218,7 @@
             </PreferenceCategory>
         </PreferenceScreen>
     </PreferenceCategory>
+
     <PreferenceCategory android:title="@string/pref_category_information">
         <Preference
             android:summary="@string/pref_list_formats_summary"
@@ -213,6 +229,27 @@
             android:summary="@string/pref_about_summary"
             android:title="@string/pref_about_title">
             <intent android:action="org.helllabs.android.xmp.ABOUT" />
+        </Preference>
+        <Preference
+            android:summary="@string/pref_site_summary"
+            android:title="@string/pref_site_title">
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:data="http://xmp.sourceforge.net/" />
+        </Preference>
+        <Preference
+            android:summary="@string/pref_lib_summary"
+            android:title="@string/pref_lib_title">
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:data="https://github.com/libxmp/libxmp" />
+        </Preference>
+        <Preference
+            android:summary="@string/pref_support_summary"
+            android:title="@string/pref_support_title">
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:data="https://github.com/cmatsuoka/xmp-android/issues" />
         </Preference>
     </PreferenceCategory>
 

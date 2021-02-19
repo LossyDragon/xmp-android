@@ -58,7 +58,7 @@ abstract class ModArchiveRequest(
     }
 
     override fun onResponse(result: String) {
-       logI("Volley: get response")
+        logI("Volley: get response")
         val response = xmlParse(result)
         if (response is SoftErrorResponse) {
             mOnResponseListener!!.onSoftError(response)

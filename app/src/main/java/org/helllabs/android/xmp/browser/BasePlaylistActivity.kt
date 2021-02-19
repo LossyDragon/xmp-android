@@ -3,12 +3,15 @@ package org.helllabs.android.xmp.browser
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
-import android.content.SharedPreferences
-import android.os.*
-import android.view.*
+import android.os.Bundle
+import android.os.IBinder
+import android.os.RemoteException
+import android.view.Menu
+import android.view.MenuItem
+import android.view.MotionEvent
+import android.view.View
 import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
-import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.OnItemTouchListener
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -19,6 +22,7 @@ import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter
 import org.helllabs.android.xmp.browser.playlist.PlaylistUtils
 import org.helllabs.android.xmp.modarchive.Search
 import org.helllabs.android.xmp.player.PlayerActivity
+import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.preferences.Preferences
 import org.helllabs.android.xmp.service.ModInterface
 import org.helllabs.android.xmp.service.PlayerService
@@ -31,7 +35,6 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     private var mShowToasts = false
     private var mModPlayer: ModInterface? = null
     private var mAddList: MutableList<String>? = null
-    protected var mPrefs: SharedPreferences? = null
     protected var mPlaylistAdapter: PlaylistAdapter? = null
     private var refresh = false
     private val playAllButtonListener = View.OnClickListener {
@@ -90,11 +93,11 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
 
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mPrefs = PreferenceManager.getDefaultSharedPreferences(this)
-        mShowToasts = mPrefs!!.getBoolean(Preferences.SHOW_TOAST, true)
 
         // Action bar icon navigation
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
+
+        mShowToasts = PrefManager.showToast
     }
 
     public override fun onResume() {
@@ -158,7 +161,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
 
     open fun onItemClick(adapter: PlaylistAdapter, view: View?, position: Int) {
         val filename = adapter.getItem(position).file!!.path
-        val mode = mPrefs!!.getString(Preferences.PLAYLIST_MODE, "1")!!.toInt()
+        val mode = PrefManager.playlistMode.toInt()
 
         /* Test module again if invalid, in case a new file format is added to the
          * player library and the file was previously unrecognized and cached as invalid.
@@ -225,7 +228,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         when (requestCode) {
             SETTINGS_REQUEST -> {
                 update()
-                mShowToasts = mPrefs!!.getBoolean(Preferences.SHOW_TOAST, true)
+                mShowToasts = PrefManager.showToast
             }
             PLAY_MOD_REQUEST -> if (resultCode != RESULT_OK) {
                 update()
@@ -236,7 +239,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
 
     protected fun addToQueue(filename: String?) {
         if (testModule(filename!!)) {
-            if (PlayerService.isAlive) {
+            if (PlayerService.isPlayerAlive.value == true) {
                 val service = Intent(this, PlayerService::class.java)
                 mAddList = ArrayList()
                 mAddList!!.add(filename)
@@ -263,7 +266,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
             toast(R.string.msg_only_valid_files_sent)
         }
         if (realSize > 0) {
-            if (PlayerService.isAlive) {
+            if (PlayerService.isPlayerAlive.value == true) {
                 val service = Intent(this, PlayerService::class.java)
                 mAddList = realList
                 bindService(service, connection, 0)

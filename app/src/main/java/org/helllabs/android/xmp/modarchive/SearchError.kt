@@ -1,12 +1,12 @@
 package org.helllabs.android.xmp.modarchive
 
 import android.content.Intent
-import android.graphics.Typeface
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.res.ResourcesCompat
 import java.util.*
 import org.helllabs.android.xmp.R
 
@@ -48,9 +48,10 @@ class SearchError : AppCompatActivity(), Runnable {
                     ".  Press back button to continue."
             }
         }
+
+        val font = ResourcesCompat.getFont(applicationContext, R.font.font_topaz_plus_a500)
         msg!!.text = message
-        val typeface = Typeface.createFromAsset(assets, "fonts/TopazPlus_a500_v1.0.ttf")
-        msg!!.typeface = typeface
+        msg!!.typeface = font
         msg!!.postDelayed(this, PERIOD.toLong())
     }
 

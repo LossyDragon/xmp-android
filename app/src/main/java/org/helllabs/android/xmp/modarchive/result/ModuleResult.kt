@@ -1,13 +1,11 @@
 package org.helllabs.android.xmp.modarchive.result
 
 import android.content.Intent
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.text.Html
 import android.text.method.LinkMovementMethod
 import android.view.*
 import android.widget.*
-import androidx.preference.PreferenceManager
 import java.io.File
 import java.io.IOException
 import java.io.UnsupportedEncodingException
@@ -26,7 +24,7 @@ import org.helllabs.android.xmp.modarchive.response.ModArchiveResponse
 import org.helllabs.android.xmp.modarchive.response.ModuleResponse
 import org.helllabs.android.xmp.modarchive.response.SoftErrorResponse
 import org.helllabs.android.xmp.player.PlayerActivity
-import org.helllabs.android.xmp.preferences.Preferences
+import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.util.Message.yesNoDialog
 import org.helllabs.android.xmp.util.logD
 import org.helllabs.android.xmp.util.logE
@@ -49,14 +47,12 @@ open class ModuleResult : Result(), OnResponseListener, DownloaderListener {
     private var playButton: Button? = null
     private var errorMessage: TextView? = null
     private var dataView: View? = null
-    private var mPrefs: SharedPreferences? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.result_module)
         setupCrossfade()
 
-        mPrefs = PreferenceManager.getDefaultSharedPreferences(this)
         title = findViewById<View>(R.id.module_title) as TextView
         filename = findViewById<View>(R.id.module_filename) as TextView
         info = findViewById<View>(R.id.module_info) as TextView
@@ -162,17 +158,12 @@ open class ModuleResult : Result(), OnResponseListener, DownloaderListener {
             }
 
             // Delete parent directory if empty
-            if (mPrefs!!.getBoolean(Preferences.ARTIST_FOLDER, true)) {
+            if (PrefManager.useArtistFolder) {
                 val parent = file.parentFile
                 val contents = parent.listFiles()
                 if (contents != null && contents.isEmpty()) {
                     try {
-                        val mediaPath = File(
-                            mPrefs!!.getString(
-                                Preferences.MEDIA_PATH,
-                                Preferences.DEFAULT_MEDIA_PATH
-                            )!!
-                        ).canonicalPath
+                        val mediaPath = File(PrefManager.mediaPath).canonicalPath
                         val parentPath = parent.canonicalPath
                         if (parentPath.startsWith(mediaPath) && parentPath != mediaPath) {
                             logI("Remove empty directory " + parent.path)
@@ -202,12 +193,12 @@ open class ModuleResult : Result(), OnResponseListener, DownloaderListener {
 
     private fun getDownloadPath(module: Module?): String {
         val sb = StringBuilder()
-        sb.append(mPrefs!!.getString(Preferences.MEDIA_PATH, Preferences.DEFAULT_MEDIA_PATH))
-        if (mPrefs!!.getBoolean(Preferences.MODARCHIVE_FOLDER, true)) {
+        sb.append(PrefManager.mediaPath)
+        if (PrefManager.useModArchiveFolder) {
             sb.append(File.separatorChar)
             sb.append(MODARCHIVE_DIRNAME)
         }
-        if (mPrefs!!.getBoolean(Preferences.ARTIST_FOLDER, true)) {
+        if (PrefManager.useArtistFolder) {
             sb.append(File.separatorChar)
             sb.append(module!!.artist)
         }

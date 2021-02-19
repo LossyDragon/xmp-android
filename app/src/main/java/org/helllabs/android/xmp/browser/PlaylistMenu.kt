@@ -5,8 +5,6 @@ import android.app.Activity
 import android.content.*
 import android.content.pm.PackageManager
 import android.os.*
-import android.os.Environment.MEDIA_MOUNTED
-import android.os.Environment.MEDIA_MOUNTED_READ_ONLY
 import android.view.*
 import android.view.ContextMenu.ContextMenuInfo
 import android.widget.TextView
@@ -29,6 +27,7 @@ import org.helllabs.android.xmp.browser.playlist.PlaylistItem
 import org.helllabs.android.xmp.browser.playlist.PlaylistUtils
 import org.helllabs.android.xmp.modarchive.Search
 import org.helllabs.android.xmp.player.PlayerActivity
+import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.preferences.Preferences
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.util.ChangeLog
@@ -36,7 +35,6 @@ import org.helllabs.android.xmp.util.FileUtils.writeToFile
 import org.helllabs.android.xmp.util.Message.error
 import org.helllabs.android.xmp.util.Message.fatalError
 import org.helllabs.android.xmp.util.Message.yesNoDialog
-import org.helllabs.android.xmp.util.logE
 import org.helllabs.android.xmp.util.logI
 
 class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
@@ -80,11 +78,11 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
                 }
 
                 override fun onTouchEvent(rv: RecyclerView, e: MotionEvent) {
-// do nothing
+                    // do nothing
                 }
 
                 override fun onRequestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
-// do nothing
+                    // do nothing
                 }
             }
         )
@@ -101,7 +99,7 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
         recyclerView.adapter = playlistAdapter
         registerForContextMenu(recyclerView)
         prefs = PreferenceManager.getDefaultSharedPreferences(this)
-        if (!checkStorage()) {
+        if (!Preferences.checkStorage()) {
             fatalError(this, getString(R.string.error_storage))
         }
         if (Build.VERSION.SDK_INT >= 23) {
@@ -199,8 +197,8 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
     }
 
     private fun startPlayerActivity() {
-        if (prefs!!.getBoolean(Preferences.START_ON_PLAYER, true)) {
-            if (PlayerService.isAlive) {
+        if (PrefManager.startOnPlayer) {
+            if (PlayerService.isPlayerAlive.value == true) {
                 val playerIntent = Intent(this, PlayerActivity::class.java)
                 startActivity(playerIntent)
             }
@@ -208,7 +206,7 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
     }
 
     private fun updateList() {
-        mediaPath = prefs!!.getString(Preferences.MEDIA_PATH, Preferences.DEFAULT_MEDIA_PATH)
+        mediaPath = PrefManager.mediaPath
         playlistAdapter!!.clear()
         val browserItem = PlaylistItem(
             PlaylistItem.TYPE_SPECIAL,
@@ -314,9 +312,7 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
         alert.setPositiveButton(R.string.ok) { _: DialogInterface?, _: Int ->
             val value = alert.input.text.toString()
             if (value != mediaPath) {
-                val editor = prefs!!.edit()
-                editor.putString(Preferences.MEDIA_PATH, value)
-                editor.apply()
+                PrefManager.mediaPath = value
                 updateList()
             }
         }
@@ -392,14 +388,5 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
         private const val SETTINGS_REQUEST = 45
         private const val PLAYLIST_REQUEST = 46
         private const val REQUEST_WRITE_STORAGE = 112
-        private fun checkStorage(): Boolean {
-            val state = Environment.getExternalStorageState()
-            return if (MEDIA_MOUNTED == state || MEDIA_MOUNTED_READ_ONLY == state) {
-                true
-            } else {
-                logE("External storage state error: $state")
-                false
-            }
-        }
     }
 }

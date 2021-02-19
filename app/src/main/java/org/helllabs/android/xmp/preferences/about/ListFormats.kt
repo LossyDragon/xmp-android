@@ -1,18 +1,65 @@
 package org.helllabs.android.xmp.preferences.about
 
-import android.app.ListActivity
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.os.Bundle
+import android.view.MenuItem
 import android.widget.ArrayAdapter
+import android.widget.ListView
+import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.appbar.MaterialToolbar
 import java.util.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp.getFormats
+import org.helllabs.android.xmp.util.toast
 
-class ListFormats : ListActivity() {
+// TODO: di ClipboardManager
+class ListFormats : AppCompatActivity() {
+
     private val formats = getFormats()
-    public override fun onCreate(icicle: Bundle?) {
-        super.onCreate(icicle)
-        setContentView(R.layout.list_formats)
-        Arrays.sort(formats)
-        listAdapter = ArrayAdapter(this, R.layout.format_list_item, formats)
+    private var clipboard: ClipboardManager? = null
+
+    public override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+
+        setContentView(R.layout.pref_formats)
+        setSupportActionBar(findViewById<MaterialToolbar>(R.id.toolbar))
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setDisplayShowHomeEnabled(true)
+
+        val appbar = findViewById<TextView>(R.id.toolbarText)
+        val list = findViewById<ListView>(R.id.formatsList)
+
+        // Sort alphabetically
+        formats.sort()
+
+        appbar.text = getString(R.string.pref_list_formats_title)
+        list.apply {
+            adapter = ArrayAdapter(this@ListFormats, R.layout.item_single, formats)
+            setOnItemLongClickListener { _, _, position, _ ->
+                val item = this.getItemAtPosition(position) as String
+                val clip = ClipData.newPlainText("Xmp Clipboard", item)
+                clipboard?.setPrimaryClip(clip)
+                toast(R.string.clipboard_copied)
+                true
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        clipboard = null
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == android.R.id.home) {
+            onBackPressed()
+            return true
+        }
+        return super.onOptionsItemSelected(item)
     }
 }

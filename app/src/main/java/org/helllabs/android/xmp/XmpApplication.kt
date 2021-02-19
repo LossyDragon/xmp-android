@@ -3,6 +3,7 @@ package org.helllabs.android.xmp
 import android.app.Application
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.Volley
+import org.helllabs.android.xmp.preferences.PrefManager
 
 class XmpApplication : Application() {
 
@@ -12,6 +13,9 @@ class XmpApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         instance = this
+
+        // Initialize preferences
+        PrefManager.init(applicationContext)
     }
 
     fun clearFileList() {

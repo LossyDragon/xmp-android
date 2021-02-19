@@ -18,7 +18,7 @@ import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter
 import org.helllabs.android.xmp.browser.playlist.PlaylistItem
 import org.helllabs.android.xmp.browser.playlist.PlaylistUtils
-import org.helllabs.android.xmp.preferences.Preferences
+import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.util.Crossfader
 import org.helllabs.android.xmp.util.FileUtils.basename
 import org.helllabs.android.xmp.util.InfoCache.clearCache
@@ -125,7 +125,7 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
             val ret = Examples.install(
                 this,
                 mediaPath,
-                mPrefs!!.getBoolean(Preferences.EXAMPLES, true)
+                PrefManager.installExamples
             )
             if (ret < 0) {
                 error(this, "Error creating directory $mediaPath.")
@@ -143,11 +143,13 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
     }
 
     private fun readShuffleModePref(): Boolean {
-        return mPrefs!!.getBoolean(OPTIONS_SHUFFLE_MODE, DEFAULT_SHUFFLE_MODE)
+        val prefs = PrefManager.getPreferenceManager()
+        return prefs.getBoolean(OPTIONS_SHUFFLE_MODE, DEFAULT_SHUFFLE_MODE)
     }
 
     private fun readLoopModePref(): Boolean {
-        return mPrefs!!.getBoolean(OPTIONS_LOOP_MODE, DEFAULT_LOOP_MODE)
+        val prefs = PrefManager.getPreferenceManager()
+        return prefs.getBoolean(OPTIONS_LOOP_MODE, DEFAULT_LOOP_MODE)
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -169,14 +171,14 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         val fastScroller = findViewById<View>(R.id.fast_scroller) as RecyclerFastScroller
         fastScroller.attachRecyclerView(recyclerView)
         registerForContextMenu(recyclerView)
-        val mediaPath = mPrefs!!.getString(Preferences.MEDIA_PATH, Preferences.DEFAULT_MEDIA_PATH)!!
+        val mediaPath = PrefManager.mediaPath
         setTitle(R.string.browser_filelist_title)
         mNavigation = FilelistNavigation()
         mCrossfade = Crossfader(this)
         mCrossfade!!.setup(R.id.modlist_content, R.id.modlist_spinner)
         curPath = findViewById<View>(R.id.current_path) as TextView
         registerForContextMenu(curPath)
-        mBackButtonParentdir = mPrefs!!.getBoolean(Preferences.BACK_BUTTON_NAVIGATION, true)
+        mBackButtonParentdir = PrefManager.backButtonNavigation
         val textColor = curPath!!.currentTextColor
 
         curPath!!.setOnTouchListener { view: View, event: MotionEvent ->
@@ -237,7 +239,7 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         }
         if (saveModes) {
             logI("Save new file list preferences")
-            val editor = mPrefs!!.edit()
+            val editor = PrefManager.getPreferenceManager().edit()
             editor.putBoolean(OPTIONS_SHUFFLE_MODE, isShuffleMode)
             editor.putBoolean(OPTIONS_LOOP_MODE, isLoopMode)
             editor.apply()
@@ -282,8 +284,8 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
 
     private fun deleteDirectory(position: Int) {
         val deleteName = mPlaylistAdapter!!.getFilename(position)
-        val mediaPath = mPrefs!!.getString(Preferences.MEDIA_PATH, Preferences.DEFAULT_MEDIA_PATH)
-        if (deleteName.startsWith(mediaPath!!) && deleteName != mediaPath) {
+        val mediaPath = PrefManager.mediaPath
+        if (deleteName.startsWith(mediaPath) && deleteName != mediaPath) {
             yesNoDialog(
                 this,
                 "Delete directory",
@@ -356,7 +358,7 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
             menu.add(Menu.NONE, 3, 3, "Delete directory")
         } else {
             // For files
-            val mode = mPrefs!!.getString(Preferences.PLAYLIST_MODE, "1")!!.toInt()
+            val mode = PrefManager.playlistMode.toInt()
             menu.setHeaderTitle("This file")
             menu.add(Menu.NONE, 0, 0, "Add to playlist")
             if (mode != 3) {
@@ -380,9 +382,7 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
                 1 -> choosePlaylist(0, addCurrentRecursiveChoice)
                 2 -> addToQueue(mPlaylistAdapter!!.filenameList)
                 3 -> {
-                    val editor = mPrefs!!.edit()
-                    editor.putString(Preferences.MEDIA_PATH, mNavigation!!.currentDir!!.path)
-                    editor.apply()
+                    PrefManager.mediaPath = mNavigation!!.currentDir!!.path
                     toast("Set as default module path")
                 }
                 4 -> clearCachedEntries(mPlaylistAdapter!!.filenameList)

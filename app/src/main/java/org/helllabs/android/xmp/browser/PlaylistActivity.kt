@@ -19,7 +19,7 @@ import java.io.IOException
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.browser.playlist.Playlist
 import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter
-import org.helllabs.android.xmp.preferences.Preferences
+import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.util.logE
 
 class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickListener {
@@ -52,7 +52,7 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         val extras = intent.extras ?: return
         setTitle(R.string.browser_playlist_title)
         val name = extras.getString("name") ?: return
-        val useFilename = mPrefs!!.getBoolean(Preferences.USE_FILENAME, false)
+        val useFilename = PrefManager.useFilename
         try {
             mPlaylist = Playlist(this, name)
         } catch (e: IOException) {
@@ -113,7 +113,7 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
 
     override fun onResume() {
         super.onResume()
-        mPlaylistAdapter!!.setUseFilename(mPrefs!!.getBoolean(Preferences.USE_FILENAME, false))
+        mPlaylistAdapter!!.setUseFilename(PrefManager.useFilename)
         update()
     }
 
@@ -160,7 +160,7 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
 
     // Playlist context menu
     override fun onCreateContextMenu(menu: ContextMenu, view: View, menuInfo: ContextMenuInfo) {
-        val mode = mPrefs!!.getString(Preferences.PLAYLIST_MODE, "1")!!.toInt()
+        val mode = PrefManager.playlistMode.toInt()
         menu.setHeaderTitle("Edit playlist")
         menu.add(Menu.NONE, 0, 0, "Remove from playlist")
         menu.add(Menu.NONE, 1, 1, "Add to play queue")

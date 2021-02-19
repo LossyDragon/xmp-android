@@ -135,10 +135,6 @@
         </activity>
 
         <activity
-            android:name=".preferences.Preferences"
-            android:theme="@style/AppTheme.Preferences" />
-
-        <activity
             android:name=".browser.FilelistActivity"
             android:configChanges="keyboardHidden|orientation|screenSize" />
 
@@ -200,10 +196,15 @@
                 android:value=".modarchive.Search" />
         </activity>
 
-        <!-- To be called from settings -->
+        <!-- Preferences -->
+        <activity
+            android:name=".preferences.Preferences"
+            android:theme="@style/AppTheme.Preferences" />
+
         <activity
             android:name=".preferences.about.ListFormats"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:parentActivityName=".preferences.Preferences"
+            android:theme="@style/AppTheme.Preferences">
             <intent-filter>
                 <action android:name="org.helllabs.android.xmp.LIST_FORMATS" />
 
@@ -213,7 +214,8 @@
 
         <activity
             android:name=".preferences.about.About"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:parentActivityName=".preferences.Preferences"
+            android:theme="@style/AppTheme.Preferences">
             <intent-filter>
                 <action android:name="org.helllabs.android.xmp.ABOUT" />
 

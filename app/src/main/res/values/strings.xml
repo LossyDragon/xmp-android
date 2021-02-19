@@ -77,6 +77,7 @@
     <string name="pref_enable_delete_summary">Display a menu option to delete the currently playing file</string>
 
     <string name="pref_category_sound">Sound settings</string>
+    <string name="pref_category_sound_disabled">Sound settings (Disabled when playing)</string>
     <string name="pref_category_files">Playlist settings</string>
     <string name="pref_category_mixer_control">Mixer control</string>
     <string name="pref_category_player_control">Player control</string>
@@ -196,5 +197,12 @@
 
     <string name="notif_channel_desc">Current module and player controls</string>
     <string name="notif_channel_name">Xmp</string>
+    <string name="clipboard_copied">Copied to clipboard</string>
+    <string name="pref_support_title">Support</string>
+    <string name="pref_support_summary">Create or View issues about Xmp Mod Player</string>
+    <string name="pref_lib_title">Libxmp Repo</string>
+    <string name="pref_lib_summary">Code repository for libxmp</string>
+    <string name="pref_site_title">Website</string>
+    <string name="pref_site_summary">View more information about libxmp</string>
 
 </resources>
