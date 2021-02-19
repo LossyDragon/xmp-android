@@ -8,6 +8,7 @@ class PlaylistItem(
     val name: String?,
     val comment: String
 ) : Comparable<PlaylistItem> {
+
     // Accessors
     var id = 0
     var file: File? = null

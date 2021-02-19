@@ -15,7 +15,7 @@ import org.helllabs.android.xmp.util.Message.error
 import org.helllabs.android.xmp.util.logE
 import org.helllabs.android.xmp.util.logI
 
-class Playlist(context: Context?, val name: String?) {
+class Playlist(context: Context, val name: String) {
 
     var comment: String? = null
     private var mListChanged = false

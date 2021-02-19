@@ -40,8 +40,4 @@ class ChangeLog(private val context: Context) {
             .setView(view)
             .setNegativeButton("Dismiss") { _: DialogInterface?, _: Int -> }.show()
     }
-
-    companion object {
-        private const val TAG = "ChangeLog"
-    }
 }

@@ -24,8 +24,8 @@ import org.helllabs.android.xmp.service.ModInterface
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.util.InfoCache.testModule
 import org.helllabs.android.xmp.util.InfoCache.testModuleForceIfInvalid
-import org.helllabs.android.xmp.util.Message.toast
 import org.helllabs.android.xmp.util.logI
+import org.helllabs.android.xmp.util.toast
 
 abstract class BasePlaylistActivity : AppCompatActivity() {
     private var mShowToasts = false
@@ -37,7 +37,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     private val playAllButtonListener = View.OnClickListener {
         val list = allFiles
         if (list.isEmpty()) {
-            toast(this@BasePlaylistActivity, R.string.error_no_files_to_play)
+            toast(R.string.error_no_files_to_play)
         } else {
             playModule(list)
         }
@@ -52,7 +52,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
                 R.drawable.list_loop_off
         )
         if (mShowToasts) {
-            toast(view.getContext(), if (loopMode) R.string.msg_loop_on else R.string.msg_loop_off)
+            toast(if (loopMode) R.string.msg_loop_on else R.string.msg_loop_off)
         }
         isLoopMode = loopMode
     }
@@ -66,10 +66,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
                 R.drawable.list_shuffle_off
         )
         if (mShowToasts) {
-            toast(
-                view.getContext(),
-                if (shuffleMode) R.string.msg_shuffle_on else R.string.msg_shuffle_off
-            )
+            toast(if (shuffleMode) R.string.msg_shuffle_on else R.string.msg_shuffle_off)
         }
         isShuffleMode = shuffleMode
     }
@@ -81,7 +78,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
             try {
                 mModPlayer!!.add(mAddList)
             } catch (e: RemoteException) {
-                toast(this@BasePlaylistActivity, R.string.error_adding_mod)
+                toast(R.string.error_adding_mod)
             }
             unbindService(this)
         }
@@ -113,7 +110,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     protected abstract fun update()
 
     protected fun setSwipeRefresh(recyclerView: RecyclerView) {
-        val swipeRefresh = findViewById<View>(R.id.swipeContainer) as SwipeRefreshLayout
+        val swipeRefresh = findViewById<SwipeRefreshLayout>(R.id.swipeContainer)
         swipeRefresh.setOnRefreshListener {
             update()
             swipeRefresh.isRefreshing = false
@@ -133,11 +130,11 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
                 }
 
                 override fun onTouchEvent(rv: RecyclerView, e: MotionEvent) {
-// do nothing
+                    // do nothing
                 }
 
                 override fun onRequestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
-// do nothing
+                    // do nothing
                 }
             }
         )
@@ -177,11 +174,11 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
                 2 -> playModule(filename)
                 3 -> {
                     addToQueue(filename)
-                    toast(this, "Added to queue")
+                    toast("Added to queue")
                 }
             }
         } else {
-            toast(this, "Unrecognized file format")
+            toast("Unrecognized file format")
         }
     }
 
@@ -196,11 +193,10 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
 		});
 	}
     */
+
     // Play this module
     protected fun playModule(mod: String) {
-        val modList: MutableList<String> = ArrayList()
-        modList.add(mod)
-        playModule(modList, 0, false)
+        playModule(listOf(mod), 0, false)
     }
 
     // Play all modules in list and honor default shuffle mode
@@ -219,7 +215,6 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         intent.putExtra(PlayerActivity.PARM_LOOP, isLoopMode)
         intent.putExtra(PlayerActivity.PARM_START, start)
         intent.putExtra(PlayerActivity.PARM_KEEPFIRST, keepFirst)
-        // intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);	// prevent screen flicker when starting player activity
         logI("Start Player activity")
         startActivityForResult(intent, PLAY_MOD_REQUEST)
     }
@@ -265,7 +260,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
             }
         }
         if (invalid) {
-            toast(this, R.string.msg_only_valid_files_sent)
+            toast(R.string.msg_only_valid_files_sent)
         }
         if (realSize > 0) {
             if (PlayerService.isAlive) {
@@ -280,8 +275,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
 
     // Menu
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        val inflater = menuInflater
-        inflater.inflate(R.menu.options_menu, menu)
+        menuInflater.inflate(R.menu.options_menu, menu)
 
         // Calling super after populating the menu is necessary here to ensure that the
         // action bar helpers have a chance to handle this event.

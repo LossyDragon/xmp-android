@@ -25,9 +25,9 @@ import org.helllabs.android.xmp.util.InfoCache.clearCache
 import org.helllabs.android.xmp.util.InfoCache.delete
 import org.helllabs.android.xmp.util.InfoCache.deleteRecursive
 import org.helllabs.android.xmp.util.Message.error
-import org.helllabs.android.xmp.util.Message.toast
 import org.helllabs.android.xmp.util.Message.yesNoDialog
 import org.helllabs.android.xmp.util.logI
+import org.helllabs.android.xmp.util.toast
 
 class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickListener {
 
@@ -292,13 +292,13 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
             ) {
                 if (deleteRecursive(deleteName)) {
                     updateModlist()
-                    toast(this@FilelistActivity, getString(R.string.msg_dir_deleted))
+                    toast(getString(R.string.msg_dir_deleted))
                 } else {
-                    toast(this@FilelistActivity, getString(R.string.msg_cant_delete_dir))
+                    toast(getString(R.string.msg_cant_delete_dir))
                 }
             }
         } else {
-            toast(this, R.string.error_dir_not_under_moddir)
+            toast(R.string.error_dir_not_under_moddir)
         }
     }
 
@@ -306,7 +306,7 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
 
         // Return if no playlists exist
         if (PlaylistUtils.list().isEmpty()) {
-            toast(this, getString(R.string.msg_no_playlists))
+            toast(getString(R.string.msg_no_playlists))
             return
         }
         val playlistSelection = IntArray(1)
@@ -383,7 +383,7 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
                     val editor = mPrefs!!.edit()
                     editor.putString(Preferences.MEDIA_PATH, mNavigation!!.currentDir!!.path)
                     editor.apply()
-                    toast(this, "Set as default module path")
+                    toast("Set as default module path")
                 }
                 4 -> clearCachedEntries(mPlaylistAdapter!!.filenameList)
             }
@@ -414,9 +414,9 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
                     ) {
                         if (delete(deleteName)) {
                             updateModlist()
-                            toast(this@FilelistActivity, getString(R.string.msg_file_deleted))
+                            toast(R.string.msg_file_deleted)
                         } else {
-                            toast(this@FilelistActivity, getString(R.string.msg_cant_delete))
+                            toast(R.string.msg_cant_delete)
                         }
                     }
                 }

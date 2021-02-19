@@ -27,11 +27,11 @@ import org.helllabs.android.xmp.modarchive.response.ModuleResponse
 import org.helllabs.android.xmp.modarchive.response.SoftErrorResponse
 import org.helllabs.android.xmp.player.PlayerActivity
 import org.helllabs.android.xmp.preferences.Preferences
-import org.helllabs.android.xmp.util.Message.toast
 import org.helllabs.android.xmp.util.Message.yesNoDialog
 import org.helllabs.android.xmp.util.logD
 import org.helllabs.android.xmp.util.logE
 import org.helllabs.android.xmp.util.logI
+import org.helllabs.android.xmp.util.toast
 
 open class ModuleResult : Result(), OnResponseListener, DownloaderListener {
 
@@ -158,7 +158,7 @@ open class ModuleResult : Result(), OnResponseListener, DownloaderListener {
             if (file.delete()) {
                 updateButtons(module)
             } else {
-                toast(this@ModuleResult, "Error")
+                toast("Error")
             }
 
             // Delete parent directory if empty
@@ -171,13 +171,13 @@ open class ModuleResult : Result(), OnResponseListener, DownloaderListener {
                             mPrefs!!.getString(
                                 Preferences.MEDIA_PATH,
                                 Preferences.DEFAULT_MEDIA_PATH
-                            )
+                            )!!
                         ).canonicalPath
                         val parentPath = parent.canonicalPath
                         if (parentPath.startsWith(mediaPath) && parentPath != mediaPath) {
                             logI("Remove empty directory " + parent.path)
                             if (!parent.delete()) {
-                                toast(this@ModuleResult, "Error removing directory")
+                                toast("Error removing directory")
                                 logE("error removing directory")
                             }
                         }

@@ -27,11 +27,11 @@ import org.helllabs.android.xmp.service.ModInterface
 import org.helllabs.android.xmp.service.PlayerCallback
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.util.FileUtils.basename
-import org.helllabs.android.xmp.util.Message.toast
 import org.helllabs.android.xmp.util.Message.yesNoDialog
 import org.helllabs.android.xmp.util.logD
 import org.helllabs.android.xmp.util.logE
 import org.helllabs.android.xmp.util.logI
+import org.helllabs.android.xmp.util.toast
 
 class PlayerActivity : AppCompatActivity() {
     /* actual mod player */
@@ -143,9 +143,9 @@ class PlayerActivity : AppCompatActivity() {
                 if (result != PlayerService.RESULT_OK) {
                     runOnUiThread {
                         if (result == PlayerService.RESULT_CANT_OPEN_AUDIO) {
-                            toast(this@PlayerActivity, R.string.error_opensl)
+                            toast(R.string.error_opensl)
                         } else if (result == PlayerService.RESULT_NO_AUDIO_FOCUS) {
-                            toast(this@PlayerActivity, R.string.error_audiofocus)
+                            toast(R.string.error_audiofocus)
                         }
                     }
                 }
@@ -787,7 +787,7 @@ class PlayerActivity : AppCompatActivity() {
         seekBar!!.progress = 0
         seekBar!!.max = time / 100
         val formattedTime = String.format("%d:%02d", time / 60000, time / 1000 % 60)
-        toast(this, "New sequence duration: $formattedTime")
+        toast("New sequence duration: $formattedTime")
         val sequence = modVars[7]
         sidebar!!.selectSequence(sequence)
     }
@@ -906,14 +906,14 @@ class PlayerActivity : AppCompatActivity() {
             yesNoDialog(this, "Delete", "Are you sure to delete this file?") {
                 try {
                     if (modPlayer!!.deleteFile()) {
-                        toast(this, "File deleted")
+                        toast("File deleted")
                         setResult(RESULT_FIRST_USER)
                         modPlayer!!.nextSong()
                     } else {
-                        toast(this, "Can't delete file")
+                        toast("Can't delete file")
                     }
                 } catch (e: RemoteException) {
-                    toast(this, "Can't connect service")
+                    toast("Can't connect service")
                 }
             }
         }

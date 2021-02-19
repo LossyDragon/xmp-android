@@ -11,16 +11,13 @@ import android.content.Intent
 class ScreenReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == Intent.ACTION_SCREEN_OFF) {
-            // DO WHATEVER YOU NEED TO DO HERE
             wasScreenOn = false
         } else if (intent.action == Intent.ACTION_SCREEN_ON) {
-            // AND DO WHATEVER YOU NEED TO DO HERE
             wasScreenOn = true
         }
     }
 
     companion object {
-        // THANKS JASON
         var wasScreenOn = true
     }
 }

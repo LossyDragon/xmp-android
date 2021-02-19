@@ -30,9 +30,7 @@ class PlaylistAdapter :
     }
 
     class ViewHolder(itemView: View, adapter: PlaylistAdapter) :
-        AbstractDraggableItemViewHolder(
-            itemView
-        ),
+        AbstractDraggableItemViewHolder(itemView),
         View.OnClickListener {
         val container: View
         val handle: View?
@@ -58,7 +56,7 @@ class PlaylistAdapter :
 
         override fun onClick(view: View) {
             if (onItemClickListener != null) {
-                onItemClickListener!!.onItemClick(adapter, view, position)
+                onItemClickListener!!.onItemClick(adapter, view, adapterPosition)
             }
         }
     }
@@ -103,7 +101,7 @@ class PlaylistAdapter :
 
         // See http://stackoverflow.com/questions/26466877/how-to-create-context-menu-for-recyclerview
         holder.itemView.setOnLongClickListener {
-            position = holder.position
+            position = holder.adapterPosition
             false
         }
 
@@ -257,7 +255,6 @@ class PlaylistAdapter :
         const val LAYOUT_LIST = 0
         const val LAYOUT_CARD = 1
         const val LAYOUT_DRAG = 2
-        private const val TAG = "PlaylistAdapter"
 
         private fun hitTest(v: View, x: Int, y: Int): Boolean {
             val tx = (v.translationX + 0.5f).toInt()

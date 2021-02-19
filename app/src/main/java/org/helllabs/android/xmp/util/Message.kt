@@ -5,7 +5,14 @@ import android.app.AlertDialog
 import android.content.Context
 import android.content.DialogInterface
 import android.widget.Toast
+import androidx.annotation.StringRes
 import org.helllabs.android.xmp.R
+
+inline fun <reified T : Context> T.toast(message: String) =
+    Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+
+inline fun <reified T : Context> T.toast(@StringRes resId: Int) =
+    Toast.makeText(this, this.getString(resId), Toast.LENGTH_SHORT).show()
 
 object Message {
     fun fatalError(activity: Activity, message: String?) {
@@ -42,15 +49,6 @@ object Message {
     @JvmStatic
     fun error(activity: Activity, resId: Int) {
         error(activity, activity.getString(resId))
-    }
-
-    fun toast(context: Context?, message: String?) {
-        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-    }
-
-    @JvmStatic
-    fun toast(context: Context, resId: Int) {
-        toast(context, context.getString(resId))
     }
 
     @JvmStatic

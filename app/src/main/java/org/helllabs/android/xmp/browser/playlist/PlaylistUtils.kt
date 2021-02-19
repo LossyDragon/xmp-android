@@ -14,8 +14,8 @@ import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp.testModule
 import org.helllabs.android.xmp.preferences.Preferences
 import org.helllabs.android.xmp.util.Message.error
-import org.helllabs.android.xmp.util.Message.toast
 import org.helllabs.android.xmp.util.ModInfo
+import org.helllabs.android.xmp.util.toast
 
 object PlaylistUtils {
     fun newPlaylistDialog(activity: Activity) {
@@ -49,7 +49,6 @@ object PlaylistUtils {
         val list: MutableList<PlaylistItem> = ArrayList()
         val modInfo = ModInfo()
         var hasInvalid = false
-        val id = 0
         for (filename in fileList!!) {
             if (testModule(filename!!, modInfo)) {
                 val item = PlaylistItem(PlaylistItem.TYPE_FILE, modInfo.name, modInfo.type)
@@ -64,7 +63,7 @@ object PlaylistUtils {
             if (hasInvalid) {
                 activity.runOnUiThread {
                     if (list.size > 1) {
-                        toast(activity, R.string.msg_only_valid_files_added)
+                        activity.toast(R.string.msg_only_valid_files_added)
                     } else {
                         error(activity, R.string.unrecognized_format)
                     }
@@ -113,7 +112,7 @@ object PlaylistUtils {
         return pList[index]!!.substring(0, pList[index]!!.lastIndexOf(Playlist.PLAYLIST_SUFFIX))
     }
 
-    fun createEmptyPlaylist(activity: Activity, name: String?, comment: String?): Boolean {
+    fun createEmptyPlaylist(activity: Activity, name: String, comment: String): Boolean {
         return try {
             val playlist = Playlist(activity, name)
             playlist.comment = comment

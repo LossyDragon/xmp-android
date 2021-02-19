@@ -51,7 +51,7 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         setContentView(R.layout.playlist)
         val extras = intent.extras ?: return
         setTitle(R.string.browser_playlist_title)
-        val name = extras.getString("name")
+        val name = extras.getString("name") ?: return
         val useFilename = mPrefs!!.getBoolean(Preferences.USE_FILENAME, false)
         try {
             mPlaylist = Playlist(this, name)

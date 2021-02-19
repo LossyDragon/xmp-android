@@ -11,7 +11,7 @@ import com.fnp.materialpreferences.PreferenceFragment
 import java.io.File
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.service.PlayerService
-import org.helllabs.android.xmp.util.Message.toast
+import org.helllabs.android.xmp.util.toast
 
 class Preferences : PreferenceActivity() {
 
@@ -65,9 +65,9 @@ class Preferences : PreferenceActivity() {
             val clearCache = findPreference("clear_cache")
             clearCache.onPreferenceClickListener = Preference.OnPreferenceClickListener {
                 if (deleteCache(CACHE_DIR)) {
-                    toast(ctx, getString(R.string.cache_clear))
+                    ctx!!.toast(R.string.cache_clear)
                 } else {
-                    toast(ctx, getString(R.string.cache_clear_error))
+                    ctx!!.toast(R.string.cache_clear_error)
                 }
                 true
             }
