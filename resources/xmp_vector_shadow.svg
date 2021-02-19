@@ -12,8 +12,8 @@
    viewBox="0 0 854 854"
    version="1.1"
    id="svg4552"
-   sodipodi:docname="xmp vector.svg"
-   inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
+   sodipodi:docname="xmp_vector_shadow.svg"
+   inkscape:version="1.0.1 (3bc2e813f5, 2020-09-07)"
    inkscape:export-filename="C:\Users\Lossy\Desktop\XMP_Vector.png"
    inkscape:export-xdpi="96"
    inkscape:export-ydpi="96">
@@ -45,13 +45,14 @@
      id="namedview4554"
      showgrid="true"
      showborder="false"
-     inkscape:zoom="1.4142136"
-     inkscape:cx="623.34199"
-     inkscape:cy="318.13185"
+     inkscape:zoom="1"
+     inkscape:cx="403.9684"
+     inkscape:cy="484.35119"
      inkscape:window-x="-8"
-     inkscape:window-y="-5"
+     inkscape:window-y="-8"
      inkscape:window-maximized="1"
-     inkscape:current-layer="layer1">
+     inkscape:current-layer="layer2"
+     inkscape:document-rotation="0">
     <inkscape:grid
        type="xygrid"
        id="grid4560" />
@@ -60,12 +61,13 @@
      inkscape:groupmode="layer"
      id="layer3"
      inkscape:label="Shadow"
-     style="display:none"
+     style="display:inline"
      sodipodi:insensitive="true">
     <g
-       id="#000000ff">
+       id="#000000ff"
+       transform="translate(36.750007,19.75)">
       <path
-         d="m 295.50001,77.750003 h 42 l 51.75,64.500007 c -7.19,8.16 -21.75,25.5 -21.75,25.5 -24.775,-29.37078 -72,-90.000007 -72,-90.000007 z"
+         d="m 295.50001,77.750003 h 42 l 52.5,65.250007 c -7.19,8.16 -21.75,26.25 -21.75,26.25 -24.775,-29.37078 -72.75,-91.500007 -72.75,-91.500007 z"
          id="path4542"
          inkscape:connector-curvature="0"
          style="opacity:1;fill:#000000"
@@ -77,7 +79,7 @@
          style="opacity:1;fill:#000000"
          sodipodi:nodetypes="cccccccccccc" />
       <path
-         d="m 367.50001,482.75002 39,45.75 -69,81.75 H 85.500003 c -11.25,0 -6.75,-9.75 -1.429257,-14.98683 L 102,576.50002 h 190.50001 z"
+         d="m 367.50001,481.25002 39.75,46.5 -69.75,82.5 H 85.500003 c -11.25,0 -6.75,-9.75 -1.429257,-14.98683 L 102,576.50002 h 190.50001 z"
          id="path4546"
          inkscape:connector-curvature="0"
          style="opacity:1;fill:#000000"
@@ -91,9 +93,10 @@
      style="display:inline"
      sodipodi:insensitive="true">
     <g
-       id="#416cc3ff">
+       id="#416cc3ff"
+       transform="translate(39.89063,23.049985)">
       <path
-         d="m 285.00001,81.500003 82.5,97.500007 82.50001,-97.500007 h 240 l -194.25,243.750007 194.25,243.75001 -126,132.00001 -196.50001,-225.75001 -78.75,93.75 H 45.000002 L 247.50001,325.25001 C 170.5983,238.23957 111.71016,167.55991 33.750001,81.500003 Z"
+         d="m 285.00001,81.500003 82.35937,96.450017 82.64064,-96.450017 h 240 L 495.75002,325.25001 691.3594,566.45004 564.00002,701.00003 367.50001,475.25002 l -78.75,93.75 H 45.000002 L 246.60938,321.95003 C 169.70767,234.93959 111.71016,167.55991 33.750001,81.500003 Z"
          id="path4549"
          inkscape:connector-curvature="0"
          style="opacity:1;fill:#416cc3"
@@ -104,9 +107,11 @@
      inkscape:groupmode="layer"
      id="layer1"
      inkscape:label="Outline"
-     style="display:inline;opacity:1">
+     style="display:inline;opacity:1"
+     sodipodi:insensitive="true">
     <g
-       id="#254686ff">
+       id="#254686ff"
+       transform="translate(37.916781,20.049985)">
       <path
          d="m 292.50001,74.000003 75,93.750007 78.75001,-93.750007 h 243.75 c 11.25001,1.5 11.25001,6.75 9.75001,11.25 C 634.20076,163.36257 568.0427,245.76591 502.50002,325.25001 l 198.75001,241.50001 c 2.25,2.25 2.25,6 -0.74892,9.03859 L 564.00002,714.50003 367.50001,482.75002 l -75,93.75 H 41.250001 c -7.5,0 -10.5,-4.5 -5.25,-11.25 L 236.25001,325.25001 26.250001,86.750003 c -3.75,-5.25 0,-12.750001 11.25,-12.75 m 3.75,11.25 206.250009,236.250007 c 3,3.75 3,3.75 0,7.5 L 52.500002,565.25002 H 285.00001 c 25.03963,-31.29954 75,-93.75 75,-93.75 3.75,-3.75 11.25,-3.75 15,0 l 189.00001,225.75 126,-128.25 -198.75,-240.00001 c -3,-3.75 -3,-3.75 0,-7.5 l 191.25,-236.250007 h -225 l -82.50001,93.750007 c -3.75,3.75 -11.25,3.75 -15,0 l -75,-93.750007 z"
          id="path4539"
