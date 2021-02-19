@@ -88,8 +88,9 @@ task runKtlintFormat(type: Exec) {
 
 // Completely remove libxmp folder and clone a new copy.
 task getLibxmp(type: Exec) {
-    workingDir '/app/src/main/cpp'
-    commandLine 'bash', '-c', 'rm -r libxmp && git clone https://github.com/libxmp/libxmp.git && exit'
+    def args = "rm -rf libxmp && git clone https://github.com/libxmp/libxmp.git && exit"
+    workingDir '../app/src/main/cpp'
+    commandLine 'bash', '-c', args
 }
 
 // Build libxmp's object files
