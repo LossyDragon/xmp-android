@@ -6,7 +6,7 @@ import org.helllabs.android.xmp.util.logD
 import org.helllabs.android.xmp.util.logE
 
 object Examples {
-    fun install(context: Context, path: String?, examples: Boolean): Int {
+    fun install(context: Context, path: String, examples: Boolean): Int {
         val dir = File(path)
         if (dir.isDirectory) {
             logD("install: $path directory not found")

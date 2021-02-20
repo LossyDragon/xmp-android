@@ -11,6 +11,7 @@ import com.h6ah4i.android.widget.advrecyclerview.utils.AbstractDraggableItemView
 import java.io.File
 import java.util.*
 import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.util.color
 
 class PlaylistAdapter :
     RecyclerView.Adapter<PlaylistAdapter.ViewHolder>,
@@ -95,7 +96,7 @@ class PlaylistAdapter :
             holder.image.visibility = View.GONE
         }
         if (layoutType == LAYOUT_DRAG) {
-            holder.handle?.setBackgroundColor(context.resources.getColor(R.color.drag_handle_color))
+            holder.handle?.setBackgroundColor(context.resources.color(R.color.drag_handle_color))
             // holder.image.setAlpha(0.5f);
         }
 

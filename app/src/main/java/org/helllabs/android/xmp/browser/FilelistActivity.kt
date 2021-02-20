@@ -19,15 +19,13 @@ import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter
 import org.helllabs.android.xmp.browser.playlist.PlaylistItem
 import org.helllabs.android.xmp.browser.playlist.PlaylistUtils
 import org.helllabs.android.xmp.preferences.PrefManager
-import org.helllabs.android.xmp.util.Crossfader
+import org.helllabs.android.xmp.util.*
 import org.helllabs.android.xmp.util.FileUtils.basename
 import org.helllabs.android.xmp.util.InfoCache.clearCache
 import org.helllabs.android.xmp.util.InfoCache.delete
 import org.helllabs.android.xmp.util.InfoCache.deleteRecursive
 import org.helllabs.android.xmp.util.Message.error
 import org.helllabs.android.xmp.util.Message.yesNoDialog
-import org.helllabs.android.xmp.util.logI
-import org.helllabs.android.xmp.util.toast
 
 class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickListener {
 
@@ -165,7 +163,7 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         mPlaylistAdapter!!.setOnItemClickListener(this)
         recyclerView!!.adapter = mPlaylistAdapter
         recyclerView!!.addItemDecoration(
-            SimpleListDividerDecorator(resources.getDrawable(R.drawable.list_divider), true)
+            SimpleListDividerDecorator(resources.drawable(R.drawable.list_divider), true)
         )
         // fast scroll
         val fastScroller = findViewById<View>(R.id.fast_scroller) as RecyclerFastScroller
@@ -185,7 +183,7 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
             if (event.action == MotionEvent.ACTION_UP) {
                 curPath!!.setTextColor(textColor)
             } else {
-                curPath!!.setTextColor(resources.getColor(R.color.pressed_color))
+                curPath!!.setTextColor(resources.color(R.color.pressed_color))
             }
             view.performClick()
             false

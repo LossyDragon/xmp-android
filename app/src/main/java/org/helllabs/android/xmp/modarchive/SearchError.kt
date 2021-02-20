@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.res.ResourcesCompat
 import java.util.*
 import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.util.drawable
 
 class SearchError : AppCompatActivity(), Runnable {
 
@@ -75,11 +76,8 @@ class SearchError : AppCompatActivity(), Runnable {
 
     override fun run() {
         // Guru frame blink
-        msg!!.setBackgroundDrawable(
-            resources.getDrawable(
-                if (frameBlink) R.drawable.guru_frame else R.drawable.guru_frame_2
-            )
-        )
+        val frame = if (frameBlink) R.drawable.guru_frame else R.drawable.guru_frame_2
+        msg!!.background = resources.drawable(frame)
         frameBlink = frameBlink xor true
         msg!!.postDelayed(this, PERIOD.toLong())
     }

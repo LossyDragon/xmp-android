@@ -43,7 +43,7 @@ object InfoCache {
     fun deleteRecursive(filename: String): Boolean {
         val file = File(filename)
         return if (file.isDirectory) {
-            for (f in file.listFiles()) {
+            for (f in file.listFiles()!!) {
                 if (f.isDirectory) {
                     deleteRecursive(f.path)
                 } else {
@@ -137,14 +137,14 @@ object InfoCache {
                     filename,
                     info.type
                 )
-                val dir = cacheFile.parentFile
+                val dir = cacheFile.parentFile!!
                 if (!dir.isDirectory) {
                     dir.mkdirs()
                 }
                 cacheFile.createNewFile()
                 FileUtils.writeToFile(cacheFile, lines)
             } else {
-                val dir = skipFile.parentFile
+                val dir = skipFile.parentFile!!
                 if (!dir.isDirectory) {
                     dir.mkdirs()
                 }

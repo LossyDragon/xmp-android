@@ -1,6 +1,6 @@
 package org.helllabs.android.xmp.modarchive.model
 
-import android.text.Html
+import org.helllabs.android.xmp.util.asHtml
 
 class Module {
     var artist: String = Artist.UNKNOWN
@@ -12,15 +12,15 @@ class Module {
         private set
     var license: String? = null
         set(license) {
-            field = Html.fromHtml(license).toString()
+            field = license.asHtml()
         }
     var licenseDescription: String? = null
         set(licenseDescription) {
-            field = Html.fromHtml(licenseDescription).toString()
+            field = licenseDescription.asHtml()
         }
     var legalUrl: String? = null
         set(legalUrl) {
-            field = Html.fromHtml(legalUrl).toString()
+            field = legalUrl.asHtml()
         }
     var instruments: String? = null
         private set
@@ -30,17 +30,17 @@ class Module {
         val lines = instruments.split("\n").toTypedArray()
         val buffer = StringBuilder()
         for (line in lines) {
-            buffer.append(Html.fromHtml(line).toString())
+            buffer.append(line.asHtml())
             buffer.append('\n')
         }
         this.instruments = buffer.toString()
     }
 
-    fun setSongTitle(songtitle: String) {
-        songTitle = if (songtitle.isEmpty()) {
+    fun setSongTitle(title: String) {
+        songTitle = if (title.isEmpty()) {
             UNTITLED
         } else {
-            Html.fromHtml(songtitle).toString()
+            title.asHtml()
         }
     }
 

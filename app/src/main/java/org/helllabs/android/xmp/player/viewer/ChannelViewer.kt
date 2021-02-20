@@ -1,6 +1,5 @@
 package org.helllabs.android.xmp.player.viewer
 
-import android.app.Activity
 import android.content.Context
 import android.content.res.Configuration
 import android.graphics.*
@@ -213,7 +212,7 @@ class ChannelViewer(context: Context) : Viewer(context) {
         super.setRotation(value)
 
         // Should use canvasWidth but it's not updated yet
-        val width = (context as Activity).windowManager.defaultDisplay.width
+        val width = context.resources.displayMetrics.widthPixels
         when (screenSize) {
             Configuration.SCREENLAYOUT_SIZE_NORMAL -> {
                 if (width < 800) {

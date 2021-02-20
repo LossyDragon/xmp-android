@@ -2,7 +2,6 @@ package org.helllabs.android.xmp.modarchive.result
 
 import android.content.Intent
 import android.os.Bundle
-import android.text.Html
 import android.text.method.LinkMovementMethod
 import android.view.*
 import android.widget.*
@@ -25,11 +24,8 @@ import org.helllabs.android.xmp.modarchive.response.ModuleResponse
 import org.helllabs.android.xmp.modarchive.response.SoftErrorResponse
 import org.helllabs.android.xmp.player.PlayerActivity
 import org.helllabs.android.xmp.preferences.PrefManager
+import org.helllabs.android.xmp.util.*
 import org.helllabs.android.xmp.util.Message.yesNoDialog
-import org.helllabs.android.xmp.util.logD
-import org.helllabs.android.xmp.util.logE
-import org.helllabs.android.xmp.util.logI
-import org.helllabs.android.xmp.util.toast
 
 open class ModuleResult : Result(), OnResponseListener, DownloaderListener {
 
@@ -96,9 +92,9 @@ open class ModuleResult : Result(), OnResponseListener, DownloaderListener {
             filename!!.text = module.filename
             val size = module.bytes / 1024
             info!!.text = String.format("%s by %s (%d KB)", module.format, module.artist, size)
-            license!!.text = Html.fromHtml(
+            license!!.text = (
                 "License: <a href=\"" + module.legalUrl + "\">" + module.license + "</a>"
-            )
+                ).asHtml()
             license!!.movementMethod = LinkMovementMethod.getInstance()
             licenseDescription!!.text = module.licenseDescription
             instruments!!.text = module.instruments
@@ -107,10 +103,10 @@ open class ModuleResult : Result(), OnResponseListener, DownloaderListener {
         }
         val sponsor = response.sponsor
         if (sponsor != null) {
-            sponsorText!!.text = Html.fromHtml(
+            sponsorText!!.text = (
                 "Download mirrors provided by " +
                     "<a href=\"" + sponsor.link + "\">" + sponsor.name + "</a>"
-            )
+                ).asHtml()
             sponsorText!!.movementMethod = LinkMovementMethod.getInstance()
         }
         crossfade()
@@ -159,7 +155,7 @@ open class ModuleResult : Result(), OnResponseListener, DownloaderListener {
 
             // Delete parent directory if empty
             if (PrefManager.useArtistFolder) {
-                val parent = file.parentFile
+                val parent = file.parentFile!!
                 val contents = parent.listFiles()
                 if (contents != null && contents.isEmpty()) {
                     try {

@@ -64,6 +64,7 @@ class InstrumentViewer(context: Context) : Viewer(context) {
         }
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun doDraw(canvas: Canvas, modPlayer: ModInterface, info: Info?) {
         val chn = modVars[3]
         val ins = modVars[4]

@@ -1,16 +1,17 @@
 package org.helllabs.android.xmp.browser
 
 import android.graphics.drawable.NinePatchDrawable
-import android.os.Build
 import android.os.Bundle
-import android.view.*
+import android.view.ContextMenu
 import android.view.ContextMenu.ContextMenuInfo
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
 import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.h6ah4i.android.widget.advrecyclerview.animator.GeneralItemAnimator
 import com.h6ah4i.android.widget.advrecyclerview.animator.RefactoredDefaultItemAnimator
-import com.h6ah4i.android.widget.advrecyclerview.decoration.ItemShadowDecorator
 import com.h6ah4i.android.widget.advrecyclerview.decoration.SimpleListDividerDecorator
 import com.h6ah4i.android.widget.advrecyclerview.draggable.RecyclerViewDragDropManager
 import com.h6ah4i.android.widget.advrecyclerview.utils.WrapperAdapterUtils
@@ -20,6 +21,7 @@ import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.browser.playlist.Playlist
 import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter
 import org.helllabs.android.xmp.preferences.PrefManager
+import org.helllabs.android.xmp.util.drawable
 import org.helllabs.android.xmp.util.logE
 
 class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickListener {
@@ -68,7 +70,7 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         // drag & drop manager
         mRecyclerViewDragDropManager = RecyclerViewDragDropManager()
         mRecyclerViewDragDropManager!!.setDraggingItemShadowDrawable(
-            resources.getDrawable(R.drawable.material_shadow_z3) as NinePatchDrawable
+            resources.drawable(R.drawable.material_shadow_z3) as NinePatchDrawable
         )
 
         // adapter
@@ -88,19 +90,10 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         val fastScroller = findViewById<View>(R.id.fast_scroller) as RecyclerFastScroller
         fastScroller.attachRecyclerView(mRecyclerView)
 
-        // additional decorations
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            // Lollipop or later has native drop shadow feature. ItemShadowDecorator is not required.
-        } else {
-            mRecyclerView!!.addItemDecoration(
-                ItemShadowDecorator(
-                    resources.getDrawable(R.drawable.material_shadow_z1) as NinePatchDrawable
-                )
-            )
-        }
         mRecyclerView!!.addItemDecoration(
-            SimpleListDividerDecorator(resources.getDrawable(R.drawable.list_divider), true)
+            SimpleListDividerDecorator(resources.drawable(R.drawable.list_divider), true)
         )
+
         mRecyclerViewDragDropManager!!.attachRecyclerView(mRecyclerView!!)
         mPlaylistAdapter!!.setOnItemClickListener(this)
         val curListName = findViewById<View>(R.id.current_list_name) as TextView
