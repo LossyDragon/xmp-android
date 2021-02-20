@@ -356,8 +356,7 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
 
     // Menu
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        val inflater = menuInflater
-        inflater.inflate(R.menu.options_menu, menu)
+        menuInflater.inflate(R.menu.menu_options, menu)
 
         // Calling super after populating the menu is necessary here to ensure that the
         // action bar helpers have a chance to handle this event.
@@ -367,15 +366,11 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             android.R.id.home -> startPlayerActivity()
-            R.id.menu_new_playlist -> PlaylistUtils.newPlaylistDialog(this) { updateList() }
             R.id.menu_prefs -> startActivityForResult(
                 Intent(this, Preferences::class.java),
                 SETTINGS_REQUEST
             )
-            R.id.menu_refresh -> updateList()
             R.id.menu_download -> startActivity(Intent(this, Search::class.java))
-            else -> {
-            }
         }
         return super.onOptionsItemSelected(item)
     }

@@ -891,7 +891,7 @@ class PlayerActivity : AppCompatActivity() {
     // Menu
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         if (PrefManager.enableDelete) {
-            menuInflater.inflate(R.menu.player_menu, menu)
+            menuInflater.inflate(R.menu.menu_delete, menu)
         }
         return true
     }
