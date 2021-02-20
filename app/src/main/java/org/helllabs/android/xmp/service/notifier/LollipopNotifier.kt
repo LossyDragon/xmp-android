@@ -25,7 +25,7 @@ class LollipopNotifier(service: Service) : Notifier(service) {
             .setContentText(notifyInfo)
             .setContentInfo(indexText)
             .setContentIntent(contentIntent)
-            .setSmallIcon(R.drawable.notification_icon)
+            .setSmallIcon(R.drawable.ic_notification)
             .setLargeIcon(icon)
             .setOngoing(true)
             .setWhen(0)

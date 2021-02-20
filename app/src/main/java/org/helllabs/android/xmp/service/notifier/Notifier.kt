@@ -4,12 +4,13 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import java.util.*
+import androidx.core.content.res.ResourcesCompat
+import androidx.core.graphics.drawable.toBitmap
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.player.PlayerActivity
 import org.helllabs.android.xmp.service.receiver.NotificationActionReceiver
 import org.helllabs.android.xmp.service.utils.QueueManager
+import java.util.*
 
 abstract class Notifier(protected val service: Service) {
 
@@ -24,11 +25,15 @@ abstract class Notifier(protected val service: Service) {
     init {
         val intent = Intent(service, PlayerActivity::class.java)
         contentIntent = PendingIntent.getActivity(service, 0, intent, 0)
-        icon = BitmapFactory.decodeResource(service.resources, R.drawable.icon)
         prevIntent = makePendingIntent(ACTION_PREV)
         stopIntent = makePendingIntent(ACTION_STOP)
         pauseIntent = makePendingIntent(ACTION_PAUSE)
         nextIntent = makePendingIntent(ACTION_NEXT)
+        icon = ResourcesCompat.getDrawable(
+            service.resources,
+            R.drawable.ic_xmp_vector,
+            null
+        )!!.toBitmap()
     }
 
     abstract fun notify(title: String, info: String, index: Int, type: Int)
