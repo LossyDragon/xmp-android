@@ -42,6 +42,9 @@ object PrefManager {
     private const val USE_FILENAME = "use_filename"
     private const val VOL_BOOST = "vol_boost"
 
+    // New
+    private const val SEARCH_HISTORY = "search_history"
+
     private lateinit var prefs: SharedPreferences
 
     fun init(context: Context) {
@@ -51,6 +54,10 @@ object PrefManager {
     // TODO get rid of this
     fun getPreferenceManager(): SharedPreferences {
         return prefs
+    }
+
+    fun clearSearchHistory() {
+        prefs.edit { remove(SEARCH_HISTORY) }
     }
 
     var showToast: Boolean
@@ -148,4 +155,9 @@ object PrefManager {
     var bluetoothPause: Boolean
         get() = prefs.getBoolean(BLUETOOTH_PAUSE, true)
         set(value) = prefs.edit { putBoolean(BLUETOOTH_PAUSE, value) }
+
+    // Search History
+    var searchHistory: String?
+        get() = prefs.getString(SEARCH_HISTORY, null)
+        set(value) = prefs.edit { putString(SEARCH_HISTORY, value) }
 }

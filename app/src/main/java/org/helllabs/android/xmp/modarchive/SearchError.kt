@@ -3,39 +3,39 @@ package org.helllabs.android.xmp.modarchive
 import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
-import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.res.ResourcesCompat
+import com.google.android.material.appbar.MaterialToolbar
 import java.util.*
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.util.drawable
+import org.helllabs.android.xmp.modarchive.ModArchiveConstants.ERROR
 
 class SearchError : AppCompatActivity(), Runnable {
 
-    private var msg: TextView? = null
-    private var frameBlink = false
+    private var frameBlink: Boolean = false
+
+    private lateinit var appBarText: TextView
+    private lateinit var errorMessage: TextView
 
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 		// Hide the status bar
-        //        if (Build.VERSION.SDK_INT < 16) {
-        //            getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        //        } else {
-        //        	final View decorView = getWindow().getDecorView();
-        //        	decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
-        //        }
+        setContentView(R.layout.activity_search_error)
+        setSupportActionBar(findViewById<MaterialToolbar>(R.id.toolbar))
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setDisplayShowHomeEnabled(true)
 
-        setContentView(R.layout.search_error)
-        title = "Search error"
-        val error = intent.getSerializableExtra(Search.ERROR) as Throwable
-        msg = findViewById<View>(R.id.error_message) as TextView
-        // msg.getPaint().setAntiAlias(false);
-        var message = error.message
+        appBarText = findViewById(R.id.toolbarText)
+        errorMessage = findViewById(R.id.error_message)
 
+        appBarText.text = getString(R.string.search_title_error)
+
+        val error = intent.getStringExtra(ERROR)
+
+        var message = error
         if (message == null) {
-            message = UNKNOWN_ERROR
+            message = getString(R.string.search_unknown_error)
         } else {
             // Remove java exception stuff
             val idx = message.indexOf("Exception: ")
@@ -43,48 +43,51 @@ class SearchError : AppCompatActivity(), Runnable {
                 message = message.substring(idx + 11)
             }
             message = if (message.trim { it <= ' ' }.isEmpty()) {
-                UNKNOWN_ERROR
+                getString(R.string.search_unknown_error)
             } else {
-                message.substring(0, 1).toUpperCase(Locale.US) + message.substring(1) +
-                    ".  Press back button to continue."
+                val err = message.substring(0, 1).toUpperCase(Locale.US) + message.substring(1)
+                getString(R.string.search_known_error, err)
             }
         }
 
         val font = ResourcesCompat.getFont(applicationContext, R.font.font_topaz_plus_a500)
-        msg!!.text = message
-        msg!!.typeface = font
-        msg!!.postDelayed(this, PERIOD.toLong())
+        errorMessage.text = message
+        errorMessage.typeface = font
     }
 
-    public override fun onDestroy() {
-        msg!!.removeCallbacks(this)
-        super.onDestroy()
+    override fun onResume() {
+        super.onResume()
+        errorMessage.postDelayed(this, BLINK_PERIOD)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        errorMessage.removeCallbacks(this)
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
-
         // Back key returns to search
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             val intent = Intent(this, Search::class.java)
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-            startActivity(intent)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
             overridePendingTransition(0, 0)
+            startActivity(intent)
             return true
         }
         return super.onKeyDown(keyCode, event)
     }
 
+    // Guru frame blink
     override fun run() {
-        // Guru frame blink
-        val frame = if (frameBlink) R.drawable.guru_frame else R.drawable.guru_frame_2
-        msg!!.background = resources.drawable(frame)
-        frameBlink = frameBlink xor true
-        msg!!.postDelayed(this, PERIOD.toLong())
+        errorMessage.apply {
+            background.alpha = if (frameBlink) 255 else 0
+            postDelayed(this@SearchError, BLINK_PERIOD)
+        }
+
+        frameBlink = !frameBlink
     }
 
     companion object {
-        private const val PERIOD = 1337
-        private const val UNKNOWN_ERROR = "Software Failure.   " +
-            "Press back to continue.\n\nGuru Meditation #35068035.48454C50"
+        private const val BLINK_PERIOD = 1337L
     }
 }

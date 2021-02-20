@@ -17,25 +17,26 @@ import kotlinx.coroutines.flow.collect
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.modarchive.ModArchiveConstants.ARTIST_ID
 import org.helllabs.android.xmp.modarchive.ModArchiveConstants.ERROR
+import org.helllabs.android.xmp.modarchive.ModArchiveConstants.MODULE_ID
 import org.helllabs.android.xmp.modarchive.ModArchiveConstants.SEARCH_TEXT
 import org.helllabs.android.xmp.modarchive.SearchError
-import org.helllabs.android.xmp.modarchive.adapter.ArtistAdapter
-import org.helllabs.android.xmp.modarchive.result.ArtistResultViewModel.ArtistState
-import org.helllabs.android.xmp.model.ArtistResult
+import org.helllabs.android.xmp.modarchive.adapter.SearchListAdapter
+import org.helllabs.android.xmp.modarchive.result.SearchListViewModel.SearchResultState
+import org.helllabs.android.xmp.model.SearchListResult
 import org.helllabs.android.xmp.util.hide
 import org.helllabs.android.xmp.util.show
 
 @AndroidEntryPoint
-class ArtistResult : AppCompatActivity(), ArtistAdapter.ArtistAdapterListener {
+class SearchListResult : AppCompatActivity(), SearchListAdapter.SearchListListener {
 
-    private lateinit var artistAdapter: ArtistAdapter
-    private val viewModel: ArtistResultViewModel by viewModels()
+    private lateinit var searchListAdapter: SearchListAdapter
+    private val viewModel: SearchListViewModel by viewModels()
 
     private lateinit var appBarText: TextView
-    private lateinit var resultList: RecyclerView
-    private lateinit var resultSpinner: ProgressBar
     private lateinit var errorMessage: TextView
     private lateinit var errorLayout: LinearLayout
+    private lateinit var resultSpinner: ProgressBar
+    private lateinit var resultList: RecyclerView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,45 +47,52 @@ class ArtistResult : AppCompatActivity(), ArtistAdapter.ArtistAdapterListener {
         supportActionBar?.setDisplayShowHomeEnabled(true)
 
         appBarText = findViewById(R.id.toolbarText)
-        resultList = findViewById(R.id.result_list)
         resultSpinner = findViewById(R.id.result_spinner)
+        resultList = findViewById(R.id.result_list)
         errorMessage = findViewById(R.id.message)
         errorLayout = findViewById(R.id.layout)
 
-        appBarText.text = getString(R.string.search_artist_title)
-
-        artistAdapter = ArtistAdapter()
-        artistAdapter.artistAdapterListener = this
+        searchListAdapter = SearchListAdapter()
+        searchListAdapter.searchListListener = this
 
         resultList.apply {
-            layoutManager = LinearLayoutManager(this@ArtistResult)
-            adapter = artistAdapter
+            layoutManager = LinearLayoutManager(this@SearchListResult)
+            adapter = searchListAdapter
             addItemDecoration(
                 DividerItemDecoration(
-                    this@ArtistResult,
+                    this@SearchListResult,
                     LinearLayoutManager.HORIZONTAL
                 )
             )
         }
 
         lifecycleScope.launchWhenStarted {
-            viewModel.artistState.collect {
+            viewModel.searchResultState.collect {
                 when (it) {
-                    ArtistState.None -> Unit
-                    ArtistState.Load -> onLoad()
-                    is ArtistState.Error -> onError(it.error)
-                    is ArtistState.SoftError -> onSoftError(it.softError)
-                    is ArtistState.SearchResult -> onResult(it.result)
+                    SearchResultState.None -> Unit
+                    SearchResultState.Load -> onLoad()
+                    is SearchResultState.Error -> onError(it.error)
+                    is SearchResultState.SoftError -> onSoftError(it.softError)
+                    is SearchResultState.SearchResult -> onResult(it.result)
                 }
             }
         }
 
-        viewModel.fetchArtists(intent.getStringExtra(SEARCH_TEXT)!!)
+        intent.getStringExtra(SEARCH_TEXT)?.let {
+            appBarText.text = getString(R.string.search_title_title)
+            viewModel.getFileOrTitle(it)
+        }
+
+        intent.getIntExtra(ARTIST_ID, -1).let {
+            if (it < 0) return@let
+            appBarText.text = getString(R.string.search_artist_modules_title)
+            viewModel.getArtistById(it)
+        }
     }
 
     override fun onClick(id: Int) {
-        val intent = Intent(this, SearchListResult::class.java)
-        intent.putExtra(ARTIST_ID, id)
+        val intent = Intent(this, ModuleResult::class.java)
+        intent.putExtra(MODULE_ID, id)
         overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
         startActivity(intent)
     }
@@ -111,9 +119,9 @@ class ArtistResult : AppCompatActivity(), ArtistAdapter.ArtistAdapterListener {
         errorMessage.text = softError
     }
 
-    private fun onResult(result: ArtistResult) {
+    private fun onResult(result: SearchListResult) {
         resultList.show()
         resultSpinner.hide()
-        artistAdapter.submitList(result.items)
+        searchListAdapter.submitList(result.module)
     }
 }

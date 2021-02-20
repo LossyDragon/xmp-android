@@ -4,6 +4,7 @@ import android.content.res.Resources
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.text.Html
+import android.view.View
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.core.content.res.ResourcesCompat
@@ -44,4 +45,23 @@ fun String?.asHtml(): String {
         @Suppress("DEPRECATION")
         Html.fromHtml(this).toString()
     }
+}
+
+/**
+ * View helpers
+ */
+fun View.hide() {
+    this.visibility = View.GONE
+}
+
+fun View.show() {
+    this.visibility = View.VISIBLE
+}
+
+fun View.click(l: (v: View) -> Unit) {
+    this.setOnClickListener(l)
+}
+
+fun View.longClick(l: (v: View) -> Boolean) {
+    this.setOnLongClickListener(l)
 }

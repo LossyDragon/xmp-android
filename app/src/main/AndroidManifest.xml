@@ -157,12 +157,18 @@
             android:theme="@style/AppTheme.NoActionBar" />
 
         <activity
-            android:name=".modarchive.result.TitleResult"
+            android:name=".modarchive.SearchHistory"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:parentActivityName=".modarchive.Search" />
+
+        <activity
+            android:name=".modarchive.result.SearchListResult"
             android:configChanges="keyboardHidden|orientation|screenSize">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".modarchive.Search" />
         </activity>
+
 
         <activity
             android:name=".modarchive.result.ArtistResult"
@@ -173,23 +179,7 @@
         </activity>
 
         <activity
-            android:name=".modarchive.result.ArtistModulesResult"
-            android:configChanges="keyboardHidden|orientation|screenSize">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".modarchive.Search" />
-        </activity>
-
-        <activity
             android:name=".modarchive.result.ModuleResult"
-            android:configChanges="keyboardHidden|orientation|screenSize">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".modarchive.Search" />
-        </activity>
-
-        <activity
-            android:name=".modarchive.result.RandomResult"
             android:configChanges="keyboardHidden|orientation|screenSize">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -224,10 +214,6 @@
         </activity>
 
         <service android:name=".service.PlayerService" />
-
-        <service
-            android:name="com.telly.groundy.GroundyService"
-            android:exported="false" />
 
         <receiver
             android:name=".service.receiver.MediaButtonsReceiver"

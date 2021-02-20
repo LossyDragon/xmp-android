@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".modarchive.Search">
+
+    <include
+        android:id="@+id/appbar"
+        layout="@layout/layout_appbar" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <androidx.constraintlayout.widget.Guideline
+                android:id="@+id/guideline"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintGuide_percent="0.5" />
+
+            <!-- TODO: Low Contrast accessibility warning -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/search_input_layout"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="32dp"
+                android:hint="@string/search_search"
+                app:endIconMode="clear_text"
+                app:helperText="@string/search_helper_text"
+                app:helperTextEnabled="true"
+                app:hintTextColor="@color/white"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/search_edit_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:imeOptions="actionSearch"
+                    android:inputType="text"
+                    android:maxLines="1"
+                    android:textColor="@color/white" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <RadioGroup
+                android:id="@+id/search_radio_group"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                app:layout_constraintLeft_toLeftOf="@+id/search_input_layout"
+                app:layout_constraintRight_toRightOf="@+id/search_input_layout"
+                app:layout_constraintTop_toBottomOf="@+id/search_input_layout">
+
+                <com.google.android.material.radiobutton.MaterialRadioButton
+                    android:id="@+id/search_title_radio_button"
+                    android:layout_width="175dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/search_title_or_filename" />
+
+                <com.google.android.material.radiobutton.MaterialRadioButton
+                    android:id="@+id/search_artist_radio_button"
+                    android:layout_width="175dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/search_artist" />
+
+            </RadioGroup>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/search_search_button"
+                style="@style/SearchActivityButtons"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:layout_marginEnd="16dp"
+                android:enabled="false"
+                android:text="@string/search_search"
+                app:icon="@drawable/ic_search"
+                app:layout_constraintLeft_toLeftOf="@+id/search_input_layout"
+                app:layout_constraintRight_toLeftOf="@+id/guideline"
+                app:layout_constraintTop_toBottomOf="@+id/search_radio_group" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/search_random_button"
+                style="@style/SearchActivityButtons"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16sp"
+                android:layout_marginTop="32dp"
+                android:text="@string/search_random_pick"
+                app:icon="@drawable/ic_random"
+                app:layout_constraintLeft_toRightOf="@+id/guideline"
+                app:layout_constraintRight_toRightOf="@id/search_input_layout"
+                app:layout_constraintTop_toBottomOf="@+id/search_radio_group" />
+
+            <LinearLayout
+                android:id="@+id/search_history_button"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:layout_marginTop="24sp"
+                android:background="?selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:padding="4dp"
+                app:layout_constraintLeft_toLeftOf="@+id/search_input_layout"
+                app:layout_constraintRight_toRightOf="@id/search_random_button"
+                app:layout_constraintTop_toBottomOf="@+id/search_random_button"
+                tools:ignore="UseCompoundDrawables">
+                <!-- CompoundDrawables still worthless -->
+
+                <androidx.appcompat.widget.AppCompatImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:tint="@color/white"
+                    app:srcCompat="@drawable/ic_history"
+                    tools:ignore="ContentDescription" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:text="@string/search_history" />
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/text_modarchive"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="18sp"
+                android:autoLink="web"
+                android:gravity="center"
+                android:text="@string/search_download_provided"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/search_history_button" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </ScrollView>
+</LinearLayout>

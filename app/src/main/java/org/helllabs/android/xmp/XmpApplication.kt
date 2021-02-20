@@ -1,14 +1,13 @@
 package org.helllabs.android.xmp
 
 import android.app.Application
-import com.android.volley.RequestQueue
-import com.android.volley.toolbox.Volley
+import dagger.hilt.android.HiltAndroidApp
 import org.helllabs.android.xmp.preferences.PrefManager
 
+@HiltAndroidApp
 class XmpApplication : Application() {
 
     var fileList: List<String>? = null
-    val requestQueue: RequestQueue by lazy { Volley.newRequestQueue(applicationContext) }
 
     override fun onCreate() {
         super.onCreate()

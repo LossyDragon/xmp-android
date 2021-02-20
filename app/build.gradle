@@ -1,6 +1,7 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
+apply plugin: 'dagger.hilt.android.plugin'
 apply plugin: "org.jlleitschuh.gradle.ktlint"
 
 // https://developer.android.com/ndk/downloads
@@ -40,31 +41,63 @@ android {
         ndkBuild.path 'src/main/cpp/Android.mk'
     }
 
+    // Hush ExperimentalCoroutinesApi
     kotlinOptions {
         jvmTarget = "1.8"
+        freeCompilerArgs += "-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi"
+    }
+
+    // Removes:  Coroutines debug artifact
+    packagingOptions {
+        exclude "DebugProbesKt.bin"
     }
 }
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 
-    // Included .jars
-    implementation files('libs/groundy-1.5.jar')
-
     // Android Support Libs
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'androidx.recyclerview:recyclerview:1.1.0'
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation 'androidx.preference:preference-ktx:1.1.1'
     implementation 'com.google.android.material:material:1.3.0'
+    // implementation "androidx.activity:activity-ktx:1.2.0"
+    // implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.3.0"
+    // implementation 'android.arch.lifecycle:extensions:1.1.1'
+
+    // Dep Injection
+    implementation "androidx.hilt:hilt-lifecycle-viewmodel:1.0.0-alpha03"
+    implementation "com.google.dagger:hilt-android:$hilt_android"
+    kapt "com.google.dagger:hilt-compiler:$hilt_android"
+
+    // Coroutines
+    def coroutines = "1.4.2"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines"
+
+    // Http & Download
+    implementation 'androidx.tonyodev.fetch2:xfetch2:3.1.6'
+    implementation "androidx.tonyodev.fetch2okhttp:xfetch2okhttp:3.1.6"
+    implementation "com.squareup.okhttp3:okhttp:4.9.0"
+    implementation "com.squareup.retrofit2:retrofit:2.9.0"
+
+    // Retrofit XML Parsing
+    def tikXml = '0.8.13'
+    implementation("com.tickaroo.tikxml:annotation") { version { strictly "$tikXml" } }
+    implementation("com.tickaroo.tikxml:retrofit-converter") { version { strictly "$tikXml" } }
+    kapt("com.tickaroo.tikxml:processor") { version { strictly "$tikXml" } }
 
     // Other Libs
-    implementation 'com.android.volley:volley:1.1.1'
+    implementation 'com.google.code.gson:gson:2.8.6'
+    implementation 'com.github.razir.progressbutton:progressbutton:2.1.0'
     implementation('com.h6ah4i.android.widget.advrecyclerview:advrecyclerview:0.8.5@aar') {
         transitive = true
     }
     implementation 'com.github.pluscubed:recycler-fast-scroll:0.3.0@aar'
+    implementation 'com.afollestad.material-dialogs:core:3.3.0'
 }
 
 ktlint {

@@ -178,7 +178,7 @@
     <string name="search_artist_no_mods">This artist has no modules.</string>
     <string name="search_title_or_filename">Title or file name</string>
     <string name="search_artist">Artist</string>
-    <string name="search_random_pick">Random pick</string>
+    <string name="search_random_pick">Random</string>
 
     <string name="result_title">Title</string>
     <string name="result_download">Download</string>
@@ -195,6 +195,7 @@
     <string name="msg_sd_enable_write">Enable write access</string>
     <string name="msg_sd_instructions">In the following screen select your external (physical) SD card to enable write access. Continue?</string>
 
+    <!-- New Strings Below -->
     <string name="notif_channel_desc">Current module and player controls</string>
     <string name="notif_channel_name">Xmp</string>
     <string name="clipboard_copied">Copied to clipboard</string>
@@ -204,5 +205,33 @@
     <string name="pref_lib_summary">Code repository for libxmp</string>
     <string name="pref_site_title">Website</string>
     <string name="pref_site_summary">View more information about libxmp</string>
+    <string name="search_download_provided">Downloads provided by modarchive.org</string>
+    <string name="search_history">Search History</string>
+    <string name="search_helper_text">Minimum of 3 characters</string>
+    <string name="frowny_face">:(</string>
+    <string name="text_license">License</string>
+    <string name="text_song_message">Song Message</string>
+    <string name="text_instruments">Instruments</string>
+    <string name="download">Download</string>
+    <string name="random">Random</string>
+    <string name="search_title_error">Search Error</string>
+    <string name="search_unknown_error">Software Failure.   Press back to continue.\n\nGuru Meditation #35068035.48454C50</string>
+    <string name="search_known_error">%s.  Press back button to continue.</string>
+    <string name="menu_clear_history">Clear history</string>
+    <string name="history_no_items">No items in history.</string>
+    <string name="button_download_unsupported">Unsupported Module</string>
+    <string name="msg_file_exists">File exists</string>
+    <string name="msg_file_exists_overwrite">This module already exists. Do you want to overwrite?</string>
+    <string name="dirname_theModArchive">TheModArchive</string>
+    <string name="msg_error_remove_directory">Error removing directory</string>
+    <string name="msg_delete_file">Are you sure you want to delete %s?</string>
+    <string name="title_delete_file">Delete File</string>
+    <string name="button_downloading">Downloading…</string>
+    <string name="search_result_by">%1$s by %2$s (%3$d KB)</string>
+    <string name="msg_download_cancelled">Download cancelled</string>
+    <string name="button_loading">Loading…</string>
+    <string name="search_module_title">Module Result</string>
+    <string name="by_artist">by %s</string>
+    <string name="size_kb">%d KB</string>
 
 </resources>
