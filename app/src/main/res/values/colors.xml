@@ -14,4 +14,8 @@
     <color name="drag_handle_color">#202020</color>
     <color name="refresh_color">#229e3c</color>
     <color name="section_background_darker">#FF1B1B1B</color>
+
+    <!-- Playlist card's background color -->
+    <color name="cardColor">@color/gray</color>
+
 </resources>

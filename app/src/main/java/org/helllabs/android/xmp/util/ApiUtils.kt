@@ -4,10 +4,12 @@ import android.content.res.Resources
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.text.Html
+import android.view.MotionEvent
 import android.view.View
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.core.content.res.ResourcesCompat
+import androidx.recyclerview.widget.RecyclerView
 
 /**
  * API level helpers
@@ -25,10 +27,10 @@ inline fun <reified T : Resources> T.drawable(@DrawableRes res: Int): Drawable? 
 
 inline fun <reified T : Resources> T.color(@ColorRes res: Int): Int {
     return if (isAtLeastM) {
-        this.getColor(res, null)
+        getColor(res, null)
     } else {
         @Suppress("DEPRECATION")
-        this.getColor(res)
+        getColor(res)
     }
 }
 
@@ -51,17 +53,46 @@ fun String?.asHtml(): String {
  * View helpers
  */
 fun View.hide() {
-    this.visibility = View.GONE
+    visibility = View.GONE
 }
 
 fun View.show() {
-    this.visibility = View.VISIBLE
+    visibility = View.VISIBLE
 }
 
 fun View.click(l: (v: View) -> Unit) {
-    this.setOnClickListener(l)
+    setOnClickListener(l)
 }
 
 fun View.longClick(l: (v: View) -> Boolean) {
-    this.setOnLongClickListener(l)
+    setOnLongClickListener(l)
+}
+
+/**
+ * setOnItemTouchListener(
+ * onInterceptTouchEvent = { rv, e -> }
+ * onTouchEvent = { rv, e -> }
+ * onRequestDisallowInterceptTouchEvent = { disallowIntercept -> }
+ * )
+ */
+fun RecyclerView.setOnItemTouchListener(
+    onInterceptTouchEvent: ((rv: RecyclerView, e: MotionEvent) -> Boolean)? = null,
+    onTouchEvent: ((rv: RecyclerView, e: MotionEvent) -> Unit)? = null,
+    onRequestDisallowInterceptTouchEvent: ((disallowIntercept: Boolean) -> Unit)? = null
+): RecyclerView.OnItemTouchListener {
+    val listener = object : RecyclerView.OnItemTouchListener {
+        override fun onInterceptTouchEvent(rv: RecyclerView, e: MotionEvent): Boolean {
+            return onInterceptTouchEvent?.invoke(rv, e) ?: false
+        }
+
+        override fun onTouchEvent(rv: RecyclerView, e: MotionEvent) {
+            onTouchEvent?.invoke(rv, e)
+        }
+
+        override fun onRequestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
+            onRequestDisallowInterceptTouchEvent?.invoke(disallowIntercept)
+        }
+    }
+    addOnItemTouchListener(listener)
+    return listener
 }
