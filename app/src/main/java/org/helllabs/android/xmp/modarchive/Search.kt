@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.DisplayMetrics.DENSITY_HIGH
 import android.view.KeyEvent
+import android.view.MenuItem
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
 import android.widget.LinearLayout
@@ -76,6 +77,15 @@ class Search : AppCompatActivity(), TextView.OnEditorActionListener {
     override fun onPause() {
         super.onPause()
         searchInput.clearFocus()
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == android.R.id.home) {
+            onBackPressed()
+            return true
+        }
+
+        return super.onOptionsItemSelected(item)
     }
 
     override fun onEditorAction(v: TextView?, actionId: Int, event: KeyEvent?): Boolean {
