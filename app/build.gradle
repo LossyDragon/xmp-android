@@ -8,6 +8,7 @@ apply plugin: "org.jlleitschuh.gradle.ktlint"
 android {
     compileSdkVersion 29
     ndkVersion "21.4.7075529"
+
     defaultConfig {
         applicationId "org.helllabs.android.xmp"
         minSdkVersion 21
@@ -25,6 +26,7 @@ android {
         // Must be in your global gradle.properties. ex: C:\Users\<name>\.gradle
         buildConfigField("String", "API_KEY", "$modArchiveApiKey")
     }
+
     buildTypes {
         release {
             minifyEnabled true
@@ -93,15 +95,10 @@ dependencies {
     // Other Libs
     implementation 'com.google.code.gson:gson:2.8.6'
     implementation 'com.github.razir.progressbutton:progressbutton:2.1.0'
-    implementation('com.h6ah4i.android.widget.advrecyclerview:advrecyclerview:0.8.5@aar') {
-        transitive = true
-    }
-    implementation 'com.github.pluscubed:recycler-fast-scroll:0.3.0@aar'
     implementation 'com.afollestad.material-dialogs:core:3.3.0'
 }
 
 ktlint {
-    description = "Checking Kotlin formatting style..."
     android = true
     // Ignore: wildcard imports
     disabledRules = ["no-wildcard-imports"]

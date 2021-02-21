@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:layout_weight="1.0"
@@ -11,36 +13,42 @@
         layout="@layout/layout_appbar" />
 
     <LinearLayout
-        android:id="@+id/current_list"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:focusable="true"
-        android:longClickable="true"
         android:orientation="vertical">
 
         <TextView
             android:id="@+id/current_list_name"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="2dp"
+            android:layout_marginStart="6dp"
             android:layout_marginTop="8dp"
+            android:layout_marginEnd="6dp"
+            android:ellipsize="end"
+            android:maxLines="1"
             android:textSize="16sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            tools:text="current_list_name" />
 
         <TextView
             android:id="@+id/current_list_description"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="2dp"
+            android:layout_marginStart="6dp"
+            android:layout_marginEnd="6dp"
             android:layout_marginBottom="8dp"
-            android:textSize="13sp" />
+            android:ellipsize="end"
+            android:maxLines="3"
+            android:textSize="13sp"
+            android:textStyle="italic"
+            tools:text="current_list_description" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/cardColor" />
 
     </LinearLayout>
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@color/cardColor" />
 
     <LinearLayout
         android:layout_width="fill_parent"
@@ -60,24 +68,29 @@
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/plist_list"
-                    android:layout_width="fill_parent"
-                    android:layout_height="fill_parent" />
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    app:fastScrollEnabled="true"
+                    app:fastScrollHorizontalThumbDrawable="@drawable/thumb_drawable"
+                    app:fastScrollHorizontalTrackDrawable="@drawable/thumb_line_drawable"
+                    app:fastScrollVerticalThumbDrawable="@drawable/thumb_drawable"
+                    app:fastScrollVerticalTrackDrawable="@drawable/thumb_line_drawable"
+                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                    tools:listitem="@layout/item_playlist" />
 
             </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
-            <com.pluscubed.recyclerfastscroll.RecyclerFastScroller
-                android:id="@+id/fast_scroller"
-                android:layout_width="wrap_content"
+            <TextView
+                android:id="@+id/empty_message"
+                android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_gravity="end" />
+                android:gravity="center"
+                android:text="@string/msg_empty_playlist"
+                android:textSize="24sp"
+                android:visibility="gone"
+                tools:visibility="visible" />
 
         </FrameLayout>
-
-        <TextView
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:gravity="top"
-            android:text="@string/msg_empty_playlist" />
 
     </LinearLayout>
 

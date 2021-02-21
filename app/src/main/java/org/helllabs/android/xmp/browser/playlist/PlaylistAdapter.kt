@@ -3,66 +3,63 @@ package org.helllabs.android.xmp.browser.playlist
 import android.content.Context
 import android.graphics.Typeface
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
-import com.h6ah4i.android.widget.advrecyclerview.draggable.DraggableItemAdapter
-import com.h6ah4i.android.widget.advrecyclerview.draggable.ItemDraggableRange
-import com.h6ah4i.android.widget.advrecyclerview.utils.AbstractDraggableItemViewHolder
 import java.io.File
 import java.util.*
 import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.util.color
+import org.helllabs.android.xmp.util.recyclerview.ItemTouchHelperAdapter
+import org.helllabs.android.xmp.util.recyclerview.ItemTouchHelperViewHolder
+import org.helllabs.android.xmp.util.recyclerview.OnStartDragListener
 import org.helllabs.android.xmp.util.show
+import org.helllabs.android.xmp.util.touch
 
 class PlaylistAdapter :
     RecyclerView.Adapter<PlaylistAdapter.ViewHolder>,
-    DraggableItemAdapter<PlaylistAdapter.ViewHolder> {
+    ItemTouchHelperAdapter {
 
+    var position = 0
+
+    private var mDragStartListener: OnStartDragListener? = null
     private val typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
     private val playlist: Playlist?
     private val items: MutableList<PlaylistItem>
     private val context: Context
     private var useFilename: Boolean
-    var position = 0
     private var onItemClickListener: OnItemClickListener? = null
     private val layoutType: Int
 
+    val filenameList: List<String>
+        get() {
+            val list: MutableList<String> = ArrayList()
+            for (item in items) {
+                if (item.type == PlaylistItem.TYPE_FILE) {
+                    list.add(item.file!!.path)
+                }
+            }
+            return list
+        }
+
+    val directoryCount: Int
+        get() {
+            var count = 0
+            for (item in items) {
+                if (item.type != PlaylistItem.TYPE_DIRECTORY) {
+                    break
+                }
+                count++
+            }
+            return count
+        }
+
     interface OnItemClickListener {
         fun onItemClick(adapter: PlaylistAdapter, view: View, position: Int)
-    }
-
-    class ViewHolder(itemView: View, adapter: PlaylistAdapter) :
-        AbstractDraggableItemViewHolder(itemView),
-        View.OnClickListener {
-        val container: View
-        val handle: View?
-        val titleText: TextView
-        val infoText: TextView
-        val image: ImageView
-        private var onItemClickListener: OnItemClickListener? = null
-        private val adapter: PlaylistAdapter
-
-        init {
-            itemView.setOnClickListener(this)
-            container = itemView.findViewById(R.id.plist_container)
-            handle = itemView.findViewById(R.id.plist_handle)
-            titleText = itemView.findViewById<View>(R.id.plist_title) as TextView
-            infoText = itemView.findViewById<View>(R.id.plist_info) as TextView
-            image = itemView.findViewById<View>(R.id.plist_image) as ImageView
-            this.adapter = adapter
-        }
-
-        fun setOnItemClickListener(listener: OnItemClickListener?) {
-            onItemClickListener = listener
-        }
-
-        override fun onClick(view: View) {
-            if (onItemClickListener != null) {
-                onItemClickListener!!.onItemClick(adapter, view, adapterPosition)
-            }
-        }
     }
 
     fun setOnItemClickListener(listener: OnItemClickListener?) {
@@ -72,7 +69,7 @@ class PlaylistAdapter :
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val layout: Int = when (layoutType) {
             LAYOUT_CARD -> R.layout.item_playlist_card
-            else -> R.layout.playlist_item
+            else -> R.layout.item_playlist
         }
         val view = LayoutInflater.from(parent.context).inflate(layout, parent, false)
         val holder = ViewHolder(view, this)
@@ -108,25 +105,6 @@ class PlaylistAdapter :
             position = holder.adapterPosition
             false
         }
-
-        // Advanced RecyclerView
-        // set background resource (target view ID: container)
-        /*
-        final int dragState = holder.getDragStateFlags();
-
-        if (((dragState & RecyclerViewDragDropManager.STATE_FLAG_IS_UPDATED) != 0)) {
-            final int bgResId;
-
-            if ((dragState & RecyclerViewDragDropManager.STATE_FLAG_IS_ACTIVE) != 0) {
-                bgResId = R.drawable.bg_item_dragging_active_state;
-            } else if ((dragState & RecyclerViewDragDropManager.STATE_FLAG_DRAGGING) != 0) {
-                bgResId = R.drawable.bg_item_dragging_state;
-            } else {
-                bgResId = R.drawable.bg_item_normal_state;
-            }
-
-            holder.container.setBackgroundResource(bgResId);
-        }*/
     }
 
     constructor(
@@ -146,12 +124,19 @@ class PlaylistAdapter :
         setHasStableIds(true)
     }
 
-    constructor(context: Context, playlist: Playlist, useFilename: Boolean, layoutType: Int) {
+    constructor(
+        context: Context,
+        playlist: Playlist,
+        useFilename: Boolean,
+        layoutType: Int,
+        drag: OnStartDragListener
+    ) {
         this.playlist = playlist
         items = playlist.list
         this.context = context
         this.useFilename = useFilename
         this.layoutType = layoutType
+        mDragStartListener = drag
 
         // DraggableItemAdapter requires stable ID, and also
         // have to implement the getItemId() method appropriately.
@@ -169,6 +154,20 @@ class PlaylistAdapter :
 
     override fun getItemId(position: Int): Long {
         return items[position].id.toLong()
+    }
+
+    override fun onItemMove(fromPosition: Int, toPosition: Int): Boolean {
+        if (fromPosition == toPosition) {
+            return false
+        }
+        val item = items[fromPosition]
+        items.remove(item)
+        items.add(toPosition, item)
+        // playlist.setListChanged(true);
+        notifyItemMoved(fromPosition, toPosition)
+        playlist?.setListChanged(true)
+
+        return true
     }
 
     fun getItem(num: Int): PlaylistItem {
@@ -191,9 +190,6 @@ class PlaylistAdapter :
         this.useFilename = useFilename
     }
 
-    // public List<PlaylistItem> getItems() {
-    // 	return items;
-    // }
     fun getFilename(location: Int): String {
         return items[location].file!!.path
     }
@@ -202,72 +198,54 @@ class PlaylistAdapter :
         return items[location].file!!
     }
 
-    val filenameList: List<String>
-        get() {
-            val list: MutableList<String> = ArrayList()
-            for (item in items) {
-                if (item.type == PlaylistItem.TYPE_FILE) {
-                    list.add(item.file!!.path)
-                }
-            }
-            return list
-        }
-    val directoryCount: Int
-        get() {
-            var count = 0
-            for (item in items) {
-                if (item.type != PlaylistItem.TYPE_DIRECTORY) {
-                    break
-                }
-                count++
-            }
-            return count
-        }
-
     fun addList(list: List<PlaylistItem>) {
         items.addAll(list)
     }
 
-    // Advanced RecyclerView
-    override fun onMoveItem(fromPosition: Int, toPosition: Int) {
-        // Log.d(TAG, "onMoveItem(fromPosition = " + fromPosition + ", toPosition = " + toPosition + ")");
-        if (fromPosition == toPosition) {
-            return
+    inner class ViewHolder(itemView: View, private val playlistAdapter: PlaylistAdapter) :
+        RecyclerView.ViewHolder(itemView),
+        ItemTouchHelperViewHolder,
+        View.OnClickListener {
+
+        val container: View = itemView.findViewById(R.id.plist_container)
+        val handle: View? = itemView.findViewById(R.id.plist_handle)
+        val titleText: TextView = itemView.findViewById(R.id.plist_title)
+        val infoText: TextView = itemView.findViewById(R.id.plist_info)
+        val image: ImageView = itemView.findViewById(R.id.plist_image)
+        private var onItemClickListener: OnItemClickListener? = null
+
+        init {
+            itemView.setOnClickListener(this)
+            if (handle != null && handle.isVisible) {
+                handle.touch { _, e ->
+                    if (e.action == MotionEvent.ACTION_DOWN) {
+                        mDragStartListener?.onStartDrag(this)
+                    }
+                    false
+                }
+            }
         }
-        val item = items[fromPosition]
-        items.remove(item)
-        items.add(toPosition, item)
-        // playlist.setListChanged(true);
-        notifyItemMoved(fromPosition, toPosition)
-        playlist?.setListChanged(true)
-    }
 
-    override fun onCheckCanStartDrag(holder: ViewHolder, position: Int, x: Int, y: Int): Boolean {
-        // x, y --- relative from the itemView's top-left
-        val containerView = holder.container
-        val dragHandleView = holder.handle
-        val offsetX = containerView.left + (containerView.translationX + 0.5f).toInt()
-        return hitTest(dragHandleView!!, x - offsetX, y)
-    }
+        fun setOnItemClickListener(listener: OnItemClickListener?) {
+            onItemClickListener = listener
+        }
 
-    override fun onGetItemDraggableRange(holder: ViewHolder, position: Int): ItemDraggableRange? {
-        // no drag-sortable range specified
-        return null
+        override fun onClick(view: View) {
+            onItemClickListener?.onItemClick(playlistAdapter, view, adapterPosition)
+        }
+
+        override fun onItemSelected() {
+            itemView.setBackgroundColor(itemView.resources.color(R.color.gray))
+        }
+
+        override fun onItemClear() {
+            itemView.setBackgroundColor(0)
+        }
     }
 
     companion object {
         const val LAYOUT_LIST = 0
         const val LAYOUT_CARD = 1
         const val LAYOUT_DRAG = 2
-
-        private fun hitTest(v: View, x: Int, y: Int): Boolean {
-            val tx = (v.translationX + 0.5f).toInt()
-            val ty = (v.translationY + 0.5f).toInt()
-            val left = v.left + tx
-            val right = v.right + tx
-            val top = v.top + ty
-            val bottom = v.bottom + ty
-            return x in left..right && y >= top && y <= bottom
-        }
     }
 }

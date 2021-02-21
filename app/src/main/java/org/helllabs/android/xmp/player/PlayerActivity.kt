@@ -606,6 +606,9 @@ class PlayerActivity : AppCompatActivity() {
         display = (getSystemService(WINDOW_SERVICE) as WindowManager).defaultDisplay
         logI("Create player interface")
 
+        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+        window.statusBarColor = ResourcesCompat.getColor(resources, R.color.primary, null)
+
         // INITIALIZE RECEIVER by jwei512
         val filter = IntentFilter(Intent.ACTION_SCREEN_ON)
         filter.addAction(Intent.ACTION_SCREEN_OFF)

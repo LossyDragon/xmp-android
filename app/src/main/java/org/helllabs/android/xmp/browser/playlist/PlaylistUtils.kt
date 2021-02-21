@@ -18,6 +18,7 @@ import org.helllabs.android.xmp.util.ModInfo
 import org.helllabs.android.xmp.util.toast
 
 object PlaylistUtils {
+
     fun newPlaylistDialog(activity: Activity) {
         newPlaylistDialog(activity, null)
     }
@@ -45,12 +46,12 @@ object PlaylistUtils {
     /*
      * Send files to the specified playlist
      */
-    private fun addFiles(activity: Activity, fileList: List<String?>?, playlistName: String?) {
+    private fun addFiles(activity: Activity, fileList: List<String>, playlistName: String) {
         val list: MutableList<PlaylistItem> = ArrayList()
         val modInfo = ModInfo()
         var hasInvalid = false
-        for (filename in fileList!!) {
-            if (testModule(filename!!, modInfo)) {
+        for (filename in fileList) {
+            if (testModule(filename, modInfo)) {
                 val item = PlaylistItem(PlaylistItem.TYPE_FILE, modInfo.name, modInfo.type)
                 item.file = File(filename)
                 list.add(item)
@@ -73,7 +74,7 @@ object PlaylistUtils {
         renumberIds(list)
     }
 
-    fun filesToPlaylist(activity: Activity, fileList: List<String?>?, playlistName: String?) {
+    fun filesToPlaylist(activity: Activity, fileList: List<String>, playlistName: String) {
         val progressDialog = ProgressDialog.show(
             activity,
             "Please wait",
@@ -88,28 +89,27 @@ object PlaylistUtils {
         }.start()
     }
 
-    fun filesToPlaylist(activity: Activity, filename: String?, playlistName: String?) {
-        val fileList: MutableList<String?> = ArrayList()
-        fileList.add(filename)
-        addFiles(activity, fileList, playlistName)
+    fun filesToPlaylist(activity: Activity, filename: String, playlistName: String) {
+        addFiles(activity, listOf(filename), playlistName)
     }
 
-    fun list(): Array<String?> {
-        val ret = Preferences.DATA_DIR.list(PlaylistFilter())
-        return ret ?: arrayOfNulls(0)
+    fun list(): Array<String> {
+        return Preferences.DATA_DIR.list { _, name ->
+            name.endsWith(Playlist.PLAYLIST_SUFFIX)
+        } ?: emptyArray()
     }
 
-    fun listNoSuffix(): Array<String?> {
+    fun listNoSuffix(): Array<String> {
         val pList = list()
         for (i in pList.indices) {
-            pList[i] = pList[i]!!.substring(0, pList[i]!!.lastIndexOf(Playlist.PLAYLIST_SUFFIX))
+            pList[i] = pList[i].substring(0, pList[i].lastIndexOf(Playlist.PLAYLIST_SUFFIX))
         }
         return pList
     }
 
     fun getPlaylistName(index: Int): String {
         val pList = list()
-        return pList[index]!!.substring(0, pList[index]!!.lastIndexOf(Playlist.PLAYLIST_SUFFIX))
+        return pList[index].substring(0, pList[index].lastIndexOf(Playlist.PLAYLIST_SUFFIX))
     }
 
     fun createEmptyPlaylist(activity: Activity, name: String, comment: String): Boolean {

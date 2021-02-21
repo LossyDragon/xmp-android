@@ -26,14 +26,14 @@ class Playlist(context: Context, val name: String) {
     private val mPrefs: SharedPreferences
 
     private class ListFile : File {
-        constructor(name: String?) : super(Preferences.DATA_DIR, name + PLAYLIST_SUFFIX)
-        constructor(name: String?, suffix: String) :
+        constructor(name: String) : super(Preferences.DATA_DIR, name + PLAYLIST_SUFFIX)
+        constructor(name: String, suffix: String) :
             super(Preferences.DATA_DIR, name + PLAYLIST_SUFFIX + suffix)
     }
 
     private class CommentFile : File {
-        constructor(name: String?) : super(Preferences.DATA_DIR, name + COMMENT_SUFFIX)
-        constructor(name: String?, suffix: String) :
+        constructor(name: String) : super(Preferences.DATA_DIR, name + COMMENT_SUFFIX)
+        constructor(name: String, suffix: String) :
             super(Preferences.DATA_DIR, name + COMMENT_SUFFIX + suffix)
     }
 
@@ -121,7 +121,7 @@ class Playlist(context: Context, val name: String) {
     }
 
     // Helper methods
-    private fun readList(name: String?): Boolean {
+    private fun readList(name: String): Boolean {
         list.clear()
         val file: File = ListFile(name)
         var lineNum: Int
@@ -169,7 +169,7 @@ class Playlist(context: Context, val name: String) {
         return true
     }
 
-    private fun writeList(name: String?) {
+    private fun writeList(name: String) {
         logI("Write list")
         val file: File = ListFile(name, ".new")
         file.delete()
@@ -187,7 +187,7 @@ class Playlist(context: Context, val name: String) {
         }
     }
 
-    private fun writeComment(name: String?) {
+    private fun writeComment(name: String) {
         logI("Write comment")
         val file: File = CommentFile(name, ".new")
         file.delete()
@@ -201,11 +201,11 @@ class Playlist(context: Context, val name: String) {
         }
     }
 
-    private fun readShuffleModePref(name: String?): Boolean {
+    private fun readShuffleModePref(name: String): Boolean {
         return mPrefs.getBoolean(optionName(name, SHUFFLE_MODE), DEFAULT_SHUFFLE_MODE)
     }
 
-    private fun readLoopModePref(name: String?): Boolean {
+    private fun readLoopModePref(name: String): Boolean {
         return mPrefs.getBoolean(optionName(name, LOOP_MODE), DEFAULT_LOOP_MODE)
     }
 
@@ -230,7 +230,7 @@ class Playlist(context: Context, val name: String) {
          * @param newName The new name of the playlist
          * @return Whether the rename was successful
          */
-        fun rename(context: Context?, oldName: String?, newName: String?): Boolean {
+        fun rename(context: Context, oldName: String, newName: String): Boolean {
             val old1: File = ListFile(oldName)
             val old2: File = CommentFile(oldName)
             val new1: File = ListFile(newName)
@@ -267,7 +267,7 @@ class Playlist(context: Context, val name: String) {
          * @param context The context the playlist is being created in
          * @param name    The playlist name
          */
-        fun delete(context: Context?, name: String?) {
+        fun delete(context: Context, name: String) {
             ListFile(name).delete()
             CommentFile(name).delete()
             val prefs = PreferenceManager.getDefaultSharedPreferences(context)
@@ -301,11 +301,10 @@ class Playlist(context: Context, val name: String) {
          * @param name     The playlist name
          * @param items    The list of playlist items to add
          */
-        fun addToList(activity: Activity, name: String?, items: List<PlaylistItem>) {
+        fun addToList(activity: Activity, name: String, items: List<PlaylistItem>) {
             val lines = mutableListOf<String>()
-            var i = 0
-            for (item in items) {
-                lines[i++] = item.toString()
+            items.forEach { playlistItem ->
+                lines.add(playlistItem.toString())
             }
             try {
                 writeToFile(File(Preferences.DATA_DIR, name + PLAYLIST_SUFFIX), lines)
@@ -321,7 +320,7 @@ class Playlist(context: Context, val name: String) {
          * @param name     The playlist name
          * @return The playlist comment
          */
-        fun readComment(activity: Activity, name: String?): String {
+        fun readComment(activity: Activity, name: String): String {
             var comment: String? = null
             try {
                 comment = readFromFile(CommentFile(name))

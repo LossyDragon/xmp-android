@@ -125,7 +125,6 @@
 
         <ImageButton
             android:id="@+id/loop"
-            style="@style/ButtonTheme"
             android:layout_width="wrap_content"
             android:layout_height="32dip"
             android:layout_weight="0.05"
@@ -143,7 +142,6 @@
 
         <ImageButton
             android:id="@+id/back"
-            style="@style/ButtonTheme"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1.0"
@@ -153,7 +151,6 @@
 
         <ImageButton
             android:id="@+id/stop"
-            style="@style/ButtonTheme"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1.0"
@@ -163,7 +160,6 @@
 
         <ImageButton
             android:id="@+id/play"
-            style="@style/ButtonTheme"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1.0"
@@ -173,7 +169,6 @@
 
         <ImageButton
             android:id="@+id/forward"
-            style="@style/ButtonTheme"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1.0"

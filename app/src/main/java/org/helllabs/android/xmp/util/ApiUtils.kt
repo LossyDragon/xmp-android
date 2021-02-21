@@ -68,6 +68,10 @@ fun View.longClick(l: (v: View) -> Boolean) {
     setOnLongClickListener(l)
 }
 
+fun View.touch(l: (view: View, event: MotionEvent) -> Boolean) {
+    setOnTouchListener(l)
+}
+
 /**
  * setOnItemTouchListener(
  * onInterceptTouchEvent = { rv, e -> }

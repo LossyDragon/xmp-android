@@ -7,10 +7,9 @@ import android.view.*
 import android.view.ContextMenu.ContextMenuInfo
 import android.widget.ImageButton
 import android.widget.TextView
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.h6ah4i.android.widget.advrecyclerview.decoration.SimpleListDividerDecorator
-import com.pluscubed.recyclerfastscroll.RecyclerFastScroller
 import java.io.File
 import java.text.DateFormat
 import java.util.*
@@ -106,7 +105,6 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_modlist)
-
         findViewById<TextView>(R.id.toolbarText).text = getString(R.string.browser_filelist_title)
 
         mNavigation = FilelistNavigation()
@@ -121,11 +119,10 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
             layoutManager = LinearLayoutManager(this@FilelistActivity)
             adapter = mPlaylistAdapter
             addItemDecoration(
-                SimpleListDividerDecorator(resources.drawable(R.drawable.list_divider), true)
+                DividerItemDecoration(this@FilelistActivity, LinearLayoutManager.HORIZONTAL)
             )
         }
 
-        findViewById<RecyclerFastScroller>(R.id.fast_scroller).attachRecyclerView(recyclerView)
         findViewById<ImageButton>(R.id.up_button).click { parentDir() }
 
         curPath = findViewById<TextView>(R.id.current_path).apply {
