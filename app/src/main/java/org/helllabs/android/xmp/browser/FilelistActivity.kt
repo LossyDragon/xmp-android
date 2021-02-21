@@ -120,11 +120,7 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
             AlertDialog.BUTTON_POSITIVE,
             getString(R.string.create)
         ) { _: DialogInterface?, _: Int ->
-            val ret = Examples.install(
-                this,
-                mediaPath,
-                PrefManager.installExamples
-            )
+            val ret = installAssets(mediaPath, PrefManager.installExamples)
             if (ret < 0) {
                 error(this, "Error creating directory $mediaPath.")
             }

@@ -1,50 +1,51 @@
 package org.helllabs.android.xmp.browser
 
 import android.content.Context
-import java.io.*
-import org.helllabs.android.xmp.util.logD
+import java.io.File
 import org.helllabs.android.xmp.util.logE
+import org.helllabs.android.xmp.util.logW
 
-object Examples {
-    fun install(context: Context, path: String, examples: Boolean): Int {
-        val dir = File(path)
-        if (dir.isDirectory) {
-            logD("install: $path directory not found")
-            return 0
-        }
-        if (!dir.mkdirs()) {
-            logE("can't create directory: $path")
-            return -1
-        }
-        val am = context.resources.assets
-        val assets: Array<String>?
-        try {
-            assets = am.list("mod")
-            if (!examples || assets == null) {
-                return 0
-            }
-            for (a in assets) {
-                copyAsset(am.open("mod/$a"), "$path/$a")
-            }
-        } catch (e: IOException) {
-            return -1
-        }
+// Should be moved with FileUtils.
+/**
+ * Handles installing sample modules from assets into the specified folder
+ * @param path the directory to install the sample(s).
+ * @param shouldInstall return false if we shouldn't install the sample.
+ */
+fun Context.installAssets(path: String, shouldInstall: Boolean): Int {
+    val filePath = File(path)
+
+    // Ignore installing examples if preference is false
+    if (!shouldInstall) {
         return 0
     }
 
-    private fun copyAsset(`in`: InputStream, dst: String): Int {
-        val buf = ByteArray(1024)
-        var len: Int
-        try {
-            val out: OutputStream = FileOutputStream(dst)
-            while (`in`.read(buf).also { len = it } > 0) {
-                out.write(buf, 0, len)
-            }
-            `in`.close()
-            out.close()
-        } catch (e: IOException) {
-            return -1
-        }
+    // Return false if the filepath is not a directory.
+    if (filePath.isDirectory) {
+        logW("install: $path directory not found")
+        return -1
+    }
+
+    // Try and make the directory.
+    if (!filePath.mkdirs()) {
+        logE("Can't create directory: $path")
+        return -1
+    }
+
+    val am = assets
+    val assets: Array<String>? = am.list("mod")
+
+    // Asset folder is empty.
+    if (assets.isNullOrEmpty()) {
         return 0
     }
+
+    assets.forEach { item ->
+        am.open("mod/$item").use { stream ->
+            File("$path/$item").outputStream().use {
+                stream.copyTo(it)
+            }
+        }
+    }
+
+    return 1
 }
