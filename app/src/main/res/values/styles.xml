@@ -44,9 +44,9 @@
         <item name="android:button">@drawable/checkbox_selector</item>
     </style>
 
-    <style name="StatusTheme" parent="AppTheme">
-        <item name="android:background">@color/primary_dark</item>
-    </style>
+<!--    <style name="StatusTheme" parent="AppTheme">-->
+<!--        <item name="android:background">@color/primary_dark</item>-->
+<!--    </style>-->
 
     <style name="SidebarTheme" parent="AppTheme">
         <item name="android:padding">4dp</item>
@@ -108,6 +108,13 @@
         <item name="android:textColor">@color/white</item>
         <item name="iconTint">@color/white</item>
         <item name="backgroundTint">@color/primary</item>
+    </style>
+
+    <!--Player Buttons -->
+    <style name="PlayerButtons" parent="AppTheme">
+        <item name="android:scaleX">1.2</item>
+        <item name="android:scaleY">1.2</item>
+        <item name="android:background">?selectableItemBackgroundBorderless</item>
     </style>
 
 </resources>

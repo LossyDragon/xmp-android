@@ -38,8 +38,8 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     private var mShowToasts = false
     private var mAddList: MutableList<String>? = null
     private var refresh = false
-    protected var mPlaylistAdapter: PlaylistAdapter? = null
 
+    protected lateinit var mPlaylistAdapter: PlaylistAdapter
     protected abstract var isShuffleMode: Boolean
     protected abstract var isLoopMode: Boolean
     protected abstract val allFiles: List<String>
@@ -55,7 +55,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
 
     private val toggleLoopButtonListener = View.OnClickListener { view ->
         isLoopMode = !isLoopMode
-        val icon = if (isLoopMode) R.drawable.list_loop_on else R.drawable.list_loop_off
+        val icon = if (isLoopMode) R.drawable.ic_repeat_on else R.drawable.ic_repeat_off
         (view as ImageButton).setImageResource(icon)
         if (mShowToasts)
             toast(if (isLoopMode) R.string.msg_loop_on else R.string.msg_loop_off)
@@ -63,7 +63,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
 
     private val toggleShuffleButtonListener = View.OnClickListener { view ->
         isShuffleMode = !isShuffleMode
-        val icon = if (isShuffleMode) R.drawable.list_shuffle_on else R.drawable.list_shuffle_off
+        val icon = if (isShuffleMode) R.drawable.ic_shuffle_on else R.drawable.ic_shuffle_off
         (view as ImageButton).setImageResource(icon)
         if (mShowToasts)
             toast(if (isShuffleMode) R.string.msg_shuffle_on else R.string.msg_shuffle_off)
@@ -89,11 +89,16 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        mShowToasts = PrefManager.showToast
+    }
+
+    // Let the menu's inflate after the layout's inflated.
+    override fun onPostCreate(savedInstanceState: Bundle?) {
+        super.onPostCreate(savedInstanceState)
+
         setSupportActionBar(findViewById<MaterialToolbar>(R.id.toolbar))
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayShowHomeEnabled(true)
-
-        mShowToasts = PrefManager.showToast
     }
 
     public override fun onResume() {
@@ -195,19 +200,19 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     }
 
     protected fun setupButtons() {
-        findViewById<ImageButton>(R.id.play_all).apply {
-            setImageResource(R.drawable.list_play)
+        findViewById<ImageButton>(R.id.control_button_play).apply {
+            setImageResource(R.drawable.ic_play)
             setOnClickListener(playAllButtonListener)
         }
-        findViewById<ImageButton>(R.id.toggle_loop).apply {
+        findViewById<ImageButton>(R.id.control_button_loop).apply {
             setImageResource(
-                if (isLoopMode) R.drawable.list_loop_on else R.drawable.list_loop_off
+                if (isLoopMode) R.drawable.ic_repeat_on else R.drawable.ic_repeat_off
             )
             setOnClickListener(toggleLoopButtonListener)
         }
-        findViewById<ImageButton>(R.id.toggle_shuffle).apply {
+        findViewById<ImageButton>(R.id.control_button_shuffle).apply {
             setImageResource(
-                if (isShuffleMode) R.drawable.list_shuffle_on else R.drawable.list_shuffle_off
+                if (isShuffleMode) R.drawable.ic_shuffle_on else R.drawable.ic_shuffle_off
             )
             setOnClickListener(toggleShuffleButtonListener)
         }

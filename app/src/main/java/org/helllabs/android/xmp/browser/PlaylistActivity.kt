@@ -25,32 +25,17 @@ import org.helllabs.android.xmp.util.drawable
 import org.helllabs.android.xmp.util.logE
 
 class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickListener {
+
     private var mPlaylist: Playlist? = null
     private var mRecyclerView: RecyclerView? = null
     private var mWrappedAdapter: RecyclerView.Adapter<*>? = null
     private var mRecyclerViewDragDropManager: RecyclerViewDragDropManager? = null
 
-    // List reorder
-    /*private final TouchListView.DropListener onDrop = new TouchListView.DropListener() {
-		@Override
-		public void drop(final int from, final int to) {
-			final PlaylistItem item = playlistAdapter.getItem(from);
-			playlistAdapter.remove(item);
-			playlistAdapter.insert(item, to);
-			playlist.setListChanged(true);
-		}
-	};
-
-	private final TouchListView.RemoveListener onRemove = new TouchListView.RemoveListener() {
-		@Override
-		public void remove(final int which) {
-			playlistAdapter.remove(playlistAdapter.getItem(which));
-		}
-	};	*/
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContentView(R.layout.playlist)
+
         val extras = intent.extras ?: return
         setTitle(R.string.browser_playlist_title)
         val name = extras.getString("name") ?: return
@@ -80,7 +65,7 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
             useFilename,
             PlaylistAdapter.LAYOUT_DRAG
         )
-        mWrappedAdapter = mRecyclerViewDragDropManager!!.createWrappedAdapter(mPlaylistAdapter!!)
+        mWrappedAdapter = mRecyclerViewDragDropManager!!.createWrappedAdapter(mPlaylistAdapter)
         val animator: GeneralItemAnimator = RefactoredDefaultItemAnimator()
         mRecyclerView!!.layoutManager = layoutManager
         mRecyclerView!!.adapter = mWrappedAdapter
@@ -95,18 +80,19 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         )
 
         mRecyclerViewDragDropManager!!.attachRecyclerView(mRecyclerView!!)
-        mPlaylistAdapter!!.setOnItemClickListener(this)
+        mPlaylistAdapter.setOnItemClickListener(this)
         val curListName = findViewById<View>(R.id.current_list_name) as TextView
         val curListDesc = findViewById<View>(R.id.current_list_description) as TextView
         curListName.text = name
         curListDesc.text = mPlaylist!!.comment
         registerForContextMenu(mRecyclerView)
+
         setupButtons()
     }
 
     override fun onResume() {
         super.onResume()
-        mPlaylistAdapter!!.setUseFilename(PrefManager.useFilename)
+        mPlaylistAdapter.setUseFilename(PrefManager.useFilename)
         update()
     }
 
@@ -130,7 +116,7 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
             WrapperAdapterUtils.releaseAll(mWrappedAdapter)
             mWrappedAdapter = null
         }
-        mPlaylistAdapter = null
+        // mPlaylistAdapter = null
         super.onDestroy()
     }
 
@@ -145,10 +131,10 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
             mPlaylist!!.isLoopMode = loopMode
         }
     override val allFiles: List<String>
-        get() = mPlaylistAdapter!!.filenameList
+        get() = mPlaylistAdapter.filenameList
 
     public override fun update() {
-        mPlaylistAdapter!!.notifyDataSetChanged()
+        mPlaylistAdapter.notifyDataSetChanged()
     }
 
     // Playlist context menu
@@ -168,17 +154,17 @@ class PlaylistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
 
     override fun onContextItemSelected(item: MenuItem): Boolean {
         val itemId = item.itemId
-        val position = mPlaylistAdapter!!.position
+        val position = mPlaylistAdapter.position
         when (itemId) {
             0 -> {
                 mPlaylist!!.remove(position)
                 mPlaylist!!.commit()
                 update()
             }
-            1 -> addToQueue(mPlaylistAdapter!!.getFilename(position))
-            2 -> addToQueue(mPlaylistAdapter!!.filenameList)
-            3 -> playModule(mPlaylistAdapter!!.getFilename(position))
-            4 -> playModule(mPlaylistAdapter!!.filenameList, position)
+            1 -> addToQueue(mPlaylistAdapter.getFilename(position))
+            2 -> addToQueue(mPlaylistAdapter.filenameList)
+            3 -> playModule(mPlaylistAdapter.getFilename(position))
+            4 -> playModule(mPlaylistAdapter.filenameList, position)
         }
         return true
     }

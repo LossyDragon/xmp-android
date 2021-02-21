@@ -6,9 +6,12 @@
     android:gravity="top"
     android:orientation="vertical">
 
+    <include
+        android:id="@+id/appbar"
+        layout="@layout/layout_appbar" />
+
     <LinearLayout
         android:id="@+id/current_list"
-        style="@style/StatusTheme"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:focusable="true"
@@ -33,6 +36,11 @@
             android:textSize="13sp" />
 
     </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/cardColor" />
 
     <LinearLayout
         android:layout_width="fill_parent"
@@ -73,35 +81,6 @@
 
     </LinearLayout>
 
-    <LinearLayout
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:gravity="bottom"
-        android:orientation="horizontal">
-
-        <ImageButton
-            android:id="@+id/play_all"
-            style="@style/ButtonTheme"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.34"
-            android:contentDescription="@string/button_play_all" />
-
-        <ImageButton
-            android:id="@+id/toggle_loop"
-            style="@style/ButtonTheme"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.33"
-            android:contentDescription="@string/button_toggle_loop" />
-
-        <ImageButton
-            android:id="@+id/toggle_shuffle"
-            style="@style/ButtonTheme"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.33"
-            android:contentDescription="@string/button_toggle_shuffle" />
-    </LinearLayout>
+    <include layout="@layout/layout_list_controls" />
 
 </LinearLayout>

@@ -5,15 +5,16 @@
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     android:background="?android:attr/selectableItemBackground"
+    android:baselineAligned="false"
     android:orientation="horizontal">
 
-    <ImageView
+    <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/plist_image"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
-        android:layout_margin="8dp"
-        tools:ignore="ContentDescription" />
+        android:layout_width="?listPreferredItemHeight"
+        android:layout_height="match_parent"
+        android:layout_gravity="center_vertical|start"
+        android:scaleType="center"
+        tools:src="@drawable/ic_file" />
 
     <LinearLayout
         android:layout_width="0dp"
@@ -29,13 +30,30 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:singleLine="true"
-            android:textSize="19sp" />
+            android:text="@{title}"
+            android:textSize="19sp"
+            tools:text="Some Playlist Title" />
 
         <TextView
             android:id="@+id/plist_info"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:textSize="13sp" />
+            android:ellipsize="end"
+            android:singleLine="true"
+            android:text="@{info}"
+            android:textSize="13sp"
+            tools:text="Some Playlist Info" />
+
     </LinearLayout>
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/plist_handle"
+        android:layout_width="?listPreferredItemHeight"
+        android:layout_height="match_parent"
+        android:layout_gravity="center_vertical|end"
+        android:scaleType="center"
+        android:src="@drawable/ic_handle"
+        android:visibility="invisible"
+        tools:visibility="visible" />
 
 </LinearLayout>

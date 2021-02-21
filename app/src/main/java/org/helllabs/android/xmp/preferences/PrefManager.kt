@@ -20,7 +20,7 @@ object PrefManager {
     private const val ALL_SEQUENCES = "all_sequences"
     private const val AMIGA_MIXER = "amiga_mixer"
     private const val ARTIST_FOLDER = "artist_folder"
-    private const val BACK_BUTTON_NAVIGATION = "back_button_navigation"
+    // private const val BACK_BUTTON_NAVIGATION = "back_button_navigation"
     private const val BLUETOOTH_PAUSE = "bluetooth_pause"
     private const val BUFFER_MS = "buffer_ms_opensl"
     private const val CHANGELOG_VERSION = "changelog_version"
@@ -72,9 +72,10 @@ object PrefManager {
         get() = prefs.getString(MEDIA_PATH, Preferences.DEFAULT_MEDIA_PATH)!!
         set(value) = prefs.edit { putString(MEDIA_PATH, value) }
 
-    var backButtonNavigation: Boolean
-        get() = prefs.getBoolean(BACK_BUTTON_NAVIGATION, true)
-        set(value) = prefs.edit { putBoolean(BACK_BUTTON_NAVIGATION, value) }
+    // Not used in code anymore
+    // var backButtonNavigation: Boolean
+    //     get() = prefs.getBoolean(BACK_BUTTON_NAVIGATION, true)
+    //     set(value) = prefs.edit { putBoolean(BACK_BUTTON_NAVIGATION, value) }
 
     var installExamples: Boolean
         get() = prefs.getBoolean(EXAMPLES, true)

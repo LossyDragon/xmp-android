@@ -344,7 +344,7 @@ class PlayerActivity : AppCompatActivity() {
 
     private fun pause() {
         paused = true
-        playButton!!.setImageResource(R.drawable.play)
+        playButton!!.setImageResource(R.drawable.ic_play)
     }
 
     private fun unpause() {
@@ -511,9 +511,9 @@ class PlayerActivity : AppCompatActivity() {
             if (modPlayer != null) {
                 try {
                     if (modPlayer!!.toggleLoop()) {
-                        loopButton!!.setImageResource(R.drawable.loop_on)
+                        loopButton!!.setImageResource(R.drawable.ic_repeat_on)
                     } else {
-                        loopButton!!.setImageResource(R.drawable.loop_off)
+                        loopButton!!.setImageResource(R.drawable.ic_repeat_off)
                     }
                 } catch (e: RemoteException) {
                     logE("Can't get loop status")
@@ -653,7 +653,7 @@ class PlayerActivity : AppCompatActivity() {
         }
         playButton = findViewById<View>(R.id.play) as ImageButton
         loopButton = findViewById<View>(R.id.loop) as ImageButton
-        loopButton!!.setImageResource(R.drawable.loop_off)
+        loopButton!!.setImageResource(R.drawable.ic_repeat_off)
         elapsedTime!!.setOnClickListener {
             showElapsed = showElapsed xor true
         }
@@ -839,7 +839,9 @@ class PlayerActivity : AppCompatActivity() {
                     sidebar!!.addSequence(i, seqVars[i])
                 }
                 sidebar!!.selectSequence(0)
-                loopButton!!.setImageResource(if (loop) R.drawable.loop_on else R.drawable.loop_off)
+                loopButton!!.setImageResource(
+                    if (loop) R.drawable.ic_repeat_on else R.drawable.ic_repeat_off
+                )
                 totalTime = time / 1000
                 seekBar!!.max = time / 100
                 seekBar!!.progress = playTime

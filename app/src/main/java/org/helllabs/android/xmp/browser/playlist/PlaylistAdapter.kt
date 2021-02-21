@@ -1,9 +1,12 @@
 package org.helllabs.android.xmp.browser.playlist
 
-import android.content.*
+import android.content.Context
 import android.graphics.Typeface
-import android.view.*
-import android.widget.*
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.h6ah4i.android.widget.advrecyclerview.draggable.DraggableItemAdapter
 import com.h6ah4i.android.widget.advrecyclerview.draggable.ItemDraggableRange
@@ -11,7 +14,7 @@ import com.h6ah4i.android.widget.advrecyclerview.utils.AbstractDraggableItemView
 import java.io.File
 import java.util.*
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.util.color
+import org.helllabs.android.xmp.util.show
 
 class PlaylistAdapter :
     RecyclerView.Adapter<PlaylistAdapter.ViewHolder>,
@@ -69,7 +72,6 @@ class PlaylistAdapter :
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val layout: Int = when (layoutType) {
             LAYOUT_CARD -> R.layout.item_playlist_card
-            LAYOUT_DRAG -> R.layout.playlist_item_drag
             else -> R.layout.playlist_item
         }
         val view = LayoutInflater.from(parent.context).inflate(layout, parent, false)
@@ -96,7 +98,8 @@ class PlaylistAdapter :
             holder.image.visibility = View.GONE
         }
         if (layoutType == LAYOUT_DRAG) {
-            holder.handle?.setBackgroundColor(context.resources.color(R.color.drag_handle_color))
+            holder.handle?.show()
+            // holder.handle?.setBackgroundColor(context.resources.color(R.color.drag_handle_color))
             // holder.image.setAlpha(0.5f);
         }
 
