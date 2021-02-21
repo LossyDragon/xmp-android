@@ -18,6 +18,9 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import java.io.File
+import java.io.IOException
+import java.util.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.browser.playlist.Playlist
 import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter
@@ -34,9 +37,6 @@ import org.helllabs.android.xmp.util.FileUtils.writeToFile
 import org.helllabs.android.xmp.util.Message.error
 import org.helllabs.android.xmp.util.Message.fatalError
 import org.helllabs.android.xmp.util.Message.yesNoDialog
-import java.io.File
-import java.io.IOException
-import java.util.*
 
 class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
 
@@ -58,7 +58,8 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
                 ActivityCompat.requestPermissions(
                     this,
                     arrayOf(WRITE_EXTERNAL_STORAGE),
-                    REQUEST_WRITE_STORAGE)
+                    REQUEST_WRITE_STORAGE
+                )
             }
         }
 
@@ -113,7 +114,9 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
 
         // FAB
         findViewById<FloatingActionButton>(R.id.playlist_add_button).click {
-            PlaylistUtils.newPlaylistDialog(this) { updateList() }
+            PlaylistUtils.newPlaylistDialog(this) {
+                updateList()
+            }
         }
 
         if (!Preferences.checkStorage()) {
