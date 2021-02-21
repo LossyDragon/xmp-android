@@ -100,7 +100,7 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
     override val allFiles: List<String>
         get() = recursiveList(mNavigation!!.currentDir)
 
-    override fun onItemClick(adapter: PlaylistAdapter, view: View?, position: Int) {
+    override fun onItemClick(adapter: PlaylistAdapter, view: View, position: Int) {
         val file = mPlaylistAdapter!!.getFile(position)
         if (mNavigation!!.changeDirectory(file)) {
             mNavigation!!.saveListPosition(recyclerView)

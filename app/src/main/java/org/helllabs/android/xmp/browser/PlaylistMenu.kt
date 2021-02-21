@@ -197,7 +197,7 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
     }
 
     // Playlist context menu
-    override fun onCreateContextMenu(menu: ContextMenu, view: View, menuInfo: ContextMenuInfo) {
+    override fun onCreateContextMenu(menu: ContextMenu, view: View, menuInfo: ContextMenuInfo?) {
         menu.setHeaderTitle("Playlist options")
         val position = playlistAdapter.position
         if (position == 0) {
@@ -251,7 +251,7 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
         return true
     }
 
-    override fun onItemClick(adapter: PlaylistAdapter, view: View?, position: Int) {
+    override fun onItemClick(adapter: PlaylistAdapter, view: View, position: Int) {
         val intent: Intent
         if (position == 0) {
             intent = Intent(this@PlaylistMenu, FilelistActivity::class.java)

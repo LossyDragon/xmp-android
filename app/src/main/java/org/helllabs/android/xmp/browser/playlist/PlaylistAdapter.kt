@@ -27,7 +27,7 @@ class PlaylistAdapter :
     private val layoutType: Int
 
     interface OnItemClickListener {
-        fun onItemClick(adapter: PlaylistAdapter, view: View?, position: Int)
+        fun onItemClick(adapter: PlaylistAdapter, view: View, position: Int)
     }
 
     class ViewHolder(itemView: View, adapter: PlaylistAdapter) :
