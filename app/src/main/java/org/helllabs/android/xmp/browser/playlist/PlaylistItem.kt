@@ -2,6 +2,7 @@ package org.helllabs.android.xmp.browser.playlist
 
 import java.io.File
 import org.helllabs.android.xmp.R
+import java.util.*
 
 class PlaylistItem(
     val type: Int,
@@ -31,12 +32,13 @@ class PlaylistItem(
 
     // Comparable
     override fun compareTo(other: PlaylistItem): Int {
+        val locale = Locale.getDefault()
         val d1 = file!!.isDirectory
         val d2 = other.file!!.isDirectory
         return if (d1 xor d2) {
             if (d1) -1 else 1
         } else {
-            name!!.compareTo(other.name!!)
+            name!!.toLowerCase(locale).compareTo(other.name!!.toLowerCase(locale))
         }
     }
 

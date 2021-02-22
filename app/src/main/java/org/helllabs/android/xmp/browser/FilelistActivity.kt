@@ -32,13 +32,13 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
     private lateinit var recyclerView: RecyclerView
     private lateinit var mCrossfade: Crossfader
     private lateinit var curPath: TextView
-    private var mNavigation: FilelistNavigation? = null
+    private lateinit var mNavigation: FilelistNavigation
     private var isPathMenu = false
 
     override var isLoopMode = false
     override var isShuffleMode = false
     override val allFiles: List<String>
-        get() = recursiveList(mNavigation!!.currentDir)
+        get() = recursiveList(mNavigation.currentDir)
 
     // region [REGION] PlaylistChoice
     /**
@@ -55,7 +55,7 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         override fun execute(fileSelection: Int, playlistSelection: Int) {
             PlaylistUtils.filesToPlaylist(
                 this@FilelistActivity,
-                recursiveList(mNavigation!!.currentDir),
+                recursiveList(mNavigation.currentDir),
                 PlaylistUtils.getPlaylistName(playlistSelection)
             )
         }
@@ -117,6 +117,7 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
 
         recyclerView = findViewById<RecyclerView>(R.id.modlist_listview).apply {
             adapter = mPlaylistAdapter
+            setHasFixedSize(true)
             addItemDecoration(
                 DividerItemDecoration(this@FilelistActivity, LinearLayoutManager.HORIZONTAL)
             )
@@ -138,7 +139,7 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         // Check if directory exists
         val modDir = File(PrefManager.mediaPath)
         if (modDir.isDirectory) {
-            mNavigation!!.startNavigation(modDir)
+            mNavigation.startNavigation(modDir)
             updateModlist()
         } else {
             pathNotFound(PrefManager.mediaPath)
@@ -176,13 +177,10 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
-            // if (mBackButtonParentdir) {
-            // Return to parent dir up to the starting level, then act as regular back
-            if (!mNavigation!!.isAtTopDir) {
+            if (!mNavigation.isAtTopDir) {
                 parentDir()
                 return true
             }
-            // }
         }
         return super.onKeyDown(keyCode, event)
     }
@@ -228,7 +226,7 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
                 1 -> choosePlaylist(0, addCurrentRecursiveChoice)
                 2 -> addToQueue(mPlaylistAdapter.filenameList)
                 3 -> {
-                    PrefManager.mediaPath = mNavigation!!.currentDir!!.path
+                    PrefManager.mediaPath = mNavigation.currentDir!!.path
                     toast("Set as default module path")
                 }
                 4 -> clearCachedEntries(mPlaylistAdapter.filenameList)
@@ -273,8 +271,8 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
 
     override fun onItemClick(adapter: PlaylistAdapter, view: View, position: Int) {
         val file = mPlaylistAdapter.getFile(position)
-        if (mNavigation!!.changeDirectory(file)) {
-            mNavigation!!.saveListPosition(recyclerView)
+        if (mNavigation.changeDirectory(file)) {
+            mNavigation.saveListPosition(recyclerView)
             updateModlist()
         } else {
             super.onItemClick(adapter, view, position)
@@ -299,7 +297,7 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
                 if (ret < 0) {
                     error(this@FilelistActivity, "Error creating directory $mediaPath.")
                 }
-                mNavigation!!.startNavigation(File(mediaPath))
+                mNavigation.startNavigation(File(mediaPath))
                 updateModlist()
             }
             setButton(
@@ -322,14 +320,14 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
     }
 
     private fun parentDir() {
-        if (mNavigation!!.parentDir()) {
+        if (mNavigation.parentDir()) {
             updateModlist()
-            mNavigation!!.restoreListPosition(recyclerView)
+            mNavigation.restoreListPosition(recyclerView)
         }
     }
 
     private fun updateModlist() {
-        val modDir = mNavigation!!.currentDir ?: return
+        val modDir = mNavigation.currentDir ?: return
         mPlaylistAdapter.clear()
         curPath.text = modDir.path
         val list = mutableListOf<PlaylistItem>()
