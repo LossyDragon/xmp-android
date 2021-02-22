@@ -25,12 +25,8 @@ import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.service.ModInterface
 import org.helllabs.android.xmp.service.PlayerCallback
 import org.helllabs.android.xmp.service.PlayerService
+import org.helllabs.android.xmp.util.*
 import org.helllabs.android.xmp.util.FileUtils.basename
-import org.helllabs.android.xmp.util.Message.yesNoDialog
-import org.helllabs.android.xmp.util.logD
-import org.helllabs.android.xmp.util.logE
-import org.helllabs.android.xmp.util.logI
-import org.helllabs.android.xmp.util.toast
 
 class PlayerActivity : AppCompatActivity() {
     /* actual mod player */
@@ -903,7 +899,7 @@ class PlayerActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == R.id.menu_delete) {
-            yesNoDialog(this, "Delete", "Are you sure to delete this file?") {
+            yesNoDialog("Delete", "Are you sure to delete this file?") {
                 try {
                     if (modPlayer!!.deleteFile()) {
                         toast("File deleted")

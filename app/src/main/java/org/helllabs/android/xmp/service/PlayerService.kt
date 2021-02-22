@@ -269,8 +269,8 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                 lastRecognized = queue!!.index
                 cmd = CMD_NONE
                 var name = Xmp.getModName()
-                if (name.isEmpty()) {
-                    name = basename(currentFileName)
+                if (name.isEmpty() && currentFileName != null) {
+                    name = basename(currentFileName!!)
                 }
                 notifier!!.notify(name, Xmp.getModType(), queue!!.index, Notifier.TYPE_TICKER)
                 isLoaded = true

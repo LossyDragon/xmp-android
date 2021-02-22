@@ -11,7 +11,7 @@ import org.helllabs.android.xmp.util.FileUtils.readFromFile
 import org.helllabs.android.xmp.util.FileUtils.removeLineFromFile
 import org.helllabs.android.xmp.util.FileUtils.writeToFile
 import org.helllabs.android.xmp.util.InfoCache.fileExists
-import org.helllabs.android.xmp.util.Message.error
+import org.helllabs.android.xmp.util.generalError
 import org.helllabs.android.xmp.util.logE
 import org.helllabs.android.xmp.util.logI
 
@@ -309,7 +309,7 @@ class Playlist(context: Context, val name: String) {
             try {
                 writeToFile(File(Preferences.DATA_DIR, name + PLAYLIST_SUFFIX), lines)
             } catch (e: IOException) {
-                error(activity, activity.getString(R.string.error_write_to_playlist))
+                activity.generalError(activity.getString(R.string.error_write_to_playlist))
             }
         }
 
@@ -325,7 +325,7 @@ class Playlist(context: Context, val name: String) {
             try {
                 comment = readFromFile(CommentFile(name))
             } catch (e: IOException) {
-                error(activity, activity.getString(R.string.error_read_comment))
+                activity.generalError(activity.getString(R.string.error_read_comment))
             }
             if (comment == null || comment.trim { it <= ' ' }.isEmpty()) {
                 comment = activity.getString(R.string.no_comment)

@@ -172,7 +172,7 @@ class ModuleResult : AppCompatActivity() {
     }
 
     private fun onDownLoadError(downloadError: String) {
-        Message.error(this, downloadError)
+        generalError(downloadError)
     }
 
     private fun onError(error: String?) {
@@ -294,7 +294,7 @@ class ModuleResult : AppCompatActivity() {
         val file = localFile(module)
         val title = getString(R.string.title_delete_file)
         val message = getString(R.string.msg_delete_file, module.filename)
-        Message.yesNoDialog(this, title, message) {
+        yesNoDialog(title, message) {
             logD("Delete " + file.path)
             if (file.delete()) {
                 updateButtons(module)
@@ -373,7 +373,7 @@ class ModuleResult : AppCompatActivity() {
         if (localFile(url, path).exists()) {
             val title = getString(R.string.msg_file_exists)
             val message = getString(R.string.msg_file_exists_overwrite)
-            Message.yesNoDialog(this, title, message) {
+            yesNoDialog(title, message) {
                 viewModel.downloadModule(mod, url, path)
             }
         } else {

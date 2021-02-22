@@ -34,9 +34,6 @@ import org.helllabs.android.xmp.preferences.Preferences
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.util.*
 import org.helllabs.android.xmp.util.FileUtils.writeToFile
-import org.helllabs.android.xmp.util.Message.error
-import org.helllabs.android.xmp.util.Message.fatalError
-import org.helllabs.android.xmp.util.Message.yesNoDialog
 
 class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
 
@@ -91,7 +88,7 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
         }
 
         // Playlist adapter
-        playlistAdapter = PlaylistAdapter(this, ArrayList(), false, LAYOUT_CARD)
+        playlistAdapter = PlaylistAdapter(ArrayList(), false, LAYOUT_CARD)
         playlistAdapter.setOnItemClickListener(this)
 
         findViewById<RecyclerView>(R.id.plist_menu_list).apply {
@@ -120,7 +117,7 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
         }
 
         if (!Preferences.checkStorage()) {
-            fatalError(this, getString(R.string.error_storage))
+            fatalError(getString(R.string.error_storage))
         }
 
         if (isAtLeastM) {
@@ -236,7 +233,6 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
                 2 -> {
                     deletePosition = position - 1
                     yesNoDialog(
-                        this,
                         "Delete",
                         "Are you sure to delete playlist " +
                             PlaylistUtils.listNoSuffix()[deletePosition] + "?"
@@ -272,7 +268,7 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
                     getString(R.string.empty_comment)
                 )
             } else {
-                fatalError(this, getString(R.string.error_datadir))
+                fatalError(getString(R.string.error_datadir))
             }
         }
     }
@@ -294,7 +290,6 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
             "File browser",
             "Files in $mediaPath"
         )
-        browserItem.imageRes = R.drawable.browser
         playlistAdapter.add(browserItem)
         for (name in PlaylistUtils.listNoSuffix()) {
             val item = PlaylistItem(
@@ -333,7 +328,7 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
             input.setText(name)
             setPositiveButton(R.string.ok) { _: DialogInterface?, _: Int ->
                 if (!Playlist.rename(this@PlaylistMenu, name, input.text.toString())) {
-                    error(this@PlaylistMenu, getString(R.string.error_rename_playlist))
+                    generalError(getString(R.string.error_rename_playlist))
                 }
                 updateList()
             }
@@ -354,7 +349,7 @@ class PlaylistMenu : AppCompatActivity(), PlaylistAdapter.OnItemClickListener {
                     file.createNewFile()
                     writeToFile(file, input.text.toString().replace("\n", " "))
                 } catch (e: IOException) {
-                    error(this@PlaylistMenu, getString(R.string.error_edit_comment))
+                    generalError(getString(R.string.error_edit_comment))
                 }
                 updateList()
             }

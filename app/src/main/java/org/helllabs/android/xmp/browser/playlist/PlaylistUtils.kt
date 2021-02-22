@@ -13,15 +13,11 @@ import java.util.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp.testModule
 import org.helllabs.android.xmp.preferences.Preferences
-import org.helllabs.android.xmp.util.Message.error
 import org.helllabs.android.xmp.util.ModInfo
+import org.helllabs.android.xmp.util.generalError
 import org.helllabs.android.xmp.util.toast
 
 object PlaylistUtils {
-
-    fun newPlaylistDialog(activity: Activity) {
-        newPlaylistDialog(activity, null)
-    }
 
     @SuppressLint("InflateParams")
     fun newPlaylistDialog(activity: Activity, runnable: Runnable?) {
@@ -66,7 +62,7 @@ object PlaylistUtils {
                     if (list.size > 1) {
                         activity.toast(R.string.msg_only_valid_files_added)
                     } else {
-                        error(activity, R.string.unrecognized_format)
+                        activity.generalError(activity.getString(R.string.unrecognized_format))
                     }
                 }
             }
@@ -119,7 +115,7 @@ object PlaylistUtils {
             playlist.commit()
             true
         } catch (e: IOException) {
-            error(activity, activity.getString(R.string.error_create_playlist))
+            activity.generalError(activity.getString(R.string.error_create_playlist))
             false
         }
     }

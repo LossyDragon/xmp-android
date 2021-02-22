@@ -65,7 +65,6 @@ class PlaylistActivity :
         findViewById<TextView>(R.id.current_list_description).text = mPlaylist!!.comment
 
         mPlaylistAdapter = PlaylistAdapter(
-            this,
             mPlaylist!!,
             PrefManager.useFilename,
             LAYOUT_DRAG,
@@ -102,11 +101,11 @@ class PlaylistActivity :
     }
 
     override fun onStartDrag(viewHolder: RecyclerView.ViewHolder?) {
-        TODO("Not yet implemented")
+        /* no-op */
     }
 
     override fun onStopDrag(newList: MutableList<PlaylistItem>) {
-        TODO("Not yet implemented")
+        /* no-op */
     }
 
     // Playlist context menu

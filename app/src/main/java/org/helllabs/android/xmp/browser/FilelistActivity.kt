@@ -24,9 +24,9 @@ import org.helllabs.android.xmp.util.FileUtils.basename
 import org.helllabs.android.xmp.util.InfoCache.clearCache
 import org.helllabs.android.xmp.util.InfoCache.delete
 import org.helllabs.android.xmp.util.InfoCache.deleteRecursive
-import org.helllabs.android.xmp.util.Message.error
-import org.helllabs.android.xmp.util.Message.yesNoDialog
 
+// TODO: Replace current path with bread crumb trails
+// TODO: Implement MVI/Coroutines, dir parsing slow.
 class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickListener {
 
     private lateinit var recyclerView: RecyclerView
@@ -112,7 +112,7 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         mCrossfade = Crossfader(this)
         mCrossfade.setup(R.id.modlist_content, R.id.modlist_spinner)
 
-        mPlaylistAdapter = PlaylistAdapter(this, ArrayList(), false, PlaylistAdapter.LAYOUT_LIST)
+        mPlaylistAdapter = PlaylistAdapter(ArrayList(), false, PlaylistAdapter.LAYOUT_LIST)
         mPlaylistAdapter.setOnItemClickListener(this)
 
         recyclerView = findViewById<RecyclerView>(R.id.modlist_listview).apply {
@@ -252,7 +252,6 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
                 4 -> {
                     val deleteName = mPlaylistAdapter.getFilename(position)
                     yesNoDialog(
-                        this,
                         "Delete",
                         "Are you sure you want to delete " + basename(deleteName) + "?"
                     ) {
@@ -283,6 +282,7 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         updateModlist()
     }
 
+    // TODO: Dialog
     private fun pathNotFound(mediaPath: String) {
         AlertDialog.Builder(this).create().apply {
             setTitle("Path not found")
@@ -295,7 +295,7 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
             ) { _: DialogInterface?, _: Int ->
                 val ret = installAssets(mediaPath, PrefManager.installExamples)
                 if (ret < 0) {
-                    error(this@FilelistActivity, "Error creating directory $mediaPath.")
+                    generalError("Error creating directory $mediaPath.")
                 }
                 mNavigation.startNavigation(File(mediaPath))
                 updateModlist()
@@ -358,7 +358,6 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         val mediaPath = PrefManager.mediaPath
         if (deleteName.startsWith(mediaPath) && deleteName != mediaPath) {
             yesNoDialog(
-                this,
                 "Delete directory",
                 "Are you sure you want to delete directory" +
                     " \"${basename(deleteName)}\" and all its contents?"

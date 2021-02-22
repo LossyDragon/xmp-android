@@ -1,6 +1,5 @@
 package org.helllabs.android.xmp.browser.playlist
 
-import android.content.Context
 import android.graphics.Typeface
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -20,9 +19,7 @@ import org.helllabs.android.xmp.util.recyclerview.OnStartDragListener
 import org.helllabs.android.xmp.util.show
 import org.helllabs.android.xmp.util.touch
 
-class PlaylistAdapter :
-    RecyclerView.Adapter<PlaylistAdapter.ViewHolder>,
-    ItemTouchHelperAdapter {
+class PlaylistAdapter : RecyclerView.Adapter<PlaylistAdapter.ViewHolder>, ItemTouchHelperAdapter {
 
     var position = 0
 
@@ -30,7 +27,6 @@ class PlaylistAdapter :
     private val typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
     private val playlist: Playlist?
     private val items: MutableList<PlaylistItem>
-    private val context: Context
     private var useFilename: Boolean
     private var onItemClickListener: OnItemClickListener? = null
     private val layoutType: Int
@@ -108,14 +104,12 @@ class PlaylistAdapter :
     }
 
     constructor(
-        context: Context,
         items: MutableList<PlaylistItem>,
         useFilename: Boolean,
         layoutType: Int
     ) {
         playlist = null
         this.items = items
-        this.context = context
         this.useFilename = useFilename
         this.layoutType = layoutType
 
@@ -125,7 +119,6 @@ class PlaylistAdapter :
     }
 
     constructor(
-        context: Context,
         playlist: Playlist,
         useFilename: Boolean,
         layoutType: Int,
@@ -133,7 +126,6 @@ class PlaylistAdapter :
     ) {
         this.playlist = playlist
         items = playlist.list
-        this.context = context
         this.useFilename = useFilename
         this.layoutType = layoutType
         mDragStartListener = drag
@@ -160,10 +152,10 @@ class PlaylistAdapter :
         if (fromPosition == toPosition) {
             return false
         }
+
         val item = items[fromPosition]
         items.remove(item)
         items.add(toPosition, item)
-        // playlist.setListChanged(true);
         notifyItemMoved(fromPosition, toPosition)
         playlist?.setListChanged(true)
 

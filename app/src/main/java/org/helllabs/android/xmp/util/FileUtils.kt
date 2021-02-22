@@ -3,39 +3,41 @@ package org.helllabs.android.xmp.util
 import java.io.*
 
 object FileUtils {
-    @Throws(IOException::class)
-    fun writeToFile(file: File, lines: List<String>) {
-        val out = BufferedWriter(FileWriter(file, true), 512)
-        for (line in lines) {
-            out.write(line)
-            out.newLine()
-        }
-        out.close()
-    }
 
-    @JvmStatic
     @Throws(IOException::class)
     fun writeToFile(file: File, line: String) {
-        val lines = listOf(line)
-        writeToFile(file, lines)
+        writeToFile(file, listOf(line))
     }
 
-    @JvmStatic
+    @Throws(IOException::class)
+    fun writeToFile(file: File, lines: List<String>) {
+        FileOutputStream(file, true).bufferedWriter().use { out ->
+            lines.forEach {
+                out.write(it)
+                out.newLine()
+            }
+            out.close()
+        }
+    }
+
     @Throws(IOException::class)
     fun readFromFile(file: File): String {
-        val `in` = BufferedReader(FileReader(file), 512)
-        val line = `in`.readLine()
-        `in`.close()
+        val line: String
+        file.bufferedReader().use { reader ->
+            line = reader.readLine()
+            reader.close()
+        }
         return line
     }
 
-    @Throws(IOException::class)
-    fun removeLineFromFile(file: File, num: Int): Boolean {
-        val nums = intArrayOf(num)
-        return removeLineFromFile(file, nums)
-    }
+    // @Throws(IOException::class)
+    // fun removeLineFromFile(file: File, num: Int): Boolean {
+    //     return removeLineFromFile(file, intArrayOf(num))
+    // }
 
-    @JvmStatic
+    /**
+     * Remove a certain line in a file
+     */
     @Throws(IOException::class)
     fun removeLineFromFile(file: File, num: IntArray): Boolean {
         val tempFile = File(file.absolutePath + ".tmp")
@@ -62,19 +64,14 @@ object FileUtils {
         reader.close()
 
         // Delete the original file
-        return if (!file.delete()) {
+        return if (!file.delete())
             false
-        } else tempFile.renameTo(file)
-
+        else
+            tempFile.renameTo(file)
         // Rename the new file to the filename the original file had.
     }
 
-    @JvmStatic
-    fun basename(pathname: String?): String {
-        return if (pathname != null && pathname.isNotEmpty()) {
-            File(pathname).name
-        } else {
-            ""
-        }
+    fun basename(pathname: String): String {
+        return File(pathname).name.orEmpty()
     }
 }

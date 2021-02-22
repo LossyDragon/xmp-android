@@ -51,7 +51,6 @@ abstract class Viewer(
 
     init {
         // register our interest in hearing about changes to our surface
-        val holder = holder
         @Suppress("LeakingThis") // Its because it's in the init block.
         holder.addCallback(this)
 

@@ -1,12 +1,13 @@
 package org.helllabs.android.xmp.browser.playlist
 
 import java.io.File
-import org.helllabs.android.xmp.R
+import java.lang.IllegalArgumentException
 import java.util.*
+import org.helllabs.android.xmp.R
 
 class PlaylistItem(
     val type: Int,
-    val name: String?,
+    val name: String,
     val comment: String
 ) : Comparable<PlaylistItem> {
 
@@ -19,10 +20,10 @@ class PlaylistItem(
 
     init {
         imageRes = when (type) {
-            TYPE_DIRECTORY -> R.drawable.ic_folder
+            TYPE_DIRECTORY, TYPE_SPECIAL -> R.drawable.ic_folder
             TYPE_PLAYLIST -> R.drawable.ic_list
             TYPE_FILE -> R.drawable.ic_file
-            else -> -1
+            else -> throw IllegalArgumentException("Image res is wrong type: $type")
         }
     }
 
@@ -38,7 +39,7 @@ class PlaylistItem(
         return if (d1 xor d2) {
             if (d1) -1 else 1
         } else {
-            name!!.toLowerCase(locale).compareTo(other.name!!.toLowerCase(locale))
+            name.toLowerCase(locale).compareTo(other.name.toLowerCase(locale))
         }
     }
 
