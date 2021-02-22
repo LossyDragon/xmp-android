@@ -69,7 +69,10 @@ class ModuleResultViewModel
             .enqueue(
                 request!!,
                 { updatedRequests -> request = updatedRequests },
-                { error -> logE("enqueue: $error") }
+                { error ->
+                    logE("enqueue: $error")
+                    _moduleState.value = ModuleState.Error(error.toString())
+                }
             )
     }
 
