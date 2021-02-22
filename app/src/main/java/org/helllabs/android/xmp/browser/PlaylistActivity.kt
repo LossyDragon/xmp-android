@@ -74,7 +74,6 @@ class PlaylistActivity :
         mPlaylistAdapter.setOnItemClickListener(this)
 
         mRecyclerView = findViewById<RecyclerView>(R.id.plist_list).apply {
-            layoutManager = LinearLayoutManager(this@PlaylistActivity)
             adapter = mPlaylistAdapter
             setHasFixedSize(true)
             addItemDecoration(

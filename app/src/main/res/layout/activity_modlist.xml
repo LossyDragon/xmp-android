@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_weight="1.0"
@@ -20,20 +21,24 @@
         <TextView
             android:id="@+id/current_path"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="32dp"
             android:layout_marginStart="4dp"
             android:layout_marginTop="12dp"
             android:layout_marginBottom="12dp"
             android:layout_weight="1.0"
             android:focusable="true"
+            android:gravity="center|start"
             android:longClickable="true"
             android:textSize="16sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            tools:ignore="TouchTargetSizeCheck"
+            tools:text="/Some/Path/Directory" />
 
         <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/up_button"
             android:layout_width="48dp"
             android:layout_height="48dp"
+            android:layout_gravity="center"
             android:layout_marginStart="4dp"
             android:layout_marginEnd="12dp"
             android:background="?selectableItemBackgroundBorderless"
@@ -71,15 +76,15 @@
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/modlist_listview"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent" />
+                        android:layout_height="match_parent"
+                        app:fastScrollEnabled="true"
+                        app:fastScrollHorizontalThumbDrawable="@drawable/thumb_drawable"
+                        app:fastScrollHorizontalTrackDrawable="@drawable/thumb_line_drawable"
+                        app:fastScrollVerticalThumbDrawable="@drawable/thumb_drawable"
+                        app:fastScrollVerticalTrackDrawable="@drawable/thumb_line_drawable"
+                        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 
                 </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
-
-                <com.pluscubed.recyclerfastscroll.RecyclerFastScroller
-                    android:id="@+id/fast_scroller"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="end" />
 
             </FrameLayout>
 

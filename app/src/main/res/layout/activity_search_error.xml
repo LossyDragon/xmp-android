@@ -22,7 +22,7 @@
         android:lineSpacingExtra="2sp"
         android:padding="12dp"
         android:textColor="#ffff0000"
-        android:textSize="14sp"
+        android:textSize="16sp"
         android:typeface="monospace"
         tools:text="Guru Error\nGuru Error" />
 

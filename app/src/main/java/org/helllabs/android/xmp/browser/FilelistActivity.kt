@@ -116,7 +116,6 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         mPlaylistAdapter.setOnItemClickListener(this)
 
         recyclerView = findViewById<RecyclerView>(R.id.modlist_listview).apply {
-            layoutManager = LinearLayoutManager(this@FilelistActivity)
             adapter = mPlaylistAdapter
             addItemDecoration(
                 DividerItemDecoration(this@FilelistActivity, LinearLayoutManager.HORIZONTAL)
