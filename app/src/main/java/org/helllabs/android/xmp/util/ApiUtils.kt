@@ -18,6 +18,8 @@ val isAtLeastM: Boolean
     get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
 val isAtLeastN: Boolean
     get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
+val isAtLeastO: Boolean
+    get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
 
 /**
  * Resource helpers

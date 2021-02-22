@@ -19,6 +19,7 @@ class ChannelViewer(context: Context) : Viewer(context) {
     private val meterPaint: Paint
     private val numPaint: Paint
     private val scopeMutePaint: Paint
+    private val scopeMuteTextPaint: Paint
     private val fontSize: Int = resources.getDimensionPixelSize(R.dimen.channelview_font_size)
     private val fontHeight: Int
     private val fontWidth: Int
@@ -43,26 +44,57 @@ class ChannelViewer(context: Context) : Viewer(context) {
 
     init {
         val font2Size = resources.getDimensionPixelSize(R.dimen.channelview_channel_font_size)
-        scopePaint = Paint()
-        scopePaint.setARGB(255, 40, 40, 40)
-        scopeLinePaint = Paint()
-        scopeLinePaint.setARGB(255, 80, 160, 80)
-        scopeLinePaint.strokeWidth = 0f
-        scopeLinePaint.isAntiAlias = false
-        scopeMutePaint = Paint()
-        scopeMutePaint.setARGB(255, 60, 0, 0)
-        meterPaint = Paint()
-        meterPaint.setARGB(255, 40, 80, 160)
-        insPaint = Paint()
-        insPaint.setARGB(255, 140, 140, 160)
-        insPaint.typeface = Typeface.MONOSPACE
-        insPaint.textSize = fontSize.toFloat()
-        insPaint.isAntiAlias = true
-        numPaint = Paint()
-        numPaint.setARGB(255, 220, 220, 220)
-        numPaint.typeface = Typeface.MONOSPACE
-        numPaint.textSize = font2Size.toFloat()
-        numPaint.isAntiAlias = true
+
+        // Scope and Meter Background Paint
+        scopePaint = Paint().apply {
+            setARGB(255, 40, 40, 40)
+        }
+
+        // Scope Waveform Paint
+        scopeLinePaint = Paint().apply {
+            setARGB(255, 80, 160, 80)
+            strokeWidth = 2.0f // Thicken the scope line up.
+            style = Paint.Style.STROKE
+            isAntiAlias = true
+        }
+
+        // Mute Background Paint
+        scopeMutePaint = Paint().apply {
+            setARGB(255, 60, 0, 0)
+        }
+
+        // Mute Text Paint
+        scopeMuteTextPaint = Paint().apply {
+            setARGB(255, 220, 220, 220)
+            typeface = Typeface.MONOSPACE
+            textSize = fontSize.toFloat()
+            isAntiAlias = true
+            isLinearText = true
+        }
+
+        // Meter Paint
+        meterPaint = Paint().apply {
+            setARGB(255, 40, 80, 160)
+        }
+
+        // Channel Instrument Paint
+        insPaint = Paint().apply {
+            setARGB(255, 140, 140, 160)
+            typeface = Typeface.MONOSPACE
+            textSize = fontSize.toFloat()
+            isAntiAlias = true
+            isLinearText = true
+        }
+
+        // Row Number Paint
+        numPaint = Paint().apply {
+            setARGB(255, 220, 220, 220)
+            typeface = Typeface.MONOSPACE
+            textSize = font2Size.toFloat()
+            isAntiAlias = true
+            isLinearText = true
+        }
+
         fontWidth = insPaint.measureText("X").toInt()
         fontHeight = fontSize * 12 / 10
         font2Width = numPaint.measureText("X").toInt()
@@ -77,20 +109,24 @@ class ChannelViewer(context: Context) : Viewer(context) {
 
     override fun setup(modPlayer: ModInterface, modVars: IntArray) {
         super.setup(modPlayer, modVars)
+
         val chn = modVars[3]
         val ins = modVars[4]
+
         this.modPlayer = modPlayer
         try {
             insName = modPlayer.instruments
         } catch (e: RemoteException) {
             logE("Can't get instrument name")
         }
+
         if (insName == null) {
             insName = arrayOfNulls(ins)
             for (i in 0 until ins) {
                 insName!![i] = ""
             }
         }
+
         holdKey = IntArray(chn)
         channelNumber = arrayOfNulls(chn)
 
@@ -104,19 +140,9 @@ class ChannelViewer(context: Context) : Viewer(context) {
 
     override fun update(info: Info?, paused: Boolean) {
         super.update(info, paused)
-        var canvas: Canvas? = null
-        try {
-            canvas = surfaceHolder.lockCanvas(null)
-            if (canvas != null) {
-                synchronized(surfaceHolder) { doDraw(canvas, modPlayer!!, info, paused) }
-            }
-        } finally {
-            // do this in a finally so that if an exception is thrown
-            // during the above, we don't leave the Surface in an
-            // inconsistent state
-            if (canvas != null) {
-                surfaceHolder.unlockCanvasAndPost(canvas)
-            }
+
+        requestCanvasLock { canvas ->
+            doDraw(canvas, modPlayer!!, info, paused)
         }
     }
 
@@ -124,6 +150,7 @@ class ChannelViewer(context: Context) : Viewer(context) {
         val chn = modVars[3]
         val scopeWidth = 8 * fontWidth
         var scopeLeft = 2 * font2Width + 2 * fontWidth
+
         if (x >= scopeLeft && x <= scopeLeft + scopeWidth) {
             var scopeNum = (y + posY.toInt() - fontHeight) / (4 * fontHeight)
             if (cols > 1) {
@@ -154,7 +181,6 @@ class ChannelViewer(context: Context) : Viewer(context) {
     }
 
     public override fun onClick(x: Int, y: Int) {
-
         // Check if clicked on scopes
         val n = findScope(x, y)
         if (n >= 0) {
@@ -213,38 +239,32 @@ class ChannelViewer(context: Context) : Viewer(context) {
 
         // Should use canvasWidth but it's not updated yet
         val width = context.resources.displayMetrics.widthPixels
-        when (screenSize) {
-            Configuration.SCREENLAYOUT_SIZE_NORMAL -> {
-                if (width < 800) {
-                    cols = 1
-                }
-                cols = if (rotation == Surface.ROTATION_0 || rotation == Surface.ROTATION_180) {
-                    1
-                } else {
-                    2
-                }
-            }
+        cols = when (screenSize) {
+            Configuration.SCREENLAYOUT_SIZE_NORMAL ->
+                if (width < 800) 1
+                else if (rotation == Surface.ROTATION_0 || rotation == Surface.ROTATION_180) 1
+                else 2
             Configuration.SCREENLAYOUT_SIZE_LARGE ->
-                cols = if (rotation == Surface.ROTATION_0 || rotation == Surface.ROTATION_180) {
-                    1
-                } else {
-                    2
-                }
-            Configuration.SCREENLAYOUT_SIZE_XLARGE -> cols = 2
-            else -> cols = 1
+                if (rotation == Surface.ROTATION_0 || rotation == Surface.ROTATION_180) 1
+                else 2
+            Configuration.SCREENLAYOUT_SIZE_XLARGE -> 2
+            else -> 1
         }
+
         val chn = modVars[3]
         if (cols == 1) {
             setMaxY((chn * 4 + 1) * fontHeight)
         } else {
             setMaxY(((chn + 1) / cols * 4 + 1) * fontHeight)
         }
+
         volWidth = (width / cols - 5 * fontWidth - volLeft) / 2
         panLeft = volLeft + volWidth + 3 * fontWidth
         panWidth = volWidth
         val textWidth = 2 * volWidth / fontWidth + 3
         val num = insName!!.size
         insNameTrim = arrayOfNulls(num)
+
         for (i in 0 until num) {
             if (insName!![i]!!.length > textWidth) {
                 insNameTrim[i] = insName!![i]!!.substring(0, textWidth)
@@ -261,6 +281,7 @@ class ChannelViewer(context: Context) : Viewer(context) {
 
         // Clear screen
         canvas.drawColor(Color.BLACK)
+
         for (chn in 0 until numChannels) {
             val num = (numChannels + 1) / cols
             val icol = chn % num
@@ -268,10 +289,11 @@ class ChannelViewer(context: Context) : Viewer(context) {
             val y = (icol * 4 + 1) * fontHeight - posY.toInt()
             val ins = if (isMuted[chn]) -1 else info.instruments[chn]
             val vol = if (isMuted[chn]) 0 else info.volumes[chn]
-            val finalvol = info.finalvols[chn]
+            val finalVol = info.finalvols[chn]
             var pan = info.pans[chn]
             var key = info.keys[chn]
             val period = info.periods[chn]
+
             if (key >= 0) {
                 holdKey[chn] = key
                 if (keyRow[chn] == row) {
@@ -302,7 +324,7 @@ class ChannelViewer(context: Context) : Viewer(context) {
                     "MUTE",
                     (x + scopeLeft + 2 * fontWidth).toFloat(),
                     (y + fontHeight + fontSize).toFloat(),
-                    insPaint
+                    scopeMuteTextPaint
                 )
             } else {
                 canvas.drawRect(rect, scopePaint)
@@ -326,12 +348,13 @@ class ChannelViewer(context: Context) : Viewer(context) {
                         // fail silently
                     }
                 }
+
                 val h = scopeHeight / 2
                 for (j in 0 until scopeWidth) {
                     bufferXY[j * 2] =
                         (x + scopeLeft + j).toFloat()
                     bufferXY[j * 2 + 1] =
-                        (y + h + buffer[chn][j] * h * finalvol / (64 * 180)).toFloat()
+                        (y + h + buffer[chn][j] * h * finalVol / (64 * 180)).toFloat()
                 }
 
                 // Using drawPoints() instead of drawing each point saves a lot of CPU
@@ -361,6 +384,7 @@ class ChannelViewer(context: Context) : Viewer(context) {
             if (ins < 0) {
                 pan = 0x80
             }
+
             val panX = panLeft + pan * panWidth / 0x100
             rect[x + panLeft, volY1, x + panLeft + panWidth] = volY2
             canvas.drawRect(rect, scopePaint)

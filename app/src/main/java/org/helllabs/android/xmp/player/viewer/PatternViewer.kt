@@ -5,111 +5,130 @@ import android.graphics.*
 import android.os.RemoteException
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.player.Util
+import org.helllabs.android.xmp.player.Util.NOTES
 import org.helllabs.android.xmp.service.ModInterface
+import org.helllabs.android.xmp.util.logD
 
-// http://developer.android.com/guide/topics/graphics/2d-graphics.html
 class PatternViewer(context: Context) : Viewer(context) {
 
-    private val notePaint: Paint = Paint()
-    private val fontSize: Int = resources.getDimensionPixelSize(R.dimen.patternview_font_size)
+    private var oldRow = 0
+    private var oldPosX = 0
+    private var oldOrd = 0
 
-    private val headerPaint: Paint
-    private val headerTextPaint: Paint
-    private val insPaint: Paint
-    private val barPaint: Paint
-    private val muteNotePaint: Paint
-    private val muteInsPaint: Paint
-    private val fontHeight: Int
-    private val fontWidth: Int
-    private val allNotes = arrayOfNulls<String>(MAX_NOTES)
-    private val hexByte = arrayOfNulls<String>(256)
+    private val c = CharArray(3)
     private val rowNotes = ByteArray(64)
     private val rowInstruments = ByteArray(64)
-    private var oldRow = 0
-    private var oldOrd = 0
-    private var oldPosX = 0
     private val rect = Rect()
+    private val notePaint: Paint
+    private val muteNotePaint: Paint
+    private val muteInsPaint: Paint
+    private val insPaint: Paint
+    private val hexByte = mutableListOf<String>()
+    private val headerTextPaint: Paint
+    private val headerPaint: Paint
+    private val fontWidth: Int
+    private val fontHeight: Int
+    private val barPaint: Paint
+    private val allNotes = mutableListOf<String>()
+
+    private val fontSize: Float =
+        resources.getDimensionPixelSize(R.dimen.patternview_font_size).toFloat()
 
     init {
-        notePaint.setARGB(255, 140, 140, 160)
-        notePaint.typeface = Typeface.MONOSPACE
-        notePaint.textSize = fontSize.toFloat()
-        notePaint.isAntiAlias = true
-        insPaint = Paint()
-        insPaint.setARGB(255, 160, 80, 80)
-        insPaint.typeface = Typeface.MONOSPACE
-        insPaint.textSize = fontSize.toFloat()
-        insPaint.isAntiAlias = true
-        muteNotePaint = Paint()
-        muteNotePaint.setARGB(255, 60, 60, 60)
-        muteNotePaint.typeface = Typeface.MONOSPACE
-        muteNotePaint.textSize = fontSize.toFloat()
-        muteNotePaint.isAntiAlias = true
-        muteInsPaint = Paint()
-        muteInsPaint.setARGB(255, 80, 40, 40)
-        muteInsPaint.typeface = Typeface.MONOSPACE
-        muteInsPaint.textSize = fontSize.toFloat()
-        muteInsPaint.isAntiAlias = true
-        headerTextPaint = Paint()
-        headerTextPaint.setARGB(255, 220, 220, 220)
-        headerTextPaint.typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
-        headerTextPaint.textSize = fontSize.toFloat()
-        headerTextPaint.isAntiAlias = true
-        headerPaint = Paint()
-        headerPaint.setARGB(255, 140, 140, 220)
-        barPaint = Paint()
-        barPaint.setARGB(255, 40, 40, 40)
-        fontWidth = notePaint.measureText("X").toInt()
-        fontHeight = fontSize * 12 / 10
-        for (i in 0 until MAX_NOTES) {
-            allNotes[i] = NOTES[i % 12] + i / 12
+
+        // Note Paint
+        notePaint = Paint().apply {
+            setARGB(255, 140, 140, 160)
+            typeface = Typeface.MONOSPACE
+            textSize = fontSize
+            isAntiAlias = true
         }
-        val c = CharArray(2)
+
+        // Muted Note Paint
+        muteNotePaint = Paint().apply {
+            setARGB(255, 60, 60, 60)
+            typeface = Typeface.MONOSPACE
+            textSize = fontSize
+            isAntiAlias = true
+        }
+
+        // Instrument Paint
+        insPaint = Paint().apply {
+            setARGB(255, 160, 80, 80)
+            typeface = Typeface.MONOSPACE
+            textSize = fontSize
+            isAntiAlias = true
+        }
+
+        // Muted Instrument Paint
+        muteInsPaint = Paint().apply {
+            setARGB(255, 80, 40, 40)
+            typeface = Typeface.MONOSPACE
+            textSize = fontSize
+            isAntiAlias = true
+        }
+
+        // Header Text Paint
+        headerTextPaint = Paint().apply {
+            setARGB(255, 220, 220, 220)
+            typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
+            textSize = fontSize
+            isAntiAlias = true
+        }
+
+        // Header Paint
+        headerPaint = Paint().apply { setARGB(255, 140, 140, 220) }
+
+        // Bar Paint
+        barPaint = Paint().apply { setARGB(255, 40, 40, 40) }
+
+        fontWidth = notePaint.measureText("X").toInt()
+        fontHeight = (fontSize * 12 / 10).toInt()
+
+        for (i in 0 until MAX_NOTES) {
+            allNotes.add(NOTES[i % 12] + i / 12)
+        }
+
         for (i in 0..255) {
             Util.to02X(c, i)
-            hexByte[i] = String(c)
+            hexByte.add(String(c))
         }
     }
 
     override fun setup(modPlayer: ModInterface, modVars: IntArray) {
         super.setup(modPlayer, modVars)
+        logD("Viewer Setup")
+
         oldRow = -1
         oldOrd = -1
         oldPosX = -1
-        val chn = modVars[3]
-        setMaxX((chn * 6 + 2) * fontWidth)
+        setMaxX((modVars[3] * 6 + 2) * fontWidth)
     }
 
     override fun update(info: Info?, paused: Boolean) {
         super.update(info, paused)
+
         val row = info!!.values[2]
         val ord = info.values[0]
+
         if (oldRow == row && oldOrd == ord && oldPosX == posX.toInt()) {
             return
         }
-        val numRows = info.values[3]
-        var canvas: Canvas? = null
-        if (numRows != 0) { // Skip first invalid infos
+
+        if (info.values[3] != 0) {
+            // Skip first invalid infos
             oldRow = row
             oldOrd = ord
             oldPosX = posX.toInt()
         }
-        try {
-            canvas = surfaceHolder.lockCanvas(null)
-            if (canvas != null) {
-                synchronized(surfaceHolder) { doDraw(canvas, modPlayer!!, info) }
-            }
-        } finally {
-            // do this in a finally so that if an exception is thrown
-            // during the above, we don't leave the Surface in an
-            // inconsistent state
-            if (canvas != null) {
-                surfaceHolder.unlockCanvasAndPost(canvas)
-            }
+
+        requestCanvasLock { canvas ->
+            doDraw(canvas, modPlayer!!, info)
         }
     }
 
     private fun doDraw(canvas: Canvas, modPlayer: ModInterface, info: Info?) {
+
         val lines = canvasHeight / fontHeight
         val barLine = lines / 2 + 1
         val barY = barLine * fontHeight
@@ -117,6 +136,12 @@ class PatternViewer(context: Context) : Viewer(context) {
         val pat = info.values[1]
         val chn = modVars[3]
         val numRows = info.values[3]
+
+        // Get the number of rows dynamically
+        // Side effect of https://github.com/cmatsuoka/xmp-android/pull/15
+        if (numRows > 0 && hexByte.size != numRows) {
+            resizeRows(numRows)
+        }
 
         // Clear screen
         canvas.drawColor(Color.BLACK)
@@ -131,14 +156,14 @@ class PatternViewer(context: Context) : Viewer(context) {
                 canvas.drawText(
                     (i + 1).toString(),
                     x.toFloat(),
-                    fontSize.toFloat(),
+                    fontSize,
                     headerTextPaint
                 )
             }
         }
 
         // Current line bar
-        rect[0, barY - fontHeight + 1, canvasWidth - 1] = barY
+        rect.set(0, barY - fontHeight + 10, canvasWidth, barY + 10)
         canvas.drawRect(rect, barPaint)
 
         // Pattern data
@@ -148,12 +173,15 @@ class PatternViewer(context: Context) : Viewer(context) {
             var paint: Paint
             var paint2: Paint
             var x: Int
+
             if (lineInPattern < 0 || lineInPattern >= numRows) {
                 continue
             }
+
             if (posX > -2 * fontWidth) {
-                canvas.drawText(hexByte[lineInPattern]!!, -posX, y.toFloat(), headerTextPaint)
+                canvas.drawText(hexByte[lineInPattern], -posX, y.toFloat(), headerTextPaint)
             }
+
             for (j in 0 until chn) {
                 try {
 
@@ -165,10 +193,8 @@ class PatternViewer(context: Context) : Viewer(context) {
                 } catch (e: RemoteException) {
                     // fail silenty
                 }
-                x = (3 + j * 6) * fontWidth - posX.toInt()
-                if (x < -6 * fontWidth || x > canvasWidth) {
-                    continue
-                }
+
+                // is muted paint
                 if (isMuted[j]) {
                     paint = muteNotePaint
                     paint2 = muteInsPaint
@@ -176,36 +202,44 @@ class PatternViewer(context: Context) : Viewer(context) {
                     paint = notePaint
                     paint2 = insPaint
                 }
+
+                x = (3 + j * 6) * fontWidth - posX.toInt()
+                if (x < -6 * fontWidth || x > canvasWidth) {
+                    continue
+                }
+
+                // Notes
                 val note = rowNotes[j]
-                when {
-                    note < 0 ->
-                        canvas.drawText("===", x.toFloat(), y.toFloat(), paint)
-                    note > MAX_NOTES ->
-                        canvas.drawText(">>>", x.toFloat(), y.toFloat(), paint)
-                    note > 0 ->
-                        canvas.drawText(allNotes[note - 1]!!, x.toFloat(), y.toFloat(), paint)
-                    else ->
-                        canvas.drawText("---", x.toFloat(), y.toFloat(), paint)
+                val notes = when {
+                    note > MAX_NOTES -> ">>>"
+                    note > 0 -> allNotes[note - 1]
+                    note < 0 -> "==="
+                    else -> "---"
                 }
+                canvas.drawText(notes, x.toFloat(), y.toFloat(), paint)
+
+                // Instruments
                 x = (3 + j * 6 + 3) * fontWidth - posX.toInt()
-                if (rowInstruments[j] > 0) {
-                    canvas.drawText(
-                        hexByte[rowInstruments[j].toInt()]!!,
-                        x.toFloat(),
-                        y.toFloat(),
-                        paint2
-                    )
-                } else {
-                    canvas.drawText("--", x.toFloat(), y.toFloat(), paint2)
-                }
+                val inst = if (rowInstruments[j] > 0) hexByte[rowInstruments[j].toInt()] else "--"
+                canvas.drawText(inst, x.toFloat(), y.toFloat(), paint2)
             }
+        }
+    }
+
+    private fun resizeRows(numRows: Int) {
+        logD("Resizing numRows: $numRows")
+        hexByte.clear()
+        for (i in 0 until numRows) {
+            if (i <= 255) {
+                Util.to02X(c, i)
+            } else {
+                Util.to03X(c, i)
+            }
+            hexByte.add(String(c))
         }
     }
 
     companion object {
         private const val MAX_NOTES = 120
-        private val NOTES = arrayOf(
-            "C ", "C#", "D ", "D#", "E ", "F ", "F#", "G ", "G#", "A ", "A#", "B "
-        )
     }
 }
