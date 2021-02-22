@@ -233,5 +233,10 @@
     <string name="search_module_title">Module Result</string>
     <string name="by_artist">by %s</string>
     <string name="size_kb">%d KB</string>
+    <string name="pref_player_hex_summary">Show the player\'s info bar to show hex or decimal values</string>
+    <string name="pref_player_hex_title">Show hex values</string>
+    <string name="pref_draw_lines_title">Use better waveform</string>
+    <string name="pref_draw_lines_summary">Enabling this will render the player viewer at ~50fps and use a better waveform drawing. Older/Lower end phones may experience frame drops.</string>
+    <string name="pref_category_player_interface">Player</string>
 
 </resources>

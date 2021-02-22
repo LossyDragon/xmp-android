@@ -16,11 +16,11 @@ object PrefManager {
     // public static final String PAN_SEPARATION = "pan_separation";
     // public static final String STEREO = "stereo";
     // public static final String TITLES_IN_BROWSER = "titles_in_browser";
+    // private const val BACK_BUTTON_NAVIGATION = "back_button_navigation"
 
     private const val ALL_SEQUENCES = "all_sequences"
     private const val AMIGA_MIXER = "amiga_mixer"
     private const val ARTIST_FOLDER = "artist_folder"
-    // private const val BACK_BUTTON_NAVIGATION = "back_button_navigation"
     private const val BLUETOOTH_PAUSE = "bluetooth_pause"
     private const val BUFFER_MS = "buffer_ms_opensl"
     private const val CHANGELOG_VERSION = "changelog_version"
@@ -41,6 +41,7 @@ object PrefManager {
     private const val STEREO_MIX = "stereo_mix"
     private const val USE_FILENAME = "use_filename"
     private const val VOL_BOOST = "vol_boost"
+    private const val NEW_WAVEFORM = "use_new_waveform"
 
     // New
     private const val SEARCH_HISTORY = "search_history"
@@ -156,6 +157,10 @@ object PrefManager {
     var bluetoothPause: Boolean
         get() = prefs.getBoolean(BLUETOOTH_PAUSE, true)
         set(value) = prefs.edit { putBoolean(BLUETOOTH_PAUSE, value) }
+
+    var useNewWaveform: Boolean
+        get() = prefs.getBoolean(NEW_WAVEFORM, false)
+        set(value) = prefs.edit { putBoolean(NEW_WAVEFORM, value) }
 
     // Search History
     var searchHistory: String?

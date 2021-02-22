@@ -190,6 +190,26 @@
                     android:title="@string/pref_start_on_player_title" />
             </PreferenceCategory>
 
+            <PreferenceCategory app:title="@string/pref_category_player_interface">
+
+                <!-- TODO -->
+                <CheckBoxPreference
+                    app:defaultValue="true"
+                    app:key="show_info_line_hex"
+                    app:persistent="true"
+                    app:summary="@string/pref_player_hex_summary"
+                    app:title="@string/pref_player_hex_title" />
+
+                <!-- Experimental?? -->
+                <CheckBoxPreference
+                    app:defaultValue="false"
+                    app:key="use_new_waveform"
+                    app:persistent="true"
+                    app:summary="@string/pref_draw_lines_summary"
+                    app:title="@string/pref_draw_lines_title" />
+
+            </PreferenceCategory>
+
             <PreferenceCategory android:title="@string/pref_category_experimental">
                 <CheckBoxPreference
                     android:defaultValue="false"

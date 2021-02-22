@@ -8,6 +8,7 @@ import android.view.Surface
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.player.Util
+import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.service.ModInterface
 import org.helllabs.android.xmp.util.logE
 
@@ -41,6 +42,10 @@ class ChannelViewer(context: Context) : Viewer(context) {
     private var panLeft = 0
     private var panWidth = 0
     private val keyRow = IntArray(Xmp.MAX_CHANNELS)
+
+    // Better waveform
+    private val useNewWaveform = PrefManager.useNewWaveform
+    private val waveformPath = Path()
 
     init {
         val font2Size = resources.getDimensionPixelSize(R.dimen.channelview_channel_font_size)
@@ -350,15 +355,41 @@ class ChannelViewer(context: Context) : Viewer(context) {
                 }
 
                 val h = scopeHeight / 2
-                for (j in 0 until scopeWidth) {
-                    bufferXY[j * 2] =
-                        (x + scopeLeft + j).toFloat()
-                    bufferXY[j * 2 + 1] =
-                        (y + h + buffer[chn][j] * h * finalVol / (64 * 180)).toFloat()
-                }
 
-                // Using drawPoints() instead of drawing each point saves a lot of CPU
-                canvas.drawPoints(bufferXY, 0, scopeWidth shl 1, scopeLinePaint)
+                if (useNewWaveform) {
+                    // New scope lines.
+                    var isFirst = true
+                    for (j in 0 until scopeWidth) {
+                        if (isFirst) {
+                            isFirst = false
+                            waveformPath.moveTo(
+                                (x + scopeLeft + j).toFloat(),
+                                (y + h + buffer[chn][j] * h * finalVol / (48 * 180)).toFloat()
+                            )
+                        } else {
+                            waveformPath.lineTo(
+                                (x + scopeLeft + j).toFloat(),
+                                (y + h + buffer[chn][j] * h * finalVol / (48 * 180)).toFloat()
+                            )
+                        }
+                    }
+                    canvas.drawPath(waveformPath, scopeLinePaint)
+                    waveformPath.reset()
+                } else {
+                    // Claudio's OG scope lines.
+                    for (j in 0 until scopeWidth) {
+                        bufferXY[j * 2] = (x + scopeLeft + j).toFloat()
+                        bufferXY[j * 2 + 1] =
+                            (y + h + buffer[chn][j] * h * finalVol / (64 * 180)).toFloat()
+                    }
+
+                    // [Old] Doubled
+                    // canvas.drawLines(bufferXY, 0, scopeWidth shl 1, scopeLinePaint)
+                    // canvas.drawLines(bufferXY, 2, (scopeWidth shl 1) - 2, scopeLinePaint)
+
+                    // Using drawPoints() instead of drawing each point saves a lot of CPU
+                    canvas.drawPoints(bufferXY, 0, scopeWidth shl 1, scopeLinePaint)
+                }
             }
 
             // Draw instrument name
