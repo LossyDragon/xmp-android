@@ -262,6 +262,26 @@ class Playlist(context: Context, val name: String) {
         }
 
         /**
+         * Edit a playlist's comment
+         *
+         * @param file The file to delete in order to rename
+         * @param info The updated comment info
+         *
+         * @return Whether the comment rename was successful
+         *
+         */
+        fun editComment(file: File, info: String): Boolean {
+            try {
+                file.delete()
+                file.createNewFile()
+                writeToFile(file, info)
+            } catch (e: IOException) {
+                return false
+            }
+            return true
+        }
+
+        /**
          * Delete the specified playlist.
          *
          * @param context The context the playlist is being created in

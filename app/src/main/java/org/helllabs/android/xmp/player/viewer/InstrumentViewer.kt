@@ -12,6 +12,7 @@ import org.helllabs.android.xmp.util.logE
 @SuppressLint("ViewConstructor")
 class InstrumentViewer(context: Context, background: Int) : Viewer(context, background) {
 
+    // TODO: Programmatically calc this from primary to background, with more steps.
     // Theme the bar paint from background up to the 'accent' color
     private var back = String.format("#%06X", 0xFFFFFF and background)
     private val barTheme =

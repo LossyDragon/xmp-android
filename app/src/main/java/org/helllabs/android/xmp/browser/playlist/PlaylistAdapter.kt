@@ -12,23 +12,24 @@ import androidx.recyclerview.widget.RecyclerView
 import java.io.File
 import java.util.*
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.util.color
+import org.helllabs.android.xmp.util.*
 import org.helllabs.android.xmp.util.recyclerview.ItemTouchHelperAdapter
 import org.helllabs.android.xmp.util.recyclerview.ItemTouchHelperViewHolder
 import org.helllabs.android.xmp.util.recyclerview.OnStartDragListener
-import org.helllabs.android.xmp.util.show
-import org.helllabs.android.xmp.util.touch
 
 class PlaylistAdapter : RecyclerView.Adapter<PlaylistAdapter.ViewHolder>, ItemTouchHelperAdapter {
 
     var position = 0
+
+    var onClick: ((adapter: PlaylistAdapter, position: Int) -> Unit)? = null
+    var onLongClick: ((adapter: PlaylistAdapter, position: Int) -> Unit)? = null
 
     private var mDragStartListener: OnStartDragListener? = null
     private val typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
     private val playlist: Playlist?
     private val items: MutableList<PlaylistItem>
     private var useFilename: Boolean
-    private var onItemClickListener: OnItemClickListener? = null
+
     private val layoutType: Int
 
     val filenameList: List<String>
@@ -54,53 +55,17 @@ class PlaylistAdapter : RecyclerView.Adapter<PlaylistAdapter.ViewHolder>, ItemTo
             return count
         }
 
-    interface OnItemClickListener {
-        fun onItemClick(adapter: PlaylistAdapter, view: View, position: Int)
-    }
-
-    fun setOnItemClickListener(listener: OnItemClickListener?) {
-        onItemClickListener = listener
-    }
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val layout: Int = when (layoutType) {
             LAYOUT_CARD -> R.layout.item_playlist_card
             else -> R.layout.item_playlist
         }
         val view = LayoutInflater.from(parent.context).inflate(layout, parent, false)
-        val holder = ViewHolder(view, this)
-        holder.setOnItemClickListener(onItemClickListener)
-        return holder
+        return ViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, pos: Int) {
-        val item = items[pos]
-        val imageRes = item.imageRes
-        val type = item.type
-        if (type == PlaylistItem.TYPE_DIRECTORY) {
-            holder.infoText.setTypeface(typeface, Typeface.ITALIC)
-        } else {
-            holder.infoText.setTypeface(typeface, Typeface.NORMAL)
-        }
-        holder.titleText.text = if (useFilename) item.filename else item.name
-        holder.infoText.text = item.comment
-        if (imageRes > 0) {
-            holder.image.setImageResource(imageRes)
-            holder.image.visibility = View.VISIBLE
-        } else {
-            holder.image.visibility = View.GONE
-        }
-        if (layoutType == LAYOUT_DRAG) {
-            holder.handle?.show()
-            // holder.handle?.setBackgroundColor(context.resources.color(R.color.drag_handle_color))
-            // holder.image.setAlpha(0.5f);
-        }
-
-        // See http://stackoverflow.com/questions/26466877/how-to-create-context-menu-for-recyclerview
-        holder.itemView.setOnLongClickListener {
-            position = holder.adapterPosition
-            false
-        }
+        holder.onBind(items[pos])
     }
 
     constructor(
@@ -135,18 +100,9 @@ class PlaylistAdapter : RecyclerView.Adapter<PlaylistAdapter.ViewHolder>, ItemTo
         setHasStableIds(true)
     }
 
-    override fun onViewRecycled(holder: ViewHolder) {
-        holder.itemView.setOnLongClickListener(null)
-        super.onViewRecycled(holder)
-    }
+    override fun getItemCount(): Int = items.size
 
-    override fun getItemCount(): Int {
-        return items.size
-    }
-
-    override fun getItemId(position: Int): Long {
-        return items[position].id.toLong()
-    }
+    override fun getItemId(position: Int): Long = items[position].id.toLong()
 
     override fun onItemMove(fromPosition: Int, toPosition: Int): Boolean {
         if (fromPosition == toPosition) {
@@ -194,20 +150,19 @@ class PlaylistAdapter : RecyclerView.Adapter<PlaylistAdapter.ViewHolder>, ItemTo
         items.addAll(list)
     }
 
-    inner class ViewHolder(itemView: View, private val playlistAdapter: PlaylistAdapter) :
-        RecyclerView.ViewHolder(itemView),
-        ItemTouchHelperViewHolder,
-        View.OnClickListener {
+    inner class ViewHolder(
+        itemView: View,
+    ) : RecyclerView.ViewHolder(itemView),
+        ItemTouchHelperViewHolder {
 
-        val container: View = itemView.findViewById(R.id.plist_container)
-        val handle: View? = itemView.findViewById(R.id.plist_handle)
-        val titleText: TextView = itemView.findViewById(R.id.plist_title)
-        val infoText: TextView = itemView.findViewById(R.id.plist_info)
-        val image: ImageView = itemView.findViewById(R.id.plist_image)
-        private var onItemClickListener: OnItemClickListener? = null
+        fun onBind(item: PlaylistItem) {
+            val container: View = itemView.findViewById(R.id.plist_container)
+            val handle: View? = itemView.findViewById(R.id.plist_handle)
+            val titleText: TextView = itemView.findViewById(R.id.plist_title)
+            val infoText: TextView = itemView.findViewById(R.id.plist_info)
+            val image: ImageView = itemView.findViewById(R.id.plist_image)
 
-        init {
-            itemView.setOnClickListener(this)
+            // Drag
             if (handle != null && handle.isVisible) {
                 handle.touch { _, e ->
                     if (e.action == MotionEvent.ACTION_DOWN) {
@@ -216,14 +171,31 @@ class PlaylistAdapter : RecyclerView.Adapter<PlaylistAdapter.ViewHolder>, ItemTo
                     false
                 }
             }
-        }
 
-        fun setOnItemClickListener(listener: OnItemClickListener?) {
-            onItemClickListener = listener
-        }
+            if (item.type == PlaylistItem.TYPE_DIRECTORY) {
+                infoText.setTypeface(typeface, Typeface.ITALIC)
+            } else {
+                infoText.setTypeface(typeface, Typeface.NORMAL)
+            }
 
-        override fun onClick(view: View) {
-            onItemClickListener?.onItemClick(playlistAdapter, view, adapterPosition)
+            titleText.text = if (useFilename) item.filename else item.name
+            infoText.text = item.comment
+            image.setImageResource(item.imageRes)
+
+            if (layoutType == LAYOUT_DRAG) {
+                handle?.show()
+            }
+
+            container.click {
+                onClick?.invoke(this@PlaylistAdapter, adapterPosition)
+            }
+
+            container.longClick {
+                onLongClick?.invoke(this@PlaylistAdapter, adapterPosition)
+
+                // Contextual menu's need to not be consumed.
+                layoutType == LAYOUT_CARD
+            }
         }
 
         override fun onItemSelected() {

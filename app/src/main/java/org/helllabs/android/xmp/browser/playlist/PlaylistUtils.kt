@@ -1,12 +1,9 @@
 package org.helllabs.android.xmp.browser.playlist
 
-import android.annotation.SuppressLint
 import android.app.Activity
-import android.app.AlertDialog
 import android.app.ProgressDialog
 import android.content.*
 import android.view.*
-import android.widget.EditText
 import java.io.File
 import java.io.IOException
 import java.util.*
@@ -18,26 +15,6 @@ import org.helllabs.android.xmp.util.generalError
 import org.helllabs.android.xmp.util.toast
 
 object PlaylistUtils {
-
-    @SuppressLint("InflateParams")
-    fun newPlaylistDialog(activity: Activity, runnable: Runnable?) {
-        val alert = AlertDialog.Builder(activity)
-        alert.setTitle("New playlist")
-        val inflater = activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
-        val layout = inflater.inflate(R.layout.newlist, null)
-        alert.setView(layout)
-        alert.setPositiveButton(R.string.ok) { _: DialogInterface?, _: Int ->
-            val e1 = layout.findViewById<View>(R.id.new_playlist_name) as EditText
-            val e2 = layout.findViewById<View>(R.id.new_playlist_comment) as EditText
-            val name = e1.text.toString()
-            val comment = e2.text.toString()
-            if (createEmptyPlaylist(activity, name, comment) && runnable != null) {
-                runnable.run()
-            }
-        }
-        alert.setNegativeButton(R.string.cancel) { _: DialogInterface?, _: Int -> }
-        alert.show()
-    }
 
     /*
      * Send files to the specified playlist

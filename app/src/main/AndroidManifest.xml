@@ -4,8 +4,6 @@
     package="org.helllabs.android.xmp"
     android:installLocation="auto">
 
-    <supports-screens />
-
     <uses-feature
         android:name="android.hardware.bluetooth"
         android:required="false" />
@@ -16,10 +14,6 @@
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         tools:ignore="ScopedStorage" />
-
-    <uses-feature
-        android:name="android.hardware.touchscreen"
-        android:required="false" />
 
     <application
         android:name="XmpApplication"
@@ -35,7 +29,7 @@
         <activity
             android:name=".browser.PlaylistMenu"
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -44,10 +38,15 @@
         </activity>
 
         <activity
+            android:name=".browser.PlaylistAddEdit"
+            android:parentActivityName=".browser.PlaylistMenu"
+            android:theme="@style/AppTheme" />
+
+        <activity
             android:name=".player.PlayerActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:launchMode="singleTop"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
@@ -147,12 +146,12 @@
         <!-- ModArchive search & download -->
         <activity
             android:name=".modarchive.Search"
-            android:configChanges="keyboardHidden|orientation|screenSize"></activity>
+            android:configChanges="keyboardHidden|orientation|screenSize" />
 
         <activity
             android:name=".modarchive.SearchError"
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:theme="@style/AppTheme.NoActionBar" />
+            android:theme="@style/AppTheme" />
 
         <activity
             android:name=".modarchive.SearchHistory"
@@ -187,12 +186,12 @@
         <!-- Preferences -->
         <activity
             android:name=".preferences.Preferences"
-            android:theme="@style/AppTheme.Preferences" />
+            android:theme="@style/AppTheme" />
 
         <activity
             android:name=".preferences.about.ListFormats"
             android:parentActivityName=".preferences.Preferences"
-            android:theme="@style/AppTheme.Preferences">
+            android:theme="@style/AppTheme">
             <intent-filter>
                 <action android:name="org.helllabs.android.xmp.LIST_FORMATS" />
 
@@ -203,7 +202,7 @@
         <activity
             android:name=".preferences.about.About"
             android:parentActivityName=".preferences.Preferences"
-            android:theme="@style/AppTheme.Preferences">
+            android:theme="@style/AppTheme">
             <intent-filter>
                 <action android:name="org.helllabs.android.xmp.ABOUT" />
 

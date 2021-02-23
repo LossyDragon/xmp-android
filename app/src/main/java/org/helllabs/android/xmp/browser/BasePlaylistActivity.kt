@@ -150,7 +150,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
-    open fun onItemClick(adapter: PlaylistAdapter, view: View, position: Int) {
+    open fun onItemClick(adapter: PlaylistAdapter, position: Int) {
         val filename = adapter.getItem(position).file!!.path
         val mode = PrefManager.playlistMode.toInt()
 

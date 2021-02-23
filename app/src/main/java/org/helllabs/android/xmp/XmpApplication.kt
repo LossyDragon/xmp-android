@@ -4,6 +4,13 @@ import android.app.Application
 import dagger.hilt.android.HiltAndroidApp
 import org.helllabs.android.xmp.preferences.PrefManager
 
+// Someday: JSON playlists
+// Someday: Migrate from OpenSLES to oboe.
+// Someday: OpenGL ES instead of Canvas
+// Someday: MediaBrowserServiceCompat service (Android Auto).
+// Someday: Favorites option - Claudio
+// Someday: Simple Player Activity (non Viewers)
+
 @HiltAndroidApp
 class XmpApplication : Application() {
 

@@ -27,8 +27,7 @@ import org.helllabs.android.xmp.util.show
 // TODO: Remove contextual menu as it interferes with drag handle.
 class PlaylistActivity :
     BasePlaylistActivity(),
-    OnStartDragListener,
-    PlaylistAdapter.OnItemClickListener {
+    OnStartDragListener {
 
     private lateinit var mItemTouchHelper: ItemTouchHelper
     private lateinit var mRecyclerView: RecyclerView
@@ -70,7 +69,8 @@ class PlaylistActivity :
             LAYOUT_DRAG,
             this
         )
-        mPlaylistAdapter.setOnItemClickListener(this)
+        mPlaylistAdapter.onClick = { adapter, position -> onItemClick(adapter, position) }
+        mPlaylistAdapter.onLongClick = { adapter, position -> adapter.position = position }
 
         mRecyclerView = findViewById<RecyclerView>(R.id.plist_list).apply {
             adapter = mPlaylistAdapter

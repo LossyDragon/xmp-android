@@ -13,6 +13,7 @@ import org.helllabs.android.xmp.util.logD
 @SuppressLint("ViewConstructor")
 class PatternViewer(context: Context, background: Int) : Viewer(context, background) {
 
+    // TODO: Number row padding (Rows 100+ clips very close to patterns)
     // TODO: Find a way to accurately implement effects params...
     // private val muteEffectsPaint: Paint
     // private var effectsPaint: Paint
@@ -113,7 +114,7 @@ class PatternViewer(context: Context, background: Int) : Viewer(context, backgro
 
         // Number Row Text Paint
         numRowsTextPaint = Paint().apply {
-            setARGB(255, 220, 220, 220)
+            setARGB(255, 200, 200, 200)
             typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
             textSize = fontSize
             isAntiAlias = true

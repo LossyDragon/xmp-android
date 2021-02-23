@@ -27,7 +27,7 @@ import org.helllabs.android.xmp.util.InfoCache.deleteRecursive
 
 // TODO: Replace current path with bread crumb trails
 // TODO: Implement MVI/Coroutines, dir parsing slow.
-class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickListener {
+class FilelistActivity : BasePlaylistActivity() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var mCrossfade: Crossfader
@@ -113,7 +113,8 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         mCrossfade.setup(R.id.modlist_content, R.id.modlist_spinner)
 
         mPlaylistAdapter = PlaylistAdapter(ArrayList(), false, PlaylistAdapter.LAYOUT_LIST)
-        mPlaylistAdapter.setOnItemClickListener(this)
+        mPlaylistAdapter.onClick = { adapter, position -> onClick(adapter, position) }
+        mPlaylistAdapter.onLongClick = { adapter, position -> adapter.position = position }
 
         recyclerView = findViewById<RecyclerView>(R.id.modlist_listview).apply {
             adapter = mPlaylistAdapter
@@ -268,13 +269,13 @@ class FilelistActivity : BasePlaylistActivity(), PlaylistAdapter.OnItemClickList
         return true
     }
 
-    override fun onItemClick(adapter: PlaylistAdapter, view: View, position: Int) {
+    fun onClick(adapter: PlaylistAdapter, position: Int) {
         val file = mPlaylistAdapter.getFile(position)
         if (mNavigation.changeDirectory(file)) {
             mNavigation.saveListPosition(recyclerView)
             updateModlist()
         } else {
-            super.onItemClick(adapter, view, position)
+            onItemClick(adapter, position)
         }
     }
 

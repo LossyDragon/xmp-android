@@ -106,7 +106,7 @@ class ChannelViewer(context: Context, background: Int) : Viewer(context, backgro
 
         // Channel Instrument Paint
         insPaint = Paint().apply {
-            setARGB(255, 140, 140, 160)
+            setARGB(255, 200, 200, 200)
             typeface = Typeface.MONOSPACE
             textSize = fontSize.toFloat()
             isAntiAlias = true
@@ -115,7 +115,7 @@ class ChannelViewer(context: Context, background: Int) : Viewer(context, backgro
 
         // Row Number Paint
         numPaint = Paint().apply {
-            setARGB(255, 220, 220, 220)
+            setARGB(255, 200, 200, 200)
             typeface = Typeface.MONOSPACE
             textSize = font2Size.toFloat()
             isAntiAlias = true
