@@ -16,22 +16,26 @@ import org.helllabs.android.xmp.util.*
 // http://www.independent-software.com/android-speeding-up-canvas-drawbitmap.html
 // https://androidpedia.net/en/tutorial/3754/canvas-drawing-using-surfaceview
 // https://stackoverflow.com/a/8289516
-abstract class Viewer(context: Context) :
+abstract class Viewer(context: Context, color: Int) :
     SurfaceView(context),
     SurfaceHolder.Callback,
     View.OnClickListener {
 
-    private var canvas: Canvas? = null
-    private lateinit var gestureDetector: GestureDetector
+    internal lateinit var modPlayer: ModInterface
 
-    internal var surfaceHolder: SurfaceHolder
-    internal var rotation: Int = 0
-    internal var modPlayer: ModInterface? = null
-    internal var canvasWidth = 0
-    internal var canvasHeight = 0
-    internal val screenSize: Int
-    internal lateinit var modVars: IntArray
+    // Background Color
+    protected var bgColor: Int = color
+        private set
+
     internal lateinit var isMuted: BooleanArray
+    internal lateinit var modVars: IntArray
+    internal val screenSize: Int
+    internal var canvasHeight = 0
+    internal var canvasWidth = 0
+    internal var rotation: Int = 0
+    private lateinit var gestureDetector: GestureDetector
+    private var canvas: Canvas? = null
+    private var surfaceHolder: SurfaceHolder
 
     // Touch tracking
     internal var posX: Float
@@ -45,7 +49,7 @@ abstract class Viewer(context: Context) :
         var time = 0
         val values = IntArray(7) // order pattern row num_rows frame speed bpm
         val volumes = IntArray(64)
-        val finalvols = IntArray(64)
+        val finalVols = IntArray(64)
         val pans = IntArray(64)
         val instruments = IntArray(64)
         val keys = IntArray(64)

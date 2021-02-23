@@ -2,6 +2,8 @@ package org.helllabs.android.xmp.player
 
 import android.content.*
 import android.content.res.Configuration
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.*
 import android.util.TypedValue
 import android.view.*
@@ -213,7 +215,7 @@ class PlayerActivity : AppCompatActivity() {
                             info!!.time = modPlayer!!.time() / 1000
                             modPlayer!!.getChannelData(
                                 info!!.volumes,
-                                info!!.finalvols,
+                                info!!.finalVols,
                                 info!!.pans,
                                 info!!.instruments,
                                 info!!.keys,
@@ -626,7 +628,18 @@ class PlayerActivity : AppCompatActivity() {
         elapsedTime = findViewById<View>(R.id.elapsed_time) as TextView
         titleFlipper = findViewById<View>(R.id.title_flipper) as ViewFlipper
         viewerLayout = findViewById<View>(R.id.viewer_layout) as FrameLayout
-        viewer = InstrumentViewer(this)
+
+        // Get the background color of the activity.
+        var color: Int = Color.parseColor("#FF000000")
+        val background = window.decorView.background
+        if (background is ColorDrawable) color = background.color
+
+        instrumentViewer = InstrumentViewer(this, color)
+        channelViewer = ChannelViewer(this, color)
+        patternViewer = PatternViewer(this, color)
+
+        viewer = instrumentViewer
+
         viewerLayout!!.addView(viewer)
         viewerLayout!!.setOnClickListener {
             synchronized(playerLock) {
@@ -681,9 +694,6 @@ class PlayerActivity : AppCompatActivity() {
                 }
             }
         )
-        instrumentViewer = InstrumentViewer(this)
-        channelViewer = ChannelViewer(this)
-        patternViewer = PatternViewer(this)
     }
 
     private fun saveAllSeqPreference() {

@@ -1,5 +1,6 @@
 package org.helllabs.android.xmp.player.viewer
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
 import android.os.RemoteException
@@ -8,15 +9,30 @@ import org.helllabs.android.xmp.service.ModInterface
 import org.helllabs.android.xmp.util.logD
 import org.helllabs.android.xmp.util.logE
 
-class InstrumentViewer(context: Context) : Viewer(context) {
+@SuppressLint("ViewConstructor")
+class InstrumentViewer(context: Context, background: Int) : Viewer(context, background) {
+
+    // Theme the bar paint from background up to the 'accent' color
+    private var back = String.format("#%06X", 0xFFFFFF and background)
+    private val barTheme =
+        arrayOf(back, "#14264a", "#1a305d", "#1f396f", "#244382", "#294c94", "#2e56a7", "#3460ba")
 
     private lateinit var insName: Array<String>
-    private val insPaint = arrayListOf<Paint>()
     private val barPaint = arrayListOf<Paint>()
-    private val fontSize: Int = resources.getDimensionPixelSize(R.dimen.instrumentview_font_size)
     private val fontHeight: Int
+    private val fontSize: Int = resources.getDimensionPixelSize(R.dimen.instrumentview_font_size)
     private val fontWidth: Int
+    private val insPaint = arrayListOf<Paint>()
     private val rect = Rect()
+
+    // Draw Loop Variables
+    private var chn: Int = 0
+    private var drawWidth: Int = 0
+    private var drawX: Int = 0
+    private var drawY: Int = 0
+    private var ins: Int = 0
+    private var maxVol: Int = 0
+    private var vol: Int = 0
 
     init {
         for (i in 0..7) {
@@ -32,10 +48,12 @@ class InstrumentViewer(context: Context) : Viewer(context) {
         }
 
         for (i in 0..7) {
-            val value = 15 * i
+            // val value = 15 * i
             barPaint.add(
                 Paint().apply {
-                    setARGB(255, (value / 4), (value / 2), value)
+                    // setARGB(255, (value / 4), (value / 2), value)
+                    color = Color.parseColor(barTheme[i])
+                    alpha = 255
                 }
             )
         }
@@ -61,25 +79,25 @@ class InstrumentViewer(context: Context) : Viewer(context) {
         super.update(info, paused)
 
         requestCanvasLock { canvas ->
-            doDraw(canvas, modPlayer!!, info)
+            doDraw(canvas, modPlayer, info)
         }
     }
 
     @Suppress("UNUSED_PARAMETER")
     private fun doDraw(canvas: Canvas, modPlayer: ModInterface, info: Info?) {
-        val chn = modVars[3]
-        val ins = modVars[4]
+        chn = modVars[3]
+        ins = modVars[4]
 
         // Clear screen
-        canvas.drawColor(Color.BLACK)
+        canvas.drawColor(bgColor)
 
         for (i in 0 until ins) {
-            val y = (i + 1) * fontHeight - posY.toInt()
-            val width = (canvasWidth - 3 * fontWidth) / chn
-            var maxVol = 0
+            drawY = (i + 1) * fontHeight - posY.toInt()
+            drawWidth = (canvasWidth - 3 * fontWidth) / chn
+            maxVol = 0
 
             // Don't draw if not visible
-            if (y < 0 || y > canvasHeight + fontHeight) {
+            if (drawY < 0 || drawY > canvasHeight + fontHeight) {
                 continue
             }
 
@@ -88,22 +106,22 @@ class InstrumentViewer(context: Context) : Viewer(context) {
                     continue
                 }
                 if (info!!.instruments[j] == i) {
-                    val x = 3 * fontWidth + width * j
-                    var vol = info.volumes[j] / 8
+                    drawX = 3 * fontWidth + drawWidth * j
+                    vol = info.volumes[j] / 8
 
                     if (vol > 7) {
                         vol = 7
                     }
 
                     // TODO: Center or pad bars a bit more
-                    rect[x, y - fontSize + 1, x + width * 8 / 10] = y + 1
+                    rect[drawX, drawY - fontSize + 1, drawX + drawWidth * 8 / 10] = drawY + 1
                     canvas.drawRect(rect, barPaint[vol])
                     if (vol > maxVol) {
                         maxVol = vol
                     }
                 }
             }
-            canvas.drawText(insName[i], 0f, y.toFloat(), insPaint[maxVol])
+            canvas.drawText(insName[i], 0f, drawY.toFloat(), insPaint[maxVol])
         }
     }
 }

@@ -1,5 +1,6 @@
 package org.helllabs.android.xmp.player.viewer
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.Configuration
 import android.graphics.*
@@ -12,40 +13,61 @@ import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.service.ModInterface
 import org.helllabs.android.xmp.util.logE
 
-class ChannelViewer(context: Context) : Viewer(context) {
+@SuppressLint("ViewConstructor")
+class ChannelViewer(context: Context, background: Int) : Viewer(context, background) {
 
-    private val scopePaint: Paint
-    private val scopeLinePaint: Paint
-    private val insPaint: Paint
-    private val meterPaint: Paint
-    private val numPaint: Paint
-    private val scopeMutePaint: Paint
-    private val scopeMuteTextPaint: Paint
-    private val fontSize: Int = resources.getDimensionPixelSize(R.dimen.channelview_font_size)
-    private val fontHeight: Int
-    private val fontWidth: Int
-    private val font2Height: Int
-    private val font2Width: Int
-    private var insName: Array<String?>? = null
+    private lateinit var channelNumber: Array<String?>
+    private lateinit var holdKey: IntArray
     private lateinit var insNameTrim: Array<String?>
-    private val rect = Rect()
     private val buffer: Array<ByteArray> // keep several buffers to hold data in pause
     private val bufferXY: FloatArray
-    private lateinit var holdKey: IntArray
-    private lateinit var channelNumber: Array<String?>
-    private var cols = 1
-    private val scopeWidth: Int
+    private val font2Height: Int
+    private val font2Width: Int
+    private val fontHeight: Int
+    private val fontSize: Int = resources.getDimensionPixelSize(R.dimen.channelview_font_size)
+    private val fontWidth: Int
+    private val insPaint: Paint
+    private val keyRow = IntArray(Xmp.MAX_CHANNELS)
+    private val meterPaint: Paint
+    private val numPaint: Paint
+    private val rect = Rect()
     private val scopeHeight: Int
     private val scopeLeft: Int
+    private val scopeLinePaint: Paint
+    private val scopeMutePaint: Paint
+    private val scopeMuteTextPaint: Paint
+    private val scopePaint: Paint
+    private val scopeWidth: Int
     private val volLeft: Int
-    private var volWidth = 0
+    private var cols = 1
+    private var insName = mutableListOf<String>()
     private var panLeft = 0
     private var panWidth = 0
-    private val keyRow = IntArray(Xmp.MAX_CHANNELS)
+    private var volWidth = 0
 
     // Better waveform
     private val useNewWaveform = PrefManager.useNewWaveform
     private val waveformPath = Path()
+
+    // Draw Loop Variables
+    private var numChannels: Int = 0
+    private var numInstruments: Int = 0
+    private var row: Int = 0
+    private var num: Int = 0
+    private var icol: Int = 0
+    private var drawX: Int = 0
+    private var drawY: Int = 0
+    private var ins: Int = 0
+    private var vol: Int = 0
+    private var finalVol: Int = 0
+    private var pan: Int = 0
+    private var key: Int = 0
+    private var period: Int = 0
+    private var h: Int = 0
+    private var volX: Int = 0
+    private var volY1: Int = 0
+    private var volY2: Int = 0
+    private var panX: Int = 0
 
     init {
         val font2Size = resources.getDimensionPixelSize(R.dimen.channelview_channel_font_size)
@@ -120,15 +142,14 @@ class ChannelViewer(context: Context) : Viewer(context) {
 
         this.modPlayer = modPlayer
         try {
-            insName = modPlayer.instruments
+            insName = modPlayer.instruments.toMutableList()
         } catch (e: RemoteException) {
             logE("Can't get instrument name")
         }
 
-        if (insName == null) {
-            insName = arrayOfNulls(ins)
+        if (insName.isNullOrEmpty()) {
             for (i in 0 until ins) {
-                insName!![i] = ""
+                insName[i] = ""
             }
         }
 
@@ -147,7 +168,7 @@ class ChannelViewer(context: Context) : Viewer(context) {
         super.update(info, paused)
 
         requestCanvasLock { canvas ->
-            doDraw(canvas, modPlayer!!, info, paused)
+            doDraw(canvas, modPlayer, info, paused)
         }
     }
 
@@ -190,7 +211,7 @@ class ChannelViewer(context: Context) : Viewer(context) {
         val n = findScope(x, y)
         if (n >= 0) {
             try {
-                modPlayer!!.mute(n, if (isMuted[n]) 0 else 1)
+                modPlayer.mute(n, if (isMuted[n]) 0 else 1)
                 isMuted[n] = isMuted[n] xor true
             } catch (e: RemoteException) {
                 logE("Can't mute channel $n")
@@ -218,7 +239,7 @@ class ChannelViewer(context: Context) : Viewer(context) {
             if (count == 1 && !isMuted[n]) {
                 try {
                     for (i in 0 until chn) {
-                        modPlayer!!.mute(i, 0)
+                        modPlayer.mute(i, 0)
                         isMuted[i] = false
                     }
                 } catch (e: RemoteException) {
@@ -227,7 +248,7 @@ class ChannelViewer(context: Context) : Viewer(context) {
             } else {
                 try {
                     for (i in 0 until chn) {
-                        modPlayer!!.mute(i, if (i != n) 1 else 0)
+                        modPlayer.mute(i, if (i != n) 1 else 0)
                         isMuted[i] = i != n
                     }
                 } catch (e: RemoteException) {
@@ -267,37 +288,37 @@ class ChannelViewer(context: Context) : Viewer(context) {
         panLeft = volLeft + volWidth + 3 * fontWidth
         panWidth = volWidth
         val textWidth = 2 * volWidth / fontWidth + 3
-        val num = insName!!.size
+        val num = insName.size
         insNameTrim = arrayOfNulls(num)
 
         for (i in 0 until num) {
-            if (insName!![i]!!.length > textWidth) {
-                insNameTrim[i] = insName!![i]!!.substring(0, textWidth)
+            if (insName[i].length > textWidth) {
+                insNameTrim[i] = insName[i].substring(0, textWidth)
             } else {
-                insNameTrim[i] = insName!![i]
+                insNameTrim[i] = insName[i]
             }
         }
     }
 
     private fun doDraw(canvas: Canvas, modPlayer: ModInterface, info: Info?, paused: Boolean) {
-        val numChannels = modVars[3]
-        val numInstruments = modVars[4]
-        val row = info!!.values[2]
+        numChannels = modVars[3]
+        numInstruments = modVars[4]
+        row = info!!.values[2]
 
         // Clear screen
-        canvas.drawColor(Color.BLACK)
+        canvas.drawColor(bgColor)
 
         for (chn in 0 until numChannels) {
-            val num = (numChannels + 1) / cols
-            val icol = chn % num
-            val x = chn / num * canvasWidth / 2
-            val y = (icol * 4 + 1) * fontHeight - posY.toInt()
-            val ins = if (isMuted[chn]) -1 else info.instruments[chn]
-            val vol = if (isMuted[chn]) 0 else info.volumes[chn]
-            val finalVol = info.finalvols[chn]
-            var pan = info.pans[chn]
-            var key = info.keys[chn]
-            val period = info.periods[chn]
+            num = (numChannels + 1) / cols
+            icol = chn % num
+            drawX = chn / num * canvasWidth / 2
+            drawY = (icol * 4 + 1) * fontHeight - posY.toInt()
+            ins = if (isMuted[chn]) -1 else info.instruments[chn]
+            vol = if (isMuted[chn]) 0 else info.volumes[chn]
+            finalVol = info.finalVols[chn]
+            pan = info.pans[chn]
+            key = info.keys[chn]
+            period = info.periods[chn]
 
             if (key >= 0) {
                 holdKey[chn] = key
@@ -309,26 +330,26 @@ class ChannelViewer(context: Context) : Viewer(context) {
             }
 
             // Don't draw if not visible
-            if (y < -scopeHeight || y > canvasHeight) {
+            if (drawY < -scopeHeight || drawY > canvasHeight) {
                 continue
             }
 
             // Draw channel number
             canvas.drawText(
                 channelNumber[chn]!!,
-                x.toFloat(),
-                (y + (scopeHeight + font2Height) / 2).toFloat(),
+                drawX.toFloat(),
+                drawY + (scopeHeight + font2Height) / 2.toFloat(),
                 numPaint
             )
 
             // Draw scopes
-            rect[x + scopeLeft, y + 1, x + scopeLeft + scopeWidth] = y + scopeHeight
+            rect[drawX + scopeLeft, drawY + 1, drawX + scopeLeft + scopeWidth] = drawY + scopeHeight
             if (isMuted[chn]) {
                 canvas.drawRect(rect, scopeMutePaint)
                 canvas.drawText(
                     "MUTE",
-                    (x + scopeLeft + 2 * fontWidth).toFloat(),
-                    (y + fontHeight + fontSize).toFloat(),
+                    (drawX + scopeLeft + 2 * fontWidth).toFloat(),
+                    (drawY + fontHeight + fontSize).toFloat(),
                     scopeMuteTextPaint
                 )
             } else {
@@ -354,7 +375,7 @@ class ChannelViewer(context: Context) : Viewer(context) {
                     }
                 }
 
-                val h = scopeHeight / 2
+                h = scopeHeight / 2
 
                 if (useNewWaveform) {
                     // New scope lines.
@@ -363,13 +384,13 @@ class ChannelViewer(context: Context) : Viewer(context) {
                         if (isFirst) {
                             isFirst = false
                             waveformPath.moveTo(
-                                (x + scopeLeft + j).toFloat(),
-                                (y + h + buffer[chn][j] * h * finalVol / (48 * 180)).toFloat()
+                                (drawX + scopeLeft + j).toFloat(),
+                                (drawY + h + buffer[chn][j] * h * finalVol / (48 * 180)).toFloat()
                             )
                         } else {
                             waveformPath.lineTo(
-                                (x + scopeLeft + j).toFloat(),
-                                (y + h + buffer[chn][j] * h * finalVol / (48 * 180)).toFloat()
+                                (drawX + scopeLeft + j).toFloat(),
+                                (drawY + h + buffer[chn][j] * h * finalVol / (48 * 180)).toFloat()
                             )
                         }
                     }
@@ -378,9 +399,9 @@ class ChannelViewer(context: Context) : Viewer(context) {
                 } else {
                     // Claudio's OG scope lines.
                     for (j in 0 until scopeWidth) {
-                        bufferXY[j * 2] = (x + scopeLeft + j).toFloat()
+                        bufferXY[j * 2] = (drawX + scopeLeft + j).toFloat()
                         bufferXY[j * 2 + 1] =
-                            (y + h + buffer[chn][j] * h * finalVol / (64 * 180)).toFloat()
+                            (drawY + h + buffer[chn][j] * h * finalVol / (48 * 180)).toFloat()
                     }
 
                     // [Old] Doubled
@@ -396,19 +417,19 @@ class ChannelViewer(context: Context) : Viewer(context) {
             if (ins in 0 until numInstruments) {
                 canvas.drawText(
                     insNameTrim[ins]!!,
-                    (x + volLeft).toFloat(),
-                    (y + fontHeight).toFloat(),
+                    drawX + volLeft.toFloat(),
+                    drawY + fontHeight.toFloat(),
                     insPaint
                 )
             }
 
             // Draw volumes
-            val volX = volLeft + vol * volWidth / 0x40
-            val volY1 = y + 2 * fontHeight
-            val volY2 = y + 2 * fontHeight + fontHeight / 3
-            rect[x + volLeft, volY1, x + volX] = volY2
+            volX = volLeft + vol * volWidth / 0x40
+            volY1 = drawY + 2 * fontHeight
+            volY2 = drawY + 2 * fontHeight + fontHeight / 3
+            rect[drawX + volLeft, volY1, drawX + volX] = volY2
             canvas.drawRect(rect, meterPaint)
-            rect[x + volX + 1, volY1, x + volLeft + volWidth] = volY2
+            rect[drawX + volX + 1, volY1, drawX + volLeft + volWidth] = volY2
             canvas.drawRect(rect, scopePaint)
 
             // Draw pan
@@ -416,10 +437,10 @@ class ChannelViewer(context: Context) : Viewer(context) {
                 pan = 0x80
             }
 
-            val panX = panLeft + pan * panWidth / 0x100
-            rect[x + panLeft, volY1, x + panLeft + panWidth] = volY2
+            panX = panLeft + pan * panWidth / 0x100
+            rect[drawX + panLeft, volY1, drawX + panLeft + panWidth] = volY2
             canvas.drawRect(rect, scopePaint)
-            rect[x + panX, volY1, x + panX + fontWidth / 2] = volY2
+            rect[drawX + panX, volY1, drawX + panX + fontWidth / 2] = volY2
             canvas.drawRect(rect, meterPaint)
         }
     }

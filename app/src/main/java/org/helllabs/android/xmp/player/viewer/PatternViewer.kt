@@ -1,5 +1,6 @@
 package org.helllabs.android.xmp.player.viewer
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
 import android.os.RemoteException
@@ -9,27 +10,53 @@ import org.helllabs.android.xmp.player.Util.NOTES
 import org.helllabs.android.xmp.service.ModInterface
 import org.helllabs.android.xmp.util.logD
 
-class PatternViewer(context: Context) : Viewer(context) {
+@SuppressLint("ViewConstructor")
+class PatternViewer(context: Context, background: Int) : Viewer(context, background) {
 
-    private var oldRow = 0
-    private var oldPosX = 0
-    private var oldOrd = 0
+    // TODO: Find a way to accurately implement effects params...
+    // private val muteEffectsPaint: Paint
+    // private var effectsPaint: Paint
+    // private var paint3: Paint = Paint()
 
-    private val c = CharArray(3)
-    private val rowNotes = ByteArray(64)
-    private val rowInstruments = ByteArray(64)
-    private val rect = Rect()
-    private val notePaint: Paint
-    private val muteNotePaint: Paint
-    private val muteInsPaint: Paint
-    private val insPaint: Paint
-    private val hexByte = mutableListOf<String>()
-    private val headerTextPaint: Paint
-    private val headerPaint: Paint
-    private val fontWidth: Int
-    private val fontHeight: Int
-    private val barPaint: Paint
     private val allNotes = mutableListOf<String>()
+    private val c = CharArray(3)
+    private val fontHeight: Int
+    private val fontWidth: Int
+    private val instHexByte = mutableListOf<String>()
+    private val rect = Rect()
+    private val rowInsts = ByteArray(64)
+    private val rowNotes = ByteArray(64)
+    private var hexByte = mutableListOf<String>()
+    private var oldOrd = 0f
+    private var oldPosX = 0f
+    private var oldRow = 0f
+
+    private val barPaint: Paint
+    private val headerPaint: Paint
+    private val headerTextPaint: Paint
+    private val insPaint: Paint
+    private val muteNotePaint: Paint
+    private val notePaint: Paint
+    private val numRowsTextPaint: Paint
+    private var muteInsPaint: Paint
+    private var paint1: Paint = Paint()
+    private var paint2: Paint = Paint()
+
+    // Draw Loop Variables
+    private var adj: Float = 0f
+    private var barLine: Int = 0
+    private var barY: Int = 0
+    private var chn: Int = 0
+    private var headerX: Float = 0f
+    private var lineInPattern: Int = 0
+    private var lines: Int = 0
+    private var numRows: Int = 0
+    private var ord: Float = 0f
+    private var pat: Int = 0
+    private var patternX: Float = 0f
+    private var patternY: Float = 0f
+    private var row: Float = 0f
+    private var updateRow: Float = 0f
 
     private val fontSize: Float =
         resources.getDimensionPixelSize(R.dimen.patternview_font_size).toFloat()
@@ -68,6 +95,30 @@ class PatternViewer(context: Context) : Viewer(context) {
             isAntiAlias = true
         }
 
+        // Effects Paint
+        // effectsPaint = Paint().apply {
+        //     setARGB(255, 34, 158, 60) // Kinda digging the green.
+        //     typeface = Typeface.MONOSPACE
+        //     textSize = fontSize
+        //     isAntiAlias = true
+        // }
+
+        // Muted Effects Paint
+        // muteEffectsPaint = Paint().apply {
+        //     setARGB(255, 16, 75, 28) // Darker shade of green
+        //     typeface = Typeface.MONOSPACE
+        //     textSize = fontSize
+        //     isAntiAlias = true
+        // }
+
+        // Number Row Text Paint
+        numRowsTextPaint = Paint().apply {
+            setARGB(255, 220, 220, 220)
+            typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
+            textSize = fontSize
+            isAntiAlias = true
+        }
+
         // Header Text Paint
         headerTextPaint = Paint().apply {
             setARGB(255, 220, 220, 220)
@@ -91,7 +142,7 @@ class PatternViewer(context: Context) : Viewer(context) {
 
         for (i in 0..255) {
             Util.to02X(c, i)
-            hexByte.add(String(c))
+            instHexByte.add(String(c))
         }
     }
 
@@ -99,66 +150,62 @@ class PatternViewer(context: Context) : Viewer(context) {
         super.setup(modPlayer, modVars)
         logD("Viewer Setup")
 
-        oldRow = -1
-        oldOrd = -1
-        oldPosX = -1
+        oldRow = -1f
+        oldOrd = -1f
+        oldPosX = -1f
         setMaxX((modVars[3] * 6 + 2) * fontWidth)
     }
 
     override fun update(info: Info?, paused: Boolean) {
         super.update(info, paused)
 
-        val row = info!!.values[2]
-        val ord = info.values[0]
+        updateRow = info!!.values[2].toFloat()
+        ord = info.values[0].toFloat()
 
-        if (oldRow == row && oldOrd == ord && oldPosX == posX.toInt()) {
+        if (oldRow == updateRow && oldOrd == ord && oldPosX == posX) {
             return
         }
 
+        //  NumRows
         if (info.values[3] != 0) {
             // Skip first invalid infos
             oldRow = row
             oldOrd = ord
-            oldPosX = posX.toInt()
+            oldPosX = posX
         }
 
         requestCanvasLock { canvas ->
-            doDraw(canvas, modPlayer!!, info)
+            doDraw(canvas, modPlayer, info)
         }
     }
 
     private fun doDraw(canvas: Canvas, modPlayer: ModInterface, info: Info?) {
 
-        val lines = canvasHeight / fontHeight
-        val barLine = lines / 2 + 1
-        val barY = barLine * fontHeight
-        val row = info!!.values[2]
-        val pat = info.values[1]
-        val chn = modVars[3]
-        val numRows = info.values[3]
+        lines = canvasHeight / fontHeight
+        barLine = lines / 2 + 1
+        barY = barLine * fontHeight
+        row = info!!.values[2].toFloat()
+        pat = info.values[1]
+        chn = modVars[3]
+        numRows = info.values[3]
 
         // Get the number of rows dynamically
         // Side effect of https://github.com/cmatsuoka/xmp-android/pull/15
         if (numRows > 0 && hexByte.size != numRows) {
-            resizeRows(numRows)
+            resizeRows()
         }
 
         // Clear screen
-        canvas.drawColor(Color.BLACK)
+        canvas.drawColor(bgColor)
 
         // Header
         rect[0, 0, canvasWidth - 1] = fontHeight - 1
         canvas.drawRect(rect, headerPaint)
         for (i in 0 until chn) {
-            val adj = if (i + 1 < 10) 1 else 0
-            val x = (3 + i * 6 + 1 + adj) * fontWidth - posX.toInt()
-            if (x > -2 * fontWidth && x < canvasWidth) {
-                canvas.drawText(
-                    (i + 1).toString(),
-                    x.toFloat(),
-                    fontSize,
-                    headerTextPaint
-                )
+            adj = if (i + 1 < 10) 1f else 0f
+            headerX = (3 + i * 6 + 1 + adj) * fontWidth - posX.toInt()
+            if (headerX > -2 * fontWidth && headerX < canvasWidth) {
+                canvas.drawText((i + 1).toString(), headerX, fontSize, headerTextPaint)
             }
         }
 
@@ -168,18 +215,16 @@ class PatternViewer(context: Context) : Viewer(context) {
 
         // Pattern data
         for (i in 1 until lines) {
-            val lineInPattern = i + row - barLine + 1
-            val y = (i + 1) * fontHeight
-            var paint: Paint
-            var paint2: Paint
-            var x: Int
+            lineInPattern = (i + row - barLine + 1).toInt()
+            patternY = ((i + 1) * fontHeight).toFloat()
 
             if (lineInPattern < 0 || lineInPattern >= numRows) {
                 continue
             }
 
+            // Row Number
             if (posX > -2 * fontWidth) {
-                canvas.drawText(hexByte[lineInPattern], -posX, y.toFloat(), headerTextPaint)
+                canvas.drawText(lineInPattern.toString(), -posX, patternY, numRowsTextPaint)
             }
 
             for (j in 0 until chn) {
@@ -189,22 +234,24 @@ class PatternViewer(context: Context) : Viewer(context) {
                     // Our variables are latency-compensated but pattern data is current
                     // so caution is needed to avoid retrieving data using old variables
                     // from a module with pattern data from a newly loaded one.
-                    modPlayer.getPatternRow(pat, lineInPattern, rowNotes, rowInstruments)
+                    modPlayer.getPatternRow(pat, lineInPattern, rowNotes, rowInsts)
                 } catch (e: RemoteException) {
-                    // fail silenty
+                    // fail silently
                 }
 
                 // is muted paint
                 if (isMuted[j]) {
-                    paint = muteNotePaint
+                    paint1 = muteNotePaint
                     paint2 = muteInsPaint
+                    // paint3 = muteEffectsPaint
                 } else {
-                    paint = notePaint
+                    paint1 = notePaint
                     paint2 = insPaint
+                    // paint3 = effectsPaint
                 }
 
-                x = (3 + j * 6) * fontWidth - posX.toInt()
-                if (x < -6 * fontWidth || x > canvasWidth) {
+                patternX = (3 + j * 6) * fontWidth - posX
+                if (patternX < -6 * fontWidth || patternX > canvasWidth) {
                     continue
                 }
 
@@ -216,17 +263,17 @@ class PatternViewer(context: Context) : Viewer(context) {
                     note < 0 -> "==="
                     else -> "---"
                 }
-                canvas.drawText(notes, x.toFloat(), y.toFloat(), paint)
+                canvas.drawText(notes, patternX, patternY, paint1)
 
                 // Instruments
-                x = (3 + j * 6 + 3) * fontWidth - posX.toInt()
-                val inst = if (rowInstruments[j] > 0) hexByte[rowInstruments[j].toInt()] else "--"
-                canvas.drawText(inst, x.toFloat(), y.toFloat(), paint2)
+                patternX = (3 + j * 6 + 3) * fontWidth - posX
+                val inst = if (rowInsts[j] > 0) instHexByte[rowInsts[j].toInt()] else "--"
+                canvas.drawText(inst, patternX, patternY, paint2)
             }
         }
     }
 
-    private fun resizeRows(numRows: Int) {
+    private fun resizeRows() {
         logD("Resizing numRows: $numRows")
         hexByte.clear()
         for (i in 0 until numRows) {
