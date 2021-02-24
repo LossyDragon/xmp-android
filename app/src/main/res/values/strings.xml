@@ -247,5 +247,6 @@
     <string name="error_playlist_name">Name cannot be blank</string>
     <string name="dialog_delete_playlist">Delete Playlist</string>
     <string name="dialog_delete_playlist_message">Are you sure you want to delete %s</string>
+    <string name="select">Select</string>
 
 </resources>

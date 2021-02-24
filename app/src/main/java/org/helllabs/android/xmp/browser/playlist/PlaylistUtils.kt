@@ -2,8 +2,6 @@ package org.helllabs.android.xmp.browser.playlist
 
 import android.app.Activity
 import android.app.ProgressDialog
-import android.content.*
-import android.view.*
 import java.io.File
 import java.io.IOException
 import java.util.*
@@ -87,7 +85,7 @@ object PlaylistUtils {
 
     fun createEmptyPlaylist(activity: Activity, name: String, comment: String): Boolean {
         return try {
-            val playlist = Playlist(activity, name)
+            val playlist = Playlist(name)
             playlist.comment = comment
             playlist.commit()
             true

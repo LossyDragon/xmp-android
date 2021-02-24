@@ -1,16 +1,13 @@
 package org.helllabs.android.xmp.browser
 
 import android.os.Bundle
-import android.view.ContextMenu
-import android.view.ContextMenu.ContextMenuInfo
-import android.view.Menu
-import android.view.MenuItem
-import android.view.View
 import android.widget.TextView
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.afollestad.materialdialogs.MaterialDialog
+import com.afollestad.materialdialogs.list.listItemsSingleChoice
 import java.io.IOException
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.browser.playlist.Playlist
@@ -55,7 +52,7 @@ class PlaylistActivity :
         val name = intent.extras?.getString("name") ?: return
 
         try {
-            mPlaylist = Playlist(this, name)
+            mPlaylist = Playlist(name)
         } catch (e: IOException) {
             logE("Can't read playlist $name")
         }
@@ -63,14 +60,9 @@ class PlaylistActivity :
         findViewById<TextView>(R.id.current_list_name).text = name
         findViewById<TextView>(R.id.current_list_description).text = mPlaylist!!.comment
 
-        mPlaylistAdapter = PlaylistAdapter(
-            mPlaylist!!,
-            PrefManager.useFilename,
-            LAYOUT_DRAG,
-            this
-        )
-        mPlaylistAdapter.onClick = { adapter, position -> onItemClick(adapter, position) }
-        mPlaylistAdapter.onLongClick = { adapter, position -> adapter.position = position }
+        mPlaylistAdapter = PlaylistAdapter(LAYOUT_DRAG, PrefManager.useFilename)
+        mPlaylistAdapter.onClick = { position -> onItemClick(mPlaylistAdapter, position) }
+        mPlaylistAdapter.onLongClick = { position -> onItemLongClick(position) }
 
         mRecyclerView = findViewById<RecyclerView>(R.id.plist_list).apply {
             adapter = mPlaylistAdapter
@@ -85,7 +77,6 @@ class PlaylistActivity :
         mItemTouchHelper.attachToRecyclerView(mRecyclerView)
 
         setSwipeRefresh(mRecyclerView)
-        registerForContextMenu(mRecyclerView)
         setupButtons()
     }
 
@@ -108,39 +99,40 @@ class PlaylistActivity :
         /* no-op */
     }
 
-    // Playlist context menu
-    override fun onCreateContextMenu(menu: ContextMenu, view: View, menuInfo: ContextMenuInfo?) {
-        val mode = PrefManager.playlistMode.toInt()
-        menu.setHeaderTitle("Edit playlist")
-        menu.add(Menu.NONE, 0, 0, "Remove from playlist")
-        menu.add(Menu.NONE, 1, 1, "Add to play queue")
-        menu.add(Menu.NONE, 2, 2, "Add all to play queue")
-        if (mode != 2) menu.add(Menu.NONE, 3, 3, "Play this module")
-        if (mode != 1) menu.add(Menu.NONE, 4, 4, "Play all starting here")
-    }
+    private fun onItemLongClick(position: Int) {
+        val items = listOf(
+            "Remove from playlist",
+            "Add to play queue",
+            "Add all to play queue",
+            "Play this module",
+            "Play all starting here"
+        )
 
-    override fun onContextItemSelected(item: MenuItem): Boolean {
-        val position = mPlaylistAdapter.position
-        when (item.itemId) {
-            0 -> {
-                mPlaylist!!.remove(position)
-                mPlaylist!!.commit()
-                update()
+        MaterialDialog(this).show {
+            title(text = "Edit playlist")
+            listItemsSingleChoice(items = items) { _, index, _ ->
+                when (index) {
+                    0 -> {
+                        mPlaylist!!.remove(position)
+                        mPlaylist!!.commit()
+                        update()
+                    }
+                    1 -> addToQueue(mPlaylistAdapter.getFilename(position))
+                    2 -> addToQueue(mPlaylistAdapter.filenameList)
+                    3 -> playModule(mPlaylistAdapter.getFilename(position))
+                    4 -> playModule(mPlaylistAdapter.filenameList, position)
+                }
             }
-            1 -> addToQueue(mPlaylistAdapter.getFilename(position))
-            2 -> addToQueue(mPlaylistAdapter.filenameList)
-            3 -> playModule(mPlaylistAdapter.getFilename(position))
-            4 -> playModule(mPlaylistAdapter.filenameList, position)
+            positiveButton(R.string.select)
         }
-        return true
     }
 
     public override fun update() {
+        mPlaylistAdapter.submitList(mPlaylist!!.list)
         if (mPlaylistAdapter.getItems().isEmpty()) {
             findViewById<TextView>(R.id.empty_message).show()
         } else {
             findViewById<TextView>(R.id.empty_message).hide()
         }
-        mPlaylistAdapter.notifyDataSetChanged()
     }
 }

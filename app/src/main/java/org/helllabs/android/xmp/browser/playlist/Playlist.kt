@@ -1,11 +1,10 @@
 package org.helllabs.android.xmp.browser.playlist
 
 import android.app.Activity
-import android.content.*
-import androidx.preference.PreferenceManager
 import java.io.*
 import java.util.*
 import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.preferences.Preferences
 import org.helllabs.android.xmp.util.FileUtils.readFromFile
 import org.helllabs.android.xmp.util.FileUtils.removeLineFromFile
@@ -15,7 +14,7 @@ import org.helllabs.android.xmp.util.generalError
 import org.helllabs.android.xmp.util.logE
 import org.helllabs.android.xmp.util.logI
 
-class Playlist(context: Context, val name: String) {
+class Playlist(val name: String) {
 
     var comment: String? = null
     private var mListChanged = false
@@ -23,7 +22,6 @@ class Playlist(context: Context, val name: String) {
     var isShuffleMode = false
     var isLoopMode = false
     val list: MutableList<PlaylistItem>
-    private val mPrefs: SharedPreferences
 
     private class ListFile : File {
         constructor(name: String) : super(Preferences.DATA_DIR, name + PLAYLIST_SUFFIX)
@@ -39,7 +37,6 @@ class Playlist(context: Context, val name: String) {
 
     init {
         list = ArrayList()
-        mPrefs = PreferenceManager.getDefaultSharedPreferences(context)
         val file: File = ListFile(name)
         if (file.exists()) {
             logI("Read playlist $name")
@@ -84,31 +81,11 @@ class Playlist(context: Context, val name: String) {
             saveModes = true
         }
         if (saveModes) {
-            val editor = mPrefs.edit()
-            editor.putBoolean(optionName(name, SHUFFLE_MODE), isShuffleMode)
-            editor.putBoolean(optionName(name, LOOP_MODE), isLoopMode)
-            editor.apply()
+            PrefManager.setBooleanPref(optionName(name, SHUFFLE_MODE), isShuffleMode)
+            PrefManager.setBooleanPref(optionName(name, LOOP_MODE), isLoopMode)
         }
     }
-    // /**
-    //  * Add a new item to the playlist.
-    //  *
-    //  * @param item The item to be added
-    //  */
-    // public void add(final PlaylistItem item) {
-    // 	mList.add(item);
-    // }
-    //
-    // /**
-    //  * Add new items to the playlist.
-    //  *
-    //  * @param items The items to be added
-    //  */
-    // public void add(final PlaylistItem[] items) {
-    // 	for (final PlaylistItem item : items) {
-    // 		add(item);
-    // 	}
-    // }
+
     /**
      * Remove an item from the playlist.
      *
@@ -202,11 +179,11 @@ class Playlist(context: Context, val name: String) {
     }
 
     private fun readShuffleModePref(name: String): Boolean {
-        return mPrefs.getBoolean(optionName(name, SHUFFLE_MODE), DEFAULT_SHUFFLE_MODE)
+        return PrefManager.getBooleanPref(optionName(name, SHUFFLE_MODE), DEFAULT_SHUFFLE_MODE)
     }
 
     private fun readLoopModePref(name: String): Boolean {
-        return mPrefs.getBoolean(optionName(name, LOOP_MODE), DEFAULT_LOOP_MODE)
+        return PrefManager.getBooleanPref(optionName(name, LOOP_MODE), DEFAULT_LOOP_MODE)
     }
 
     fun setListChanged(listChanged: Boolean) {
@@ -222,15 +199,15 @@ class Playlist(context: Context, val name: String) {
         private const val DEFAULT_SHUFFLE_MODE = true
         private const val DEFAULT_LOOP_MODE = false
         // Static utilities
+
         /**
          * Rename a playlist.
          *
-         * @param context The context we're running in
          * @param oldName The current name of the playlist
          * @param newName The new name of the playlist
          * @return Whether the rename was successful
          */
-        fun rename(context: Context, oldName: String, newName: String): Boolean {
+        fun rename(oldName: String, newName: String): Boolean {
             val old1: File = ListFile(oldName)
             val old2: File = CommentFile(oldName)
             val new1: File = ListFile(newName)
@@ -245,19 +222,20 @@ class Playlist(context: Context, val name: String) {
             if (error) {
                 return false
             }
-            val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-            val editor = prefs.edit()
-            editor.putBoolean(
-                optionName(newName, SHUFFLE_MODE),
-                prefs.getBoolean(optionName(oldName, SHUFFLE_MODE), DEFAULT_SHUFFLE_MODE)
-            )
-            editor.putBoolean(
-                optionName(newName, LOOP_MODE),
-                prefs.getBoolean(optionName(oldName, LOOP_MODE), DEFAULT_LOOP_MODE)
-            )
-            editor.remove(optionName(oldName, SHUFFLE_MODE))
-            editor.remove(optionName(oldName, LOOP_MODE))
-            editor.apply()
+
+            PrefManager.run {
+                setBooleanPref(
+                    optionName(newName, LOOP_MODE),
+                    getBooleanPref(optionName(oldName, LOOP_MODE), DEFAULT_LOOP_MODE)
+                )
+                setBooleanPref(
+                    optionName(newName, SHUFFLE_MODE),
+                    getBooleanPref(optionName(oldName, SHUFFLE_MODE), DEFAULT_SHUFFLE_MODE)
+                )
+                removeBooleanPref(optionName(oldName, SHUFFLE_MODE))
+                removeBooleanPref(optionName(oldName, LOOP_MODE))
+            }
+
             return true
         }
 
@@ -284,17 +262,13 @@ class Playlist(context: Context, val name: String) {
         /**
          * Delete the specified playlist.
          *
-         * @param context The context the playlist is being created in
          * @param name    The playlist name
          */
-        fun delete(context: Context, name: String) {
+        fun delete(name: String) {
             ListFile(name).delete()
             CommentFile(name).delete()
-            val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-            val editor = prefs.edit()
-            editor.remove(optionName(name, SHUFFLE_MODE))
-            editor.remove(optionName(name, LOOP_MODE))
-            editor.apply()
+            PrefManager.removeBooleanPref(optionName(name, SHUFFLE_MODE))
+            PrefManager.removeBooleanPref(optionName(name, LOOP_MODE))
         }
 
         // /**

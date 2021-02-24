@@ -52,9 +52,16 @@ object PrefManager {
         prefs = PreferenceManager.getDefaultSharedPreferences(context)
     }
 
-    // TODO get rid of this
-    fun getPreferenceManager(): SharedPreferences {
-        return prefs
+    fun getBooleanPref(key: String, defaultValue: Boolean): Boolean {
+        return prefs.getBoolean(key, defaultValue)
+    }
+
+    fun setBooleanPref(key: String, defaultValue: Boolean) {
+        prefs.edit { putBoolean(key, defaultValue) }
+    }
+
+    fun removeBooleanPref(key: String) {
+        prefs.edit { remove(key) }
     }
 
     fun clearSearchHistory() {
