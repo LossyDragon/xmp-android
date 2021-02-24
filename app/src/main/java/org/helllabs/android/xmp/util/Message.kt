@@ -8,10 +8,10 @@ import com.afollestad.materialdialogs.MaterialDialog
 import org.helllabs.android.xmp.R
 
 inline fun <reified T : Context> T.toast(message: String) =
-    Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show()
 
 inline fun <reified T : Context> T.toast(@StringRes resId: Int) =
-    Toast.makeText(this, this.getString(resId), Toast.LENGTH_SHORT).show()
+    Toast.makeText(applicationContext, this.getString(resId), Toast.LENGTH_SHORT).show()
 
 fun Activity.fatalError(message: String) {
     MaterialDialog(this).show {
