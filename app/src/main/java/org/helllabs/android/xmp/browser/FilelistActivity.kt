@@ -329,7 +329,7 @@ class FilelistActivity : BasePlaylistActivity() {
     }
 
     private fun updateModlist() {
-        mPlaylistAdapter.submitList(null) // Stop flicker
+        mPlaylistAdapter.onSwap(null) // Stop flicker
 
         val modDir = mNavigation.currentDir ?: return
         curPath.text = modDir.path
@@ -351,7 +351,7 @@ class FilelistActivity : BasePlaylistActivity() {
 
         list.sort()
         PlaylistUtils.renumberIds(list)
-        mPlaylistAdapter.submitList(list)
+        mPlaylistAdapter.onSwap(list)
         mCrossfade.crossfade()
 
         if (list.isEmpty()) {

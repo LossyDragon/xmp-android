@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.list.listItemsSingleChoice
 import java.io.IOException
@@ -16,6 +17,7 @@ import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter.Companion.LAYOU
 import org.helllabs.android.xmp.browser.playlist.PlaylistItem
 import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.util.hide
+import org.helllabs.android.xmp.util.logD
 import org.helllabs.android.xmp.util.logE
 import org.helllabs.android.xmp.util.recyclerview.OnStartDragListener
 import org.helllabs.android.xmp.util.recyclerview.SimpleItemTouchHelperCallback
@@ -63,6 +65,7 @@ class PlaylistActivity :
         mPlaylistAdapter = PlaylistAdapter(LAYOUT_DRAG, PrefManager.useFilename)
         mPlaylistAdapter.onClick = { position -> onItemClick(mPlaylistAdapter, position) }
         mPlaylistAdapter.onLongClick = { position -> onItemLongClick(position) }
+        mPlaylistAdapter.dragListener = this
 
         mRecyclerView = findViewById<RecyclerView>(R.id.plist_list).apply {
             adapter = mPlaylistAdapter
@@ -75,6 +78,7 @@ class PlaylistActivity :
         val callback: ItemTouchHelper.Callback = SimpleItemTouchHelperCallback(mPlaylistAdapter)
         mItemTouchHelper = ItemTouchHelper(callback)
         mItemTouchHelper.attachToRecyclerView(mRecyclerView)
+
 
         setSwipeRefresh(mRecyclerView)
         setupButtons()
@@ -91,12 +95,18 @@ class PlaylistActivity :
         mPlaylist!!.commit()
     }
 
-    override fun onStartDrag(viewHolder: RecyclerView.ViewHolder?) {
-        /* no-op */
+    override fun onStartDrag(viewHolder: RecyclerView.ViewHolder) {
+        mItemTouchHelper.startDrag(viewHolder)
     }
 
-    override fun onStopDrag(newList: MutableList<PlaylistItem>) {
-        /* no-op */
+    override fun onStopDrag(playlist: MutableList<PlaylistItem>) {
+        mPlaylist!!.list.clear()
+        mPlaylist!!.list.addAll(playlist)
+        mPlaylist!!.setListChanged(true)
+    }
+
+    override fun disableSwipe(isDisabled: Boolean) {
+        findViewById<SwipeRefreshLayout>(R.id.swipeContainer).isEnabled = isDisabled
     }
 
     private fun onItemLongClick(position: Int) {
@@ -128,7 +138,7 @@ class PlaylistActivity :
     }
 
     public override fun update() {
-        mPlaylistAdapter.submitList(mPlaylist!!.list)
+        mPlaylistAdapter.onSwap(mPlaylist!!.list)
         if (mPlaylistAdapter.getItems().isEmpty()) {
             findViewById<TextView>(R.id.empty_message).show()
         } else {

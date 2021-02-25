@@ -151,7 +151,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     }
 
     open fun onItemClick(adapter: PlaylistAdapter, position: Int) {
-        val filename = adapter.currentList[position].file!!.path
+        val filename = adapter.playlist[position].file!!.path
         val mode = PrefManager.playlistMode.toInt()
 
         /* Test module again if invalid, in case a new file format is added to the

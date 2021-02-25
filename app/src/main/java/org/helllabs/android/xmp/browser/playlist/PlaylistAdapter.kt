@@ -8,45 +8,32 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import java.io.File
-import java.lang.IllegalArgumentException
-import java.util.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.util.*
 import org.helllabs.android.xmp.util.recyclerview.ItemTouchHelperAdapter
 import org.helllabs.android.xmp.util.recyclerview.ItemTouchHelperViewHolder
 import org.helllabs.android.xmp.util.recyclerview.OnStartDragListener
+import java.io.File
+import java.util.*
 
 class PlaylistAdapter(
     private var layoutType: Int,
     private var useFilename: Boolean,
-) : ListAdapter<PlaylistItem, PlaylistAdapter.ViewHolder>(DIFF_CALLBACK),
+) : RecyclerView.Adapter<PlaylistAdapter.ViewHolder>(),
     ItemTouchHelperAdapter {
 
     companion object {
         const val LAYOUT_LIST = 0
         const val LAYOUT_CARD = 1
         const val LAYOUT_DRAG = 2
-
-        val DIFF_CALLBACK = object : DiffUtil.ItemCallback<PlaylistItem>() {
-            override fun areItemsTheSame(oldItem: PlaylistItem, newItem: PlaylistItem): Boolean {
-                return oldItem.id == newItem.id && oldItem.name == newItem.name
-            }
-
-            override fun areContentsTheSame(oldItem: PlaylistItem, newItem: PlaylistItem): Boolean {
-                return oldItem.id == newItem.id
-            }
-        }
     }
 
     val filenameList: List<String>
         get() {
             val list: MutableList<String> = ArrayList()
-            for (item in currentList) {
+            for (item in playlist) {
                 if (item.type == PlaylistItem.TYPE_FILE) {
                     list.add(item.file!!.path)
                 }
@@ -57,7 +44,7 @@ class PlaylistAdapter(
     val directoryCount: Int
         get() {
             var count = 0
-            for (item in currentList) {
+            for (item in playlist) {
                 if (item.type != PlaylistItem.TYPE_DIRECTORY) {
                     break
                 }
@@ -66,16 +53,17 @@ class PlaylistAdapter(
             return count
         }
 
-    var dragListener: OnStartDragListener? = null
+    var playlist: MutableList<PlaylistItem> = LinkedList()
+        private set
 
+    var isDraggable: Boolean = false
+        private set
+
+    var dragListener: OnStartDragListener? = null
     private val typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
 
     var onClick: ((position: Int) -> Unit)? = null
     var onLongClick: ((position: Int) -> Unit)? = null
-
-    init {
-        setHasStableIds(true)
-    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
@@ -89,49 +77,69 @@ class PlaylistAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.onBind(currentList[position])
+        holder.onBind(playlist[position])
     }
 
-    override fun getItemId(position: Int): Long = currentList[position].id.toLong()
+    override fun getItemId(position: Int): Long = playlist[position].id.toLong()
 
     override fun onItemMove(fromPosition: Int, toPosition: Int): Boolean {
-        // Temp it first to avoid crashing.
-        val tempList = currentList
-        Collections.swap(tempList, fromPosition, toPosition)
-        submitList(tempList)
+        Collections.swap(playlist, fromPosition, toPosition)
+        notifyItemMoved(fromPosition, toPosition)
 
         return true
     }
 
-    fun getItems(): List<PlaylistItem> = currentList
+    override fun getItemCount(): Int = playlist.size
 
-    fun getFilename(location: Int): String = currentList[location].file!!.path
+    fun onSwap(list: List<PlaylistItem>?) {
 
-    fun getFile(location: Int): File = currentList[location].file!!
+        // Seems to stop flickering on resume.
+        val newList: MutableList<PlaylistItem> =
+            if (list == null) mutableListOf() else LinkedList(list)
+
+        val result = DiffUtil.calculateDiff(PlaylistDiffUtil(newList))
+        playlist = newList
+        result.dispatchUpdatesTo(this)
+    }
+
+    fun getItems(): List<PlaylistItem> = playlist
+
+    fun getFilename(location: Int): String = playlist[location].file!!.path
+
+    fun getFile(location: Int): File = playlist[location].file!!
 
     fun setUseFilename(useFilename: Boolean) {
         this.useFilename = useFilename
     }
 
     inner class ViewHolder(
-        itemView: View
-    ) : RecyclerView.ViewHolder(itemView),
+        val view: View
+    ) : RecyclerView.ViewHolder(view),
         ItemTouchHelperViewHolder {
-        fun onBind(item: PlaylistItem) = with(itemView) {
 
-            val container: View = findViewById(R.id.plist_container)
-            val handle: View? = findViewById(R.id.plist_handle)
-            val titleText: TextView = findViewById(R.id.plist_title)
-            val infoText: TextView = findViewById(R.id.plist_info)
-            val image: ImageView = findViewById(R.id.plist_image)
+        private val container: View = view.findViewById(R.id.plist_container)
+        private val handle: View? = view.findViewById(R.id.plist_handle)
+        private val titleText: TextView = view.findViewById(R.id.plist_title)
+        private val infoText: TextView = view.findViewById(R.id.plist_info)
+        private val image: ImageView = view.findViewById(R.id.plist_image)
+
+        fun onBind(item: PlaylistItem) = with(view) {
 
             // Drag
-            if (handle != null && handle.isVisible) {
-                handle.touch { _, e ->
-                    if (e.action == MotionEvent.ACTION_DOWN) {
-                        dragListener?.onStartDrag(this@ViewHolder)
+            if (layoutType == LAYOUT_DRAG) {
+                handle?.let { handle ->
+                    handle.show()
+                    handle.touch { _, event ->
+                        logD("Touch: ${event.actionMasked}")
+                        isDraggable =
+                            if (event.actionMasked == MotionEvent.ACTION_DOWN) {
+                                dragListener?.onStartDrag(this@ViewHolder)
+                                true
+                            } else {
+                                false
+                            }
+                        true // Continue to consume the touch event.
                     }
-                    false
                 }
             }
 
@@ -141,13 +149,9 @@ class PlaylistAdapter(
                 infoText.setTypeface(typeface, Typeface.NORMAL)
             }
 
-            titleText.text = if (useFilename) item.filename else item.name
             infoText.text = item.comment
+            titleText.text = if (useFilename) item.filename else item.name
             image.setImageResource(item.imageRes)
-
-            if (layoutType == LAYOUT_DRAG) {
-                handle?.show()
-            }
 
             container.click {
                 onClick?.invoke(adapterPosition)
@@ -160,11 +164,28 @@ class PlaylistAdapter(
         }
 
         override fun onItemSelected() {
-            itemView.setBackgroundColor(Color.LTGRAY)
+            view.setBackgroundColor(Color.LTGRAY)
+            dragListener?.disableSwipe(true)
         }
 
         override fun onItemClear() {
-            itemView.setBackgroundColor(0)
+            PlaylistUtils.renumberIds(playlist)
+            view.setBackgroundColor(0)
+
+            dragListener?.onStopDrag(playlist)
+            dragListener?.disableSwipe(false)
         }
+    }
+
+    inner class PlaylistDiffUtil(val list: MutableList<PlaylistItem>) : DiffUtil.Callback() {
+        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
+            list[newItemPosition].id == playlist[oldItemPosition].id
+
+        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int) =
+            list[newItemPosition] == playlist[oldItemPosition]
+
+        override fun getOldListSize() = playlist.size
+
+        override fun getNewListSize() = list.size
     }
 }

@@ -34,3 +34,8 @@ app/app.iml
 
 # libxmp
 /app/src/main/cpp/libxmp/
+# AS seems to like these 2 test folders.
+/app/src/main/cpp/libxmp/test/
+/app/src/main/cpp/libxmp/test/libxmp-test
+/app/src/main/cpp/libxmp/test-dev/
+/app/src/main/cpp/libxmp/test-dev/libxmp-tests

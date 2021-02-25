@@ -39,6 +39,8 @@
                 android:id="@+id/plist_info"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="4"
                 android:textSize="13sp"
                 tools:text="plist_info" />
 

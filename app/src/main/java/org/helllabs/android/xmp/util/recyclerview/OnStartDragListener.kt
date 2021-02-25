@@ -27,12 +27,19 @@ interface OnStartDragListener {
      *
      * @param viewHolder The holder of the view to drag.
      */
-    fun onStartDrag(viewHolder: RecyclerView.ViewHolder?)
+    fun onStartDrag(viewHolder: RecyclerView.ViewHolder)
 
     /**
      * Called when a view is requesting a stop of a drag.
      *
-     * @param newList The new list for the playlist editor
      */
-    fun onStopDrag(newList: MutableList<PlaylistItem>)
+    fun onStopDrag(playlist: MutableList<PlaylistItem>)
+
+    /**
+     * Called when a view is moving to disable pull to refresh,
+     *
+     * @param isDisabled true to disable, false to enable
+     *
+     */
+    fun disableSwipe(isDisabled: Boolean)
 }

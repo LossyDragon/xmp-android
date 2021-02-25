@@ -5,7 +5,6 @@
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     android:background="?android:attr/selectableItemBackground"
-    android:baselineAligned="false"
     android:orientation="horizontal">
 
     <androidx.appcompat.widget.AppCompatImageView
@@ -30,7 +29,6 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:singleLine="true"
-            android:text="@{title}"
             android:textSize="19sp"
             tools:text="Some Playlist Title" />
 
@@ -40,7 +38,6 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:singleLine="true"
-            android:text="@{info}"
             android:textSize="13sp"
             tools:text="Some Playlist Info" />
 
@@ -53,7 +50,7 @@
         android:layout_gravity="center_vertical|end"
         android:scaleType="center"
         android:src="@drawable/ic_handle"
-        android:visibility="invisible"
+        android:visibility="gone"
         tools:visibility="visible" />
 
 </LinearLayout>

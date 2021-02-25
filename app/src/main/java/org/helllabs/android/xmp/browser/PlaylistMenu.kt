@@ -129,7 +129,7 @@ class PlaylistMenu : AppCompatActivity() {
 
     public override fun onResume() {
         super.onResume()
-        playlistAdapter.submitList(null) // Stop flicker
+        playlistAdapter.onSwap(null) // Stop flicker
         updateList()
     }
 
@@ -197,7 +197,7 @@ class PlaylistMenu : AppCompatActivity() {
             intent = Intent(this@PlaylistMenu, FilelistActivity::class.java)
         } else {
             intent = Intent(this@PlaylistMenu, PlaylistActivity::class.java)
-            intent.putExtra("name", playlistAdapter.currentList[position].name)
+            intent.putExtra("name", playlistAdapter.playlist[position].name)
         }
         startActivityForResult(intent, PLAYLIST_REQUEST)
     }
@@ -206,7 +206,7 @@ class PlaylistMenu : AppCompatActivity() {
         if (position == 0) {
             changeDir()
         } else {
-            val playlist = playlistAdapter.currentList[position]
+            val playlist = playlistAdapter.playlist[position]
             val intent = Intent(this, PlaylistAddEdit::class.java).apply {
                 putExtra(PlaylistAddEdit.EXTRA_ID, playlist.id)
                 putExtra(PlaylistAddEdit.EXTRA_NAME, playlist.name)
@@ -261,7 +261,7 @@ class PlaylistMenu : AppCompatActivity() {
         }
         PlaylistUtils.renumberIds(playlistAdapter.getItems())
 
-        playlistAdapter.submitList(list)
+        playlistAdapter.onSwap(list)
     }
 
     private fun addPlaylist(data: Intent?) {
