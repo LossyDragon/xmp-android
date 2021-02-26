@@ -23,7 +23,6 @@ import org.helllabs.android.xmp.modarchive.Search
 import org.helllabs.android.xmp.player.PlayerActivity
 import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.preferences.Preferences
-import org.helllabs.android.xmp.service.ModInterface
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.util.InfoCache.testModule
 import org.helllabs.android.xmp.util.InfoCache.testModuleForceIfInvalid
@@ -34,7 +33,7 @@ import org.helllabs.android.xmp.util.toast
 
 abstract class BasePlaylistActivity : AppCompatActivity() {
 
-    private lateinit var mModPlayer: ModInterface
+    private lateinit var mModPlayer: PlayerService
     private var mShowToasts = false
     private var mAddList: MutableList<String>? = null
     private var refresh = false
@@ -72,9 +71,9 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     // Connection
     private val connection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
-            mModPlayer = ModInterface.Stub.asInterface(service)
+            mModPlayer = (service as PlayerService.PlayerBinder).service
             try {
-                mModPlayer.add(mAddList)
+                mModPlayer.add(mAddList!!.toList())
             } catch (e: RemoteException) {
                 toast(R.string.error_adding_mod)
             }

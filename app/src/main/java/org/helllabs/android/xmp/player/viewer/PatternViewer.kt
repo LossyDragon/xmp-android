@@ -7,7 +7,7 @@ import android.os.RemoteException
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.player.Util
 import org.helllabs.android.xmp.player.Util.NOTES
-import org.helllabs.android.xmp.service.ModInterface
+import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.util.logD
 
 @SuppressLint("ViewConstructor")
@@ -147,7 +147,7 @@ class PatternViewer(context: Context, background: Int) : Viewer(context, backgro
         }
     }
 
-    override fun setup(modPlayer: ModInterface, modVars: IntArray) {
+    override fun setup(modPlayer: PlayerService, modVars: IntArray) {
         super.setup(modPlayer, modVars)
         logD("Viewer Setup")
 
@@ -180,7 +180,7 @@ class PatternViewer(context: Context, background: Int) : Viewer(context, backgro
         }
     }
 
-    private fun doDraw(canvas: Canvas, modPlayer: ModInterface, info: Info?) {
+    private fun doDraw(canvas: Canvas, modPlayer: PlayerService, info: Info?) {
 
         lines = canvasHeight / fontHeight
         barLine = lines / 2 + 1

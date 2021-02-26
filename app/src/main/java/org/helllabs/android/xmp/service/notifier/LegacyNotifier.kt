@@ -4,6 +4,7 @@ import android.app.Service
 import androidx.core.app.NotificationCompat
 import org.helllabs.android.xmp.R
 
+@Deprecated("min API 21")
 class LegacyNotifier(service: Service) : Notifier(service) {
 
     private val `when`: Long = System.currentTimeMillis()

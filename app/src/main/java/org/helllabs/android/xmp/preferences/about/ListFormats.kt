@@ -10,16 +10,20 @@ import android.widget.ListView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.appbar.MaterialToolbar
+import dagger.hilt.android.AndroidEntryPoint
 import java.util.*
+import javax.inject.Inject
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp.getFormats
 import org.helllabs.android.xmp.util.toast
 
-// TODO: di ClipboardManager
+@AndroidEntryPoint
 class ListFormats : AppCompatActivity() {
 
+    @Inject
+    lateinit var clipboard: ClipboardManager
+
     private val formats = getFormats()
-    private var clipboard: ClipboardManager? = null
 
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,16 +47,11 @@ class ListFormats : AppCompatActivity() {
             setOnItemLongClickListener { _, _, position, _ ->
                 val item = this.getItemAtPosition(position) as String
                 val clip = ClipData.newPlainText("Xmp Clipboard", item)
-                clipboard?.setPrimaryClip(clip)
+                clipboard.setPrimaryClip(clip)
                 toast(R.string.clipboard_copied)
                 true
             }
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        clipboard = null
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

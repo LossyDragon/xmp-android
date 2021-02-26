@@ -8,8 +8,8 @@ import android.os.RemoteException
 import android.view.*
 import android.view.GestureDetector.SimpleOnGestureListener
 import android.view.View.OnTouchListener
+import org.helllabs.android.xmp.service.PlayerService
 import kotlin.math.abs
-import org.helllabs.android.xmp.service.ModInterface
 import org.helllabs.android.xmp.util.*
 
 // http://developer.android.com/guide/topics/graphics/2d-graphics.html
@@ -21,7 +21,7 @@ abstract class Viewer(context: Context, color: Int) :
     SurfaceHolder.Callback,
     View.OnClickListener {
 
-    internal lateinit var modPlayer: ModInterface
+    internal lateinit var modPlayer: PlayerService
 
     // Background Color
     protected var bgColor: Int = color
@@ -114,7 +114,7 @@ abstract class Viewer(context: Context, color: Int) :
         updateScroll()
     }
 
-    open fun setup(modPlayer: ModInterface, modVars: IntArray) {
+    open fun setup(modPlayer: PlayerService, modVars: IntArray) {
         logI("Viewer setup")
         val chn = modVars[3]
         this.modVars = modVars

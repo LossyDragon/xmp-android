@@ -10,7 +10,7 @@ import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.player.Util
 import org.helllabs.android.xmp.preferences.PrefManager
-import org.helllabs.android.xmp.service.ModInterface
+import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.util.logE
 
 @SuppressLint("ViewConstructor")
@@ -134,7 +134,7 @@ class ChannelViewer(context: Context, background: Int) : Viewer(context, backgro
         bufferXY = FloatArray(scopeWidth * 2)
     }
 
-    override fun setup(modPlayer: ModInterface, modVars: IntArray) {
+    override fun setup(modPlayer: PlayerService, modVars: IntArray) {
         super.setup(modPlayer, modVars)
 
         val chn = modVars[3]
@@ -142,14 +142,14 @@ class ChannelViewer(context: Context, background: Int) : Viewer(context, backgro
 
         this.modPlayer = modPlayer
         try {
-            insName = modPlayer.instruments.toMutableList()
+            insName = modPlayer.getInstruments().toMutableList()
         } catch (e: RemoteException) {
             logE("Can't get instrument name")
         }
 
         if (insName.isNullOrEmpty()) {
             for (i in 0 until ins) {
-                insName[i] = ""
+                insName.add("")
             }
         }
 
@@ -300,7 +300,7 @@ class ChannelViewer(context: Context, background: Int) : Viewer(context, backgro
         }
     }
 
-    private fun doDraw(canvas: Canvas, modPlayer: ModInterface, info: Info?, paused: Boolean) {
+    private fun doDraw(canvas: Canvas, modPlayer: PlayerService, info: Info?, paused: Boolean) {
         numChannels = modVars[3]
         numInstruments = modVars[4]
         row = info!!.values[2]

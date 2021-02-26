@@ -22,7 +22,6 @@ import org.helllabs.android.xmp.util.recyclerview.OnStartDragListener
 import org.helllabs.android.xmp.util.recyclerview.SimpleItemTouchHelperCallback
 import org.helllabs.android.xmp.util.show
 
-// TODO: Remove contextual menu as it interferes with drag handle.
 class PlaylistActivity :
     BasePlaylistActivity(),
     OnStartDragListener {

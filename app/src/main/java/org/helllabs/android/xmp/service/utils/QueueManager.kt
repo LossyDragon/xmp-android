@@ -3,7 +3,7 @@ package org.helllabs.android.xmp.service.utils
 import java.util.*
 
 class QueueManager(
-    fileList: MutableList<String>,
+    fileList: List<String>,
     start: Int,
     shuffle: Boolean,
     loop: Boolean,
@@ -37,7 +37,7 @@ class QueueManager(
         }
 
         index = initStart
-        list = fileList
+        list = fileList.toMutableList()
         ridx = RandomIndex(randomStart, fileList.size)
         shuffleMode = shuffle
         loopListMode = loop

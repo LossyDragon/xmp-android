@@ -6,6 +6,9 @@ import android.media.AudioManager
 import android.media.AudioManager.OnAudioFocusChangeListener
 import android.os.*
 import androidx.lifecycle.MutableLiveData
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
+import org.greenrobot.eventbus.EventBus
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.service.notifier.LegacyNotifier
@@ -21,7 +24,13 @@ import org.helllabs.android.xmp.util.logE
 import org.helllabs.android.xmp.util.logI
 import org.helllabs.android.xmp.util.logW
 
+@AndroidEntryPoint
 class PlayerService : Service(), OnAudioFocusChangeListener {
+
+    private val localBinder: IBinder = PlayerBinder()
+
+    @Inject
+    lateinit var eventBus: EventBus
 
     private var audioManager: AudioManager? = null
     private var remoteControl: RemoteControl? = null
@@ -50,7 +59,6 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
     private var updateData = false
     private var currentFileName: String? = null
     private var queue: QueueManager? = null
-    private val callbacks = RemoteCallbackList<PlayerCallback>()
     private var sequenceNumber = 0
     private var receiverHelper: ReceiverHelper? = null
 
@@ -96,6 +104,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         watchdog!!.setOnTimeoutListener(
             object : Watchdog.OnTimeoutListener {
                 override fun onTimeout() {
+                    eventBus.post(OnServiceStopped())
                     stopSelf()
                 }
             }
@@ -122,7 +131,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
     }
 
     override fun onBind(intent: Intent): IBinder {
-        return binder
+        return localBinder
     }
 
     private fun requestAudioFocus(): Boolean {
@@ -170,15 +179,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         doPauseAndNotify()
 
         // Notify clients that we paused
-        val numClients = callbacks.beginBroadcast()
-        for (i in 0 until numClients) {
-            try {
-                callbacks.getBroadcastItem(i).pauseCallback()
-            } catch (e: RemoteException) {
-                logE("Error notifying pause to client")
-            }
-        }
-        callbacks.finishBroadcast()
+        eventBus.post(PlayStateCallback())
     }
 
     fun actionPrev() {
@@ -213,15 +214,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
     // }
 
     private fun notifyNewSequence() {
-        val numClients = callbacks.beginBroadcast()
-        for (j in 0 until numClients) {
-            try {
-                callbacks.getBroadcastItem(j).newSequenceCallback()
-            } catch (e: RemoteException) {
-                logE("Error notifying end of module to client")
-            }
-        }
-        callbacks.finishBroadcast()
+        eventBus.post(NewSequenceCallback())
     }
 
     private inner class PlayRunnable : Runnable {
@@ -301,15 +294,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                 for (i in 0..63) {
                     Xmp.mute(i, 0)
                 }
-                var numClients = callbacks.beginBroadcast()
-                for (j in 0 until numClients) {
-                    try {
-                        callbacks.getBroadcastItem(j).newModCallback()
-                    } catch (e: RemoteException) {
-                        logE("Error notifying new module to client")
-                    }
-                }
-                callbacks.finishBroadcast()
+
                 Xmp.setPlayer(Xmp.PLAYER_AMP, volBoost.toInt())
                 Xmp.setPlayer(Xmp.PLAYER_MIX, PrefManager.stereoMix)
                 Xmp.setPlayer(Xmp.PLAYER_INTERP, interpType)
@@ -326,6 +311,8 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                 var playNewSequence: Boolean
                 Xmp.setSequence(sequenceNumber)
                 Xmp.playAudio()
+                eventBus.post(NewModCallback())
+
                 logI("Enter play loop")
                 do {
                     Xmp.getModVars(vars)
@@ -386,32 +373,20 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                 isLoaded = false
 
                 // notify end of module to our clients
-                numClients = callbacks.beginBroadcast()
-                if (numClients > 0) {
-                    canRelease = false
-                    for (j in 0 until numClients) {
-                        try {
-                            logI("Call end of module callback")
-                            callbacks.getBroadcastItem(j).endModCallback()
-                        } catch (e: RemoteException) {
-                            logE("Error notifying end of module to client")
-                        }
-                    }
-                    callbacks.finishBroadcast()
+                eventBus.post(EndModCallback())
 
-                    // if we have clients, make sure we can release module
-                    var timeout = 0
-                    try {
-                        while (!canRelease && timeout < 20) {
-                            Thread.sleep(100)
-                            timeout++
-                        }
-                    } catch (e: InterruptedException) {
-                        logE("Sleep interrupted: $e")
+                // Study the purpose of this
+                // if we have clients, make sure we can release module
+                var timeout = 0
+                try {
+                    while (!canRelease && timeout < 20) {
+                        Thread.sleep(100)
+                        timeout++
                     }
-                } else {
-                    callbacks.finishBroadcast()
+                } catch (e: InterruptedException) {
+                    logE("Sleep interrupted: $e")
                 }
+
                 logI("Release module")
                 Xmp.releaseModule()
 
@@ -437,21 +412,15 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
             audioManager!!.abandonAudioFocus(this@PlayerService)
 
             logI("Stop service")
+            eventBus.post(OnServiceStopped())
             stopSelf()
         }
     }
 
     private fun end(result: Int) {
-        logI("End service")
-        val numClients = callbacks.beginBroadcast()
-        for (i in 0 until numClients) {
-            try {
-                callbacks.getBroadcastItem(i).endPlayCallback(result)
-            } catch (e: RemoteException) {
-                logE("Error notifying end of play to client")
-            }
-        }
-        callbacks.finishBroadcast()
+        logI("End service with result: $result")
+        eventBus.post(EndPlayCallback(result))
+
         isPlayerAlive.postValue(false)
         Xmp.stopModule()
         if (isPlayerPaused) {
@@ -461,211 +430,197 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         // audio.release();
     }
 
-    private val binder = object : ModInterface.Stub() {
-        override fun play(
-            fileList: MutableList<String>,
-            start: Int,
-            shuffle: Boolean,
-            loopList: Boolean,
-            keepFirst: Boolean
-        ) {
-            if (!audioInitialized || !hasAudioFocus) {
-                stopSelf()
-                return
-            }
-            queue = QueueManager(fileList, start, shuffle, loopList, keepFirst)
-            notifier!!.setQueue(queue)
-            // notifier.clean();
-            cmd = CMD_NONE
-            if (isPlayerPaused) {
-                doPauseAndNotify()
-            }
-            if (isPlayerAlive.value == true) {
-                logI("Use existing player thread")
-                restart = true
-                startIndex = if (keepFirst) 0 else start
-                nextSong()
-            } else {
-                logI("Start player thread")
-                playThread = Thread(PlayRunnable())
-                playThread!!.start()
-            }
-            isPlayerAlive.postValue(true)
+    fun play(
+        fileList: List<String>,
+        start: Int,
+        shuffle: Boolean,
+        loopList: Boolean,
+        keepFirst: Boolean
+    ) {
+        if (!audioInitialized || !hasAudioFocus) {
+            eventBus.post(OnServiceStopped())
+            stopSelf()
+            return
         }
-
-        override fun add(fileList: List<String>) {
-            queue!!.add(fileList)
-            updateNotification()
-            // notifier.notification("Added to play queue");
-        }
-
-        override fun stop() {
-            actionStop()
-        }
-
-        override fun pause() {
+        queue = QueueManager(fileList, start, shuffle, loopList, keepFirst)
+        notifier!!.setQueue(queue)
+        // notifier.clean();
+        cmd = CMD_NONE
+        if (isPlayerPaused) {
             doPauseAndNotify()
-            receiverHelper!!.isHeadsetPaused = false
         }
-
-        override fun getInfo(values: IntArray) {
-            Xmp.getInfo(values)
+        if (isPlayerAlive.value == true) {
+            logI("Use existing player thread")
+            restart = true
+            startIndex = if (keepFirst) 0 else start
+            nextSong()
+        } else {
+            logI("Start player thread")
+            playThread = Thread(PlayRunnable())
+            playThread!!.start()
         }
+        isPlayerAlive.postValue(true)
+    }
 
-        override fun seek(seconds: Int) {
-            Xmp.seek(seconds)
-        }
+    fun add(fileList: List<String>) {
+        queue!!.add(fileList)
+        updateNotification()
+        // notifier.notification("Added to play queue");
+    }
 
-        override fun time(): Int {
-            return Xmp.time()
-        }
+    fun stop() {
+        actionStop()
+    }
 
-        override fun getModVars(vars: IntArray) {
-            Xmp.getModVars(vars)
-        }
+    fun pause() {
+        doPauseAndNotify()
+        receiverHelper!!.isHeadsetPaused = false
+    }
 
-        override fun getModName(): String {
-            return Xmp.getModName()
-        }
+    fun getInfo(values: IntArray) {
+        Xmp.getInfo(values)
+    }
 
-        override fun getModType(): String {
-            return Xmp.getModType()
-        }
+    fun seek(seconds: Int) {
+        Xmp.seek(seconds)
+    }
 
-        override fun getChannelData(
-            volumes: IntArray,
-            finalvols: IntArray,
-            pans: IntArray,
-            instruments: IntArray,
-            keys: IntArray,
-            periods: IntArray
-        ) {
-            if (updateData) {
-                synchronized(playThread!!) {
-                    Xmp.getChannelData(volumes, finalvols, pans, instruments, keys, periods)
-                }
+    fun time(): Int {
+        return Xmp.time()
+    }
+
+    fun getModVars(vars: IntArray) {
+        Xmp.getModVars(vars)
+    }
+
+    fun getModName(): String {
+        return Xmp.getModName()
+    }
+
+    fun getModType(): String {
+        return Xmp.getModType()
+    }
+
+    fun getChannelData(
+        volumes: IntArray,
+        finalvols: IntArray,
+        pans: IntArray,
+        instruments: IntArray,
+        keys: IntArray,
+        periods: IntArray
+    ) {
+        if (updateData) {
+            synchronized(playThread!!) {
+                Xmp.getChannelData(volumes, finalvols, pans, instruments, keys, periods)
             }
         }
+    }
 
-        override fun getSampleData(
-            trigger: Boolean,
-            ins: Int,
-            key: Int,
-            period: Int,
-            chn: Int,
-            width: Int,
-            buffer: ByteArray
-        ) {
-            if (updateData) {
-                synchronized(playThread!!) {
-                    Xmp.getSampleData(trigger, ins, key, period, chn, width, buffer)
-                }
+    fun getSampleData(
+        trigger: Boolean,
+        ins: Int,
+        key: Int,
+        period: Int,
+        chn: Int,
+        width: Int,
+        buffer: ByteArray
+    ) {
+        if (updateData) {
+            synchronized(playThread!!) {
+                Xmp.getSampleData(trigger, ins, key, period, chn, width, buffer)
             }
         }
+    }
 
-        override fun nextSong() {
-            Xmp.stopModule()
-            cmd = CMD_NEXT
-            if (isPlayerPaused) {
-                doPauseAndNotify()
-            }
-            discardBuffer = true
+    fun nextSong() {
+        Xmp.stopModule()
+        cmd = CMD_NEXT
+        if (isPlayerPaused) {
+            doPauseAndNotify()
         }
+        discardBuffer = true
+    }
 
-        override fun prevSong() {
-            Xmp.stopModule()
-            cmd = CMD_PREV
-            if (isPlayerPaused) {
-                doPauseAndNotify()
-            }
-            discardBuffer = true
+    fun prevSong() {
+        Xmp.stopModule()
+        cmd = CMD_PREV
+        if (isPlayerPaused) {
+            doPauseAndNotify()
         }
+        discardBuffer = true
+    }
 
-        @Throws(RemoteException::class)
-        override fun toggleLoop(): Boolean {
-            looped = looped xor true
-            return looped
-        }
+    fun toggleLoop(): Boolean {
+        looped = looped xor true
+        return looped
+    }
 
-        @Throws(RemoteException::class)
-        override fun toggleAllSequences(): Boolean {
-            playerAllSequences = playerAllSequences xor true
-            return playerAllSequences
-        }
+    fun toggleAllSequences(): Boolean {
+        playerAllSequences = playerAllSequences xor true
+        return playerAllSequences
+    }
 
-        @Throws(RemoteException::class)
-        override fun getLoop(): Boolean {
-            return looped
-        }
+    fun getLoop(): Boolean {
+        return looped
+    }
 
-        @Throws(RemoteException::class)
-        override fun getAllSequences(): Boolean {
-            return playerAllSequences
-        }
+    fun getAllSequences(): Boolean {
+        return playerAllSequences
+    }
 
-        override fun isPaused(): Boolean {
-            return isPlayerPaused
-        }
+    fun isPaused(): Boolean {
+        return isPlayerPaused
+    }
 
-        override fun setSequence(seq: Int): Boolean {
-            val ret = Xmp.setSequence(seq)
-            if (ret) {
-                sequenceNumber = seq
-                notifyNewSequence()
-            }
-            return ret
+    fun setSequence(seq: Int): Boolean {
+        val ret = Xmp.setSequence(seq)
+        if (ret) {
+            sequenceNumber = seq
+            notifyNewSequence()
         }
+        return ret
+    }
 
-        override fun allowRelease() {
-            canRelease = true
-        }
+    fun allowRelease() {
+        canRelease = true
+    }
 
-        override fun getSeqVars(vars: IntArray) {
-            Xmp.getSeqVars(vars)
-        }
+    fun getSeqVars(vars: IntArray) {
+        Xmp.getSeqVars(vars)
+    }
 
-        // for Reconnection
-        override fun getFileName(): String {
-            return currentFileName!!
-        }
+    // for Reconnection
+    fun getFileName(): String {
+        return currentFileName!!
+    }
 
-        override fun getInstruments(): Array<String> {
-            return Xmp.getInstruments()
-        }
+    fun getInstruments(): Array<String> {
+        return Xmp.getInstruments()
+    }
 
-        override fun getPatternRow(
-            pat: Int,
-            row: Int,
-            rowNotes: ByteArray,
-            rowInstruments: ByteArray
-        ) {
-            if (isPlayerAlive.value == true) {
-                Xmp.getPatternRow(pat, row, rowNotes, rowInstruments)
-            }
+    fun getPatternRow(
+        pat: Int,
+        row: Int,
+        rowNotes: ByteArray,
+        rowInstruments: ByteArray
+    ) {
+        if (isPlayerAlive.value == true) {
+            Xmp.getPatternRow(pat, row, rowNotes, rowInstruments)
         }
+    }
 
-        override fun mute(chn: Int, status: Int): Int {
-            return Xmp.mute(chn, status)
-        }
+    fun mute(chn: Int, status: Int): Int {
+        return Xmp.mute(chn, status)
+    }
 
-        override fun hasComment(): Boolean {
-            return !Xmp.getComment().isNullOrEmpty()
-        }
+    fun hasComment(): Boolean {
+        return !Xmp.getComment().isNullOrEmpty()
+    }
 
-        // File management
-        override fun deleteFile(): Boolean {
-            logI("Delete file $currentFileName")
-            return delete(currentFileName!!)
-        }
-
-        // Callback
-        override fun registerCallback(callback: PlayerCallback) {
-            callbacks.register(callback)
-        }
-
-        override fun unregisterCallback(callback: PlayerCallback) {
-            callbacks.unregister(callback)
-        }
+    // File management
+    fun deleteFile(): Boolean {
+        logI("Delete file $currentFileName")
+        return delete(currentFileName!!)
     }
 
     // for audio focus loss
@@ -716,9 +671,11 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                 // Stop playback
                 actionStop()
             }
-            else -> {
-            }
         }
+    }
+
+    inner class PlayerBinder : Binder() {
+        val service: PlayerService = this@PlayerService
     }
 
     companion object {
