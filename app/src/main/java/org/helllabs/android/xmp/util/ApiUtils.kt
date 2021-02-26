@@ -4,12 +4,29 @@ import android.content.res.Resources
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.text.Html
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
+import android.widget.SeekBar
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.RecyclerView
+
+/**
+ * Log helpers
+ */
+inline fun <reified T : Any> T.logD(message: String) =
+    Log.d("Xmp", "[${this::class.java.simpleName}] $message")
+
+inline fun <reified T : Any> T.logI(message: String) =
+    Log.i("Xmp", "[${this::class.java.simpleName}] $message")
+
+inline fun <reified T : Any> T.logW(message: String) =
+    Log.w("Xmp", "[${this::class.java.simpleName}] $message")
+
+inline fun <reified T : Any> T.logE(message: String) =
+    Log.e("Xmp", "[${this::class.java.simpleName}] $message")
 
 /**
  * API level helpers
@@ -100,5 +117,34 @@ fun RecyclerView.setOnItemTouchListener(
         }
     }
     addOnItemTouchListener(listener)
+    return listener
+}
+
+/**
+ * setOnSeekBarChangeListener(
+ * onProgressChanged = { seekbar, progress, fromUser -> }
+ * onStartTrackingTouch = { seekbar -> }
+ * onStopTrackingTouch = { seekbar -> }
+ * )
+ */
+fun SeekBar.setOnSeekBarChangeListener(
+    onProgressChanged: ((seekBar: SeekBar?, progress: Int, fromUser: Boolean) -> Unit)? = null,
+    onStartTrackingTouch: ((seekBar: SeekBar?) -> Unit)? = null,
+    onStopTrackingTouch: ((seekBar: SeekBar?) -> Unit)? = null,
+): SeekBar.OnSeekBarChangeListener {
+    val listener = object : SeekBar.OnSeekBarChangeListener {
+        override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+            onProgressChanged?.invoke(seekBar, progress, fromUser)
+        }
+
+        override fun onStartTrackingTouch(seekBar: SeekBar?) {
+            onStartTrackingTouch?.invoke(seekBar)
+        }
+
+        override fun onStopTrackingTouch(seekBar: SeekBar?) {
+            onStopTrackingTouch?.invoke(seekBar)
+        }
+    }
+    setOnSeekBarChangeListener(listener)
     return listener
 }

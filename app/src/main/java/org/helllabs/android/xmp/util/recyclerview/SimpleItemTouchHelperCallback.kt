@@ -18,8 +18,8 @@ package org.helllabs.android.xmp.util.recyclerview
 import android.graphics.Canvas
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
-import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter
 import kotlin.math.abs
+import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter
 
 /**
  * An implementation of [ItemTouchHelper.Callback] that enables basic drag & drop and

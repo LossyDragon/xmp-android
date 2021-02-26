@@ -41,7 +41,7 @@ object Xmp {
     external fun dropAudio()
     external fun endPlayer(): Int
     external fun fillBuffer(loop: Boolean): Int
-    external fun getComment(): String
+    external fun getComment(): String?
     external fun getFormats(): Array<String>
     external fun getInfo(values: IntArray)
     external fun getInstruments(): Array<String>

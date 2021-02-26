@@ -461,7 +461,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         // audio.release();
     }
 
-    private val binder: ModInterface.Stub = object : ModInterface.Stub() {
+    private val binder = object : ModInterface.Stub() {
         override fun play(
             fileList: MutableList<String>,
             start: Int,
@@ -649,7 +649,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         }
 
         override fun hasComment(): Boolean {
-            return Xmp.getComment().isNotEmpty()
+            return !Xmp.getComment().isNullOrEmpty()
         }
 
         // File management

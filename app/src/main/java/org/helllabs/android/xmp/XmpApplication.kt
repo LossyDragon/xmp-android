@@ -24,10 +24,6 @@ class XmpApplication : Application() {
         PrefManager.init(applicationContext)
     }
 
-    fun clearFileList() {
-        fileList = null
-    }
-
     companion object {
         @get:Synchronized
         var instance: XmpApplication? = null

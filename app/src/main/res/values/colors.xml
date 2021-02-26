@@ -17,5 +17,6 @@
 
     <!-- Playlist card's background color -->
     <color name="cardColor">@color/gray</color>
+    <color name="colorLightGray">#FFC0C0C0</color>
 
 </resources>

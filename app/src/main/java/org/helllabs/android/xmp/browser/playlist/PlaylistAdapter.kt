@@ -10,13 +10,13 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import java.io.File
+import java.util.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.util.*
 import org.helllabs.android.xmp.util.recyclerview.ItemTouchHelperAdapter
 import org.helllabs.android.xmp.util.recyclerview.ItemTouchHelperViewHolder
 import org.helllabs.android.xmp.util.recyclerview.OnStartDragListener
-import java.io.File
-import java.util.*
 
 class PlaylistAdapter(
     private var layoutType: Int,

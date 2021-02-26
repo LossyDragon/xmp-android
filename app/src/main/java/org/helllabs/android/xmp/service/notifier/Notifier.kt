@@ -57,7 +57,7 @@ abstract class Notifier(protected val service: Service) {
     }
 
     companion object {
-        const val NOTIFY_ID = R.layout.player
+        const val NOTIFY_ID = R.layout.activity_player
         const val TYPE_TICKER = 1
         const val TYPE_PAUSE = 2
         const val ACTION_STOP = "org.helllabs.android.xmp.STOP"

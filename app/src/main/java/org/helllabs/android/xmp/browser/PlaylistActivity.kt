@@ -17,7 +17,6 @@ import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter.Companion.LAYOU
 import org.helllabs.android.xmp.browser.playlist.PlaylistItem
 import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.util.hide
-import org.helllabs.android.xmp.util.logD
 import org.helllabs.android.xmp.util.logE
 import org.helllabs.android.xmp.util.recyclerview.OnStartDragListener
 import org.helllabs.android.xmp.util.recyclerview.SimpleItemTouchHelperCallback
@@ -78,7 +77,6 @@ class PlaylistActivity :
         val callback: ItemTouchHelper.Callback = SimpleItemTouchHelperCallback(mPlaylistAdapter)
         mItemTouchHelper = ItemTouchHelper(callback)
         mItemTouchHelper.attachToRecyclerView(mRecyclerView)
-
 
         setSwipeRefresh(mRecyclerView)
         setupButtons()

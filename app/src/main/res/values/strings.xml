@@ -108,7 +108,6 @@
     <string name="empty_comment">Long press modules to create new playlists or add to existing playlists. Long press playlists for more options.</string>
     <string name="unrecognized_format">Unrecognized file format</string>
 
-
     <string name="about_author">Written by Claudio Matsuoka</string>
     <string name="about_version">Version %s</string>
     <string name="about_xmp">Using libxmp %s written by Claudio Matsuoka and Hipolito Carraro Jr.</string>
@@ -158,15 +157,6 @@
     <string name="browser_filelist_title">File browser</string>
     <string name="browser_playlist_title">Playlist</string>
 
-    <string name="sidebar_details">Module details</string>
-    <string name="sidebar_patterns">Patterns:</string>
-    <string name="sidebar_instruments">Instruments:</string>
-    <string name="sidebar_samples">Samples:</string>
-    <string name="sidebar_channels">Channels:</string>
-    <string name="sidebar_subsongs">Subsongs</string>
-    <string name="sidebar_button_allseqs">Play all subsongs</string>
-    <string name="sidebar_button_loopseq">Loop subsong</string>
-
     <string name="search_title">Module search</string>
     <string name="search_result_title">Search result</string>
     <string name="search_artist_modules_title">Modules by artist</string>
@@ -194,6 +184,18 @@
     <string name="msg_sd_cant_do">This android device can\'t access the SD card. Use the internal emulated SD card instead.</string>
     <string name="msg_sd_enable_write">Enable write access</string>
     <string name="msg_sd_instructions">In the following screen select your external (physical) SD card to enable write access. Continue?</string>
+
+    <!-- Sheet -->
+    <string name="sheet_main_song">Main Song</string>
+    <string name="sheet_sub_song">Subsong %d</string>
+    <string name="sheet_details">Module details</string>
+    <string name="sheet_patterns">Patterns:</string>
+    <string name="sheet_instruments">Instruments:</string>
+    <string name="sheet_samples">Samples:</string>
+    <string name="sheet_channels">Channels:</string>
+    <string name="sheet_subsongs">Subsongs</string>
+    <string name="sheet_button_allseqs">Play all subsongs</string>
+    <string name="sheet_button_loopseq">Loop subsong</string>
 
     <!-- New Strings Below -->
     <string name="notif_channel_desc">Current module and player controls</string>
@@ -248,5 +250,18 @@
     <string name="dialog_delete_playlist">Delete Playlist</string>
     <string name="dialog_delete_playlist_message">Are you sure you want to delete %s</string>
     <string name="select">Select</string>
+    <string name="info_pattern">&#160;Pat:</string>
+    <string name="info_position">&#160;Pos:</string>
+    <string name="info_bpm">&#160;BPM:</string>
+    <string name="info_speed">Speed:</string>
+    <string name="player_time">&#160;0:00</string>
+    <string name="msg_no_song_info">No song message available.</string>
+    <string name="dialog_title_song_message">Song Message</string>
+    <string name="desc_show_module_message">Show Module Message</string>
+    <string name="desc_play_or_pause_module">Play or Pause module</string>
+    <string name="desc_stop_playing_module">Stop playing module</string>
+    <string name="desc_rewind_module_or_skip">Rewind module or skip to previous before 3 seconds.</string>
+    <string name="desc_repeat_current_play">Repeat currently playing module</string>
+    <string name="desc_skip_to_next_module">Skip to next module</string>
 
 </resources>
