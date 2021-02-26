@@ -8,17 +8,12 @@ import android.text.SpannableString
 import android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
 import android.text.style.ForegroundColorSpan
 import android.view.*
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.input.input
-import com.google.android.material.appbar.MaterialToolbar
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.io.File
 import java.util.*
 import org.helllabs.android.xmp.R
@@ -28,6 +23,7 @@ import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter.Companion.LAYOU
 import org.helllabs.android.xmp.browser.playlist.PlaylistItem
 import org.helllabs.android.xmp.browser.playlist.PlaylistUtils
 import org.helllabs.android.xmp.browser.playlist.PlaylistUtils.createEmptyPlaylist
+import org.helllabs.android.xmp.databinding.ActivityPlaylistMenuBinding
 import org.helllabs.android.xmp.modarchive.Search
 import org.helllabs.android.xmp.player.PlayerActivity
 import org.helllabs.android.xmp.preferences.PrefManager
@@ -40,12 +36,16 @@ class PlaylistMenu : AppCompatActivity() {
     private lateinit var playlistAdapter: PlaylistAdapter
     private lateinit var mediaPath: String
 
+    private lateinit var binder: ActivityPlaylistMenuBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        binder = ActivityPlaylistMenuBinding.inflate(layoutInflater)
+
         logI("Start application")
-        setContentView(R.layout.activity_playlist_menu)
-        setSupportActionBar(findViewById<MaterialToolbar>(R.id.toolbar))
+        setContentView(binder.root)
+        setSupportActionBar(binder.appbar.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(false)
         supportActionBar?.setDisplayShowHomeEnabled(false)
 
@@ -53,13 +53,13 @@ class PlaylistMenu : AppCompatActivity() {
         val spannable = SpannableString(getString(R.string.app_name))
         val color = resources.color(R.color.accent)
         spannable.setSpan(ForegroundColorSpan(color), 0, 3, SPAN_EXCLUSIVE_EXCLUSIVE)
-        findViewById<TextView>(R.id.toolbarText).apply {
+        binder.appbar.toolbarText.apply {
             text = spannable
             click { startPlayerActivity() }
         }
 
         // Swipe refresh
-        val swipe = findViewById<SwipeRefreshLayout>(R.id.swipeContainer).apply {
+        binder.swipeContainer.apply {
             setColorSchemeResources(R.color.refresh_color)
             setOnRefreshListener {
                 updateList()
@@ -72,7 +72,7 @@ class PlaylistMenu : AppCompatActivity() {
         playlistAdapter.onClick = { position -> onClick(position) }
         playlistAdapter.onLongClick = { position -> onLongClick(position) }
 
-        findViewById<RecyclerView>(R.id.plist_menu_list).apply {
+        binder.plistMenuList.apply {
             layoutManager = LinearLayoutManager(this@PlaylistMenu)
             adapter = playlistAdapter
             setOnItemTouchListener(
@@ -82,7 +82,7 @@ class PlaylistMenu : AppCompatActivity() {
                         if (childCount > 0) {
                             enable = !canScrollVertically(-1)
                         }
-                        swipe.isEnabled = enable
+                        binder.swipeContainer.isEnabled = enable
                     }
                     false
                 }
@@ -90,7 +90,7 @@ class PlaylistMenu : AppCompatActivity() {
         }
 
         // FAB
-        findViewById<FloatingActionButton>(R.id.playlist_add_button).click {
+        binder.playlistAddButton.click {
             val intent = Intent(this, PlaylistAddEdit::class.java)
             startActivityForResult(intent, MOD_ADD_REQUEST)
         }

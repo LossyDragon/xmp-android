@@ -81,8 +81,8 @@
             style="@style/PlayerButtons"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:contentDescription="@string/desc_stop_playing_module"
             android:layout_marginEnd="15dp"
+            android:contentDescription="@string/desc_stop_playing_module"
             android:padding="12dp"
             app:layout_constraintBottom_toBottomOf="@id/player_button_prev"
             app:layout_constraintEnd_toStartOf="@id/player_button_prev"
@@ -96,8 +96,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="15dp"
-            android:padding="12dp"
             android:contentDescription="@string/desc_rewind_module_or_skip"
+            android:padding="12dp"
             app:layout_constraintBottom_toBottomOf="@id/player_button_play"
             app:layout_constraintEnd_toStartOf="@id/player_button_play"
             app:layout_constraintTop_toTopOf="@id/player_button_play"
@@ -109,8 +109,8 @@
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:layout_marginBottom="20dp"
-            android:contentDescription="@string/desc_play_or_pause_module"
             android:background="@drawable/button_fab_background"
+            android:contentDescription="@string/desc_play_or_pause_module"
             android:stateListAnimator="@animator/button_elevation"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -121,8 +121,8 @@
             style="@style/PlayerButtons"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:contentDescription="@string/desc_skip_to_next_module"
             android:layout_marginStart="15dp"
+            android:contentDescription="@string/desc_skip_to_next_module"
             android:padding="12dp"
             app:layout_constraintBottom_toBottomOf="@id/player_button_play"
             app:layout_constraintStart_toEndOf="@id/player_button_play"
@@ -135,8 +135,8 @@
             style="@style/PlayerButtons"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:contentDescription="@string/desc_repeat_current_play"
             android:layout_marginStart="15dp"
+            android:contentDescription="@string/desc_repeat_current_play"
             android:padding="12dp"
             app:layout_constraintBottom_toBottomOf="@id/player_button_forward"
             app:layout_constraintStart_toEndOf="@id/player_button_forward"
@@ -146,6 +146,8 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <include layout="@layout/layout_bottom_sheet" />
+    <include
+        android:id="@+id/info_pane"
+        layout="@layout/layout_bottom_sheet" />
 
 </LinearLayout>

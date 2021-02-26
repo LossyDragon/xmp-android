@@ -4,18 +4,15 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.LinearLayout
-import android.widget.ProgressBar
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.afollestad.materialdialogs.MaterialDialog
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.databinding.ActivityResultListBinding
 import org.helllabs.android.xmp.modarchive.ModArchiveConstants.MODULE_ID
 import org.helllabs.android.xmp.modarchive.adapter.HistoryAdapter
 import org.helllabs.android.xmp.modarchive.result.ModuleResult
@@ -26,34 +23,25 @@ import org.helllabs.android.xmp.util.show
 
 class SearchHistory : AppCompatActivity(), HistoryAdapter.HistoryAdapterListener {
 
+    private lateinit var binder: ActivityResultListBinding
     private lateinit var historyAdapter: HistoryAdapter
-
-    private lateinit var appBarText: TextView
-    private lateinit var errorMessage: TextView
-    private lateinit var errorLayout: LinearLayout
-    private lateinit var resultSpinner: ProgressBar
-    private lateinit var resultList: RecyclerView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setContentView(R.layout.activity_result_list)
-        setSupportActionBar(findViewById<MaterialToolbar>(R.id.toolbar))
+        binder = ActivityResultListBinding.inflate(layoutInflater)
+
+        setContentView(binder.root)
+        setSupportActionBar(binder.appbar.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayShowHomeEnabled(true)
 
-        appBarText = findViewById(R.id.toolbarText)
-        resultSpinner = findViewById(R.id.result_spinner)
-        resultList = findViewById(R.id.result_list)
-        errorMessage = findViewById(R.id.message)
-        errorLayout = findViewById(R.id.layout)
-
-        appBarText.text = getString(R.string.search_history)
+        binder.appbar.toolbarText.text = getString(R.string.search_history)
 
         historyAdapter = HistoryAdapter()
         historyAdapter.historyListener = this
-        resultSpinner.hide()
-        resultList.apply {
+        binder.resultSpinner.hide()
+        binder.resultList.apply {
             layoutManager = LinearLayoutManager(this@SearchHistory)
             adapter = historyAdapter
             addItemDecoration(
@@ -89,12 +77,12 @@ class SearchHistory : AppCompatActivity(), HistoryAdapter.HistoryAdapterListener
         historyAdapter.submitList(getHistory().sortedBy { it.visitDate })
 
         if (historyAdapter.historySet.isEmpty()) {
-            resultList.hide()
-            errorLayout.show()
-            errorMessage.text = getString(R.string.history_no_items)
+            binder.resultList.hide()
+            binder.errorLayout.layout.show()
+            binder.errorLayout.message.text = getString(R.string.history_no_items)
         } else {
-            resultList.show()
-            errorLayout.hide()
+            binder.resultList.show()
+            binder.errorLayout.layout.hide()
         }
     }
 

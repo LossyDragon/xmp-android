@@ -117,6 +117,8 @@
 
     </FrameLayout>
 
-    <include layout="@layout/layout_list_controls" />
+    <include
+        android:id="@+id/list_controls"
+        layout="@layout/layout_list_controls" />
 
 </LinearLayout>

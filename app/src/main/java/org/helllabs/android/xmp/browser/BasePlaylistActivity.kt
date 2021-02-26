@@ -5,31 +5,25 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
-import android.os.RemoteException
 import android.view.Menu
 import android.view.MenuItem
 import android.view.MotionEvent
-import android.view.View
-import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.google.android.material.appbar.MaterialToolbar
-import java.util.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter
+import org.helllabs.android.xmp.databinding.LayoutListControlsBinding
 import org.helllabs.android.xmp.modarchive.Search
 import org.helllabs.android.xmp.player.PlayerActivity
 import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.preferences.Preferences
 import org.helllabs.android.xmp.service.PlayerService
+import org.helllabs.android.xmp.util.*
 import org.helllabs.android.xmp.util.InfoCache.testModule
 import org.helllabs.android.xmp.util.InfoCache.testModuleForceIfInvalid
-import org.helllabs.android.xmp.util.logI
-import org.helllabs.android.xmp.util.logW
-import org.helllabs.android.xmp.util.setOnItemTouchListener
-import org.helllabs.android.xmp.util.toast
+import java.util.*
 
 abstract class BasePlaylistActivity : AppCompatActivity() {
 
@@ -44,39 +38,17 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     protected abstract val allFiles: List<String>
     protected abstract fun update()
 
-    private val playAllButtonListener = View.OnClickListener {
-        if (allFiles.isEmpty()) {
-            toast(R.string.error_no_files_to_play)
-        } else {
-            playModule(allFiles)
-        }
-    }
-
-    private val toggleLoopButtonListener = View.OnClickListener { view ->
-        isLoopMode = !isLoopMode
-        val icon = if (isLoopMode) R.drawable.ic_repeat_on else R.drawable.ic_repeat_off
-        (view as ImageButton).setImageResource(icon)
-        if (mShowToasts)
-            toast(if (isLoopMode) R.string.msg_loop_on else R.string.msg_loop_off)
-    }
-
-    private val toggleShuffleButtonListener = View.OnClickListener { view ->
-        isShuffleMode = !isShuffleMode
-        val icon = if (isShuffleMode) R.drawable.ic_shuffle_on else R.drawable.ic_shuffle_off
-        (view as ImageButton).setImageResource(icon)
-        if (mShowToasts)
-            toast(if (isShuffleMode) R.string.msg_shuffle_on else R.string.msg_shuffle_off)
-    }
+    private val shuffleIcon
+        get() = if (isShuffleMode) R.drawable.ic_shuffle_on else R.drawable.ic_shuffle_off
+    private val loopIcon
+        get() = if (isLoopMode) R.drawable.ic_repeat_on else R.drawable.ic_repeat_off
 
     // Connection
     private val connection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             mModPlayer = (service as PlayerService.PlayerBinder).service
-            try {
+            if (!mAddList.isNullOrEmpty())
                 mModPlayer.add(mAddList!!.toList())
-            } catch (e: RemoteException) {
-                toast(R.string.error_adding_mod)
-            }
             unbindService(this)
         }
 
@@ -95,7 +67,6 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     override fun onPostCreate(savedInstanceState: Bundle?) {
         super.onPostCreate(savedInstanceState)
 
-        setSupportActionBar(findViewById<MaterialToolbar>(R.id.toolbar))
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayShowHomeEnabled(true)
     }
@@ -175,8 +146,8 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         }
     }
 
-    protected fun setSwipeRefresh(recyclerView: RecyclerView) {
-        val swipeRefresh = findViewById<SwipeRefreshLayout>(R.id.swipeContainer).apply {
+    protected fun setSwipeRefresh(swipe: SwipeRefreshLayout, rv: RecyclerView) {
+        swipe.apply {
             setOnRefreshListener {
                 update()
                 isRefreshing = false
@@ -184,36 +155,48 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
             setColorSchemeResources(R.color.refresh_color)
         }
 
-        recyclerView.setOnItemTouchListener(
+        rv.setOnItemTouchListener(
             onInterceptTouchEvent = { _, e ->
                 if (e.action == MotionEvent.ACTION_DOWN) {
                     var enable = false
-                    if (recyclerView.childCount > 0) {
-                        enable = !recyclerView.canScrollVertically(-1)
+                    if (rv.childCount > 0) {
+                        enable = !rv.canScrollVertically(-1)
                     }
-                    swipeRefresh.isEnabled = enable
+                    swipe.isEnabled = enable
                 }
                 false
             }
         )
     }
 
-    protected fun setupButtons() {
-        findViewById<ImageButton>(R.id.control_button_play).apply {
+    protected fun setupButtons(controls: LayoutListControlsBinding) {
+        controls.controlButtonPlay.apply {
             setImageResource(R.drawable.ic_play)
-            setOnClickListener(playAllButtonListener)
+            click {
+                if (allFiles.isEmpty()) {
+                    toast(R.string.error_no_files_to_play)
+                } else {
+                    playModule(allFiles)
+                }
+            }
         }
-        findViewById<ImageButton>(R.id.control_button_loop).apply {
-            setImageResource(
-                if (isLoopMode) R.drawable.ic_repeat_on else R.drawable.ic_repeat_off
-            )
-            setOnClickListener(toggleLoopButtonListener)
+        controls.controlButtonLoop.apply {
+            setImageResource(loopIcon)
+            click {
+                isLoopMode = !isLoopMode
+                setImageResource(loopIcon)
+                if (mShowToasts)
+                    toast(if (isLoopMode) R.string.msg_loop_on else R.string.msg_loop_off)
+            }
         }
-        findViewById<ImageButton>(R.id.control_button_shuffle).apply {
-            setImageResource(
-                if (isShuffleMode) R.drawable.ic_shuffle_on else R.drawable.ic_shuffle_off
-            )
-            setOnClickListener(toggleShuffleButtonListener)
+        controls.controlButtonShuffle.apply {
+            setImageResource(shuffleIcon)
+            click {
+                isShuffleMode = !isShuffleMode
+                setImageResource(shuffleIcon)
+                if (mShowToasts)
+                    toast(if (isShuffleMode) R.string.msg_shuffle_on else R.string.msg_shuffle_off)
+            }
         }
     }
 

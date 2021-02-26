@@ -4,11 +4,8 @@ import android.app.AlertDialog
 import android.content.DialogInterface
 import android.os.Bundle
 import android.view.*
-import android.widget.ImageButton
-import android.widget.TextView
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.list.listItemsSingleChoice
 import java.io.File
@@ -20,6 +17,7 @@ import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter.Companion.LAYOU
 import org.helllabs.android.xmp.browser.playlist.PlaylistItem
 import org.helllabs.android.xmp.browser.playlist.PlaylistItem.Companion.TYPE_DIRECTORY
 import org.helllabs.android.xmp.browser.playlist.PlaylistUtils
+import org.helllabs.android.xmp.databinding.ActivityModlistBinding
 import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.util.*
 import org.helllabs.android.xmp.util.FileUtils.basename
@@ -31,9 +29,8 @@ import org.helllabs.android.xmp.util.InfoCache.deleteRecursive
 // TODO: Implement MVI/Coroutines, dir parsing slow.
 class FilelistActivity : BasePlaylistActivity() {
 
-    private lateinit var recyclerView: RecyclerView
+    private lateinit var binder: ActivityModlistBinding
     private lateinit var mCrossfade: Crossfader
-    private lateinit var curPath: TextView
     private lateinit var mNavigation: FilelistNavigation
 
     override var isLoopMode = false
@@ -105,40 +102,43 @@ class FilelistActivity : BasePlaylistActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setContentView(R.layout.activity_modlist)
-        findViewById<TextView>(R.id.toolbarText).text = getString(R.string.browser_filelist_title)
+        binder = ActivityModlistBinding.inflate(layoutInflater)
+
+        setContentView(binder.root)
+        setSupportActionBar(binder.appbar.toolbar)
+        binder.appbar.toolbarText.text = getString(R.string.browser_filelist_title)
 
         mNavigation = FilelistNavigation()
 
         mCrossfade = Crossfader(this)
-        mCrossfade.setup(R.id.modlist_content, R.id.modlist_spinner)
+        mCrossfade.setup(binder.modlistContent, binder.modlistSpinner)
 
         mPlaylistAdapter = PlaylistAdapter(LAYOUT_LIST, false)
         mPlaylistAdapter.onClick = { position -> onClick(position) }
         mPlaylistAdapter.onLongClick = { position -> onLongClick(position) }
 
-        recyclerView = findViewById<RecyclerView>(R.id.modlist_listview).apply {
-            adapter = mPlaylistAdapter
-            setHasFixedSize(true)
-            addItemDecoration(
-                DividerItemDecoration(this@FilelistActivity, LinearLayoutManager.HORIZONTAL)
-            )
-        }
-
-        findViewById<ImageButton>(R.id.up_button).click { parentDir() }
-
-        curPath = findViewById<TextView>(R.id.current_path).apply {
-            val textColor = currentTextColor
-            setOnTouchListener { view, event ->
-                when (event?.action) {
-                    MotionEvent.ACTION_UP -> setTextColor(textColor)
-                    else -> setTextColor(resources.color(R.color.pressed_color))
-                }
-                view?.performClick() ?: false
+        binder.apply {
+            modlistListview.apply {
+                adapter = mPlaylistAdapter
+                setHasFixedSize(true)
+                addItemDecoration(
+                    DividerItemDecoration(this@FilelistActivity, LinearLayoutManager.HORIZONTAL)
+                )
             }
-            longClick {
-                onPathClick()
-                true
+            upButton.click { parentDir() }
+            currentPath.apply {
+                val textColor = currentTextColor
+                setOnTouchListener { view, event ->
+                    when (event?.action) {
+                        MotionEvent.ACTION_UP -> setTextColor(textColor)
+                        else -> setTextColor(resources.color(R.color.pressed_color))
+                    }
+                    view?.performClick() ?: false
+                }
+                longClick {
+                    onPathClick()
+                    true
+                }
             }
         }
 
@@ -155,10 +155,10 @@ class FilelistActivity : BasePlaylistActivity() {
         isLoopMode = readLoopModePref()
 
         // Swipe
-        setSwipeRefresh(recyclerView)
+        setSwipeRefresh(binder.swipeContainer, binder.modlistListview)
 
         // Play buttons
-        setupButtons()
+        setupButtons(binder.listControls)
     }
 
     public override fun onDestroy() {
@@ -188,7 +188,7 @@ class FilelistActivity : BasePlaylistActivity() {
     private fun onClick(position: Int) {
         val file = mPlaylistAdapter.getFile(position)
         if (mNavigation.changeDirectory(file)) {
-            mNavigation.saveListPosition(recyclerView)
+            mNavigation.saveListPosition(binder.modlistListview)
             updateModlist()
         } else {
             onItemClick(mPlaylistAdapter, position)
@@ -324,7 +324,7 @@ class FilelistActivity : BasePlaylistActivity() {
     private fun parentDir() {
         if (mNavigation.parentDir()) {
             updateModlist()
-            mNavigation.restoreListPosition(recyclerView)
+            mNavigation.restoreListPosition(binder.modlistListview)
         }
     }
 
@@ -332,12 +332,11 @@ class FilelistActivity : BasePlaylistActivity() {
         mPlaylistAdapter.onSwap(null) // Stop flicker
 
         val modDir = mNavigation.currentDir ?: return
-        curPath.text = modDir.path
+        binder.currentPath.text = modDir.path
         val list = mutableListOf<PlaylistItem>()
 
         modDir.listFiles()?.forEach { file ->
-            val item: PlaylistItem
-            item = if (file.isDirectory) {
+            val item: PlaylistItem = if (file.isDirectory) {
                 PlaylistItem(TYPE_DIRECTORY, file.name, getString(R.string.directory))
             } else {
                 val date = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM)
@@ -354,10 +353,8 @@ class FilelistActivity : BasePlaylistActivity() {
         mPlaylistAdapter.onSwap(list)
         mCrossfade.crossfade()
 
-        if (list.isEmpty()) {
-            findViewById<TextView>(R.id.empty_message).show()
-        } else {
-            findViewById<TextView>(R.id.empty_message).hide()
+        binder.emptyMessage.apply {
+            if (list.isEmpty()) show() else hide()
         }
     }
 

@@ -5,25 +5,27 @@ import android.os.Environment
 import android.os.Environment.MEDIA_MOUNTED
 import android.os.Environment.MEDIA_MOUNTED_READ_ONLY
 import android.view.MenuItem
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.material.appbar.MaterialToolbar
-import java.io.File
 import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.databinding.PrefLayoutBinding
 import org.helllabs.android.xmp.util.logE
+import java.io.File
 
 class Preferences : AppCompatActivity() {
+
+    private lateinit var binder: PrefLayoutBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setContentView(R.layout.pref_layout)
-        setSupportActionBar(findViewById<MaterialToolbar>(R.id.toolbar))
+        binder = PrefLayoutBinding.inflate(layoutInflater)
+
+        setContentView(binder.root)
+        setSupportActionBar(binder.appbar.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayShowHomeEnabled(true)
 
-        val appbar = findViewById<TextView>(R.id.toolbarText)
-        appbar.text = getString(R.string.pref_category_preferences)
+        binder.appbar.toolbarText.text = getString(R.string.pref_category_preferences)
 
         supportFragmentManager
             .beginTransaction()

@@ -53,6 +53,12 @@ android {
     packagingOptions {
         exclude "DebugProbesKt.bin"
     }
+
+    // View binding
+    buildFeatures {
+        viewBinding true
+        dataBinding true
+    }
 }
 
 dependencies {

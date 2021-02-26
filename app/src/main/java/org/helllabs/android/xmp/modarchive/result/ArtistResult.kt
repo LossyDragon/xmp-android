@@ -2,19 +2,16 @@ package org.helllabs.android.xmp.modarchive.result
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.LinearLayout
-import android.widget.ProgressBar
-import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.appbar.MaterialToolbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collect
 import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.databinding.ActivityResultListBinding
 import org.helllabs.android.xmp.modarchive.ModArchiveConstants.ARTIST_ID
 import org.helllabs.android.xmp.modarchive.ModArchiveConstants.ERROR
 import org.helllabs.android.xmp.modarchive.ModArchiveConstants.SEARCH_TEXT
@@ -28,35 +25,27 @@ import org.helllabs.android.xmp.util.show
 @AndroidEntryPoint
 class ArtistResult : AppCompatActivity(), ArtistAdapter.ArtistAdapterListener {
 
+    private lateinit var binder: ActivityResultListBinding
+
     private lateinit var artistAdapter: ArtistAdapter
     private val viewModel: ArtistResultViewModel by viewModels()
-
-    private lateinit var appBarText: TextView
-    private lateinit var resultList: RecyclerView
-    private lateinit var resultSpinner: ProgressBar
-    private lateinit var errorMessage: TextView
-    private lateinit var errorLayout: LinearLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setContentView(R.layout.activity_result_list)
-        setSupportActionBar(findViewById<MaterialToolbar>(R.id.toolbar))
+        binder = ActivityResultListBinding.inflate(layoutInflater)
+
+        setContentView(binder.root)
+        setSupportActionBar(binder.appbar.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayShowHomeEnabled(true)
 
-        appBarText = findViewById(R.id.toolbarText)
-        resultList = findViewById(R.id.result_list)
-        resultSpinner = findViewById(R.id.result_spinner)
-        errorMessage = findViewById(R.id.message)
-        errorLayout = findViewById(R.id.layout)
-
-        appBarText.text = getString(R.string.search_artist_title)
+        binder.appbar.toolbarText.text = getString(R.string.search_artist_title)
 
         artistAdapter = ArtistAdapter()
         artistAdapter.artistAdapterListener = this
 
-        resultList.apply {
+        binder.resultList.apply {
             layoutManager = LinearLayoutManager(this@ArtistResult)
             adapter = artistAdapter
             addItemDecoration(
@@ -90,9 +79,11 @@ class ArtistResult : AppCompatActivity(), ArtistAdapter.ArtistAdapterListener {
     }
 
     private fun onLoad() {
-        resultSpinner.show()
-        resultList.hide()
-        errorLayout.hide()
+        binder.apply {
+            resultSpinner.show()
+            resultList.hide()
+            errorLayout.layout.hide()
+        }
     }
 
     private fun onError(error: String?) {
@@ -105,15 +96,17 @@ class ArtistResult : AppCompatActivity(), ArtistAdapter.ArtistAdapterListener {
     }
 
     private fun onSoftError(softError: String) {
-        resultSpinner.hide()
-        resultList.hide()
-        errorLayout.show()
-        errorMessage.text = softError
+        binder.apply {
+            resultSpinner.hide()
+            resultList.hide()
+            errorLayout.layout.show()
+            errorLayout.message.text = softError
+        }
     }
 
     private fun onResult(result: ArtistResult) {
-        resultList.show()
-        resultSpinner.hide()
+        binder.resultList.show()
+        binder.resultSpinner.hide()
         artistAdapter.submitList(result.items)
     }
 }

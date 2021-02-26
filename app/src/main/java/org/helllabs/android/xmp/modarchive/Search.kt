@@ -7,15 +7,11 @@ import android.view.KeyEvent
 import android.view.MenuItem
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
-import android.widget.LinearLayout
-import android.widget.RadioGroup
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.doOnTextChanged
-import com.google.android.material.appbar.MaterialToolbar
-import com.google.android.material.button.MaterialButton
-import com.google.android.material.textfield.TextInputEditText
 import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.databinding.ActivitySearchBinding
 import org.helllabs.android.xmp.modarchive.ModArchiveConstants.MODULE_ID
 import org.helllabs.android.xmp.modarchive.ModArchiveConstants.SEARCH_TEXT
 import org.helllabs.android.xmp.modarchive.result.ArtistResult
@@ -24,45 +20,35 @@ import org.helllabs.android.xmp.modarchive.result.SearchListResult
 
 class Search : AppCompatActivity(), TextView.OnEditorActionListener {
 
-    private var canSearch: Boolean = false
+    private lateinit var binder: ActivitySearchBinding
 
-    private lateinit var searchInput: TextInputEditText
-    private lateinit var radioGroup: RadioGroup
-    private lateinit var appBarText: TextView
-    private lateinit var searchButton: MaterialButton
-    private lateinit var randomButton: MaterialButton
-    private lateinit var historyButton: LinearLayout
+    private var canSearch: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setContentView(R.layout.activity_search)
-        setSupportActionBar(findViewById<MaterialToolbar>(R.id.toolbar))
+        binder = ActivitySearchBinding.inflate(layoutInflater)
+
+        setContentView(binder.root)
+        setSupportActionBar(binder.appbar.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayShowHomeEnabled(true)
 
-        appBarText = findViewById(R.id.toolbarText)
-        searchInput = findViewById(R.id.search_edit_text)
-        radioGroup = findViewById(R.id.search_radio_group)
-        searchButton = findViewById(R.id.search_search_button)
-        randomButton = findViewById(R.id.search_random_button)
-        historyButton = findViewById(R.id.search_history_button)
-
-        appBarText.text = getString(R.string.search_title)
-        radioGroup.check(R.id.search_title_radio_button)
-        searchButton.setOnClickListener { performSearch() }
-        randomButton.setOnClickListener { performRandomSearch() }
-        historyButton.setOnClickListener { showHistory() }
-        searchInput.doOnTextChanged { text, _, _, _ ->
+        binder.appbar.toolbarText.text = getString(R.string.search_title)
+        binder.searchRadioGroup.check(R.id.search_title_radio_button)
+        binder.searchSearchButton.setOnClickListener { performSearch() }
+        binder.searchRandomButton.setOnClickListener { performRandomSearch() }
+        binder.searchHistoryButton.setOnClickListener { showHistory() }
+        binder.searchEditText.doOnTextChanged { text, _, _, _ ->
             canSearch = text!!.count() >= 3
-            searchButton.isEnabled = canSearch
+            binder.searchSearchButton.isEnabled = canSearch
         }
 
         // Smaller screens will wrap the text of these buttons.
         // We'll remove the buttons, but keep the text
         if (resources.displayMetrics.densityDpi <= DENSITY_HIGH) {
-            searchButton.icon = null
-            randomButton.icon = null
+            binder.searchSearchButton.icon = null
+            binder.searchRandomButton.icon = null
         }
     }
 
@@ -70,13 +56,13 @@ class Search : AppCompatActivity(), TextView.OnEditorActionListener {
         super.onResume()
 
         // Show soft keyboard
-        searchInput.requestFocus()
+        binder.searchInputLayout.requestFocus()
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
     }
 
     override fun onPause() {
         super.onPause()
-        searchInput.clearFocus()
+        binder.searchInputLayout.clearFocus()
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -111,9 +97,9 @@ class Search : AppCompatActivity(), TextView.OnEditorActionListener {
     }
 
     private fun performSearch() {
-        val searchText = searchInput.text.toString().trim { it <= ' ' }
+        val searchText = binder.searchEditText.text.toString().trim { it <= ' ' }
 
-        when (radioGroup.checkedRadioButtonId) {
+        when (binder.searchRadioGroup.checkedRadioButtonId) {
             R.id.search_title_radio_button -> {
                 val intent = Intent(this, SearchListResult::class.java)
                 intent.putExtra(SEARCH_TEXT, searchText)

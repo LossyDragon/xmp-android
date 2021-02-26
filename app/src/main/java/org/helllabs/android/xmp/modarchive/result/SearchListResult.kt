@@ -2,19 +2,15 @@ package org.helllabs.android.xmp.modarchive.result
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.LinearLayout
-import android.widget.ProgressBar
-import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.appbar.MaterialToolbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collect
 import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.databinding.ActivityResultListBinding
 import org.helllabs.android.xmp.modarchive.ModArchiveConstants.ARTIST_ID
 import org.helllabs.android.xmp.modarchive.ModArchiveConstants.ERROR
 import org.helllabs.android.xmp.modarchive.ModArchiveConstants.MODULE_ID
@@ -29,33 +25,24 @@ import org.helllabs.android.xmp.util.show
 @AndroidEntryPoint
 class SearchListResult : AppCompatActivity(), SearchListAdapter.SearchListListener {
 
+    private lateinit var binder: ActivityResultListBinding
     private lateinit var searchListAdapter: SearchListAdapter
     private val viewModel: SearchListViewModel by viewModels()
-
-    private lateinit var appBarText: TextView
-    private lateinit var errorMessage: TextView
-    private lateinit var errorLayout: LinearLayout
-    private lateinit var resultSpinner: ProgressBar
-    private lateinit var resultList: RecyclerView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setContentView(R.layout.activity_result_list)
-        setSupportActionBar(findViewById<MaterialToolbar>(R.id.toolbar))
+        binder = ActivityResultListBinding.inflate(layoutInflater)
+
+        setContentView(binder.root)
+        setSupportActionBar(binder.appbar.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayShowHomeEnabled(true)
-
-        appBarText = findViewById(R.id.toolbarText)
-        resultSpinner = findViewById(R.id.result_spinner)
-        resultList = findViewById(R.id.result_list)
-        errorMessage = findViewById(R.id.message)
-        errorLayout = findViewById(R.id.layout)
 
         searchListAdapter = SearchListAdapter()
         searchListAdapter.searchListListener = this
 
-        resultList.apply {
+        binder.resultList.apply {
             layoutManager = LinearLayoutManager(this@SearchListResult)
             adapter = searchListAdapter
             addItemDecoration(
@@ -79,13 +66,13 @@ class SearchListResult : AppCompatActivity(), SearchListAdapter.SearchListListen
         }
 
         intent.getStringExtra(SEARCH_TEXT)?.let {
-            appBarText.text = getString(R.string.search_title_title)
+            binder.appbar.toolbarText.text = getString(R.string.search_title_title)
             viewModel.getFileOrTitle(it)
         }
 
         intent.getIntExtra(ARTIST_ID, -1).let {
             if (it < 0) return@let
-            appBarText.text = getString(R.string.search_artist_modules_title)
+            binder.appbar.toolbarText.text = getString(R.string.search_artist_modules_title)
             viewModel.getArtistById(it)
         }
     }
@@ -98,9 +85,9 @@ class SearchListResult : AppCompatActivity(), SearchListAdapter.SearchListListen
     }
 
     private fun onLoad() {
-        resultSpinner.show()
-        resultList.hide()
-        errorLayout.hide()
+        binder.resultSpinner.show()
+        binder.resultList.hide()
+        binder.errorLayout.layout.hide()
     }
 
     private fun onError(error: String?) {
@@ -113,15 +100,15 @@ class SearchListResult : AppCompatActivity(), SearchListAdapter.SearchListListen
     }
 
     private fun onSoftError(softError: String) {
-        resultSpinner.hide()
-        resultList.hide()
-        errorLayout.show()
-        errorMessage.text = softError
+        binder.resultSpinner.hide()
+        binder.resultList.hide()
+        binder.errorLayout.layout.show()
+        binder.errorLayout.message.text = softError
     }
 
     private fun onResult(result: SearchListResult) {
-        resultList.show()
-        resultSpinner.hide()
+        binder.resultList.show()
+        binder.resultSpinner.hide()
         searchListAdapter.submitList(result.module)
     }
 }

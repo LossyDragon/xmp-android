@@ -4,17 +4,20 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.app.Activity
 import android.view.View
+import android.widget.LinearLayout
+import android.widget.ProgressBar
 
-class Crossfader(private val activity: Activity) {
+@Deprecated("Will be replaced with MVI architecture.")
+class Crossfader(activity: Activity) {
 
     private val animationDuration: Int =
         activity.resources.getInteger(android.R.integer.config_shortAnimTime)
     private var contentView: View? = null
     private var progressView: View? = null
 
-    fun setup(contentRes: Int, spinnerRes: Int) {
-        contentView = activity.findViewById(contentRes)
-        progressView = activity.findViewById(spinnerRes)
+    fun setup(contentRes: LinearLayout, spinnerRes: ProgressBar) {
+        contentView = contentRes
+        progressView = spinnerRes
         contentView!!.visibility = View.GONE
     }
 

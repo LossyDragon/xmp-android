@@ -8,8 +8,8 @@ import android.os.RemoteException
 import android.view.*
 import android.view.GestureDetector.SimpleOnGestureListener
 import android.view.View.OnTouchListener
-import org.helllabs.android.xmp.service.PlayerService
 import kotlin.math.abs
+import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.util.*
 
 // http://developer.android.com/guide/topics/graphics/2d-graphics.html

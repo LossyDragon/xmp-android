@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.text.method.LinkMovementMethod
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.*
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -14,16 +13,13 @@ import com.github.razir.progressbutton.DrawableButton
 import com.github.razir.progressbutton.attachTextChangeAnimator
 import com.github.razir.progressbutton.bindProgressButton
 import com.github.razir.progressbutton.showProgress
-import com.google.android.material.appbar.MaterialToolbar
-import com.google.android.material.button.MaterialButton
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import dagger.hilt.android.AndroidEntryPoint
-import java.io.File
-import java.io.IOException
 import kotlinx.coroutines.flow.collect
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.XmpApplication
+import org.helllabs.android.xmp.databinding.ActivityResultModuleBinding
 import org.helllabs.android.xmp.modarchive.ModArchiveConstants.ERROR
 import org.helllabs.android.xmp.modarchive.ModArchiveConstants.MODULE_ID
 import org.helllabs.android.xmp.modarchive.SearchError
@@ -35,13 +31,14 @@ import org.helllabs.android.xmp.model.ModuleResult
 import org.helllabs.android.xmp.player.PlayerActivity
 import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.util.*
+import java.io.File
+import java.io.IOException
 
 @AndroidEntryPoint
 class ModuleResult : AppCompatActivity() {
 
-    companion object {
-        private val UNSUPPORTED = arrayOf("AHX", "HVL", "MO3")
-    }
+
+    private lateinit var binder: ActivityResultModuleBinding
 
     private val viewModel: ModuleResultViewModel by viewModels()
 
@@ -49,61 +46,27 @@ class ModuleResult : AppCompatActivity() {
     private var shouldPlay = false
     private var deleteMenu: Menu? = null
 
-    private lateinit var appBarText: TextView
-    private lateinit var errorMessage: TextView
-    private lateinit var errorLayout: LinearLayout
-    private lateinit var resultFrame: FrameLayout
-    private lateinit var resultSpinner: ProgressBar
-    private lateinit var resultData: ScrollView
-    private lateinit var moduleButtonPlay: MaterialButton
-    private lateinit var moduleButtonRandom: MaterialButton
-    private lateinit var moduleTitle: TextView
-    private lateinit var moduleFilename: TextView
-    private lateinit var moduleInfo: TextView
-    private lateinit var moduleLicense: TextView
-    private lateinit var moduleLicenseDescription: TextView
-    private lateinit var moduleInstruments: TextView
-    private lateinit var moduleCommentTitle: TextView
-    private lateinit var moduleCommentText: TextView
-    private lateinit var moduleSponsor: TextView
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setContentView(R.layout.activity_result_module)
-        setSupportActionBar(findViewById<MaterialToolbar>(R.id.toolbar))
+        binder = ActivityResultModuleBinding.inflate(layoutInflater)
+
+        setContentView(binder.root)
+        setSupportActionBar(binder.appbar.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayShowHomeEnabled(true)
 
-        appBarText = findViewById(R.id.toolbarText)
-        moduleButtonPlay = findViewById(R.id.module_button_play)
-        moduleButtonRandom = findViewById(R.id.module_button_random)
-        resultFrame = findViewById(R.id.result_frame)
-        resultSpinner = findViewById(R.id.result_spinner)
-        errorMessage = findViewById(R.id.message)
-        errorLayout = findViewById(R.id.layout)
-        resultData = findViewById(R.id.result_data)
-        moduleTitle = findViewById(R.id.module_title)
-        moduleFilename = findViewById(R.id.module_filename)
-        moduleInfo = findViewById(R.id.module_info)
-        moduleLicense = findViewById(R.id.module_license)
-        moduleLicenseDescription = findViewById(R.id.module_license_description)
-        moduleInstruments = findViewById(R.id.module_instruments)
-        moduleCommentTitle = findViewById(R.id.module_comment_title)
-        moduleCommentText = findViewById(R.id.module_comment_text)
-        moduleSponsor = findViewById(R.id.module_sponsor)
+        binder.appbar.toolbarText.text = getString(R.string.search_module_title)
 
-        appBarText.text = getString(R.string.search_module_title)
-
-        moduleButtonPlay.apply {
+        binder.moduleButtonPlay.apply {
             attachTextChangeAnimator()
             bindProgressButton(this)
             click { playClick() }
         }
 
-        moduleButtonRandom.click {
+        binder.moduleButtonRandom.click {
             viewModel.getRandomModule()
-            appBarText.text = getString(R.string.search_random_title)
+            binder.appbar.toolbarText.text = getString(R.string.search_random_title)
         }
 
         lifecycleScope.launchWhenStarted {
@@ -126,7 +89,7 @@ class ModuleResult : AppCompatActivity() {
         logD("request module ID $id")
         if (id < 0) {
             viewModel.getRandomModule()
-            appBarText.text = getString(R.string.search_random_title)
+            binder.appbar.toolbarText.text = getString(R.string.search_random_title)
         } else {
             viewModel.getModuleById(id)
         }
@@ -148,27 +111,27 @@ class ModuleResult : AppCompatActivity() {
     }
 
     private fun onLoad() {
-        resultFrame.hide()
-        resultSpinner.show()
-        moduleButtonPlay.isEnabled = false
-        moduleButtonPlay.text = getString(R.string.button_loading)
+        binder.resultFrame.hide()
+        binder.resultSpinner.show()
+        binder.moduleButtonPlay.isEnabled = false
+        binder.moduleButtonPlay.text = getString(R.string.button_loading)
     }
 
     private fun onCancelled() {
         toast(R.string.msg_download_cancelled)
         updateButtons(module)
-        moduleButtonRandom.isEnabled = true
+        binder.moduleButtonRandom.isEnabled = true
     }
 
     private fun onQueued() {
         logI("Download Queued")
-        moduleButtonRandom.isEnabled = false
+        binder.moduleButtonRandom.isEnabled = false
     }
 
     private fun onComplete() {
         logI("Download Complete")
         updateButtons(module)
-        moduleButtonRandom.isEnabled = true
+        binder.moduleButtonRandom.isEnabled = true
     }
 
     private fun onDownLoadError(downloadError: String) {
@@ -186,15 +149,15 @@ class ModuleResult : AppCompatActivity() {
 
     private fun onSoftError(softError: String) {
         logW(softError)
-        resultSpinner.hide()
-        resultData.hide()
-        errorLayout.show()
-        errorMessage.text = softError
+        binder.resultSpinner.hide()
+        binder.resultData.hide()
+        binder.layoutError.layout.show()
+        binder.layoutError.message.text = softError
     }
 
     private fun onResult(result: ModuleResult) {
-        resultFrame.show()
-        resultSpinner.hide()
+        binder.resultFrame.show()
+        binder.resultSpinner.hide()
         updateView(result)
     }
 
@@ -220,43 +183,43 @@ class ModuleResult : AppCompatActivity() {
         // Save module result into Search History
         saveModuleToHistory(module)
 
-        resultData.scrollTo(0, 0)
+        binder.resultData.scrollTo(0, 0)
         updateButtons(module)
 
         val size = module.bytes!! / 1024
         val info = getString(R.string.search_result_by, module.format, module.getArtist(), size)
 
-        moduleTitle.text = module.getSongTitle()
-        moduleFilename.text = module.filename
-        moduleInfo.text = (
+        binder.moduleTitle.text = module.getSongTitle()
+        binder.moduleFilename.text = module.filename
+        binder.moduleInfo.text = (
             "<a href=\"" + module.infopage + "\">" + info + "</a>"
             ).asHtml()
-        moduleInfo.movementMethod = LinkMovementMethod.getInstance()
-        moduleInfo.linksClickable = true
-        moduleLicense.text = (
+        binder.moduleInfo.movementMethod = LinkMovementMethod.getInstance()
+        binder.moduleInfo.linksClickable = true
+        binder.moduleLicense.text = (
             "<a href=\"" + module.license!!.legalurl + "\">" + module.license!!.title + "</a>"
             ).asHtml()
-        moduleLicense.movementMethod = LinkMovementMethod.getInstance()
-        moduleLicense.linksClickable = true
-        moduleLicenseDescription.text = module.license!!.description
-        moduleInstruments.text = module.parseInstruments()
+        binder.moduleLicense.movementMethod = LinkMovementMethod.getInstance()
+        binder.moduleLicense.linksClickable = true
+        binder.moduleLicenseDescription.text = module.license!!.description
+        binder.moduleInstruments.text = module.parseInstruments()
 
         // If a module has a comment / message
         if (!module.comment.isNullOrEmpty()) {
-            moduleCommentTitle.show()
-            moduleCommentText.show()
-            moduleCommentText.text = module.getComment()
+            binder.moduleCommentTitle.show()
+            binder.moduleCommentText.show()
+            binder.moduleCommentText.text = module.getComment()
         }
 
         val sponsor = result.sponsor
         if (sponsor!!.hasSponsor()) {
-            moduleSponsor.show()
-            moduleSponsor.text = (
+            binder.moduleSponsor.show()
+            binder.moduleSponsor.text = (
                 "Download mirrors provided by <a href=\"" +
                     sponsor.link + "\">" +
                     sponsor.text + "</a>"
                 ).asHtml()
-            moduleSponsor.movementMethod = LinkMovementMethod.getInstance()
+            binder.moduleSponsor.movementMethod = LinkMovementMethod.getInstance()
         }
     }
 
@@ -279,7 +242,7 @@ class ModuleResult : AppCompatActivity() {
 
             shouldPlay = true
 
-            moduleButtonPlay.showProgress {
+            binder.moduleButtonPlay.showProgress {
                 buttonText = getString(R.string.button_downloading)
                 progressColor = Color.WHITE
                 gravity = DrawableButton.GRAVITY_TEXT_START
@@ -352,19 +315,19 @@ class ModuleResult : AppCompatActivity() {
         val isUnSupported = listOf(*UNSUPPORTED).contains(module.format)
 
         if (isUnSupported) {
-            moduleButtonPlay.text = getString(R.string.button_download_unsupported)
-            moduleButtonPlay.isEnabled = false
+            binder.moduleButtonPlay.text = getString(R.string.button_download_unsupported)
+            binder.moduleButtonPlay.isEnabled = false
         } else {
-            moduleButtonPlay.isEnabled = true
+            binder.moduleButtonPlay.isEnabled = true
 
             if (localFile(module).exists()) {
                 // module exists, update button to reflect existence and enable Menu Delete
                 deleteMenu?.findItem(R.id.menu_delete)?.isEnabled = true
-                moduleButtonPlay.text = getString(R.string.result_play)
+                binder.moduleButtonPlay.text = getString(R.string.result_play)
             } else {
                 // module does not exist, update button to download and disable Menu Delete
                 deleteMenu?.findItem(R.id.menu_delete)?.isEnabled = false
-                moduleButtonPlay.text = getString(R.string.download)
+                binder.moduleButtonPlay.text = getString(R.string.download)
             }
         }
     }
@@ -426,5 +389,9 @@ class ModuleResult : AppCompatActivity() {
     private fun getSearchHistory(): List<History> {
         val type = object : TypeToken<List<History?>?>() {}.type
         return Gson().fromJson<List<History>>(PrefManager.searchHistory, type).orEmpty()
+    }
+
+    companion object {
+        private val UNSUPPORTED = arrayOf("AHX", "HVL", "MO3")
     }
 }

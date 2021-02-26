@@ -4,13 +4,9 @@ import android.annotation.SuppressLint
 import android.util.TypedValue.COMPLEX_UNIT_SP
 import android.view.View
 import android.widget.FrameLayout
-import android.widget.LinearLayout
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.RadioGroup.LayoutParams
-import android.widget.TextView
-import androidx.appcompat.widget.AppCompatImageButton
-import androidx.appcompat.widget.SwitchCompat
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.afollestad.materialdialogs.MaterialDialog
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -24,38 +20,24 @@ import org.helllabs.android.xmp.util.toast
 
 class PlayerSheet(private val activity: PlayerActivity) {
 
-    private val seqGroupListener: RadioGroup.OnCheckedChangeListener
-    var peekState: Int? = null
-
-    private val numPat: TextView = activity.findViewById(R.id.sidebar_num_pat)
-    private val numIns: TextView = activity.findViewById(R.id.sidebar_num_ins)
-    private val numSmp: TextView = activity.findViewById(R.id.sidebar_num_smp)
-    private val numChn: TextView = activity.findViewById(R.id.sidebar_num_chn)
-    private val seqSwitch: SwitchCompat = activity.findViewById(R.id.sidebar_allseqs_switch)
-    private val sequences: RadioGroup = activity.findViewById(R.id.sidebar_sequences)
-    private val sheet: LinearLayout = activity.findViewById(R.id.controlsSheet)
-    private val commentButton: AppCompatImageButton = activity.findViewById(R.id.sheet_show_comment)
-
-    // Can't get it styled this way, see http://stackoverflow.com/questions/3142067/android-set-style-in-code
-    // val button = activity.layoutInflater.inflate(R.layout.item_sequence, null) as RadioButton
-
-    init {
-        seqSwitch.apply {
-            isChecked = PrefManager.allSequences
-            click { activity.toggleAllSequences() }
-        }
-
-        seqGroupListener = RadioGroup.OnCheckedChangeListener { _, checkedId ->
+    private val seqGroupListener: RadioGroup.OnCheckedChangeListener =
+        RadioGroup.OnCheckedChangeListener { _, checkedId ->
             activity.playNewSequence(checkedId)
         }
-        sequences.setOnCheckedChangeListener(seqGroupListener)
 
-        commentButton.click { showSongMessage() }
+    init {
 
-        BottomSheetBehavior.from(sheet).apply {
-            peekState = BottomSheetBehavior.STATE_COLLAPSED
+        activity.binder.sheet.infoPane.apply {
+            sidebarAllseqsSwitch.apply {
+                isChecked = PrefManager.allSequences
+                click { activity.toggleAllSequences() }
+            }
+            sidebarSequences.setOnCheckedChangeListener(seqGroupListener)
+            sheetShowComment.click { showSongMessage() }
+        }
 
-            sheet.post {
+        BottomSheetBehavior.from(activity.binder.sheet.controlsSheet).apply {
+            activity.binder.sheet.controlsSheet.post {
                 val sheetPeekHeight = activity.findViewById<View>(R.id.player_sheet).height
 
                 // Set the peek height dynamically.
@@ -71,15 +53,17 @@ class PlayerSheet(private val activity: PlayerActivity) {
     }
 
     fun setDetails(pat: Int, ins: Int, smp: Int, chn: Int, allSequences: Boolean) {
-        numPat.text = pat.toString()
-        numIns.text = ins.toString()
-        numSmp.text = smp.toString()
-        numChn.text = chn.toString()
-        seqSwitch.isChecked = allSequences
+        activity.binder.sheet.infoPane.apply {
+            sidebarNumPat.text = pat.toString()
+            sidebarNumIns.text = ins.toString()
+            sidebarNumSmp.text = smp.toString()
+            sidebarNumChn.text = chn.toString()
+            sidebarAllseqsSwitch.isChecked = allSequences
+        }
     }
 
     fun clearSequences() {
-        sequences.removeAllViews()
+        activity.binder.sheet.infoPane.sidebarSequences.removeAllViews()
     }
 
     @SuppressLint("InflateParams")
@@ -96,15 +80,17 @@ class PlayerSheet(private val activity: PlayerActivity) {
 
         val layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
         layoutParams.setMargins(0, 10, 0, 10)
-        sequences.addView(button, num, layoutParams)
+        activity.binder.sheet.infoPane.sidebarSequences.addView(button, num, layoutParams)
     }
 
     fun selectSequence(num: Int) {
-        sequences.setOnCheckedChangeListener(null)
-        logI("Selecting sequence $num")
-        sequences.check(-1) // force redraw
-        sequences.check(num)
-        sequences.setOnCheckedChangeListener(seqGroupListener)
+        activity.binder.sheet.infoPane.sidebarSequences.apply {
+            setOnCheckedChangeListener(null)
+            logI("Selecting sequence $num")
+            check(-1) // force redraw
+            check(num)
+            setOnCheckedChangeListener(seqGroupListener)
+        }
     }
 
     private fun showSongMessage() {

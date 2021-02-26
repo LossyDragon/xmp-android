@@ -3,33 +3,30 @@ package org.helllabs.android.xmp.modarchive
 import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.res.ResourcesCompat
-import com.google.android.material.appbar.MaterialToolbar
-import java.util.*
 import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.databinding.ActivitySearchErrorBinding
 import org.helllabs.android.xmp.modarchive.ModArchiveConstants.ERROR
+import java.util.*
 
 class SearchError : AppCompatActivity(), Runnable {
 
-    private var frameBlink: Boolean = false
+    private lateinit var binder: ActivitySearchErrorBinding
 
-    private lateinit var appBarText: TextView
-    private lateinit var errorMessage: TextView
+    private var frameBlink: Boolean = false
 
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setContentView(R.layout.activity_search_error)
-        setSupportActionBar(findViewById<MaterialToolbar>(R.id.toolbar))
+        binder = ActivitySearchErrorBinding.inflate(layoutInflater)
+
+        setContentView(binder.root)
+        setSupportActionBar(binder.appbar.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayShowHomeEnabled(true)
 
-        appBarText = findViewById(R.id.toolbarText)
-        errorMessage = findViewById(R.id.error_message)
-
-        appBarText.text = getString(R.string.search_title_error)
+        binder.appbar.toolbarText.text = getString(R.string.search_title_error)
 
         val error = intent.getStringExtra(ERROR)
 
@@ -51,18 +48,18 @@ class SearchError : AppCompatActivity(), Runnable {
         }
 
         val font = ResourcesCompat.getFont(applicationContext, R.font.font_topaz_plus_a500)
-        errorMessage.text = message
-        errorMessage.typeface = font
+        binder.errorMessage.text = message
+        binder.errorMessage.typeface = font
     }
 
     override fun onResume() {
         super.onResume()
-        errorMessage.postDelayed(this, BLINK_PERIOD)
+        binder.errorMessage.postDelayed(this, BLINK_PERIOD)
     }
 
     override fun onPause() {
         super.onPause()
-        errorMessage.removeCallbacks(this)
+        binder.errorMessage.removeCallbacks(this)
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
@@ -79,7 +76,7 @@ class SearchError : AppCompatActivity(), Runnable {
 
     // Guru frame blink
     override fun run() {
-        errorMessage.apply {
+        binder.errorMessage.apply {
             background.alpha = if (frameBlink) 255 else 0
             postDelayed(this@SearchError, BLINK_PERIOD)
         }

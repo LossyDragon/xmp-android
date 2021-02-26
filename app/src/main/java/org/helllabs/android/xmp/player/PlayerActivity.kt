@@ -26,6 +26,7 @@ import org.greenrobot.eventbus.ThreadMode
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.browser.PlaylistMenu
+import org.helllabs.android.xmp.databinding.ActivityPlayerBinding
 import org.helllabs.android.xmp.player.viewer.ChannelViewer
 import org.helllabs.android.xmp.player.viewer.InstrumentViewer
 import org.helllabs.android.xmp.player.viewer.PatternViewer
@@ -41,6 +42,7 @@ import org.helllabs.android.xmp.util.FileUtils.basename
 @AndroidEntryPoint
 class PlayerActivity : AppCompatActivity() {
 
+    internal lateinit var binder: ActivityPlayerBinding
     private lateinit var modPlayer: PlayerService
     private var isBound = false
 
