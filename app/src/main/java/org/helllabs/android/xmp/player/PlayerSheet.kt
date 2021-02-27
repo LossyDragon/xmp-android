@@ -2,8 +2,6 @@ package org.helllabs.android.xmp.player
 
 import android.annotation.SuppressLint
 import android.util.TypedValue.COMPLEX_UNIT_SP
-import android.view.View
-import android.widget.FrameLayout
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.RadioGroup.LayoutParams
@@ -27,24 +25,24 @@ class PlayerSheet(private val activity: PlayerActivity) {
 
     init {
 
-        activity.binder.sheet.infoPane.apply {
-            sidebarAllseqsSwitch.apply {
+        activity.binder.controlsSheet.infoPane.apply {
+            allseqsSwitch.apply {
                 isChecked = PrefManager.allSequences
                 click { activity.toggleAllSequences() }
             }
-            sidebarSequences.setOnCheckedChangeListener(seqGroupListener)
-            sheetShowComment.click { showSongMessage() }
+            sequencesGroup.setOnCheckedChangeListener(seqGroupListener)
+            buttonShowComment.click { showSongMessage() }
         }
 
-        BottomSheetBehavior.from(activity.binder.sheet.controlsSheet).apply {
-            activity.binder.sheet.controlsSheet.post {
-                val sheetPeekHeight = activity.findViewById<View>(R.id.player_sheet).height
+        BottomSheetBehavior.from(activity.binder.controlsSheet.sheet).apply {
+            activity.binder.controlsSheet.controlsLayout.post {
+                val sheetPeekHeight = activity.binder.controlsSheet.controlsLayout.height
 
                 // Set the peek height dynamically.
                 peekHeight = sheetPeekHeight
 
                 // Set the bottom margin of the viewerLayout as well
-                val playerLayout = activity.findViewById<FrameLayout>(R.id.player_layout)
+                val playerLayout = activity.binder.viewerLayout
                 val viewerParams = playerLayout.layoutParams as CoordinatorLayout.LayoutParams
                 viewerParams.setMargins(0, 0, 0, sheetPeekHeight)
                 playerLayout.layoutParams = viewerParams
@@ -53,17 +51,17 @@ class PlayerSheet(private val activity: PlayerActivity) {
     }
 
     fun setDetails(pat: Int, ins: Int, smp: Int, chn: Int, allSequences: Boolean) {
-        activity.binder.sheet.infoPane.apply {
-            sidebarNumPat.text = pat.toString()
-            sidebarNumIns.text = ins.toString()
-            sidebarNumSmp.text = smp.toString()
-            sidebarNumChn.text = chn.toString()
-            sidebarAllseqsSwitch.isChecked = allSequences
+        activity.binder.controlsSheet.infoPane.apply {
+            numPat.text = pat.toString()
+            numIns.text = ins.toString()
+            numSmp.text = smp.toString()
+            numChn.text = chn.toString()
+            allseqsSwitch.isChecked = allSequences
         }
     }
 
     fun clearSequences() {
-        activity.binder.sheet.infoPane.sidebarSequences.removeAllViews()
+        activity.binder.controlsSheet.infoPane.sequencesGroup.removeAllViews()
     }
 
     @SuppressLint("InflateParams")
@@ -80,11 +78,11 @@ class PlayerSheet(private val activity: PlayerActivity) {
 
         val layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
         layoutParams.setMargins(0, 10, 0, 10)
-        activity.binder.sheet.infoPane.sidebarSequences.addView(button, num, layoutParams)
+        activity.binder.controlsSheet.infoPane.sequencesGroup.addView(button, num, layoutParams)
     }
 
     fun selectSequence(num: Int) {
-        activity.binder.sheet.infoPane.sidebarSequences.apply {
+        activity.binder.controlsSheet.infoPane.sequencesGroup.apply {
             setOnCheckedChangeListener(null)
             logI("Selecting sequence $num")
             check(-1) // force redraw

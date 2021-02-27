@@ -4,22 +4,18 @@ import android.content.*
 import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
-import android.os.*
+import android.os.Bundle
+import android.os.Handler
+import android.os.IBinder
 import android.util.TypedValue
-import android.view.*
-import android.widget.*
+import android.view.Display
+import android.view.Menu
+import android.view.MenuItem
+import android.view.WindowManager
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.AppCompatImageButton
-import androidx.appcompat.widget.AppCompatSeekBar
 import androidx.core.content.res.ResourcesCompat
-import com.google.android.material.textview.MaterialTextView
 import dagger.hilt.android.AndroidEntryPoint
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
-import java.io.OutputStream
-import java.util.*
-import javax.inject.Inject
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -35,7 +31,11 @@ import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.service.utils.*
 import org.helllabs.android.xmp.util.*
-import org.helllabs.android.xmp.util.FileUtils.basename
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.OutputStream
+import javax.inject.Inject
 
 // TODO: Animate Play/Pause button
 
@@ -44,39 +44,20 @@ class PlayerActivity : AppCompatActivity() {
 
     internal lateinit var binder: ActivityPlayerBinding
     private lateinit var modPlayer: PlayerService
-    private var isBound = false
 
     @Inject
     lateinit var eventBus: EventBus
 
-    /* Views */
-    private lateinit var channelViewer: Viewer
-    private lateinit var instrumentViewer: Viewer
-    private lateinit var loopButton: AppCompatImageButton
-    private lateinit var nextButton: AppCompatImageButton
-    private lateinit var patternViewer: Viewer
-    private lateinit var playButton: AppCompatImageButton
-    private lateinit var playerFlipper: ViewFlipper
-    private lateinit var playerLayout: FrameLayout
-    private lateinit var prevButton: AppCompatImageButton
-    private lateinit var seekBar: AppCompatSeekBar
-    private lateinit var sheet: PlayerSheet
-    private lateinit var stopButton: AppCompatImageButton
-    private lateinit var timeNow: MaterialTextView
-    private lateinit var timeTotal: MaterialTextView
-    private lateinit var viewer: Viewer
-    private val infoName = arrayOfNulls<TextView>(2)
-    private val infoType = arrayOfNulls<TextView>(2)
-
+    private lateinit var display: Display
     private val handler = Handler()
     private val modVars = IntArray(10)
     private val playerLock = Any() // for sync
     private val seqVars = IntArray(16) // this is MAX_SEQUENCES defined in common.h
     private var currentViewer = 0
-    private var display: Display? = null
     private var fileList: List<String>? = null
     private var flipperPage = 0
     private var info: Viewer.Info? = null
+    private var isBound = false
     private var keepFirst = false
     private var loopListMode = false
     private var paused = false
@@ -85,12 +66,20 @@ class PlayerActivity : AppCompatActivity() {
     private var screenOn = false
     private var screenReceiver: BroadcastReceiver? = null
     private var seeking = false
+    private var showHex: Boolean = false
     private var shuffleMode = false
     private var skipToPrevious = false
     private var start = 0
     private var totalTime = 0
 
-    private var showHex = PrefManager.showInfoLineHex
+    /* Views */
+    private lateinit var channelViewer: Viewer
+    private lateinit var instrumentViewer: Viewer
+    private lateinit var patternViewer: Viewer
+    private lateinit var sheet: PlayerSheet
+    private lateinit var viewer: Viewer
+    private val infoName = arrayOfNulls<TextView>(2)
+    private val infoType = arrayOfNulls<TextView>(2)
 
     // Update Runnable Loops
     private var oldSpd = -1
@@ -114,15 +103,11 @@ class PlayerActivity : AppCompatActivity() {
                     playNewMod(fileList!!, start)
                 } else {
                     // Reconnect to existing service
-                    try {
-                        showNewMod()
-                        if (modPlayer.isPaused()) {
-                            pause()
-                        } else {
-                            unpause()
-                        }
-                    } catch (e: RemoteException) {
-                        logE("Can't get module file name")
+                    showNewMod()
+                    if (modPlayer.isPaused()) {
+                        pause()
+                    } else {
+                        unpause()
                     }
                 }
             }
@@ -142,21 +127,17 @@ class PlayerActivity : AppCompatActivity() {
     @Suppress("unused", "UNUSED_PARAMETER")
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun newModEvent(event: NewModCallback) {
-        synchronized(playerLock) {
-            logD("newModCallback: show module data")
-            showNewMod()
-            canChangeViewer = true
-        }
+        logD("newModCallback: show module data")
+        showNewMod()
+        canChangeViewer = true
     }
 
     @Suppress("unused", "UNUSED_PARAMETER")
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun endModEvent(event: EndModCallback) {
-        synchronized(playerLock) {
-            logD("endModCallback: end of module")
-            stopUpdate = true
-            canChangeViewer = false
-        }
+        logD("endModCallback: end of module")
+        stopUpdate = true
+        canChangeViewer = false
     }
 
     @Suppress("unused", "UNUSED_PARAMETER")
@@ -188,13 +169,12 @@ class PlayerActivity : AppCompatActivity() {
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun pauseEvent(event: PlayStateCallback) {
         logD("pauseCallback")
-        handler.post {
-            synchronized(playerLock) {
-                try {
-                    modPlayer.let { if (it.isPaused()) pause() else unpause() }
-                } catch (e: RemoteException) {
-                    logE("Can't get pause status")
-                }
+        synchronized(playerLock) {
+            if (isBound) {
+                if (modPlayer.isPaused())
+                    pause()
+                else
+                    unpause()
             }
         }
     }
@@ -216,33 +196,27 @@ class PlayerActivity : AppCompatActivity() {
             finish()
         }
     }
-    // endregion
+// endregion
 
     private val updateInfoRunnable: Runnable = Runnable {
         if (!paused) {
             // update seekbar
             if (!seeking && playTime >= 0) {
-                seekBar.progress = playTime
+                binder.controlsSheet.seekbar.progress = playTime
             }
 
             // get current frame info
             synchronized(playerLock) {
-                try {
-                    modPlayer.let {
-                        modPlayer.getInfo(info!!.values)
-                        info!!.time = modPlayer.time() / 1000
-                        modPlayer.getChannelData(
-                            info!!.volumes,
-                            info!!.finalVols,
-                            info!!.pans,
-                            info!!.instruments,
-                            info!!.keys,
-                            info!!.periods
-                        )
-                    }
-                } catch (e: RemoteException) {
-                    // fail silently
-                }
+                modPlayer.getInfo(info!!.values)
+                info!!.time = modPlayer.time() / 1000
+                modPlayer.getChannelData(
+                    info!!.volumes,
+                    info!!.finalVols,
+                    info!!.pans,
+                    info!!.instruments,
+                    info!!.keys,
+                    info!!.periods
+                )
             }
 
             /* Display frame info */
@@ -255,7 +229,7 @@ class PlayerActivity : AppCompatActivity() {
                 } else {
                     s.append(info!!.values[5])
                 }
-                findViewById<TextView>(R.id.infoSpeed).text = s
+                binder.controlsSheet.infoLayout.infoSpeed.text = s
                 oldSpd = info!!.values[5]
             }
 
@@ -268,7 +242,7 @@ class PlayerActivity : AppCompatActivity() {
                 } else {
                     s.append(info!!.values[6])
                 }
-                findViewById<TextView>(R.id.infoBpm).text = s
+                binder.controlsSheet.infoLayout.infoBpm.text = s
                 oldBpm = info!!.values[6]
             }
 
@@ -281,7 +255,7 @@ class PlayerActivity : AppCompatActivity() {
                 } else {
                     s.append(info!!.values[0])
                 }
-                findViewById<TextView>(R.id.infoPos).text = s
+                binder.controlsSheet.infoLayout.infoPos.text = s
                 oldPos = info!!.values[0]
             }
 
@@ -294,7 +268,7 @@ class PlayerActivity : AppCompatActivity() {
                 } else {
                     s.append(info!!.values[1])
                 }
-                findViewById<TextView>(R.id.infoPat).text = s
+                binder.controlsSheet.infoLayout.infoPat.text = s
                 oldPat = info!!.values[1]
             }
 
@@ -311,7 +285,7 @@ class PlayerActivity : AppCompatActivity() {
                 Util.to02d(c, t % 60)
                 s.append(c)
 
-                timeNow.text = s
+                binder.controlsSheet.timeNow.text = s
                 oldTime = info!!.time
             }
 
@@ -324,93 +298,53 @@ class PlayerActivity : AppCompatActivity() {
                 Util.to02d(c, totalTime % 60)
                 s.append(c)
 
-                timeTotal.text = s
+                binder.controlsSheet.timeTotal.text = s
                 oldTotalTime = totalTime
             }
         }
 
         // always call viewer update (for scrolls during pause)
-        synchronized(playerLayout) {
+        synchronized(playerLock) {
             viewer.update(info, paused)
         }
     }
 
-//    val allSequences: Boolean
-//        get() {
-//            if (modPlayer != null) {
-//                try {
-//                    return modPlayer!!.allSequences
-//                } catch (e: RemoteException) {
-//                    logE("Can't get all sequences status")
-//                }
-//            }
-//            return false
-//        }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setContentView(R.layout.activity_player)
-        display = (getSystemService(WINDOW_SERVICE) as WindowManager).defaultDisplay
+        binder = ActivityPlayerBinding.inflate(layoutInflater)
+
+        setContentView(binder.root)
         logI("Create player interface")
-
-        eventBus.register(this)
-
-        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-        window.statusBarColor = ResourcesCompat.getColor(resources, R.color.primary, null)
-
-        // INITIALIZE RECEIVER by jwei512
-        val filter = IntentFilter(Intent.ACTION_SCREEN_ON)
-        filter.addAction(Intent.ACTION_SCREEN_OFF)
-        screenReceiver = ScreenReceiver()
-        registerReceiver(screenReceiver, filter)
-        screenOn = true
-
-        if (PlayerService.isLoaded) {
-            canChangeViewer = true
-        }
 
         onNewIntent(intent)
 
-        infoName[0] = findViewById(R.id.player_info_name_0)
-        infoType[0] = findViewById(R.id.player_info_type_0)
-        infoName[1] = findViewById(R.id.player_info_name_1)
-        infoType[1] = findViewById(R.id.player_info_type_1)
+        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+        window.statusBarColor = ResourcesCompat.getColor(resources, R.color.primary, null)
+        display = (getSystemService(WINDOW_SERVICE) as WindowManager).defaultDisplay!!
 
-        playerLayout = findViewById(R.id.player_layout)
-        timeNow = findViewById(R.id.player_time_now)
-        timeTotal = findViewById(R.id.player_time_total)
-        seekBar = findViewById(R.id.player_seekbar)
-        prevButton = findViewById(R.id.player_button_prev)
-        nextButton = findViewById(R.id.player_button_forward)
-        playButton = findViewById(R.id.player_button_play)
-        stopButton = findViewById(R.id.player_button_stop)
-        loopButton = findViewById(R.id.player_button_loop)
-        playerFlipper = findViewById(R.id.player_title_flipper)
-
-        playButton.setImageResource(R.drawable.ic_pause) // To be removed when animated.
-
-        prevButton.click { onBackButton() }
-        nextButton.click { onForwardButton() }
-        playButton.click { onPlayButton() }
-        stopButton.click { onStopButton() }
-        loopButton.click { onLoopButton() }
-
+        eventBus.register(this)
         sheet = PlayerSheet(this)
+
+        // INITIALIZE RECEIVER by jwei512
+        screenOn = true
+        screenReceiver = ScreenReceiver()
+        val filter = IntentFilter().apply {
+            addAction(Intent.ACTION_SCREEN_ON)
+            addAction(Intent.ACTION_SCREEN_OFF)
+        }
+        registerReceiver(screenReceiver, filter)
 
         // Get the background color of the activity.
         var color: Int = Color.parseColor("#FF000000")
         val background = window.decorView.background
         if (background is ColorDrawable) color = background.color
-
         instrumentViewer = InstrumentViewer(this, color)
         channelViewer = ChannelViewer(this, color)
         patternViewer = PatternViewer(this, color)
-
         viewer = instrumentViewer
-
-        playerLayout.addView(viewer)
-        playerLayout.setOnClickListener {
+        binder.viewerLayout.addView(viewer)
+        binder.viewerLayout.setOnClickListener {
             synchronized(playerLock) {
                 if (canChangeViewer) {
                     changeViewer()
@@ -418,10 +352,10 @@ class PlayerActivity : AppCompatActivity() {
             }
         }
 
-        if (PrefManager.keepScreenOn) {
-            playerLayout.keepScreenOn = true
-        }
-
+        infoName[0] = binder.infoName0
+        infoType[0] = binder.infoType0
+        infoName[1] = binder.infoName1
+        infoType[1] = binder.infoType1
         val font = ResourcesCompat.getFont(applicationContext, R.font.font_michroma)
         for (i in 0..1) {
             infoName[i]!!.typeface = font
@@ -430,23 +364,41 @@ class PlayerActivity : AppCompatActivity() {
             infoType[i]!!.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12f)
         }
 
-        if (!PrefManager.showInfoLine) {
-            timeNow.hide()
-            timeTotal.hide()
-            findViewById<LinearLayout>(R.id.player_info_line).hide()
+        binder.controlsSheet.apply {
+            buttonPlay.setImageResource(R.drawable.ic_pause) // To be removed when animated.
+            buttonPrev.click { onBackButton() }
+            buttonForward.click { onForwardButton() }
+            buttonPlay.click { onPlayButton() }
+            buttonStop.click { onStopButton() }
+            buttonLoop.click { onLoopButton() }
+            seekbar.apply {
+                progress = 0
+                setOnSeekBarChangeListener(
+                    onStartTrackingTouch = { seeking = true },
+                    onStopTrackingTouch = {
+                        if (isBound) {
+                            modPlayer.seek(it!!.progress * 100)
+                            playTime = modPlayer.time() / 100
+                        }
+                        seeking = false
+                    }
+                )
+            }
+
+            if (!PrefManager.showInfoLine) {
+                timeNow.hide()
+                timeTotal.hide()
+                infoLayout.infoLine.hide()
+            }
         }
 
-        seekBar.progress = 0
-        seekBar.setOnSeekBarChangeListener(
-            onStartTrackingTouch = { seeking = true },
-            onStopTrackingTouch = {
-                if (isBound) {
-                    modPlayer.seek(it!!.progress * 100)
-                    playTime = modPlayer.time() / 100
-                }
-                seeking = false
-            }
-        )
+        if (PrefManager.keepScreenOn) {
+            binder.viewerLayout.keepScreenOn = true
+        }
+
+        // if (PlayerService.isLoaded) {
+        //    canChangeViewer = true
+        // }
 
         setResult(RESULT_OK)
     }
@@ -484,8 +436,10 @@ class PlayerActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         screenOn = true
+        showHex = PrefManager.showInfoLineHex
     }
 
+    // We don't have an action bar, so this is only a phone with a hardware menu button.
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         if (PrefManager.enableDelete) {
             menuInflater.inflate(R.menu.menu_delete, menu)
@@ -497,16 +451,12 @@ class PlayerActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == R.id.menu_delete) {
             yesNoDialog("Delete", "Are you sure to delete this file?") {
-                try {
-                    if (modPlayer.deleteFile()) {
-                        toast("File deleted")
-                        setResult(RESULT_FIRST_USER)
-                        modPlayer.nextSong()
-                    } else {
-                        toast("Can't delete file")
-                    }
-                } catch (e: RemoteException) {
-                    toast("Can't connect service")
+                if (modPlayer.deleteFile()) {
+                    toast("File deleted")
+                    setResult(RESULT_FIRST_USER)
+                    modPlayer.nextSong()
+                } else {
+                    toast("Can't delete file")
                 }
             }
         }
@@ -515,7 +465,7 @@ class PlayerActivity : AppCompatActivity() {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        viewer.setRotation(display!!.rotation)
+        viewer.setRotation(display.rotation)
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -539,7 +489,6 @@ class PlayerActivity : AppCompatActivity() {
             }
         }
 
-        // fileArray = null;
         if (path != null) {
             // from intent filter
             logI("Player started from intent filter")
@@ -560,7 +509,6 @@ class PlayerActivity : AppCompatActivity() {
         } else {
             val extras = intent.extras
             if (extras != null) {
-                // fileArray = extras.getStringArray("files");
                 val app = application as XmpApplication
                 fileList = app.fileList
                 shuffleMode = extras.getBoolean(PARM_SHUFFLE)
@@ -586,12 +534,12 @@ class PlayerActivity : AppCompatActivity() {
 
     private fun pause() {
         paused = true
-        playButton.setImageResource(R.drawable.ic_play)
+        binder.controlsSheet.buttonPlay.setImageResource(R.drawable.ic_play)
     }
 
     private fun unpause() {
         paused = false
-        playButton.setImageResource(R.drawable.ic_pause)
+        binder.controlsSheet.buttonPlay.setImageResource(R.drawable.ic_pause)
     }
 
     private fun handleIntentAction(intent: Intent): String? {
@@ -630,19 +578,17 @@ class PlayerActivity : AppCompatActivity() {
     private fun changeViewer() {
         currentViewer++
         currentViewer %= 3
-        synchronized(playerLayout) {
-            synchronized(playerLock) {
-                if (isBound) {
-                    playerLayout.removeAllViews()
-                    when (currentViewer) {
-                        0 -> viewer = instrumentViewer
-                        1 -> viewer = channelViewer
-                        2 -> viewer = patternViewer
-                    }
-                    playerLayout.addView(viewer)
-                    viewer.setup(modPlayer, modVars)
-                    viewer.setRotation(display!!.rotation)
+        synchronized(playerLock) {
+            if (isBound) {
+                binder.viewerLayout.removeAllViews()
+                when (currentViewer) {
+                    0 -> viewer = instrumentViewer
+                    1 -> viewer = channelViewer
+                    2 -> viewer = patternViewer
                 }
+                binder.viewerLayout.addView(viewer)
+                viewer.setup(modPlayer, modVars)
+                viewer.setRotation(display.rotation)
             }
         }
     }
@@ -661,9 +607,9 @@ class PlayerActivity : AppCompatActivity() {
         synchronized(playerLock) {
             if (isBound) {
                 if (modPlayer.toggleLoop()) {
-                    loopButton.setImageResource(R.drawable.ic_repeat_one_on)
+                    binder.controlsSheet.buttonLoop.setImageResource(R.drawable.ic_repeat_one_on)
                 } else {
-                    loopButton.setImageResource(R.drawable.ic_repeat_one_off)
+                    binder.controlsSheet.buttonLoop.setImageResource(R.drawable.ic_repeat_one_off)
                 }
             }
         }
@@ -718,33 +664,33 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     private fun saveAllSeqPreference() {
-        synchronized(playerLock) {
-            // Write our all sequences button status to shared prefs
-            val allSeq = modPlayer.getAllSequences()
-            if (allSeq != PrefManager.allSequences) {
-                logD("Write all sequences preference")
-                PrefManager.allSequences = allSeq
-            }
+        // Write our all sequences button status to shared prefs
+        val allSeq = modPlayer.getAllSequences()
+        if (allSeq != PrefManager.allSequences) {
+            logD("Write all sequences preference")
+            PrefManager.allSequences = allSeq
         }
     }
 
     fun playNewSequence(num: Int) {
         synchronized(playerLock) {
-            if (isBound)
+            if (isBound) {
                 modPlayer.setSequence(num)
+            }
         }
     }
 
     private fun showNewSequence() {
         synchronized(playerLock) {
-            if (isBound)
+            if (isBound) {
                 modPlayer.getModVars(modVars)
+            }
 
             handler.post {
                 val time = modVars[0]
                 totalTime = time / 1000
-                seekBar.progress = 0
-                seekBar.max = time / 100
+                binder.controlsSheet.seekbar.progress = 0
+                binder.controlsSheet.seekbar.max = time / 100
                 val formattedTime = String.format("%d:%02d", time / 60000, time / 1000 % 60)
                 toast("New sequence duration: $formattedTime")
                 val sequence = modVars[7]
@@ -757,34 +703,15 @@ class PlayerActivity : AppCompatActivity() {
         handler.post {
             logI("Show new module")
             synchronized(playerLock) {
-                playTime = try {
-                    modPlayer.getModVars(modVars)
-                    modPlayer.getSeqVars(seqVars)
-                    modPlayer.time() / 100
-                } catch (e: RemoteException) {
-                    logE("Can't get module data")
-                    return@post
-                }
 
-                var name: String
-                var type: String
-                var allSeq: Boolean
-                var loop: Boolean
-                try {
-                    name = modPlayer.getModName()
-                    type = modPlayer.getModType()
-                    allSeq = modPlayer.getAllSequences()
-                    loop = modPlayer.getLoop()
-                    if (name.trim { it <= ' ' }.isEmpty()) {
-                        name = basename(modPlayer.getFileName())
-                    }
-                } catch (e: RemoteException) {
-                    name = ""
-                    type = ""
-                    allSeq = false
-                    loop = false
-                    logE("Can't get module name and type")
-                }
+                modPlayer.getModVars(modVars)
+                modPlayer.getSeqVars(seqVars)
+                playTime = modPlayer.time() / 100
+
+                val name: String = modPlayer.getModName()
+                val type: String = modPlayer.getModType()
+                val allSeq: Boolean = modPlayer.getAllSequences()
+                val loop: Boolean = modPlayer.getLoop()
 
                 val time = modVars[0]
                 /* val len = vars[1] */
@@ -794,7 +721,7 @@ class PlayerActivity : AppCompatActivity() {
                 val smp = modVars[5]
                 val numSeq = modVars[6]
 
-                sheet.run {
+                sheet.apply {
                     setDetails(pat, ins, smp, chn, allSeq)
                     clearSequences()
                     for (i in 0 until numSeq) {
@@ -803,29 +730,29 @@ class PlayerActivity : AppCompatActivity() {
                     selectSequence(0)
                 }
 
-                loopButton.setImageResource(
+                binder.controlsSheet.buttonLoop.setImageResource(
                     if (loop) R.drawable.ic_repeat_one_on else R.drawable.ic_repeat_one_off
                 )
 
                 totalTime = time / 1000
-                seekBar.max = time / 100
-                seekBar.progress = playTime
+                binder.controlsSheet.seekbar.max = time / 100
+                binder.controlsSheet.seekbar.progress = playTime
                 flipperPage = (flipperPage + 1) % 2
                 infoName[flipperPage]!!.text = name
                 infoType[flipperPage]!!.text = type
 
                 if (skipToPrevious) {
-                    playerFlipper.setInAnimation(this, R.anim.slide_in_left_slow)
-                    playerFlipper.setOutAnimation(this, R.anim.slide_out_right_slow)
+                    binder.titleFlipper.setInAnimation(this, R.anim.slide_in_left_slow)
+                    binder.titleFlipper.setOutAnimation(this, R.anim.slide_out_right_slow)
                 } else {
-                    playerFlipper.setInAnimation(this, R.anim.slide_in_right_slow)
-                    playerFlipper.setOutAnimation(this, R.anim.slide_out_left_slow)
+                    binder.titleFlipper.setInAnimation(this, R.anim.slide_in_right_slow)
+                    binder.titleFlipper.setOutAnimation(this, R.anim.slide_out_left_slow)
                 }
 
                 skipToPrevious = false
-                playerFlipper.showNext()
+                binder.titleFlipper.showNext()
                 viewer.setup(modPlayer, modVars)
-                viewer.setRotation(display!!.rotation)
+                viewer.setRotation(display.rotation)
 
                 info = Viewer.Info()
                 stopUpdate = false
@@ -840,8 +767,9 @@ class PlayerActivity : AppCompatActivity() {
 
     private fun playNewMod(fileList: List<String>, start: Int) {
         synchronized(playerLock) {
-            if (isBound)
+            if (isBound) {
                 modPlayer.play(fileList, start, shuffleMode, loopListMode, keepFirst)
+            }
         }
     }
 
@@ -859,8 +787,9 @@ class PlayerActivity : AppCompatActivity() {
                 }
 
                 synchronized(playerLock) {
-                    if (isBound)
+                    if (isBound) {
                         playTime = modPlayer.time() / 100
+                    }
                 }
 
                 if (screenOn) {

@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/bottomSheet"
+    android:id="@+id/infoPaneLayout"
     style="@style/SidebarTheme"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -27,11 +27,11 @@
             android:textSize="16sp" />
 
         <androidx.appcompat.widget.AppCompatImageButton
-            android:id="@+id/sheet_show_comment"
+            android:id="@+id/button_show_comment"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:contentDescription="@string/desc_show_module_message"
             android:background="?selectableItemBackground"
+            android:contentDescription="@string/desc_show_module_message"
             android:src="@drawable/ic_info" />
 
     </LinearLayout>
@@ -49,7 +49,7 @@
             android:text="@string/sheet_patterns" />
 
         <TextView
-            android:id="@+id/sidebar_num_pat"
+            android:id="@+id/num_pat"
             style="@style/SidebarDetailsTheme"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -63,7 +63,7 @@
             android:text="@string/sheet_instruments" />
 
         <TextView
-            android:id="@+id/sidebar_num_ins"
+            android:id="@+id/num_ins"
             style="@style/SidebarDetailsTheme"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -77,7 +77,7 @@
             android:text="@string/sheet_samples" />
 
         <TextView
-            android:id="@+id/sidebar_num_smp"
+            android:id="@+id/num_smp"
             style="@style/SidebarDetailsTheme"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -91,7 +91,7 @@
             android:text="@string/sheet_channels" />
 
         <TextView
-            android:id="@+id/sidebar_num_chn"
+            android:id="@+id/num_chn"
             style="@style/SidebarDetailsTheme"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -100,7 +100,7 @@
     </GridLayout>
 
     <androidx.appcompat.widget.SwitchCompat
-        android:id="@+id/sidebar_allseqs_switch"
+        android:id="@+id/allseqs_switch"
         style="@style/SidebarSectionTheme"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -113,7 +113,7 @@
         android:layout_height="wrap_content">
 
         <RadioGroup
-            android:id="@+id/sidebar_sequences"
+            android:id="@+id/sequences_group"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical" />

@@ -7,12 +7,12 @@ import android.view.MenuItem
 import android.widget.ArrayAdapter
 import androidx.appcompat.app.AppCompatActivity
 import dagger.hilt.android.AndroidEntryPoint
+import java.util.*
+import javax.inject.Inject
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp.getFormats
 import org.helllabs.android.xmp.databinding.PrefFormatsBinding
 import org.helllabs.android.xmp.util.toast
-import java.util.*
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class ListFormats : AppCompatActivity() {

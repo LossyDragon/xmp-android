@@ -2,15 +2,21 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/controlsSheet"
+    android:id="@+id/sheet"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:clickable="true"
+    android:focusable="true"
     android:orientation="vertical"
     app:behavior_hideable="false"
     app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
 
+    <!-- clickable and focusable are to intercept touches on layouts above the viewer. -->
+    <!-- Downside from above is progress bar thinks it's being touched, apply the same to it. -->
+    <!-- https://stackoverflow.com/a/36586790 -->
+
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/player_sheet"
+        android:id="@+id/controlsLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/bottom_sheet"
@@ -30,7 +36,7 @@
             tools:ignore="ContentDescription" />
 
         <include
-            android:id="@+id/player_info_layout"
+            android:id="@+id/info_layout"
             layout="@layout/layout_control_info"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -41,71 +47,73 @@
             app:layout_constraintTop_toBottomOf="@id/sheetHandle" />
 
         <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/player_time_now"
+            android:id="@+id/time_now"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="10dp"
             android:text="@string/player_time"
             android:textColor="@color/white"
             android:textSize="16sp"
-            app:layout_constraintBottom_toBottomOf="@id/player_seekbar"
+            app:layout_constraintBottom_toBottomOf="@id/seekbar"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@id/player_seekbar" />
+            app:layout_constraintTop_toTopOf="@id/seekbar" />
 
         <androidx.appcompat.widget.AppCompatSeekBar
-            android:id="@+id/player_seekbar"
+            android:id="@+id/seekbar"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:layout_marginBottom="10dp"
+            android:clickable="true"
+            android:focusable="true"
             android:progress="50"
-            app:layout_constraintBottom_toTopOf="@id/player_button_play"
-            app:layout_constraintEnd_toStartOf="@id/player_time_total"
-            app:layout_constraintStart_toEndOf="@id/player_time_now"
-            app:layout_constraintTop_toBottomOf="@id/player_info_layout" />
+            app:layout_constraintBottom_toTopOf="@id/button_play"
+            app:layout_constraintEnd_toStartOf="@id/time_total"
+            app:layout_constraintStart_toEndOf="@id/time_now"
+            app:layout_constraintTop_toBottomOf="@id/info_layout" />
 
         <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/player_time_total"
+            android:id="@+id/time_total"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="10dp"
             android:text="@string/player_time"
             android:textColor="@color/white"
             android:textSize="16sp"
-            app:layout_constraintBottom_toBottomOf="@id/player_seekbar"
+            app:layout_constraintBottom_toBottomOf="@id/seekbar"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/player_seekbar" />
+            app:layout_constraintTop_toTopOf="@id/seekbar" />
 
         <androidx.appcompat.widget.AppCompatImageButton
-            android:id="@+id/player_button_stop"
+            android:id="@+id/button_stop"
             style="@style/PlayerButtons"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="15dp"
             android:contentDescription="@string/desc_stop_playing_module"
             android:padding="12dp"
-            app:layout_constraintBottom_toBottomOf="@id/player_button_prev"
-            app:layout_constraintEnd_toStartOf="@id/player_button_prev"
-            app:layout_constraintTop_toTopOf="@id/player_button_prev"
+            app:layout_constraintBottom_toBottomOf="@id/button_prev"
+            app:layout_constraintEnd_toStartOf="@id/button_prev"
+            app:layout_constraintTop_toTopOf="@id/button_prev"
             app:srcCompat="@drawable/ic_stop"
             tools:ignore="ContentDescription" />
 
         <androidx.appcompat.widget.AppCompatImageButton
-            android:id="@+id/player_button_prev"
+            android:id="@+id/button_prev"
             style="@style/PlayerButtons"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="15dp"
             android:contentDescription="@string/desc_rewind_module_or_skip"
             android:padding="12dp"
-            app:layout_constraintBottom_toBottomOf="@id/player_button_play"
-            app:layout_constraintEnd_toStartOf="@id/player_button_play"
-            app:layout_constraintTop_toTopOf="@id/player_button_play"
+            app:layout_constraintBottom_toBottomOf="@id/button_play"
+            app:layout_constraintEnd_toStartOf="@id/button_play"
+            app:layout_constraintTop_toTopOf="@id/button_play"
             app:srcCompat="@drawable/ic_previous"
             tools:ignore="ContentDescription" />
 
         <androidx.appcompat.widget.AppCompatImageButton
-            android:id="@+id/player_button_play"
+            android:id="@+id/button_play"
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:layout_marginBottom="20dp"
@@ -117,30 +125,30 @@
             app:layout_constraintStart_toStartOf="parent" />
 
         <androidx.appcompat.widget.AppCompatImageButton
-            android:id="@+id/player_button_forward"
+            android:id="@+id/button_forward"
             style="@style/PlayerButtons"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="15dp"
             android:contentDescription="@string/desc_skip_to_next_module"
             android:padding="12dp"
-            app:layout_constraintBottom_toBottomOf="@id/player_button_play"
-            app:layout_constraintStart_toEndOf="@id/player_button_play"
-            app:layout_constraintTop_toTopOf="@id/player_button_play"
+            app:layout_constraintBottom_toBottomOf="@id/button_play"
+            app:layout_constraintStart_toEndOf="@id/button_play"
+            app:layout_constraintTop_toTopOf="@id/button_play"
             app:srcCompat="@drawable/ic_forward"
             tools:ignore="ContentDescription" />
 
         <androidx.appcompat.widget.AppCompatImageButton
-            android:id="@+id/player_button_loop"
+            android:id="@+id/button_loop"
             style="@style/PlayerButtons"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="15dp"
             android:contentDescription="@string/desc_repeat_current_play"
             android:padding="12dp"
-            app:layout_constraintBottom_toBottomOf="@id/player_button_forward"
-            app:layout_constraintStart_toEndOf="@id/player_button_forward"
-            app:layout_constraintTop_toTopOf="@id/player_button_forward"
+            app:layout_constraintBottom_toBottomOf="@id/button_forward"
+            app:layout_constraintStart_toEndOf="@id/button_forward"
+            app:layout_constraintTop_toTopOf="@id/button_forward"
             app:srcCompat="@drawable/ic_repeat_one_off"
             tools:ignore="ContentDescription" />
 

@@ -6,10 +6,10 @@ import android.os.Environment.MEDIA_MOUNTED
 import android.os.Environment.MEDIA_MOUNTED_READ_ONLY
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
+import java.io.File
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.databinding.PrefLayoutBinding
 import org.helllabs.android.xmp.util.logE
-import java.io.File
 
 class Preferences : AppCompatActivity() {
 

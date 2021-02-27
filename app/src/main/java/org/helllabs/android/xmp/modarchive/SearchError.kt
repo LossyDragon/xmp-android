@@ -5,10 +5,10 @@ import android.os.Bundle
 import android.view.KeyEvent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.res.ResourcesCompat
+import java.util.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.databinding.ActivitySearchErrorBinding
 import org.helllabs.android.xmp.modarchive.ModArchiveConstants.ERROR
-import java.util.*
 
 class SearchError : AppCompatActivity(), Runnable {
 

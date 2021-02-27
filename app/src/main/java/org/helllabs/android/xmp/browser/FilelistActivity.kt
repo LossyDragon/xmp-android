@@ -286,17 +286,11 @@ class FilelistActivity : BasePlaylistActivity() {
         updateModlist()
     }
 
-    // TODO: Dialog
     private fun pathNotFound(mediaPath: String) {
-        AlertDialog.Builder(this).create().apply {
-            setTitle("Path not found")
-            setMessage(
-                "$mediaPath not found. Create this directory or change the module path."
-            )
-            setButton(
-                AlertDialog.BUTTON_POSITIVE,
-                getString(R.string.create)
-            ) { _: DialogInterface?, _: Int ->
+        MaterialDialog(this).show {
+            title(text = "Path not found")
+            message(text = "$mediaPath not found. Create this directory or change the module path.")
+            positiveButton(R.string.create) {
                 val ret = installAssets(mediaPath, PrefManager.installExamples)
                 if (ret < 0) {
                     generalError("Error creating directory $mediaPath.")
@@ -304,13 +298,10 @@ class FilelistActivity : BasePlaylistActivity() {
                 mNavigation.startNavigation(File(mediaPath))
                 updateModlist()
             }
-            setButton(
-                AlertDialog.BUTTON_NEGATIVE,
-                getString(R.string.cancel)
-            ) { _: DialogInterface?, _: Int ->
+            negativeButton(R.string.cancel) {
                 finish()
             }
-        }.show()
+        }
     }
 
     private fun readShuffleModePref(): Boolean {

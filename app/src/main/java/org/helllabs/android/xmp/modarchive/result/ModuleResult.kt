@@ -16,6 +16,8 @@ import com.github.razir.progressbutton.showProgress
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import dagger.hilt.android.AndroidEntryPoint
+import java.io.File
+import java.io.IOException
 import kotlinx.coroutines.flow.collect
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.XmpApplication
@@ -31,12 +33,9 @@ import org.helllabs.android.xmp.model.ModuleResult
 import org.helllabs.android.xmp.player.PlayerActivity
 import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.util.*
-import java.io.File
-import java.io.IOException
 
 @AndroidEntryPoint
 class ModuleResult : AppCompatActivity() {
-
 
     private lateinit var binder: ActivityResultModuleBinding
 

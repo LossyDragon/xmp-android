@@ -11,6 +11,7 @@ import android.view.MotionEvent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import java.util.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter
@@ -23,7 +24,6 @@ import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.util.*
 import org.helllabs.android.xmp.util.InfoCache.testModule
 import org.helllabs.android.xmp.util.InfoCache.testModuleForceIfInvalid
-import java.util.*
 
 abstract class BasePlaylistActivity : AppCompatActivity() {
 

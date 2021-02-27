@@ -494,7 +494,11 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
     }
 
     fun getModName(): String {
-        return Xmp.getModName()
+        var name = Xmp.getModName()
+        if (name.trim { it <= ' ' }.isEmpty()) {
+            name = basename(currentFileName!!)
+        }
+        return name
     }
 
     fun getModType(): String {
@@ -590,10 +594,6 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
     }
 
     // for Reconnection
-    fun getFileName(): String {
-        return currentFileName!!
-    }
-
     fun getInstruments(): Array<String> {
         return Xmp.getInstruments()
     }
@@ -688,7 +688,6 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
         private const val CMD_STOP = 3
         private const val MIN_BUFFER_MS = 80
         private const val MAX_BUFFER_MS = 1000
-        private const val DEFAULT_BUFFER_MS = 400
         private const val DUCK_VOLUME = 0x500
 
         @JvmField
