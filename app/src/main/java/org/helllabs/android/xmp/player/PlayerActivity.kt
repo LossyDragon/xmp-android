@@ -16,10 +16,16 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.res.ResourcesCompat
 import dagger.hilt.android.AndroidEntryPoint
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.OutputStream
+import javax.inject.Inject
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.browser.PlaylistMenu
 import org.helllabs.android.xmp.databinding.ActivityPlayerBinding
@@ -31,11 +37,6 @@ import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.service.utils.*
 import org.helllabs.android.xmp.util.*
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
-import java.io.OutputStream
-import javax.inject.Inject
 
 // TODO: Animate Play/Pause button
 
@@ -43,7 +44,7 @@ import javax.inject.Inject
 class PlayerActivity : AppCompatActivity() {
 
     internal lateinit var binder: ActivityPlayerBinding
-    private lateinit var modPlayer: PlayerService
+    private var modPlayer: PlayerService? = null
 
     @Inject
     lateinit var eventBus: EventBus
@@ -95,7 +96,8 @@ class PlayerActivity : AppCompatActivity() {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             logI("Service connected")
             synchronized(playerLock) {
-                modPlayer = (service as PlayerService.PlayerBinder).service
+                val binder = service as PlayerService.PlayerBinder
+                modPlayer = binder.service
                 isBound = true
                 flipperPage = 0
                 if (fileList != null && fileList!!.isNotEmpty()) {
@@ -104,7 +106,7 @@ class PlayerActivity : AppCompatActivity() {
                 } else {
                     // Reconnect to existing service
                     showNewMod()
-                    if (modPlayer.isPaused()) {
+                    if (modPlayer!!.isPaused()) {
                         pause()
                     } else {
                         unpause()
@@ -117,9 +119,11 @@ class PlayerActivity : AppCompatActivity() {
             saveAllSeqPreference()
             synchronized(playerLock) {
                 stopUpdate = true
-                logI("Service disconnected")
+                logI("Service unexpectedly disconnected")
                 finish()
             }
+            isBound = false
+            modPlayer = null
         }
     }
 
@@ -150,6 +154,7 @@ class PlayerActivity : AppCompatActivity() {
                 when (event.result) {
                     PlayerService.RESULT_CANT_OPEN_AUDIO -> toast(R.string.error_opensl)
                     PlayerService.RESULT_NO_AUDIO_FOCUS -> toast(R.string.error_audiofocus)
+                    PlayerService.RESULT_WATCHDOG -> toast(R.string.error_watchdog)
                 }
             }
             if (progressThread != null && progressThread!!.isAlive) {
@@ -171,7 +176,7 @@ class PlayerActivity : AppCompatActivity() {
         logD("pauseCallback")
         synchronized(playerLock) {
             if (isBound) {
-                if (modPlayer.isPaused())
+                if (modPlayer!!.isPaused())
                     pause()
                 else
                     unpause()
@@ -207,16 +212,18 @@ class PlayerActivity : AppCompatActivity() {
 
             // get current frame info
             synchronized(playerLock) {
-                modPlayer.getInfo(info!!.values)
-                info!!.time = modPlayer.time() / 1000
-                modPlayer.getChannelData(
-                    info!!.volumes,
-                    info!!.finalVols,
-                    info!!.pans,
-                    info!!.instruments,
-                    info!!.keys,
-                    info!!.periods
-                )
+                Xmp.getInfo(info!!.values)
+                info!!.time = Xmp.time() / 1000
+                if (modPlayer!!.updateData) {
+                    Xmp.getChannelData(
+                        info!!.volumes,
+                        info!!.finalVols,
+                        info!!.pans,
+                        info!!.instruments,
+                        info!!.keys,
+                        info!!.periods
+                    )
+                }
             }
 
             /* Display frame info */
@@ -377,8 +384,9 @@ class PlayerActivity : AppCompatActivity() {
                     onStartTrackingTouch = { seeking = true },
                     onStopTrackingTouch = {
                         if (isBound) {
-                            modPlayer.seek(it!!.progress * 100)
-                            playTime = modPlayer.time() / 100
+                            modPlayer!!.mediaSession.controller
+                                .transportControls.seekTo((it!!.progress * 100).toLong())
+                            playTime = Xmp.time() / 100
                         }
                         seeking = false
                     }
@@ -422,6 +430,8 @@ class PlayerActivity : AppCompatActivity() {
             progressThread = null
         }
 
+        isBound = false
+        modPlayer = null
         super.onDestroy()
     }
 
@@ -451,10 +461,10 @@ class PlayerActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == R.id.menu_delete) {
             yesNoDialog("Delete", "Are you sure to delete this file?") {
-                if (modPlayer.deleteFile()) {
+                if (modPlayer!!.deleteFile()) {
                     toast("File deleted")
                     setResult(RESULT_FIRST_USER)
-                    modPlayer.nextSong()
+                    modPlayer!!.mediaSession.controller.transportControls.skipToNext()
                 } else {
                     toast("Can't delete file")
                 }
@@ -526,7 +536,7 @@ class PlayerActivity : AppCompatActivity() {
             logI("Start service")
             startService(service)
         }
-        if (!bindService(service, connection, 0)) {
+        if (!bindService(service, connection, BIND_AUTO_CREATE)) {
             logE("Can't bind to service")
             finish()
         }
@@ -587,7 +597,7 @@ class PlayerActivity : AppCompatActivity() {
                     2 -> viewer = patternViewer
                 }
                 binder.viewerLayout.addView(viewer)
-                viewer.setup(modPlayer, modVars)
+                viewer.setup(modVars)
                 viewer.setRotation(display.rotation)
             }
         }
@@ -597,7 +607,7 @@ class PlayerActivity : AppCompatActivity() {
     fun toggleAllSequences(): Boolean {
         synchronized(playerLock) {
             if (isBound) {
-                return modPlayer.toggleAllSequences()
+                return modPlayer!!.toggleAllSequences()
             }
             return false
         }
@@ -606,7 +616,7 @@ class PlayerActivity : AppCompatActivity() {
     private fun onLoopButton() {
         synchronized(playerLock) {
             if (isBound) {
-                if (modPlayer.toggleLoop()) {
+                if (modPlayer!!.toggleLoop()) {
                     binder.controlsSheet.buttonLoop.setImageResource(R.drawable.ic_repeat_one_on)
                 } else {
                     binder.controlsSheet.buttonLoop.setImageResource(R.drawable.ic_repeat_one_off)
@@ -619,7 +629,7 @@ class PlayerActivity : AppCompatActivity() {
         synchronized(playerLock) {
             logD("Play/pause button pressed (paused=$paused)")
             if (isBound) {
-                modPlayer.pause()
+                modPlayer!!.mediaSession.controller.transportControls.pause()
                 if (paused) unpause() else pause()
             }
         }
@@ -629,7 +639,7 @@ class PlayerActivity : AppCompatActivity() {
         synchronized(playerLock) {
             logD("Stop button pressed")
             if (isBound) {
-                modPlayer.stop()
+                modPlayer!!.mediaSession.controller.transportControls.stop()
             }
         }
         paused = false
@@ -639,16 +649,8 @@ class PlayerActivity : AppCompatActivity() {
         synchronized(playerLock) {
             logD("Back button pressed")
             if (isBound) {
-                if (modPlayer.time() > 3000) {
-                    modPlayer.seek(0)
-                    if (paused) {
-                        modPlayer.pause()
-                    }
-                } else {
-                    modPlayer.prevSong()
-                    skipToPrevious = true
-                }
-                unpause()
+                skipToPrevious = true
+                modPlayer!!.mediaSession.controller.transportControls.skipToPrevious()
             }
         }
     }
@@ -657,25 +659,26 @@ class PlayerActivity : AppCompatActivity() {
         synchronized(playerLock) {
             logD("Next button pressed")
             if (isBound) {
-                modPlayer.nextSong()
-                unpause()
+                modPlayer!!.mediaSession.controller.transportControls.skipToNext()
             }
         }
     }
 
     private fun saveAllSeqPreference() {
         // Write our all sequences button status to shared prefs
-        val allSeq = modPlayer.getAllSequences()
-        if (allSeq != PrefManager.allSequences) {
-            logD("Write all sequences preference")
-            PrefManager.allSequences = allSeq
+        if (isBound) {
+            val allSeq = modPlayer!!.getAllSequences()
+            if (allSeq != PrefManager.allSequences) {
+                logD("Write all sequences preference")
+                PrefManager.allSequences = allSeq
+            }
         }
     }
 
     fun playNewSequence(num: Int) {
         synchronized(playerLock) {
             if (isBound) {
-                modPlayer.setSequence(num)
+                modPlayer?.setSequence(num)
             }
         }
     }
@@ -683,7 +686,7 @@ class PlayerActivity : AppCompatActivity() {
     private fun showNewSequence() {
         synchronized(playerLock) {
             if (isBound) {
-                modPlayer.getModVars(modVars)
+                Xmp.getModVars(modVars)
             }
 
             handler.post {
@@ -704,14 +707,14 @@ class PlayerActivity : AppCompatActivity() {
             logI("Show new module")
             synchronized(playerLock) {
 
-                modPlayer.getModVars(modVars)
-                modPlayer.getSeqVars(seqVars)
-                playTime = modPlayer.time() / 100
+                Xmp.getModVars(modVars)
+                Xmp.getSeqVars(seqVars)
+                playTime = Xmp.time() / 100
 
-                val name: String = modPlayer.getModName()
-                val type: String = modPlayer.getModType()
-                val allSeq: Boolean = modPlayer.getAllSequences()
-                val loop: Boolean = modPlayer.getLoop()
+                val name: String = modPlayer?.getModName() ?: ""
+                val type: String = Xmp.getModType()
+                val allSeq: Boolean = modPlayer?.getAllSequences() ?: false
+                val loop: Boolean = modPlayer?.getLoop() ?: false
 
                 val time = modVars[0]
                 /* val len = vars[1] */
@@ -751,7 +754,7 @@ class PlayerActivity : AppCompatActivity() {
 
                 skipToPrevious = false
                 binder.titleFlipper.showNext()
-                viewer.setup(modPlayer, modVars)
+                viewer.setup(modVars)
                 viewer.setRotation(display.rotation)
 
                 info = Viewer.Info()
@@ -768,7 +771,7 @@ class PlayerActivity : AppCompatActivity() {
     private fun playNewMod(fileList: List<String>, start: Int) {
         synchronized(playerLock) {
             if (isBound) {
-                modPlayer.play(fileList, start, shuffleMode, loopListMode, keepFirst)
+                modPlayer?.play(fileList, start, shuffleMode, loopListMode, keepFirst)
             }
         }
     }
@@ -788,7 +791,7 @@ class PlayerActivity : AppCompatActivity() {
 
                 synchronized(playerLock) {
                     if (isBound) {
-                        playTime = modPlayer.time() / 100
+                        playTime = Xmp.time() / 100
                     }
                 }
 
@@ -814,7 +817,7 @@ class PlayerActivity : AppCompatActivity() {
                     logI("Flush interface update")
                     // finished playing, we can release the module
                     if (isBound)
-                        modPlayer.allowRelease()
+                        modPlayer?.allowRelease()
                 }
             }
         }

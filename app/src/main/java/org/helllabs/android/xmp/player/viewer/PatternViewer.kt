@@ -5,6 +5,7 @@ import android.content.Context
 import android.graphics.*
 import android.os.RemoteException
 import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.player.Util
 import org.helllabs.android.xmp.player.Util.NOTES
 import org.helllabs.android.xmp.service.PlayerService
@@ -147,8 +148,8 @@ class PatternViewer(context: Context, background: Int) : Viewer(context, backgro
         }
     }
 
-    override fun setup(modPlayer: PlayerService, modVars: IntArray) {
-        super.setup(modPlayer, modVars)
+    override fun setup(modVars: IntArray) {
+        super.setup(modVars)
         logD("Viewer Setup")
 
         oldRow = -1f
@@ -176,12 +177,11 @@ class PatternViewer(context: Context, background: Int) : Viewer(context, backgro
         }
 
         requestCanvasLock { canvas ->
-            doDraw(canvas, modPlayer, info)
+            doDraw(canvas, info)
         }
     }
 
-    private fun doDraw(canvas: Canvas, modPlayer: PlayerService, info: Info?) {
-
+    private fun doDraw(canvas: Canvas, info: Info?) {
         lines = canvasHeight / fontHeight
         barLine = lines / 2 + 1
         barY = barLine * fontHeight
@@ -235,7 +235,8 @@ class PatternViewer(context: Context, background: Int) : Viewer(context, backgro
                     // Our variables are latency-compensated but pattern data is current
                     // so caution is needed to avoid retrieving data using old variables
                     // from a module with pattern data from a newly loaded one.
-                    modPlayer.getPatternRow(pat, lineInPattern, rowNotes, rowInsts)
+                    if (PlayerService.isPlayerAlive.value == true)
+                        Xmp.getPatternRow(pat, lineInPattern, rowNotes, rowInsts)
                 } catch (e: RemoteException) {
                     // fail silently
                 }

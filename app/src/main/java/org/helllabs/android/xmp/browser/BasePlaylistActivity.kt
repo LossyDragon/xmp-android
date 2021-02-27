@@ -11,7 +11,6 @@ import android.view.MotionEvent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import java.util.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter
@@ -24,10 +23,11 @@ import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.util.*
 import org.helllabs.android.xmp.util.InfoCache.testModule
 import org.helllabs.android.xmp.util.InfoCache.testModuleForceIfInvalid
+import java.util.*
 
 abstract class BasePlaylistActivity : AppCompatActivity() {
 
-    private lateinit var mModPlayer: PlayerService
+    private var mModPlayer: PlayerService? = null
     private var mShowToasts = false
     private var mAddList: MutableList<String>? = null
     private var refresh = false
@@ -46,10 +46,11 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     // Connection
     private val connection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
-            mModPlayer = (service as PlayerService.PlayerBinder).service
-            if (!mAddList.isNullOrEmpty())
-                mModPlayer.add(mAddList!!.toList())
+            val binder = service as PlayerService.PlayerBinder
+            mModPlayer = binder.service
+            mModPlayer?.add(mAddList!!.toList())
             unbindService(this)
+            mModPlayer = null
         }
 
         override fun onServiceDisconnected(className: ComponentName) {
@@ -76,6 +77,11 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         if (refresh) {
             update()
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        mModPlayer = null
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -215,7 +221,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     }
 
     private fun playModule(modList: List<String>, start: Int, keepFirst: Boolean) {
-        (application as XmpApplication).fileList = modList
+        XmpApplication.instance?.fileList = modList
         val intent = Intent(this, PlayerActivity::class.java).apply {
             putExtra(PlayerActivity.PARM_SHUFFLE, isShuffleMode)
             putExtra(PlayerActivity.PARM_LOOP, isLoopMode)
@@ -233,7 +239,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
                 mAddList = ArrayList()
                 mAddList!!.add(filename)
                 val service = Intent(this, PlayerService::class.java)
-                bindService(service, connection, 0)
+                bindService(service, connection, BIND_AUTO_CREATE)
             } else {
                 playModule(filename)
             }
@@ -261,7 +267,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
             if (PlayerService.isPlayerAlive.value == true) {
                 val service = Intent(this, PlayerService::class.java)
                 mAddList = realList
-                bindService(service, connection, 0)
+                bindService(service, connection, BIND_AUTO_CREATE)
             } else {
                 playModule(realList)
             }

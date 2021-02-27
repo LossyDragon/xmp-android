@@ -10,7 +10,6 @@ import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.player.Util
 import org.helllabs.android.xmp.preferences.PrefManager
-import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.util.logE
 
 @SuppressLint("ViewConstructor")
@@ -134,15 +133,14 @@ class ChannelViewer(context: Context, background: Int) : Viewer(context, backgro
         bufferXY = FloatArray(scopeWidth * 2)
     }
 
-    override fun setup(modPlayer: PlayerService, modVars: IntArray) {
-        super.setup(modPlayer, modVars)
+    override fun setup(modVars: IntArray) {
+        super.setup(modVars)
 
         val chn = modVars[3]
         val ins = modVars[4]
 
-        this.modPlayer = modPlayer
         try {
-            insName = modPlayer.getInstruments().toMutableList()
+            insName = Xmp.getInstruments().toMutableList()
         } catch (e: RemoteException) {
             logE("Can't get instrument name")
         }
@@ -168,7 +166,7 @@ class ChannelViewer(context: Context, background: Int) : Viewer(context, backgro
         super.update(info, paused)
 
         requestCanvasLock { canvas ->
-            doDraw(canvas, modPlayer, info, paused)
+            doDraw(canvas, info, paused)
         }
     }
 
@@ -211,7 +209,7 @@ class ChannelViewer(context: Context, background: Int) : Viewer(context, backgro
         val n = findScope(x, y)
         if (n >= 0) {
             try {
-                modPlayer.mute(n, if (isMuted[n]) 0 else 1)
+                Xmp.mute(n, if (isMuted[n]) 0 else 1)
                 isMuted[n] = isMuted[n] xor true
             } catch (e: RemoteException) {
                 logE("Can't mute channel $n")
@@ -239,7 +237,7 @@ class ChannelViewer(context: Context, background: Int) : Viewer(context, backgro
             if (count == 1 && !isMuted[n]) {
                 try {
                     for (i in 0 until chn) {
-                        modPlayer.mute(i, 0)
+                        Xmp.mute(i, 0)
                         isMuted[i] = false
                     }
                 } catch (e: RemoteException) {
@@ -248,7 +246,7 @@ class ChannelViewer(context: Context, background: Int) : Viewer(context, backgro
             } else {
                 try {
                     for (i in 0 until chn) {
-                        modPlayer.mute(i, if (i != n) 1 else 0)
+                        Xmp.mute(i, if (i != n) 1 else 0)
                         isMuted[i] = i != n
                     }
                 } catch (e: RemoteException) {
@@ -300,7 +298,7 @@ class ChannelViewer(context: Context, background: Int) : Viewer(context, backgro
         }
     }
 
-    private fun doDraw(canvas: Canvas, modPlayer: PlayerService, info: Info?, paused: Boolean) {
+    private fun doDraw(canvas: Canvas, info: Info?, paused: Boolean) {
         numChannels = modVars[3]
         numInstruments = modVars[4]
         row = info!!.values[2]
@@ -361,7 +359,7 @@ class ChannelViewer(context: Context, background: Int) : Viewer(context, backgro
                         // Our variables are latency-compensated but sample data is current
                         // so caution is needed to avoid retrieving data using old variables
                         // from a module with sample data from a newly loaded one.
-                        modPlayer.getSampleData(
+                        Xmp.getSampleData(
                             key >= 0,
                             ins,
                             holdKey[chn],

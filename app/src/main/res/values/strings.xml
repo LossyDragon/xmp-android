@@ -263,5 +263,16 @@
     <string name="desc_rewind_module_or_skip">Rewind module or skip to previous before 3 seconds.</string>
     <string name="desc_repeat_current_play">Repeat currently playing module</string>
     <string name="desc_skip_to_next_module">Skip to next module</string>
+    <string name="notif_play">Play</string>
+    <string name="notif_pause">Pause</string>
+    <string name="notif_next">Next</string>
+    <string name="notif_prev">Previous</string>
+    <string name="notif_stop">Stop</string>
+    <string name="notif_paused">Paused</string>
+    <string name="notif_unknown">Unknown</string>
+    <string name="pref_category_notifications">Notifications</string>
+    <string name="pref_notification_title">Use Media Style Notifications</string>
+    <string name="pref_notification_summary">Use Android\'s Media Style notification or classic notification</string>
+    <string name="error_watchdog">Stopped by watchdog</string>
 
 </resources>

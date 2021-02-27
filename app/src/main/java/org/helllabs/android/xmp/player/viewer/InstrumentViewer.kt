@@ -5,7 +5,7 @@ import android.content.Context
 import android.graphics.*
 import android.os.RemoteException
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.service.PlayerService
+import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.util.logD
 import org.helllabs.android.xmp.util.logE
 
@@ -63,12 +63,12 @@ class InstrumentViewer(context: Context, background: Int) : Viewer(context, back
         fontHeight = fontSize * 14 / 10
     }
 
-    override fun setup(modPlayer: PlayerService, modVars: IntArray) {
-        super.setup(modPlayer, modVars)
+    override fun setup(modVars: IntArray) {
+        super.setup(modVars)
         logD("Viewer Setup")
 
         try {
-            insName = modPlayer.getInstruments()
+            insName = Xmp.getInstruments()
         } catch (e: RemoteException) {
             logE("Can't get instrument name")
         }
@@ -80,12 +80,12 @@ class InstrumentViewer(context: Context, background: Int) : Viewer(context, back
         super.update(info, paused)
 
         requestCanvasLock { canvas ->
-            doDraw(canvas, modPlayer, info)
+            doDraw(canvas, info)
         }
     }
 
     @Suppress("UNUSED_PARAMETER")
-    private fun doDraw(canvas: Canvas, modPlayer: PlayerService, info: Info?) {
+    private fun doDraw(canvas: Canvas, info: Info?) {
         chn = modVars[3]
         ins = modVars[4]
 

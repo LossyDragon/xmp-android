@@ -46,6 +46,7 @@ object PrefManager {
     // New
     private const val SEARCH_HISTORY = "search_history"
     private const val SHOW_INFO_LINE_HEX = "show_info_line_hex"
+    private const val NEW_NOTIFICATION = "pref_use_newer_notification"
 
     private lateinit var prefs: SharedPreferences
 
@@ -175,7 +176,13 @@ object PrefManager {
         get() = prefs.getString(SEARCH_HISTORY, null)
         set(value) = prefs.edit { putString(SEARCH_HISTORY, value) }
 
+    // Show either hex or decimal in the info line for player activity
     var showInfoLineHex: Boolean
         get() = prefs.getBoolean(SHOW_INFO_LINE_HEX, true)
         set(value) = prefs.edit { putBoolean(SHOW_INFO_LINE_HEX, value) }
+
+    // Use new MediaStyle notification
+    var useMediaStyle: Boolean
+        get() = prefs.getBoolean(NEW_NOTIFICATION, true)
+        set(value) = prefs.edit { putBoolean(NEW_NOTIFICATION, value) }
 }

@@ -9,7 +9,7 @@ import android.view.*
 import android.view.GestureDetector.SimpleOnGestureListener
 import android.view.View.OnTouchListener
 import kotlin.math.abs
-import org.helllabs.android.xmp.service.PlayerService
+import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.util.*
 
 // http://developer.android.com/guide/topics/graphics/2d-graphics.html
@@ -20,8 +20,6 @@ abstract class Viewer(context: Context, color: Int) :
     SurfaceView(context),
     SurfaceHolder.Callback,
     View.OnClickListener {
-
-    internal lateinit var modPlayer: PlayerService
 
     // Background Color
     protected var bgColor: Int = color
@@ -114,16 +112,15 @@ abstract class Viewer(context: Context, color: Int) :
         updateScroll()
     }
 
-    open fun setup(modPlayer: PlayerService, modVars: IntArray) {
+    open fun setup(modVars: IntArray) {
         logI("Viewer setup")
         val chn = modVars[3]
         this.modVars = modVars
-        this.modPlayer = modPlayer
         isMuted = BooleanArray(chn)
 
         for (i in 0 until chn) {
             try {
-                isMuted[i] = modPlayer.mute(i, -1) == 1
+                isMuted[i] = Xmp.mute(i, -1) == 1
             } catch (e: RemoteException) {
                 logE("Can't read channel mute status")
             }

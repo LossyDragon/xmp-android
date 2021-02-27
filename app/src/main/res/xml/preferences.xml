@@ -210,6 +210,17 @@
 
             </PreferenceCategory>
 
+            <PreferenceCategory android:title="@string/pref_category_notifications">
+
+                <CheckBoxPreference
+                    app:defaultValue="true"
+                    app:key="pref_use_newer_notification"
+                    app:persistent="true"
+                    app:summary="@string/pref_notification_summary"
+                    app:title="@string/pref_notification_title" />
+
+            </PreferenceCategory>
+
             <PreferenceCategory android:title="@string/pref_category_experimental">
                 <CheckBoxPreference
                     android:defaultValue="false"
