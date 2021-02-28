@@ -17,17 +17,17 @@ object PrefManager {
     // public static final String STEREO = "stereo";
     // public static final String TITLES_IN_BROWSER = "titles_in_browser";
     // private const val BACK_BUTTON_NAVIGATION = "back_button_navigation"
+    // private const val BLUETOOTH_PAUSE = "bluetooth_pause"
+    // private const val HEADSET_PAUSE = "headset_pause"
 
     private const val ALL_SEQUENCES = "all_sequences"
     private const val AMIGA_MIXER = "amiga_mixer"
     private const val ARTIST_FOLDER = "artist_folder"
-    private const val BLUETOOTH_PAUSE = "bluetooth_pause"
     private const val BUFFER_MS = "buffer_ms_opensl"
     private const val CHANGELOG_VERSION = "changelog_version"
     private const val DEFAULT_PAN = "default_pan"
     private const val ENABLE_DELETE = "enable_delete"
     private const val EXAMPLES = "examples"
-    private const val HEADSET_PAUSE = "headset_pause"
     private const val INTERPOLATE = "interpolate"
     private const val INTERP_TYPE = "interp_type"
     private const val KEEP_SCREEN_ON = "keep_screen_on"
@@ -159,13 +159,13 @@ object PrefManager {
         get() = prefs.getBoolean(START_ON_PLAYER, true)
         set(value) = prefs.edit { putBoolean(START_ON_PLAYER, value) }
 
-    var headsetPause: Boolean
-        get() = prefs.getBoolean(HEADSET_PAUSE, true)
-        set(value) = prefs.edit { putBoolean(HEADSET_PAUSE, value) }
+    // var headsetPause: Boolean
+    //     get() = prefs.getBoolean(HEADSET_PAUSE, true)
+    //     set(value) = prefs.edit { putBoolean(HEADSET_PAUSE, value) }
 
-    var bluetoothPause: Boolean
-        get() = prefs.getBoolean(BLUETOOTH_PAUSE, true)
-        set(value) = prefs.edit { putBoolean(BLUETOOTH_PAUSE, value) }
+    // var bluetoothPause: Boolean
+    //     get() = prefs.getBoolean(BLUETOOTH_PAUSE, true)
+    //     set(value) = prefs.edit { putBoolean(BLUETOOTH_PAUSE, value) }
 
     var useNewWaveform: Boolean
         get() = prefs.getBoolean(NEW_WAVEFORM, false)

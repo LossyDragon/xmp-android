@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import java.text.SimpleDateFormat
 import java.util.*
@@ -19,7 +20,7 @@ class HistoryAdapter : RecyclerView.Adapter<HistoryAdapter.ViewHolder>() {
 
     var historyListener: HistoryAdapterListener? = null
     val format by lazy { SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()) }
-    var historySet: List<History> = listOf()
+    var historyList: List<History> = listOf()
         private set
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -29,18 +30,20 @@ class HistoryAdapter : RecyclerView.Adapter<HistoryAdapter.ViewHolder>() {
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.onBind(historySet[position])
+        holder.onBind(historyList[position])
     }
 
-    override fun getItemCount(): Int = historySet.size
+    override fun getItemCount(): Int = historyList.size
 
     private fun formatDate(visitDate: Long): String {
         return format.format(Date(visitDate))
     }
 
-    fun submitList(set: List<History>) {
-        historySet = set
-        notifyDataSetChanged()
+    fun submitList(list: List<History>) {
+        val newList = LinkedList(list)
+        val result = DiffUtil.calculateDiff(HistoryDiffUtil(newList))
+        historyList = newList
+        result.dispatchUpdatesTo(this)
     }
 
     inner class ViewHolder(
@@ -53,5 +56,18 @@ class HistoryAdapter : RecyclerView.Adapter<HistoryAdapter.ViewHolder>() {
             findViewById<TextView>(R.id.search_list_size).text = formatDate(item.visitDate)
             click { historyListener?.onClick(item.id) }
         }
+    }
+
+    inner class HistoryDiffUtil(val list: MutableList<History>) : DiffUtil.Callback() {
+
+        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
+            list[newItemPosition].id == historyList[oldItemPosition].id
+
+        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
+            list[newItemPosition] == historyList[oldItemPosition]
+
+        override fun getOldListSize(): Int = historyList.size
+
+        override fun getNewListSize(): Int = list.size
     }
 }

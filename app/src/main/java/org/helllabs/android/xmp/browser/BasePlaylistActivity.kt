@@ -11,6 +11,7 @@ import android.view.MotionEvent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import java.util.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter
@@ -23,7 +24,6 @@ import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.util.*
 import org.helllabs.android.xmp.util.InfoCache.testModule
 import org.helllabs.android.xmp.util.InfoCache.testModuleForceIfInvalid
-import java.util.*
 
 abstract class BasePlaylistActivity : AppCompatActivity() {
 
@@ -54,7 +54,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         }
 
         override fun onServiceDisconnected(className: ComponentName) {
-            // mModPlayer = null
+            mModPlayer = null
         }
     }
 
@@ -176,14 +176,11 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     }
 
     protected fun setupButtons(controls: LayoutListControlsBinding) {
-        controls.controlButtonPlay.apply {
-            setImageResource(R.drawable.ic_play)
-            click {
-                if (allFiles.isEmpty()) {
-                    toast(R.string.error_no_files_to_play)
-                } else {
-                    playModule(allFiles)
-                }
+        controls.controlButtonPlay.click {
+            if (allFiles.isEmpty()) {
+                toast(R.string.error_no_files_to_play)
+            } else {
+                playModule(allFiles)
             }
         }
         controls.controlButtonLoop.apply {

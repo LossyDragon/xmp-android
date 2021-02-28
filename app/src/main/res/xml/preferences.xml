@@ -139,18 +139,6 @@
 
             <PreferenceCategory android:title="@string/pref_category_player_control">
                 <CheckBoxPreference
-                    android:defaultValue="true"
-                    android:key="headset_pause"
-                    android:persistent="true"
-                    android:summary="@string/pref_headset_pause_summary"
-                    android:title="@string/pref_headset_pause_title" />
-                <CheckBoxPreference
-                    android:defaultValue="true"
-                    android:key="bluetooth_pause"
-                    android:persistent="true"
-                    android:summary="@string/pref_bluetooth_pause_summary"
-                    android:title="@string/pref_bluetooth_pause_title" />
-                <CheckBoxPreference
                     android:defaultValue="false"
                     android:key="all_sequences"
                     android:persistent="true"

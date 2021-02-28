@@ -24,12 +24,6 @@ class PlaylistAdapter(
 ) : RecyclerView.Adapter<PlaylistAdapter.ViewHolder>(),
     ItemTouchHelperAdapter {
 
-    companion object {
-        const val LAYOUT_LIST = 0
-        const val LAYOUT_CARD = 1
-        const val LAYOUT_DRAG = 2
-    }
-
     val filenameList: List<String>
         get() {
             val list: MutableList<String> = ArrayList()
@@ -187,5 +181,11 @@ class PlaylistAdapter(
         override fun getOldListSize() = playlist.size
 
         override fun getNewListSize() = list.size
+    }
+
+    companion object {
+        const val LAYOUT_LIST = 0
+        const val LAYOUT_CARD = 1
+        const val LAYOUT_DRAG = 2
     }
 }

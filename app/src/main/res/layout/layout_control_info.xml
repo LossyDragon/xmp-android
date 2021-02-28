@@ -9,102 +9,55 @@
 
     <!-- Speed -->
     <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        style="@style/PlayerInfoLine"
         android:singleLine="true"
-        android:text="@string/info_speed"
-        android:textColor="@color/white"
-        android:textSize="15sp"
-        android:textStyle="bold"
-        android:typeface="monospace" />
+        android:text="@string/info_speed" />
 
     <TextView
         android:id="@+id/infoSpeed"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        style="@style/PlayerInfoLine"
         android:gravity="start"
         android:minWidth="18dp"
-        android:singleLine="true"
         android:text="00"
-        android:textColor="@color/white"
-        android:textSize="15sp"
-        android:textStyle="bold"
-        android:typeface="monospace"
         tools:ignore="HardcodedText" />
 
     <!-- BPM -->
     <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:singleLine="true"
-        android:text="@string/info_bpm"
-        android:textColor="@color/white"
-        android:textSize="15sp"
-        android:textStyle="bold"
-        android:typeface="monospace" />
+        style="@style/PlayerInfoLine"
+        android:text="@string/info_bpm" />
 
     <TextView
         android:id="@+id/infoBpm"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        style="@style/PlayerInfoLine"
         android:gravity="start"
         android:minWidth="18dp"
-        android:singleLine="true"
         android:text="00"
-        android:textColor="@color/white"
-        android:textSize="15sp"
-        android:textStyle="bold"
-        android:typeface="monospace"
         tools:ignore="HardcodedText" />
 
     <!-- Pos -->
     <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:singleLine="true"
-        android:text="@string/info_position"
-        android:textColor="@color/white"
-        android:textSize="15sp"
-        android:textStyle="bold"
-        android:typeface="monospace" />
+        style="@style/PlayerInfoLine"
+        android:text="@string/info_position" />
 
     <TextView
         android:id="@+id/infoPos"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        style="@style/PlayerInfoLine"
         android:gravity="start"
         android:minWidth="18dp"
-        android:singleLine="true"
         android:text="00"
-        android:textColor="@color/white"
-        android:textSize="15sp"
-        android:textStyle="bold"
-        android:typeface="monospace"
         tools:ignore="HardcodedText" />
 
     <!-- Pat -->
     <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:singleLine="true"
-        android:text="@string/info_pattern"
-        android:textColor="@color/white"
-        android:textSize="15sp"
-        android:textStyle="bold"
-        android:typeface="monospace" />
+        style="@style/PlayerInfoLine"
+        android:text="@string/info_pattern" />
 
     <TextView
         android:id="@+id/infoPat"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        style="@style/PlayerInfoLine"
         android:gravity="start"
         android:minWidth="18dp"
-        android:singleLine="true"
         android:text="00"
-        android:textColor="@color/white"
-        android:textSize="15sp"
-        android:textStyle="bold"
-        android:typeface="monospace"
         tools:ignore="HardcodedText" />
 
 </LinearLayout>

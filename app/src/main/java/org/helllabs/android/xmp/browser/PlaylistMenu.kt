@@ -90,7 +90,7 @@ class PlaylistMenu : AppCompatActivity() {
         }
 
         // FAB
-        binder.playlistAddButton.click {
+        binder.fab.click {
             val intent = Intent(this, PlaylistAddEdit::class.java)
             startActivityForResult(intent, MOD_ADD_REQUEST)
         }
@@ -242,6 +242,8 @@ class PlaylistMenu : AppCompatActivity() {
     }
 
     private fun updateList() {
+        playlistAdapter.onSwap(null) // Stop Flicker
+
         val list = mutableListOf<PlaylistItem>()
         mediaPath = PrefManager.mediaPath
         val browserItem = PlaylistItem(
@@ -250,22 +252,32 @@ class PlaylistMenu : AppCompatActivity() {
             "Files in $mediaPath"
         )
         list.add(browserItem)
+
         for (name in PlaylistUtils.listNoSuffix()) {
             val item = PlaylistItem(
                 PlaylistItem.TYPE_PLAYLIST,
                 name,
                 Playlist.readComment(this, name)
             )
-            item.imageRes = R.drawable.ic_list
             list.add(item)
         }
+
+        // TOOD testing
+        for (i in 0..1000) {
+            val item = PlaylistItem(
+                PlaylistItem.TYPE_PLAYLIST,
+                "z$i",
+                "Mlem $i"
+            )
+            list.add(item)
+        }
+
         PlaylistUtils.renumberIds(playlistAdapter.getItems())
 
         playlistAdapter.onSwap(list)
     }
 
     private fun addPlaylist(data: Intent?) {
-
         if (data == null) {
             toast("Couldn't add playlist")
             return

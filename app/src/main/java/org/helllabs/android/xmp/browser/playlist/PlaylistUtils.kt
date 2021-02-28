@@ -1,10 +1,12 @@
 package org.helllabs.android.xmp.browser.playlist
 
 import android.app.Activity
-import android.app.ProgressDialog
 import java.io.File
 import java.io.IOException
 import java.util.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp.testModule
 import org.helllabs.android.xmp.preferences.Preferences
@@ -32,8 +34,8 @@ object PlaylistUtils {
         }
         if (list.isNotEmpty()) {
             Playlist.addToList(activity, playlistName, list)
-            if (hasInvalid) {
-                activity.runOnUiThread {
+            activity.runOnUiThread { // Can't toast on a thread that has not called Looper.prepare()
+                if (hasInvalid) {
                     if (list.size > 1) {
                         activity.toast(R.string.msg_only_valid_files_added)
                     } else {
@@ -46,18 +48,10 @@ object PlaylistUtils {
     }
 
     fun filesToPlaylist(activity: Activity, fileList: List<String>, playlistName: String) {
-        val progressDialog = ProgressDialog.show(
-            activity,
-            "Please wait",
-            "Scanning module files...",
-            true
-        )
-        object : Thread() {
-            override fun run() {
-                addFiles(activity, fileList, playlistName)
-                progressDialog.dismiss()
-            }
-        }.start()
+        activity.toast("Please wait, adding files...")
+        GlobalScope.launch(Dispatchers.IO) {
+            addFiles(activity, fileList, playlistName)
+        }
     }
 
     fun filesToPlaylist(activity: Activity, filename: String, playlistName: String) {

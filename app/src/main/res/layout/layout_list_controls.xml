@@ -9,31 +9,19 @@
 
     <androidx.appcompat.widget.AppCompatImageButton
         android:id="@+id/control_button_play"
-        style="@style/PlayerButtons"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_gravity="center_vertical"
-        android:layout_weight="1"
+        style="@style/PlaylistButtons"
         android:contentDescription="@string/button_play_all"
         app:srcCompat="@drawable/ic_play" />
 
     <androidx.appcompat.widget.AppCompatImageButton
         android:id="@+id/control_button_loop"
-        style="@style/PlayerButtons"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_gravity="center_vertical"
-        android:layout_weight="1"
+        style="@style/PlaylistButtons"
         android:contentDescription="@string/button_toggle_loop"
         app:srcCompat="@drawable/ic_repeat_off" />
 
     <androidx.appcompat.widget.AppCompatImageButton
         android:id="@+id/control_button_shuffle"
-        style="@style/PlayerButtons"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_gravity="center_vertical"
-        android:layout_weight="1"
+        style="@style/PlaylistButtons"
         android:contentDescription="@string/button_toggle_shuffle"
         app:srcCompat="@drawable/ic_shuffle_off" />
 

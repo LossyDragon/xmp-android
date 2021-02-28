@@ -56,10 +56,6 @@
         <item name="android:textColor">@color/white</item>
     </style>
 
-    <style name="PreferencesTheme" parent="ThemeOverlay.AppCompat.Dark">
-        <item name="android:windowBackground">@color/black</item>
-    </style>
-
     <!-- Module Search Buttons -->
     <style name="SearchActivityButtons" parent="Widget.MaterialComponents.Button.Icon">
         <item name="android:textColor">@color/white</item>
@@ -94,11 +90,37 @@
         <item name="backgroundTint">@color/primary</item>
     </style>
 
+    <!-- Playlist Buttons -->
+    <style name="PlaylistButtons" parent="AppTheme">
+        <item name="android:scaleX">1.2</item>
+        <item name="android:scaleY">1.2</item>
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:background">?selectableItemBackgroundBorderless</item>
+    </style>
+
     <!--Player Buttons -->
     <style name="PlayerButtons" parent="AppTheme">
         <item name="android:scaleX">1.2</item>
         <item name="android:scaleY">1.2</item>
+        <item name="android:padding">12dp</item>
+        <item name="android:layout_marginStart">10dp</item>
+        <item name="android:layout_marginEnd">10dp</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
         <item name="android:background">?selectableItemBackgroundBorderless</item>
+    </style>
+
+    <!-- Player Info Line -->
+    <style name="PlayerInfoLine" parent="AppTheme">
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="singleLine">true</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:typeface">monospace</item>
     </style>
 
     <!-- Material dialog input fix -->

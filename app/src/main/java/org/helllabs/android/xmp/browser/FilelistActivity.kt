@@ -1,7 +1,5 @@
 package org.helllabs.android.xmp.browser
 
-import android.app.AlertDialog
-import android.content.DialogInterface
 import android.os.Bundle
 import android.view.*
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -30,7 +28,6 @@ import org.helllabs.android.xmp.util.InfoCache.deleteRecursive
 class FilelistActivity : BasePlaylistActivity() {
 
     private lateinit var binder: ActivityModlistBinding
-    private lateinit var mCrossfade: Crossfader
     private lateinit var mNavigation: FilelistNavigation
 
     override var isLoopMode = false
@@ -109,9 +106,6 @@ class FilelistActivity : BasePlaylistActivity() {
         binder.appbar.toolbarText.text = getString(R.string.browser_filelist_title)
 
         mNavigation = FilelistNavigation()
-
-        mCrossfade = Crossfader(this)
-        mCrossfade.setup(binder.modlistContent, binder.modlistSpinner)
 
         mPlaylistAdapter = PlaylistAdapter(LAYOUT_LIST, false)
         mPlaylistAdapter.onClick = { position -> onClick(position) }
@@ -320,6 +314,7 @@ class FilelistActivity : BasePlaylistActivity() {
     }
 
     private fun updateModlist() {
+        binder.modlistSpinner.show()
         mPlaylistAdapter.onSwap(null) // Stop flicker
 
         val modDir = mNavigation.currentDir ?: return
@@ -342,8 +337,8 @@ class FilelistActivity : BasePlaylistActivity() {
         list.sort()
         PlaylistUtils.renumberIds(list)
         mPlaylistAdapter.onSwap(list)
-        mCrossfade.crossfade()
 
+        binder.modlistSpinner.hide()
         binder.emptyMessage.apply {
             if (list.isEmpty()) show() else hide()
         }
@@ -378,24 +373,16 @@ class FilelistActivity : BasePlaylistActivity() {
             return
         }
 
-        val playlistSelection = IntArray(1)
-        val listener = DialogInterface.OnClickListener { _: DialogInterface?, which: Int ->
-            if (which == DialogInterface.BUTTON_POSITIVE && playlistSelection[0] >= 0) {
-                choice.execute(fileSelection, playlistSelection[0])
+        val playlists = mutableListOf<CharSequence>()
+        PlaylistUtils.listNoSuffix().forEach { playlists.add(it) }
+        MaterialDialog(this).show {
+            title(R.string.msg_select_playlist)
+            listItemsSingleChoice(items = playlists) { _, index, _ ->
+                choice.execute(fileSelection, index)
             }
+            positiveButton(R.string.ok)
+            negativeButton(R.string.cancel)
         }
-
-        AlertDialog.Builder(this).apply {
-            setTitle(R.string.msg_select_playlist)
-            setPositiveButton(R.string.ok, listener)
-            setNegativeButton(R.string.cancel, listener)
-            setSingleChoiceItems(
-                PlaylistUtils.listNoSuffix(),
-                0
-            ) { _: DialogInterface?, which: Int ->
-                playlistSelection[0] = which
-            }
-        }.show()
     }
 
     private fun clearCachedEntries(fileList: List<String>) {

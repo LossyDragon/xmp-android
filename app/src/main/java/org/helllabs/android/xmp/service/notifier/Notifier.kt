@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.NotificationManager.IMPORTANCE_LOW
 import android.app.PendingIntent
+import android.app.PendingIntent.FLAG_IMMUTABLE
 import android.app.PendingIntent.FLAG_UPDATE_CURRENT
 import android.app.Service
 import android.content.Context
@@ -19,6 +20,7 @@ import org.helllabs.android.xmp.player.PlayerActivity
 import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.service.utils.QueueManager
+import org.helllabs.android.xmp.util.isAtLeastM
 import org.helllabs.android.xmp.util.isAtLeastO
 import org.helllabs.android.xmp.util.isLessThanR
 
@@ -139,14 +141,23 @@ class Notifier(val service: PlayerService) {
         return String.format(Locale.US, "%d/%d", index + 1, queueManager!!.size())
     }
 
-    private fun makePendingIntent(intent: String): PendingIntent {
-        val pendingIntent = Intent().apply { action = intent }
-        return PendingIntent.getBroadcast(service, 669, pendingIntent, FLAG_UPDATE_CURRENT)
+    private fun makePendingIntent(action: String): PendingIntent {
+        val intent = Intent().apply { this.action = action }
+        return pendingIntent(intent, 669)
     }
 
     private fun getContentIntent(): PendingIntent {
         val intent = Intent(service, PlayerActivity::class.java)
-        return PendingIntent.getActivity(service, 0, intent, FLAG_UPDATE_CURRENT)
+        return pendingIntent(intent)
+    }
+
+    private fun pendingIntent(intent: Intent, requestCode: Int = 0): PendingIntent {
+        return PendingIntent.getBroadcast(
+            service,
+            requestCode,
+            intent,
+            if (isAtLeastM) FLAG_IMMUTABLE or FLAG_UPDATE_CURRENT else FLAG_UPDATE_CURRENT
+        )
     }
 
     @TargetApi(26)

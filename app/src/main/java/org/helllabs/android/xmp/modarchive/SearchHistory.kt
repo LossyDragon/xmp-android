@@ -75,7 +75,7 @@ class SearchHistory : AppCompatActivity(), HistoryAdapter.HistoryAdapterListener
     private fun refreshList() {
         historyAdapter.submitList(getHistory().sortedBy { it.visitDate })
 
-        if (historyAdapter.historySet.isEmpty()) {
+        if (historyAdapter.historyList.isEmpty()) {
             binder.resultList.hide()
             binder.errorLayout.layout.show()
             binder.errorLayout.message.text = getString(R.string.history_no_items)

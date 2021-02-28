@@ -6,7 +6,8 @@
     android:layout_height="match_parent"
     android:layout_weight="1.0"
     android:gravity="top"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    tools:context=".browser.FilelistActivity">
 
     <include
         android:id="@+id/appbar"
@@ -57,56 +58,25 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1.0">
+        android:layout_weight="1">
 
-        <LinearLayout
-            android:id="@+id/modlist_content"
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/swipeContainer"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="top"
-            android:orientation="vertical">
+            android:layout_height="match_parent">
 
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-                    android:id="@+id/swipeContainer"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent">
-
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/modlist_listview"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        app:fastScrollEnabled="true"
-                        app:fastScrollHorizontalThumbDrawable="@drawable/thumb_drawable"
-                        app:fastScrollHorizontalTrackDrawable="@drawable/thumb_line_drawable"
-                        app:fastScrollVerticalThumbDrawable="@drawable/thumb_drawable"
-                        app:fastScrollVerticalTrackDrawable="@drawable/thumb_line_drawable"
-                        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
-
-                </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
-
-                <TextView
-                    android:id="@+id/empty_message"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center"
-                    android:text="@string/msg_empty_playlist"
-                    android:textSize="24sp"
-                    android:visibility="gone"
-                    tools:visibility="visible" />
-
-            </FrameLayout>
-
-            <TextView
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/modlist_listview"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:gravity="top"
-                android:text="@string/msg_no_modules" />
+                app:fastScrollEnabled="true"
+                app:fastScrollHorizontalThumbDrawable="@drawable/thumb_drawable"
+                app:fastScrollHorizontalTrackDrawable="@drawable/thumb_line_drawable"
+                app:fastScrollVerticalThumbDrawable="@drawable/thumb_drawable"
+                app:fastScrollVerticalTrackDrawable="@drawable/thumb_line_drawable"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 
-        </LinearLayout>
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
         <ProgressBar
             android:id="@+id/modlist_spinner"
@@ -114,6 +84,16 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center" />
+
+        <TextView
+            android:id="@+id/empty_message"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="@string/msg_empty_directory"
+            android:textSize="24sp"
+            android:visibility="gone"
+            tools:visibility="visible" />
 
     </FrameLayout>
 

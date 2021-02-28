@@ -4,7 +4,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.res.ResourcesCompat
 import java.util.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.databinding.ActivitySearchErrorBinding
@@ -47,9 +46,7 @@ class SearchError : AppCompatActivity(), Runnable {
             }
         }
 
-        val font = ResourcesCompat.getFont(applicationContext, R.font.font_topaz_plus_a500)
         binder.errorMessage.text = message
-        binder.errorMessage.typeface = font
     }
 
     override fun onResume() {

@@ -14,7 +14,10 @@ class PlaylistItem(
     // Accessors
     var id = 0
     var file: File? = null
+
     var imageRes = 0
+        private set
+
     val filename: String
         get() = file!!.name
 

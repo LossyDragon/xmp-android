@@ -23,12 +23,15 @@
         android:label="@string/app_name"
         android:requestLegacyExternalStorage="true"
         android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="false"
         android:theme="@style/AppTheme"
-        tools:ignore="AllowBackup">
+        tools:ignore="AllowBackup"
+        tools:replace="supportsRtl">
 
         <activity
             android:name=".browser.PlaylistMenu"
             android:configChanges="keyboardHidden|orientation|screenSize"
+            android:exported="true"
             android:theme="@style/AppTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -45,6 +48,7 @@
         <activity
             android:name=".player.PlayerActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
+            android:exported="true"
             android:launchMode="singleTop"
             android:theme="@style/AppTheme">
             <intent-filter>
@@ -190,6 +194,7 @@
 
         <activity
             android:name=".preferences.about.ListFormats"
+            android:exported="false"
             android:parentActivityName=".preferences.Preferences"
             android:theme="@style/AppTheme">
             <intent-filter>
@@ -201,6 +206,7 @@
 
         <activity
             android:name=".preferences.about.About"
+            android:exported="false"
             android:parentActivityName=".preferences.Preferences"
             android:theme="@style/AppTheme">
             <intent-filter>
@@ -212,22 +218,22 @@
 
         <service android:name=".service.PlayerService" />
 
-<!--        <receiver-->
-<!--            android:name=".service.receiver.MediaButtonsReceiver"-->
-<!--            android:enabled="true">-->
-<!--            <intent-filter android:priority="2147483647">-->
-<!--                <action android:name="android.intent.action.MEDIA_BUTTON" />-->
-<!--            </intent-filter>-->
-<!--        </receiver>-->
+        <!--        <receiver-->
+        <!--            android:name=".service.receiver.MediaButtonsReceiver"-->
+        <!--            android:enabled="true">-->
+        <!--            <intent-filter android:priority="2147483647">-->
+        <!--                <action android:name="android.intent.action.MEDIA_BUTTON" />-->
+        <!--            </intent-filter>-->
+        <!--        </receiver>-->
 
-<!--        <receiver-->
-<!--            android:name=".service.receiver.RemoteControlReceiver"-->
-<!--            android:enabled="true">-->
-<!--            <intent-filter>-->
-<!--                <action android:name="android.intent.action.MEDIA_BUTTON" />-->
-<!--            </intent-filter>-->
-<!--        </receiver>-->
-<!--        <receiver android:name=".service.receiver.NotificationActionReceiver" />-->
+        <!--        <receiver-->
+        <!--            android:name=".service.receiver.RemoteControlReceiver"-->
+        <!--            android:enabled="true">-->
+        <!--            <intent-filter>-->
+        <!--                <action android:name="android.intent.action.MEDIA_BUTTON" />-->
+        <!--            </intent-filter>-->
+        <!--        </receiver>-->
+        <!--        <receiver android:name=".service.receiver.NotificationActionReceiver" />-->
 
     </application>
 

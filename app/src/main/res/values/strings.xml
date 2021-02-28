@@ -143,6 +143,7 @@
     <string name="msg_loop_off">Loop off</string>
     <string name="msg_only_valid_files_sent">Only valid files were sent to player</string>
     <string name="msg_only_valid_files_added">Only valid files were added to playlist</string>
+    <string name="msg_empty_directory">Empty Directory</string>
 
     <string name="button_parent_dir">Parent directory</string>
     <string name="button_play_all">Play all</string>

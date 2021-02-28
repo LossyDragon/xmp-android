@@ -43,21 +43,20 @@ class FilelistNavigation {
      * @param file The name of the directory to change to.
      * @return True if current directory was changed.
      */
-    fun changeDirectory(file: File): Boolean {
-        var dirFile: File = file
-
-        if (!file.exists())
+    fun changeDirectory(file: File?): Boolean {
+        var dirFile: File? = file
+        if (dirFile == null) {
             return false
-
+        }
         val isDir = dirFile.isDirectory
         if (isDir) {
             if (dirFile.name == "..") {
-                dirFile = dirFile.parentFile.parentFile
+                dirFile = dirFile.parentFile!!.parentFile
                 if (dirFile == null) {
                     dirFile = File("/")
                 }
             }
-            currentDir = file
+            currentDir = dirFile
         }
         return isDir
     }

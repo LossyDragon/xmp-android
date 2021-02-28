@@ -7,7 +7,6 @@ import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
-import android.util.TypedValue
 import android.view.Display
 import android.view.Menu
 import android.view.MenuItem
@@ -79,8 +78,8 @@ class PlayerActivity : AppCompatActivity() {
     private lateinit var patternViewer: Viewer
     private lateinit var sheet: PlayerSheet
     private lateinit var viewer: Viewer
-    private val infoName = arrayOfNulls<TextView>(2)
-    private val infoType = arrayOfNulls<TextView>(2)
+    private lateinit var infoName: Array<TextView>
+    private lateinit var infoType: Array<TextView>
 
     // Update Runnable Loops
     private var oldSpd = -1
@@ -359,17 +358,8 @@ class PlayerActivity : AppCompatActivity() {
             }
         }
 
-        infoName[0] = binder.infoName0
-        infoType[0] = binder.infoType0
-        infoName[1] = binder.infoName1
-        infoType[1] = binder.infoType1
-        val font = ResourcesCompat.getFont(applicationContext, R.font.font_michroma)
-        for (i in 0..1) {
-            infoName[i]!!.typeface = font
-            infoName[i]!!.includeFontPadding = false
-            infoType[i]!!.typeface = font
-            infoType[i]!!.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12f)
-        }
+        infoName = arrayOf(binder.infoName0, binder.infoName1)
+        infoType = arrayOf(binder.infoType0, binder.infoType1)
 
         binder.controlsSheet.apply {
             buttonPlay.setImageResource(R.drawable.ic_pause) // To be removed when animated.
@@ -616,11 +606,12 @@ class PlayerActivity : AppCompatActivity() {
     private fun onLoopButton() {
         synchronized(playerLock) {
             if (isBound) {
-                if (modPlayer!!.toggleLoop()) {
-                    binder.controlsSheet.buttonLoop.setImageResource(R.drawable.ic_repeat_one_on)
+                val loopIcon = if (modPlayer!!.toggleLoop()) {
+                    R.drawable.ic_repeat_one_on
                 } else {
-                    binder.controlsSheet.buttonLoop.setImageResource(R.drawable.ic_repeat_one_off)
+                    R.drawable.ic_repeat_one_off
                 }
+                binder.controlsSheet.buttonLoop.setImageResource(loopIcon)
             }
         }
     }
@@ -629,8 +620,13 @@ class PlayerActivity : AppCompatActivity() {
         synchronized(playerLock) {
             logD("Play/pause button pressed (paused=$paused)")
             if (isBound) {
-                modPlayer!!.mediaSession.controller.transportControls.pause()
-                if (paused) unpause() else pause()
+                if (paused) {
+                    modPlayer!!.mediaSession.controller.transportControls.play()
+                    unpause()
+                } else {
+                    modPlayer!!.mediaSession.controller.transportControls.pause()
+                    pause()
+                }
             }
         }
     }
@@ -741,8 +737,8 @@ class PlayerActivity : AppCompatActivity() {
                 binder.controlsSheet.seekbar.max = time / 100
                 binder.controlsSheet.seekbar.progress = playTime
                 flipperPage = (flipperPage + 1) % 2
-                infoName[flipperPage]!!.text = name
-                infoType[flipperPage]!!.text = type
+                infoName[flipperPage].text = name
+                infoType[flipperPage].text = type
 
                 if (skipToPrevious) {
                     binder.titleFlipper.setInAnimation(this, R.anim.slide_in_left_slow)

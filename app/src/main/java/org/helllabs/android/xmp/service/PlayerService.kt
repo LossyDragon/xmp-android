@@ -338,7 +338,6 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
     fun add(fileList: List<String>) {
         queue!!.add(fileList)
         updateNotification()
-        // notifier.notification("Added to play queue");
     }
 
     fun toggleLoop(): Boolean {
@@ -568,10 +567,10 @@ class PlayerService : Service(), OnAudioFocusChangeListener {
                 } else {
                     Xmp.INTERP_LINEAR
                 }
-
                 if (!PrefManager.interpolate) {
                     interpType = Xmp.INTERP_NEAREST
                 }
+
                 Xmp.startPlayer(sampleRate)
 
                 if (ducking) {
