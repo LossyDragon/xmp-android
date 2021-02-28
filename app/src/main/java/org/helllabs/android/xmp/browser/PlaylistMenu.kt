@@ -262,16 +262,6 @@ class PlaylistMenu : AppCompatActivity() {
             list.add(item)
         }
 
-        // TOOD testing
-        for (i in 0..1000) {
-            val item = PlaylistItem(
-                PlaylistItem.TYPE_PLAYLIST,
-                "z$i",
-                "Mlem $i"
-            )
-            list.add(item)
-        }
-
         PlaylistUtils.renumberIds(playlistAdapter.getItems())
 
         playlistAdapter.onSwap(list)
