@@ -4,9 +4,6 @@ import android.app.Activity
 import java.io.File
 import java.io.IOException
 import java.util.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp.testModule
 import org.helllabs.android.xmp.preferences.Preferences
@@ -49,9 +46,7 @@ object PlaylistUtils {
 
     fun filesToPlaylist(activity: Activity, fileList: List<String>, playlistName: String) {
         activity.toast("Please wait, adding files...")
-        GlobalScope.launch(Dispatchers.IO) {
-            addFiles(activity, fileList, playlistName)
-        }
+        addFiles(activity, fileList, playlistName)
     }
 
     fun filesToPlaylist(activity: Activity, filename: String, playlistName: String) {

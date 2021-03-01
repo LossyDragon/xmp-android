@@ -2,38 +2,38 @@ package org.helllabs.android.xmp.browser
 
 import android.os.Bundle
 import android.view.*
+import androidx.activity.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.list.listItemsSingleChoice
 import java.io.File
-import java.text.DateFormat
 import java.util.*
+import kotlinx.coroutines.flow.collect
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter
 import org.helllabs.android.xmp.browser.playlist.PlaylistAdapter.Companion.LAYOUT_LIST
 import org.helllabs.android.xmp.browser.playlist.PlaylistItem
-import org.helllabs.android.xmp.browser.playlist.PlaylistItem.Companion.TYPE_DIRECTORY
 import org.helllabs.android.xmp.browser.playlist.PlaylistUtils
 import org.helllabs.android.xmp.databinding.ActivityModlistBinding
 import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.util.*
 import org.helllabs.android.xmp.util.FileUtils.basename
-import org.helllabs.android.xmp.util.InfoCache.clearCache
 import org.helllabs.android.xmp.util.InfoCache.delete
 import org.helllabs.android.xmp.util.InfoCache.deleteRecursive
 
 // TODO: Replace current path with bread crumb trails
-// TODO: Implement MVI/Coroutines, dir parsing slow.
 class FilelistActivity : BasePlaylistActivity() {
 
     private lateinit var binder: ActivityModlistBinding
     private lateinit var mNavigation: FilelistNavigation
+    private val viewModel: FilelistViewModel by viewModels()
 
     override var isLoopMode = false
     override var isShuffleMode = false
     override val allFiles: List<String>
-        get() = recursiveList(mNavigation.currentDir)
+        get() = viewModel.recursiveList(mNavigation.currentDir)
 
     // region [REGION] PlaylistChoice
     /**
@@ -50,7 +50,7 @@ class FilelistActivity : BasePlaylistActivity() {
         override fun execute(fileSelection: Int, playlistSelection: Int) {
             PlaylistUtils.filesToPlaylist(
                 this@FilelistActivity,
-                recursiveList(mNavigation.currentDir),
+                viewModel.recursiveList(mNavigation.currentDir),
                 PlaylistUtils.getPlaylistName(playlistSelection)
             )
         }
@@ -63,7 +63,7 @@ class FilelistActivity : BasePlaylistActivity() {
         override fun execute(fileSelection: Int, playlistSelection: Int) {
             PlaylistUtils.filesToPlaylist(
                 this@FilelistActivity,
-                recursiveList(mPlaylistAdapter.getFile(fileSelection)),
+                viewModel.recursiveList(mPlaylistAdapter.getFile(fileSelection)),
                 PlaylistUtils.getPlaylistName(playlistSelection)
             )
         }
@@ -112,6 +112,7 @@ class FilelistActivity : BasePlaylistActivity() {
         mPlaylistAdapter.onLongClick = { position -> onLongClick(position) }
 
         binder.apply {
+            upButton.click { parentDir() }
             modlistListview.apply {
                 adapter = mPlaylistAdapter
                 setHasFixedSize(true)
@@ -119,7 +120,6 @@ class FilelistActivity : BasePlaylistActivity() {
                     DividerItemDecoration(this@FilelistActivity, LinearLayoutManager.HORIZONTAL)
                 )
             }
-            upButton.click { parentDir() }
             currentPath.apply {
                 val textColor = currentTextColor
                 setOnTouchListener { view, event ->
@@ -140,33 +140,41 @@ class FilelistActivity : BasePlaylistActivity() {
         val modDir = File(PrefManager.mediaPath)
         if (modDir.isDirectory) {
             mNavigation.startNavigation(modDir)
-            updateModlist()
+            viewModel.updateModList(mNavigation.currentDir)
         } else {
             pathNotFound(PrefManager.mediaPath)
         }
 
-        isShuffleMode = readShuffleModePref()
-        isLoopMode = readLoopModePref()
+        isShuffleMode = PrefManager.getBooleanPref(OPTIONS_SHUFFLE_MODE, DEFAULT_SHUFFLE_MODE)
+        isLoopMode = PrefManager.getBooleanPref(OPTIONS_LOOP_MODE, DEFAULT_LOOP_MODE)
 
         // Swipe
         setSwipeRefresh(binder.swipeContainer, binder.modlistListview)
 
         // Play buttons
         setupButtons(binder.listControls)
+
+        lifecycleScope.launchWhenStarted {
+            viewModel.listState.collect {
+                logD("List State: $it")
+                when (it) {
+                    FilelistViewModel.FilelistState.None -> Unit // Do nothing
+                    FilelistViewModel.FilelistState.Empty -> onEmpty()
+                    FilelistViewModel.FilelistState.Load -> onLoad()
+                    is FilelistViewModel.FilelistState.AllFiles -> update()
+                    is FilelistViewModel.FilelistState.Error -> onError(it.error)
+                    is FilelistViewModel.FilelistState.Loaded -> onLoaded(it.list)
+                }
+            }
+        }
     }
 
     public override fun onDestroy() {
         super.onDestroy()
 
-        var saveModes = false
-        if (isShuffleMode != readShuffleModePref() || isLoopMode != readLoopModePref())
-            saveModes = true
-
-        if (saveModes) {
-            logI("Save new file list preferences")
-            PrefManager.setBooleanPref(OPTIONS_SHUFFLE_MODE, isShuffleMode)
-            PrefManager.setBooleanPref(OPTIONS_LOOP_MODE, isLoopMode)
-        }
+        logI("Save file list preferences")
+        PrefManager.setBooleanPref(OPTIONS_SHUFFLE_MODE, isShuffleMode)
+        PrefManager.setBooleanPref(OPTIONS_LOOP_MODE, isLoopMode)
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
@@ -183,7 +191,7 @@ class FilelistActivity : BasePlaylistActivity() {
         val file = mPlaylistAdapter.getFile(position)
         if (mNavigation.changeDirectory(file)) {
             mNavigation.saveListPosition(binder.modlistListview)
-            updateModlist()
+            viewModel.updateModList(mNavigation.currentDir)
         } else {
             onItemClick(mPlaylistAdapter, position)
         }
@@ -202,10 +210,11 @@ class FilelistActivity : BasePlaylistActivity() {
             MaterialDialog(this).show {
                 title(text = "This directory")
                 listItemsSingleChoice(items = items) { _, index, _ ->
+
                     when (index) {
                         0 -> choosePlaylist(position, addRecursiveToPlaylistChoice)
-                        1 -> addToQueue(recursiveList(mPlaylistAdapter.getFile(position)))
-                        2 -> playModule(recursiveList(mPlaylistAdapter.getFile(position)))
+                        1 -> addToQueue(viewModel.recursiveList(mPlaylistAdapter.getFile(position)))
+                        2 -> playModule(viewModel.recursiveList(mPlaylistAdapter.getFile(position)))
                         3 -> deleteDirectory(position)
                     }
                 }
@@ -235,7 +244,7 @@ class FilelistActivity : BasePlaylistActivity() {
                                 "Are you sure you want to delete ${basename(deleteName)}?"
                             ) {
                                 if (delete(deleteName)) {
-                                    updateModlist()
+                                    viewModel.updateModList(mNavigation.currentDir)
                                     toast(R.string.msg_file_deleted)
                                 } else {
                                     toast(R.string.msg_cant_delete)
@@ -264,12 +273,12 @@ class FilelistActivity : BasePlaylistActivity() {
                 when (index) {
                     0 -> choosePlaylist(0, addFileListToPlaylistChoice)
                     1 -> choosePlaylist(0, addCurrentRecursiveChoice)
-                    2 -> addToQueue(mPlaylistAdapter.filenameList)
+                    2 -> addToQueue(viewModel.recursiveList(mNavigation.currentDir))
                     3 -> {
                         PrefManager.mediaPath = mNavigation.currentDir!!.path
                         toast("Set as default module path")
                     }
-                    4 -> clearCachedEntries(mPlaylistAdapter.filenameList)
+                    4 -> viewModel.clearCachedEntries(mPlaylistAdapter.filenameList)
                 }
             }
             positiveButton(R.string.select)
@@ -277,7 +286,7 @@ class FilelistActivity : BasePlaylistActivity() {
     }
 
     override fun update() {
-        updateModlist()
+        viewModel.updateModList(mNavigation.currentDir)
     }
 
     private fun pathNotFound(mediaPath: String) {
@@ -290,7 +299,7 @@ class FilelistActivity : BasePlaylistActivity() {
                     generalError("Error creating directory $mediaPath.")
                 }
                 mNavigation.startNavigation(File(mediaPath))
-                updateModlist()
+                viewModel.updateModList(mNavigation.currentDir)
             }
             negativeButton(R.string.cancel) {
                 finish()
@@ -298,63 +307,53 @@ class FilelistActivity : BasePlaylistActivity() {
         }
     }
 
-    private fun readShuffleModePref(): Boolean {
-        return PrefManager.getBooleanPref(OPTIONS_SHUFFLE_MODE, DEFAULT_SHUFFLE_MODE)
-    }
-
-    private fun readLoopModePref(): Boolean {
-        return PrefManager.getBooleanPref(OPTIONS_LOOP_MODE, DEFAULT_LOOP_MODE)
-    }
-
     private fun parentDir() {
         if (mNavigation.parentDir()) {
-            updateModlist()
+            viewModel.updateModList(mNavigation.currentDir)
             mNavigation.restoreListPosition(binder.modlistListview)
         }
     }
 
-    private fun updateModlist() {
-        binder.modlistSpinner.show()
+    private fun onLoad() {
         mPlaylistAdapter.onSwap(null) // Stop flicker
+        binder.modlistSpinner.show()
+        binder.currentPath.text = mNavigation.currentDir!!.path
+    }
 
-        val modDir = mNavigation.currentDir ?: return
-        binder.currentPath.text = modDir.path
-        val list = mutableListOf<PlaylistItem>()
-
-        modDir.listFiles()?.forEach { file ->
-            val item: PlaylistItem = if (file.isDirectory) {
-                PlaylistItem(TYPE_DIRECTORY, file.name, getString(R.string.directory))
-            } else {
-                val date = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM)
-                    .format(file.lastModified())
-                val comment = date + String.format(" (%d kB)", file.length() / 1024)
-                PlaylistItem(PlaylistItem.TYPE_FILE, file.name, comment)
-            }
-            item.file = file
-            list.add(item)
+    private fun onEmpty() {
+        binder.apply {
+            modlistSpinner.hide()
+            emptyMessage.show()
+            emptyMessage.text = getString(R.string.msg_empty_directory)
         }
+    }
 
-        list.sort()
-        PlaylistUtils.renumberIds(list)
+    private fun onLoaded(list: List<PlaylistItem>) {
+        binder.apply {
+            modlistSpinner.hide()
+            emptyMessage.hide()
+        }
         mPlaylistAdapter.onSwap(list)
+    }
 
-        binder.modlistSpinner.hide()
-        binder.emptyMessage.apply {
-            if (list.isEmpty()) show() else hide()
+    private fun onError(error: String?) {
+        binder.apply {
+            modlistSpinner.hide()
+            emptyMessage.show()
+            emptyMessage.text = error ?: getString(R.string.msg_unknown_error)
         }
     }
 
     private fun deleteDirectory(position: Int) {
         val deleteName = mPlaylistAdapter.getFilename(position)
         val mediaPath = PrefManager.mediaPath
+        val title = getString(R.string.dialog_title_delete_dir)
+        val message = getString(R.string.dialog_msg_delete_dir, basename(deleteName))
+
         if (deleteName.startsWith(mediaPath) && deleteName != mediaPath) {
-            yesNoDialog(
-                "Delete directory",
-                "Are you sure you want to delete directory" +
-                    " \"${basename(deleteName)}\" and all its contents?"
-            ) {
+            yesNoDialog(title, message) {
                 if (deleteRecursive(deleteName)) {
-                    updateModlist()
+                    viewModel.updateModList(mNavigation.currentDir)
                     toast(getString(R.string.msg_dir_deleted))
                 } else {
                     toast(getString(R.string.msg_cant_delete_dir))
@@ -383,27 +382,6 @@ class FilelistActivity : BasePlaylistActivity() {
             positiveButton(R.string.ok)
             negativeButton(R.string.cancel)
         }
-    }
-
-    private fun clearCachedEntries(fileList: List<String>) {
-        fileList.forEach {
-            clearCache(it)
-        }
-    }
-
-    private fun recursiveList(file: File?): List<String> {
-        val list = mutableListOf<String>()
-
-        if (file == null) {
-            return list
-        }
-
-        file.walkTopDown().forEach {
-            if (it.isFile)
-                list.add(it.path)
-        }
-
-        return list
     }
 
     companion object {

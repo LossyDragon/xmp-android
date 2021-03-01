@@ -30,7 +30,6 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     private var mModPlayer: PlayerService? = null
     private var mShowToasts = false
     private var mAddList: MutableList<String>? = null
-    private var refresh = false
 
     protected lateinit var mPlaylistAdapter: PlaylistAdapter
     protected abstract var isShuffleMode: Boolean
@@ -74,9 +73,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
 
     public override fun onResume() {
         super.onResume()
-        if (refresh) {
-            update()
-        }
+        update()
     }
 
     override fun onDestroy() {
@@ -88,12 +85,8 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         logI("Activity result $requestCode,$resultCode")
         when (requestCode) {
-            SETTINGS_REQUEST -> {
-                update()
-                mShowToasts = PrefManager.showToast
-            }
+            SETTINGS_REQUEST -> mShowToasts = PrefManager.showToast
             PLAY_MOD_REQUEST -> if (resultCode != RESULT_OK) update()
-            SEARCH_REQUEST -> refresh = true
         }
     }
 
@@ -120,7 +113,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
             }
             R.id.menu_download -> {
                 val intent = Intent(this, Search::class.java)
-                startActivityForResult(intent, SEARCH_REQUEST)
+                startActivity(intent)
             }
         }
         return super.onOptionsItemSelected(item)
@@ -247,6 +240,12 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         val realList = mutableListOf<String>()
         val invalid = mutableListOf<String>()
 
+        if (list.isEmpty()) {
+            toast("Add to Queue empty list")
+            logW("Add to Queue empty list")
+            return
+        }
+
         list.forEach {
             if (testModule(it)) {
                 realList.add(it)
@@ -274,6 +273,5 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     companion object {
         private const val SETTINGS_REQUEST = 45
         private const val PLAY_MOD_REQUEST = 669
-        private const val SEARCH_REQUEST = 47
     }
 }

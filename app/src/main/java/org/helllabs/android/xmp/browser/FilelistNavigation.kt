@@ -19,23 +19,12 @@ class FilelistNavigation {
         private set
 
     /**
-     * To restore list position when traversing directories.
+     * Check whether we're at the file system root.
+     *
+     * @return True if we're at the file system root.
      */
-    private class ListState(recyclerView: RecyclerView?) {
-        private val index: Int
-        private val top: Int
-        fun restoreState(recyclerView: RecyclerView?) {
-            val layoutManager = recyclerView!!.layoutManager as LinearLayoutManager?
-            recyclerView.post { layoutManager!!.scrollToPositionWithOffset(index, top) }
-        }
-
-        init {
-            val layoutManager = recyclerView!!.layoutManager as LinearLayoutManager?
-            index = layoutManager!!.findFirstVisibleItemPosition()
-            val view = recyclerView.getChildAt(0)
-            top = view?.top ?: 0
-        }
-    }
+    val isAtTopDir: Boolean
+        get() = mPathStack.isEmpty()
 
     /**
      * Change to the specified directory.
@@ -108,10 +97,22 @@ class FilelistNavigation {
     }
 
     /**
-     * Check whether we're at the file system root.
-     *
-     * @return True if we're at the file system root.
+     * To restore list position when traversing directories.
      */
-    val isAtTopDir: Boolean
-        get() = mPathStack.isEmpty()
+    private class ListState(recyclerView: RecyclerView?) {
+        private val index: Int
+        private val top: Int
+
+        init {
+            val layoutManager = recyclerView!!.layoutManager as LinearLayoutManager?
+            index = layoutManager!!.findFirstVisibleItemPosition()
+            val view = recyclerView.getChildAt(0)
+            top = view?.top ?: 0
+        }
+
+        fun restoreState(recyclerView: RecyclerView?) {
+            val layoutManager = recyclerView!!.layoutManager as LinearLayoutManager?
+            recyclerView.post { layoutManager!!.scrollToPositionWithOffset(index, top) }
+        }
+    }
 }
