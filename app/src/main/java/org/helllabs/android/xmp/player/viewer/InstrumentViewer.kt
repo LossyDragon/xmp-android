@@ -4,19 +4,17 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
 import android.os.RemoteException
+import androidx.core.graphics.ColorUtils
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
+import org.helllabs.android.xmp.util.color
 import org.helllabs.android.xmp.util.logD
 import org.helllabs.android.xmp.util.logE
 
 @SuppressLint("ViewConstructor")
-class InstrumentViewer(context: Context, background: Int) : Viewer(context, background) {
+class InstrumentViewer(context: Context, val background: Int) : Viewer(context, background) {
 
-    // TODO: Programmatically calc this from primary to background, with more steps.
-    // Theme the bar paint from background up to the 'accent' color
-    private var back = String.format("#%06X", 0xFFFFFF and background)
-    private val barTheme =
-        arrayOf(back, "#14264a", "#1a305d", "#1f396f", "#244382", "#294c94", "#2e56a7", "#3460ba")
+    private val startBlue: Int = resources.color(R.color.accent)
 
     private lateinit var insName: Array<String>
     private val barPaint = arrayListOf<Paint>()
@@ -36,11 +34,14 @@ class InstrumentViewer(context: Context, background: Int) : Viewer(context, back
     private var vol: Int = 0
 
     init {
-        for (i in 0..7) {
-            val value = 120 + 10 * i
+        // White text volume shades
+        for (i in 0..10) {
+            val value: Float = (i / 10f)
+            logD("Text Value $i: $value")
             insPaint.add(
                 Paint().apply {
-                    setARGB(255, value, value, value)
+                    color = ColorUtils.blendARGB(Color.GRAY, Color.WHITE, value)
+                    alpha = 255
                     typeface = Typeface.MONOSPACE
                     textSize = fontSize.toFloat()
                     isAntiAlias = true
@@ -48,12 +49,13 @@ class InstrumentViewer(context: Context, background: Int) : Viewer(context, back
             )
         }
 
-        for (i in 0..7) {
-            // val value = 15 * i
+        // Blue bar volume shades
+        for (i in 10 downTo 0) {
+            val value: Float = (i / 10f)
+            logD("Bar Value $i: $value")
             barPaint.add(
                 Paint().apply {
-                    // setARGB(255, (value / 4), (value / 2), value)
-                    color = Color.parseColor(barTheme[i])
+                    color = ColorUtils.blendARGB(startBlue, background, value)
                     alpha = 255
                 }
             )
@@ -108,10 +110,11 @@ class InstrumentViewer(context: Context, background: Int) : Viewer(context, back
                 }
                 if (info!!.instruments[j] == i) {
                     drawX = 3 * fontWidth + drawWidth * j
-                    vol = info.volumes[j] / 8
+                    vol = info.volumes[j] / 6
 
-                    if (vol > 7) {
-                        vol = 7
+                    // Clamp
+                    if (vol > 60) {
+                        vol = 60
                     }
 
                     // TODO: Center or pad bars a bit more
