@@ -176,6 +176,9 @@ data class Module(
     @Element
     var artistInfo: ArtistInfo? = null
 ) {
+    fun getBytesFormatted(): Int =
+        bytes?.div(1024) ?: 0
+
     fun getArtist(): String =
         artistInfo?.artist?.alias ?: artistInfo?.guessed_artist?.alias ?: "unknown"
 

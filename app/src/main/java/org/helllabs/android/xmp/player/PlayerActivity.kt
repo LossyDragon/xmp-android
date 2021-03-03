@@ -5,7 +5,6 @@ import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
-import android.os.Handler
 import android.os.IBinder
 import android.view.Display
 import android.view.Menu
@@ -13,12 +12,14 @@ import android.view.MenuItem
 import android.view.WindowManager
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.OutputStream
+import java.util.concurrent.Executor
 import javax.inject.Inject
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
@@ -48,8 +49,8 @@ class PlayerActivity : AppCompatActivity() {
     @Inject
     lateinit var eventBus: EventBus
 
-    private lateinit var display: Display
-    private val handler = Handler()
+    private lateinit var playerDisplay: Display
+    private lateinit var executor: Executor
     private val modVars = IntArray(10)
     private val playerLock = Any() // for sync
     private val seqVars = IntArray(16) // this is MAX_SEQUENCES defined in common.h
@@ -327,7 +328,14 @@ class PlayerActivity : AppCompatActivity() {
 
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
         window.statusBarColor = ResourcesCompat.getColor(resources, R.color.primary, null)
-        display = (getSystemService(WINDOW_SERVICE) as WindowManager).defaultDisplay!!
+
+        executor = ContextCompat.getMainExecutor(this)
+        playerDisplay = if (isAtLeastR) {
+            display!!
+        } else {
+            @Suppress("DEPRECATION")
+            (getSystemService(WINDOW_SERVICE) as WindowManager).defaultDisplay!!
+        }
 
         eventBus.register(this)
         sheet = PlayerSheet(this)
@@ -465,7 +473,7 @@ class PlayerActivity : AppCompatActivity() {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        viewer.setRotation(display.rotation)
+        viewer.setRotation(playerDisplay.rotation)
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -588,7 +596,7 @@ class PlayerActivity : AppCompatActivity() {
                 }
                 binder.viewerLayout.addView(viewer)
                 viewer.setup(modVars)
-                viewer.setRotation(display.rotation)
+                viewer.setRotation(playerDisplay.rotation)
             }
         }
     }
@@ -685,7 +693,7 @@ class PlayerActivity : AppCompatActivity() {
                 Xmp.getModVars(modVars)
             }
 
-            handler.post {
+            executor.execute {
                 val time = modVars[0]
                 totalTime = time / 1000
                 binder.controlsSheet.seekbar.progress = 0
@@ -699,7 +707,7 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     private fun showNewMod() {
-        handler.post {
+        executor.execute {
             logI("Show new module")
             synchronized(playerLock) {
 
@@ -751,7 +759,7 @@ class PlayerActivity : AppCompatActivity() {
                 skipToPrevious = false
                 binder.titleFlipper.showNext()
                 viewer.setup(modVars)
-                viewer.setRotation(display.rotation)
+                viewer.setRotation(playerDisplay.rotation)
 
                 info = Viewer.Info()
                 stopUpdate = false
@@ -792,7 +800,7 @@ class PlayerActivity : AppCompatActivity() {
                 }
 
                 if (screenOn) {
-                    handler.post(updateInfoRunnable)
+                    executor.execute(updateInfoRunnable)
                 }
 
                 frameStartTime = System.nanoTime()
@@ -807,8 +815,7 @@ class PlayerActivity : AppCompatActivity() {
                 }
             } while (playTime >= 0)
 
-            handler.removeCallbacksAndMessages(null)
-            handler.post {
+            executor.execute {
                 synchronized(playerLock) {
                     logI("Flush interface update")
                     // finished playing, we can release the module

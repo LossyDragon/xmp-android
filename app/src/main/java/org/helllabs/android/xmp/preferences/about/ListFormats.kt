@@ -4,10 +4,8 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.os.Bundle
 import android.view.MenuItem
-import android.widget.ArrayAdapter
 import androidx.appcompat.app.AppCompatActivity
 import dagger.hilt.android.AndroidEntryPoint
-import java.util.*
 import javax.inject.Inject
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp.getFormats
@@ -36,17 +34,16 @@ class ListFormats : AppCompatActivity() {
         // Sort alphabetically
         formats.sort()
 
-        binder.appbar.toolbarText.text = getString(R.string.pref_list_formats_title)
-        binder.formatsList.apply {
-            adapter = ArrayAdapter(this@ListFormats, R.layout.item_single, formats)
-            setOnItemLongClickListener { _, _, position, _ ->
-                val item = this.getItemAtPosition(position) as String
-                val clip = ClipData.newPlainText("Xmp Clipboard", item)
-                clipboard.setPrimaryClip(clip)
-                toast(R.string.clipboard_copied)
-                true
-            }
+        val formatsAdapter = ListFormatsAdapter()
+        formatsAdapter.submitList(formats.toList())
+        formatsAdapter.onLongClick = { item ->
+            val clip = ClipData.newPlainText("Xmp Clipboard", item)
+            clipboard.setPrimaryClip(clip)
+            toast(R.string.clipboard_copied)
         }
+
+        binder.appbar.toolbarText.text = getString(R.string.pref_list_formats_title)
+        binder.formatsList.adapter = formatsAdapter
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

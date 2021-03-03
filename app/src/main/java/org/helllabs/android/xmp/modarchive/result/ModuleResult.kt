@@ -27,7 +27,6 @@ import org.helllabs.android.xmp.modarchive.ModArchiveConstants.MODULE_ID
 import org.helllabs.android.xmp.modarchive.SearchError
 import org.helllabs.android.xmp.modarchive.SearchHistory
 import org.helllabs.android.xmp.modarchive.result.ModuleResultViewModel.ModuleState
-import org.helllabs.android.xmp.model.History
 import org.helllabs.android.xmp.model.Module
 import org.helllabs.android.xmp.model.ModuleResult
 import org.helllabs.android.xmp.player.PlayerActivity
@@ -180,7 +179,7 @@ class ModuleResult : AppCompatActivity() {
         logI("Response: title - " + module.getSongTitle())
 
         // Save module result into Search History
-        saveModuleToHistory(module)
+        saveModuleToHistory()
 
         binder.resultData.scrollTo(0, 0)
         updateButtons(module)
@@ -354,23 +353,13 @@ class ModuleResult : AppCompatActivity() {
         return File(path, filename)
     }
 
-    private fun saveModuleToHistory(module: Module) {
+    private fun saveModuleToHistory() {
         // Load history list first
         val searchHistory = getSearchHistory().toMutableList()
 
-        // Load the current module in a data model
-        // Load the module into a model
-        val historyModel = History(
-            module.id!!,
-            module.songtitle!!,
-            module.getArtist(),
-            module.format!!,
-            System.currentTimeMillis()
-        )
-
         // Check to see if the module has been searched before. Skip if true
         searchHistory.forEach {
-            if (it.id == historyModel.id)
+            if (it.id == module.id)
                 return
         }
 
@@ -379,15 +368,15 @@ class ModuleResult : AppCompatActivity() {
             searchHistory.removeFirst()
 
         // Add the current module into the history
-        searchHistory.add(historyModel)
+        searchHistory.add(module)
 
         // Convert into GSON and save it
         PrefManager.searchHistory = Gson().toJson(searchHistory)
     }
 
-    private fun getSearchHistory(): List<History> {
-        val type = object : TypeToken<List<History?>?>() {}.type
-        return Gson().fromJson<List<History>>(PrefManager.searchHistory, type).orEmpty()
+    private fun getSearchHistory(): List<Module> {
+        val type = object : TypeToken<List<Module?>?>() {}.type
+        return Gson().fromJson<List<Module>>(PrefManager.searchHistory, type).orEmpty()
     }
 
     companion object {

@@ -244,6 +244,7 @@
     <string name="pref_category_player_interface">Player</string>
     <string name="hint_playlist_name">Playlist name</string>
     <string name="hint_playlist_comment">Playlist description (Optional)</string>
+    <string name="hint_search_box">Search Modules</string>
     <string name="title_edit_playlist">Edit playlist</string>
     <string name="button_playlist_update">Update Playlist</string>
     <string name="button_playlist_delete">Delete: %s</string>

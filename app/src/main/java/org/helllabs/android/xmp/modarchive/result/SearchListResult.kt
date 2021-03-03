@@ -23,7 +23,7 @@ import org.helllabs.android.xmp.util.hide
 import org.helllabs.android.xmp.util.show
 
 @AndroidEntryPoint
-class SearchListResult : AppCompatActivity(), SearchListAdapter.SearchListListener {
+class SearchListResult : AppCompatActivity() {
 
     private lateinit var binder: ActivityResultListBinding
     private lateinit var searchListAdapter: SearchListAdapter
@@ -40,10 +40,14 @@ class SearchListResult : AppCompatActivity(), SearchListAdapter.SearchListListen
         supportActionBar?.setDisplayShowHomeEnabled(true)
 
         searchListAdapter = SearchListAdapter()
-        searchListAdapter.searchListListener = this
+        searchListAdapter.onClick = { id ->
+            val intent = Intent(this, ModuleResult::class.java)
+            intent.putExtra(MODULE_ID, id)
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+            startActivity(intent)
+        }
 
         binder.resultList.apply {
-            layoutManager = LinearLayoutManager(this@SearchListResult)
             adapter = searchListAdapter
             addItemDecoration(
                 DividerItemDecoration(
@@ -75,13 +79,6 @@ class SearchListResult : AppCompatActivity(), SearchListAdapter.SearchListListen
             binder.appbar.toolbarText.text = getString(R.string.search_artist_modules_title)
             viewModel.getArtistById(it)
         }
-    }
-
-    override fun onClick(id: Int) {
-        val intent = Intent(this, ModuleResult::class.java)
-        intent.putExtra(MODULE_ID, id)
-        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
-        startActivity(intent)
     }
 
     private fun onLoad() {

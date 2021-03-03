@@ -1,9 +1,7 @@
 package org.helllabs.android.xmp.browser.playlist
 
 import java.io.File
-import java.lang.IllegalArgumentException
 import java.util.*
-import org.helllabs.android.xmp.R
 
 class PlaylistItem(
     val type: Int,
@@ -15,20 +13,11 @@ class PlaylistItem(
     var id = 0
     var file: File? = null
 
-    var imageRes = 0
-        private set
-
     val filename: String
         get() = file!!.name
 
-    init {
-        imageRes = when (type) {
-            TYPE_DIRECTORY, TYPE_SPECIAL -> R.drawable.ic_folder
-            TYPE_PLAYLIST -> R.drawable.ic_list
-            TYPE_FILE -> R.drawable.ic_file
-            else -> throw IllegalArgumentException("Image res is wrong type: $type")
-        }
-    }
+    val isDirectory: Boolean
+        get() = file?.isDirectory ?: false
 
     override fun toString(): String {
         return String.format("%s:%s:%s\n", file!!.path, comment, name)

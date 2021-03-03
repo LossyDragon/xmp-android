@@ -26,14 +26,13 @@
                 android:orientation="vertical"
                 app:layout_constraintGuide_percent="0.5" />
 
-            <!-- TODO: Low Contrast accessibility warning -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/search_input_layout"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_margin="32dp"
-                android:hint="@string/search_search"
+                android:hint="@string/hint_search_box"
                 app:endIconMode="clear_text"
                 app:helperText="@string/search_helper_text"
                 app:helperTextEnabled="true"

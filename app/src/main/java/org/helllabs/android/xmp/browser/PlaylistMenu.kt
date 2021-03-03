@@ -11,7 +11,6 @@ import android.view.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.input.input
 import java.io.File
@@ -73,7 +72,6 @@ class PlaylistMenu : AppCompatActivity() {
         playlistAdapter.onLongClick = { position -> onLongClick(position) }
 
         binder.plistMenuList.apply {
-            layoutManager = LinearLayoutManager(this@PlaylistMenu)
             adapter = playlistAdapter
             setOnItemTouchListener(
                 onInterceptTouchEvent = { _, e ->
@@ -129,7 +127,7 @@ class PlaylistMenu : AppCompatActivity() {
 
     public override fun onResume() {
         super.onResume()
-        playlistAdapter.onSwap(null) // Stop flicker
+        playlistAdapter.submitList(null) // Stop flicker
         updateList()
     }
 
@@ -137,8 +135,7 @@ class PlaylistMenu : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode == RESULT_OK) {
             when (requestCode) {
-                SETTINGS_REQUEST -> updateList()
-                PLAYLIST_REQUEST -> updateList()
+                SETTINGS_REQUEST, PLAYLIST_REQUEST -> updateList()
                 MOD_ADD_REQUEST -> addPlaylist(data)
                 MOD_EDIT_REQUEST -> editPlaylist(data)
             }
@@ -197,7 +194,7 @@ class PlaylistMenu : AppCompatActivity() {
             intent = Intent(this@PlaylistMenu, FilelistActivity::class.java)
         } else {
             intent = Intent(this@PlaylistMenu, PlaylistActivity::class.java)
-            intent.putExtra("name", playlistAdapter.playlist[position].name)
+            intent.putExtra("name", playlistAdapter.currentList[position].name)
         }
         startActivityForResult(intent, PLAYLIST_REQUEST)
     }
@@ -206,7 +203,7 @@ class PlaylistMenu : AppCompatActivity() {
         if (position == 0) {
             changeDir()
         } else {
-            val playlist = playlistAdapter.playlist[position]
+            val playlist = playlistAdapter.currentList[position]
             val intent = Intent(this, PlaylistAddEdit::class.java).apply {
                 putExtra(PlaylistAddEdit.EXTRA_ID, playlist.id)
                 putExtra(PlaylistAddEdit.EXTRA_NAME, playlist.name)
@@ -242,7 +239,7 @@ class PlaylistMenu : AppCompatActivity() {
     }
 
     private fun updateList() {
-        playlistAdapter.onSwap(null) // Stop Flicker
+        playlistAdapter.submitList(null) // Stop Flicker
 
         val list = mutableListOf<PlaylistItem>()
         mediaPath = PrefManager.mediaPath
@@ -264,7 +261,7 @@ class PlaylistMenu : AppCompatActivity() {
 
         PlaylistUtils.renumberIds(playlistAdapter.getItems())
 
-        playlistAdapter.onSwap(list)
+        playlistAdapter.submitList(list)
     }
 
     private fun addPlaylist(data: Intent?) {

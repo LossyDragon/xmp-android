@@ -103,6 +103,8 @@ class PlaylistActivity :
         mPlaylist!!.list.clear()
         mPlaylist!!.list.addAll(playlist)
         mPlaylist!!.setListChanged(true)
+        mPlaylist!!.commit()
+        mPlaylistAdapter.submitList(mPlaylist!!.list)
     }
 
     override fun disableSwipe(isDisabled: Boolean) {
@@ -124,6 +126,7 @@ class PlaylistActivity :
                 when (index) {
                     0 -> {
                         mPlaylist!!.remove(position)
+                        mPlaylist!!.setListChanged(true)
                         mPlaylist!!.commit()
                         update()
                     }
@@ -138,7 +141,7 @@ class PlaylistActivity :
     }
 
     public override fun update() {
-        mPlaylistAdapter.onSwap(mPlaylist!!.list)
+        mPlaylistAdapter.submitList(mPlaylist!!.list)
         binder.emptyMessage.apply {
             if (mPlaylistAdapter.getItems().isEmpty()) show() else hide()
         }

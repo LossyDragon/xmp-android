@@ -27,9 +27,7 @@ class SearchError : AppCompatActivity(), Runnable {
 
         binder.appbar.toolbarText.text = getString(R.string.search_title_error)
 
-        val error = intent.getStringExtra(ERROR)
-
-        var message = error
+        var message: String? = intent.getStringExtra(ERROR)
         if (message == null) {
             message = getString(R.string.search_unknown_error)
         } else {

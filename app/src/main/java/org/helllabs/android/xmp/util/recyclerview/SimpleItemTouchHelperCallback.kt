@@ -35,7 +35,7 @@ class SimpleItemTouchHelperCallback(
 ) : ItemTouchHelper.Callback() {
 
     override fun isLongPressDragEnabled(): Boolean {
-        return mAdapter.isDraggable
+        return mAdapter.isDragEnabled
     }
 
     override fun isItemViewSwipeEnabled(): Boolean {

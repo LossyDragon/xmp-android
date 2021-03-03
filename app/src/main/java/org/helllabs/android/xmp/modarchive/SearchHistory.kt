@@ -13,17 +13,17 @@ import com.google.gson.reflect.TypeToken
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.databinding.ActivityResultListBinding
 import org.helllabs.android.xmp.modarchive.ModArchiveConstants.MODULE_ID
-import org.helllabs.android.xmp.modarchive.adapter.HistoryAdapter
+import org.helllabs.android.xmp.modarchive.adapter.SearchListAdapter
 import org.helllabs.android.xmp.modarchive.result.ModuleResult
-import org.helllabs.android.xmp.model.History
+import org.helllabs.android.xmp.model.Module
 import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.util.hide
 import org.helllabs.android.xmp.util.show
 
-class SearchHistory : AppCompatActivity(), HistoryAdapter.HistoryAdapterListener {
+class SearchHistory : AppCompatActivity() {
 
     private lateinit var binder: ActivityResultListBinding
-    private lateinit var historyAdapter: HistoryAdapter
+    private lateinit var historyAdapter: SearchListAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,11 +37,15 @@ class SearchHistory : AppCompatActivity(), HistoryAdapter.HistoryAdapterListener
 
         binder.appbar.toolbarText.text = getString(R.string.search_history)
 
-        historyAdapter = HistoryAdapter()
-        historyAdapter.historyListener = this
+        historyAdapter = SearchListAdapter()
+        historyAdapter.onClick = { id ->
+            val intent = Intent(this, ModuleResult::class.java)
+            intent.putExtra(MODULE_ID, id)
+            startActivity(intent)
+        }
+
         binder.resultSpinner.hide()
         binder.resultList.apply {
-            layoutManager = LinearLayoutManager(this@SearchHistory)
             adapter = historyAdapter
             addItemDecoration(
                 DividerItemDecoration(
@@ -66,16 +70,10 @@ class SearchHistory : AppCompatActivity(), HistoryAdapter.HistoryAdapterListener
         return super.onOptionsItemSelected(item)
     }
 
-    override fun onClick(id: Int) {
-        val intent = Intent(this, ModuleResult::class.java)
-        intent.putExtra(MODULE_ID, id)
-        startActivity(intent)
-    }
-
     private fun refreshList() {
-        historyAdapter.submitList(getHistory().sortedBy { it.visitDate })
+        historyAdapter.submitList(getHistory().reversed()) // Oldest to bottom
 
-        if (historyAdapter.historyList.isEmpty()) {
+        if (historyAdapter.currentList.isEmpty()) {
             binder.resultList.hide()
             binder.errorLayout.layout.show()
             binder.errorLayout.message.text = getString(R.string.history_no_items)
@@ -85,9 +83,9 @@ class SearchHistory : AppCompatActivity(), HistoryAdapter.HistoryAdapterListener
         }
     }
 
-    private fun getHistory(): List<History> {
-        val type = object : TypeToken<List<History?>?>() {}.type
-        return Gson().fromJson<List<History>>(PrefManager.searchHistory, type).orEmpty()
+    private fun getHistory(): List<Module> {
+        val type = object : TypeToken<List<Module?>?>() {}.type
+        return Gson().fromJson<List<Module>>(PrefManager.searchHistory, type).orEmpty()
     }
 
     private fun deleteHistory() {

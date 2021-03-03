@@ -315,7 +315,7 @@ class FilelistActivity : BasePlaylistActivity() {
     }
 
     private fun onLoad() {
-        mPlaylistAdapter.onSwap(null) // Stop flicker
+        mPlaylistAdapter.submitList(null) // Stop flicker
         binder.modlistSpinner.show()
         binder.currentPath.text = mNavigation.currentDir!!.path
     }
@@ -333,7 +333,7 @@ class FilelistActivity : BasePlaylistActivity() {
             modlistSpinner.hide()
             emptyMessage.hide()
         }
-        mPlaylistAdapter.onSwap(list)
+        mPlaylistAdapter.submitList(list)
     }
 
     private fun onError(error: String?) {

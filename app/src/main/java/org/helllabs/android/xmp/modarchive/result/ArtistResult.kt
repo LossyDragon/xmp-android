@@ -22,7 +22,7 @@ import org.helllabs.android.xmp.util.hide
 import org.helllabs.android.xmp.util.show
 
 @AndroidEntryPoint
-class ArtistResult : AppCompatActivity(), ArtistAdapter.ArtistAdapterListener {
+class ArtistResult : AppCompatActivity() {
 
     private lateinit var binder: ActivityResultListBinding
 
@@ -42,7 +42,12 @@ class ArtistResult : AppCompatActivity(), ArtistAdapter.ArtistAdapterListener {
         binder.appbar.toolbarText.text = getString(R.string.search_artist_title)
 
         artistAdapter = ArtistAdapter()
-        artistAdapter.artistAdapterListener = this
+        artistAdapter.onClick = { id ->
+            val intent = Intent(this, SearchListResult::class.java)
+            intent.putExtra(ARTIST_ID, id)
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+            startActivity(intent)
+        }
 
         binder.resultList.apply {
             layoutManager = LinearLayoutManager(this@ArtistResult)
@@ -68,13 +73,6 @@ class ArtistResult : AppCompatActivity(), ArtistAdapter.ArtistAdapterListener {
         }
 
         viewModel.fetchArtists(intent.getStringExtra(SEARCH_TEXT)!!)
-    }
-
-    override fun onClick(id: Int) {
-        val intent = Intent(this, SearchListResult::class.java)
-        intent.putExtra(ARTIST_ID, id)
-        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
-        startActivity(intent)
     }
 
     private fun onLoad() {

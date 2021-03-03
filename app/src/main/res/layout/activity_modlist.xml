@@ -74,7 +74,8 @@
                 app:fastScrollHorizontalTrackDrawable="@drawable/thumb_line_drawable"
                 app:fastScrollVerticalThumbDrawable="@drawable/thumb_drawable"
                 app:fastScrollVerticalTrackDrawable="@drawable/thumb_line_drawable"
-                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                tools:listitem="@layout/item_playlist" />
 
         </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 

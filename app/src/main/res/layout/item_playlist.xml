@@ -1,56 +1,75 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/plist_container"
-    android:layout_width="fill_parent"
-    android:layout_height="wrap_content"
-    android:background="?android:attr/selectableItemBackground"
-    android:orientation="horizontal">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
-    <androidx.appcompat.widget.AppCompatImageView
-        android:id="@+id/plist_image"
-        android:layout_width="?listPreferredItemHeight"
-        android:layout_height="match_parent"
-        android:layout_gravity="center_vertical|start"
-        android:scaleType="center"
-        tools:src="@drawable/ic_file" />
+    <data>
+
+        <variable
+            name="playlistItem"
+            type="org.helllabs.android.xmp.browser.playlist.PlaylistItem" />
+
+        <variable
+            name="isDraggable"
+            type="Boolean" />
+
+        <variable
+            name="fileName"
+            type="Boolean" />
+    </data>
 
     <LinearLayout
-        android:layout_width="0dp"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:layout_marginBottom="6dp"
-        android:layout_weight="1"
-        android:orientation="vertical">
+        android:background="?android:attr/selectableItemBackground"
+        android:orientation="horizontal">
 
-        <TextView
-            android:id="@+id/plist_title"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:singleLine="true"
-            android:textSize="19sp"
-            tools:text="Some Playlist Title" />
+        <androidx.appcompat.widget.AppCompatImageView
+            android:layout_width="?listPreferredItemHeight"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_vertical|start"
+            android:scaleType="center"
+            android:srcCompat="@{playlistItem.type}"
+            tools:src="@drawable/ic_file" />
 
-        <TextView
-            android:id="@+id/plist_info"
-            android:layout_width="fill_parent"
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:singleLine="true"
-            android:textSize="13sp"
-            tools:text="Some Playlist Info" />
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="6dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:text="@{fileName ? playlistItem.filename : playlistItem.name }"
+                android:textSize="19sp"
+                tools:text="Some Playlist Title" />
+
+            <TextView
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:text="@{playlistItem.comment}"
+                android:textSize="13sp"
+                android:boldTextStyle="@{playlistItem.isDirectory}"
+                tools:text="Some Playlist Info" />
+
+        </LinearLayout>
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/handle"
+            android:layout_width="?listPreferredItemHeight"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_vertical|end"
+            android:scaleType="center"
+            android:src="@drawable/ic_handle"
+            android:draggability="@{isDraggable}"
+            tools:visibility="visible" />
 
     </LinearLayout>
-
-    <androidx.appcompat.widget.AppCompatImageView
-        android:id="@+id/plist_handle"
-        android:layout_width="?listPreferredItemHeight"
-        android:layout_height="match_parent"
-        android:layout_gravity="center_vertical|end"
-        android:scaleType="center"
-        android:src="@drawable/ic_handle"
-        android:visibility="gone"
-        tools:visibility="visible" />
-
-</LinearLayout>
+</layout>

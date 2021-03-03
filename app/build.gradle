@@ -6,7 +6,7 @@ apply plugin: "org.jlleitschuh.gradle.ktlint"
 
 // https://developer.android.com/ndk/downloads
 android {
-    compileSdkVersion 29
+    compileSdkVersion 30
     ndkVersion "21.4.7075529"
 
     defaultConfig {

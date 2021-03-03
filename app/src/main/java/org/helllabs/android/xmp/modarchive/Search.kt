@@ -21,7 +21,6 @@ import org.helllabs.android.xmp.modarchive.result.SearchListResult
 class Search : AppCompatActivity(), TextView.OnEditorActionListener {
 
     private lateinit var binder: ActivitySearchBinding
-
     private var canSearch: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,14 +33,16 @@ class Search : AppCompatActivity(), TextView.OnEditorActionListener {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayShowHomeEnabled(true)
 
-        binder.appbar.toolbarText.text = getString(R.string.search_title)
-        binder.searchRadioGroup.check(R.id.search_title_radio_button)
-        binder.searchSearchButton.setOnClickListener { performSearch() }
-        binder.searchRandomButton.setOnClickListener { performRandomSearch() }
-        binder.searchHistoryButton.setOnClickListener { showHistory() }
-        binder.searchEditText.doOnTextChanged { text, _, _, _ ->
-            canSearch = text!!.count() >= 3
-            binder.searchSearchButton.isEnabled = canSearch
+        binder.apply {
+            appbar.toolbarText.text = getString(R.string.search_title)
+            searchRadioGroup.check(R.id.search_title_radio_button)
+            searchSearchButton.setOnClickListener { performSearch() }
+            searchRandomButton.setOnClickListener { performRandomSearch() }
+            searchHistoryButton.setOnClickListener { showHistory() }
+            searchEditText.doOnTextChanged { text, _, _, _ ->
+                canSearch = text!!.count() >= 3
+                binder.searchSearchButton.isEnabled = canSearch
+            }
         }
 
         // Smaller screens will wrap the text of these buttons.
@@ -98,20 +99,20 @@ class Search : AppCompatActivity(), TextView.OnEditorActionListener {
 
     private fun performSearch() {
         val searchText = binder.searchEditText.text.toString().trim { it <= ' ' }
+        var intent: Intent? = null
 
         when (binder.searchRadioGroup.checkedRadioButtonId) {
             R.id.search_title_radio_button -> {
-                val intent = Intent(this, SearchListResult::class.java)
-                intent.putExtra(SEARCH_TEXT, searchText)
-                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
-                startActivity(intent)
+                intent = Intent(this, SearchListResult::class.java)
+                    .putExtra(SEARCH_TEXT, searchText)
             }
             R.id.search_artist_radio_button -> {
-                val intent = Intent(this, ArtistResult::class.java)
-                intent.putExtra(SEARCH_TEXT, searchText)
-                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
-                startActivity(intent)
+                intent = Intent(this, ArtistResult::class.java)
+                    .putExtra(SEARCH_TEXT, searchText)
             }
         }
+
+        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+        startActivity(intent)
     }
 }

@@ -6,13 +6,17 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import android.widget.TextView
+import androidx.appcompat.widget.AppCompatImageView
+import androidx.databinding.BindingAdapter
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import java.io.File
 import java.util.*
 import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.databinding.ItemPlaylistBinding
+import org.helllabs.android.xmp.databinding.ItemPlaylistCardBinding
 import org.helllabs.android.xmp.util.*
 import org.helllabs.android.xmp.util.recyclerview.ItemTouchHelperAdapter
 import org.helllabs.android.xmp.util.recyclerview.ItemTouchHelperViewHolder
@@ -21,13 +25,29 @@ import org.helllabs.android.xmp.util.recyclerview.OnStartDragListener
 class PlaylistAdapter(
     private var layoutType: Int,
     private var useFilename: Boolean,
-) : RecyclerView.Adapter<PlaylistAdapter.ViewHolder>(),
+) : ListAdapter<PlaylistItem, RecyclerView.ViewHolder>(DIFF_CALLBACK),
     ItemTouchHelperAdapter {
+
+    companion object {
+        const val LAYOUT_LIST = 0
+        const val LAYOUT_CARD = 1
+        const val LAYOUT_DRAG = 2
+
+        val DIFF_CALLBACK = object : DiffUtil.ItemCallback<PlaylistItem>() {
+            override fun areItemsTheSame(oldItem: PlaylistItem, newItem: PlaylistItem): Boolean {
+                return oldItem.id == newItem.id
+            }
+
+            override fun areContentsTheSame(oldItem: PlaylistItem, newItem: PlaylistItem): Boolean {
+                return oldItem.id == newItem.id
+            }
+        }
+    }
 
     val filenameList: List<String>
         get() {
             val list: MutableList<String> = ArrayList()
-            for (item in playlist) {
+            for (item in currentList) {
                 if (item.type == PlaylistItem.TYPE_FILE) {
                     list.add(item.file!!.path)
                 }
@@ -38,7 +58,7 @@ class PlaylistAdapter(
     val directoryCount: Int
         get() {
             var count = 0
-            for (item in playlist) {
+            for (item in currentList) {
                 if (item.type != PlaylistItem.TYPE_DIRECTORY) {
                     break
                 }
@@ -47,87 +67,86 @@ class PlaylistAdapter(
             return count
         }
 
-    var playlist: MutableList<PlaylistItem> = LinkedList()
-        private set
-
-    var isDraggable: Boolean = false
-        private set
-
     var dragListener: OnStartDragListener? = null
-    private val typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
-
     var onClick: ((position: Int) -> Unit)? = null
     var onLongClick: ((position: Int) -> Unit)? = null
+    var isDragEnabled: Boolean = false
+        private set
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+    // Temp list to handle drag & drop
+    private lateinit var tempList: MutableList<PlaylistItem>
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
-        val layout: Int = when (layoutType) {
-            LAYOUT_CARD -> R.layout.item_playlist_card
-            LAYOUT_DRAG, LAYOUT_LIST -> R.layout.item_playlist
+        return when (layoutType) {
+            LAYOUT_CARD -> {
+                val binder = ItemPlaylistCardBinding.inflate(inflater, parent, false)
+                CardViewHolder(binder)
+            }
+            LAYOUT_LIST, LAYOUT_DRAG -> {
+                val binder = ItemPlaylistBinding.inflate(inflater, parent, false)
+                ListViewHolder(binder)
+            }
             else -> throw IllegalArgumentException("Wrong layout type defined $layoutType")
         }
-
-        return ViewHolder(inflater.inflate(layout, parent, false))
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.onBind(playlist[position])
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        val item = getItem(position)
+        when (holder) {
+            is CardViewHolder -> holder.onBind(item)
+            is ListViewHolder -> holder.onBind(item)
+        }
     }
 
-    override fun getItemId(position: Int): Long = playlist[position].id.toLong()
+    override fun getItemId(position: Int): Long = currentList[position].id.toLong()
 
     override fun onItemMove(fromPosition: Int, toPosition: Int): Boolean {
-        Collections.swap(playlist, fromPosition, toPosition)
+        Collections.swap(tempList, fromPosition, toPosition)
         notifyItemMoved(fromPosition, toPosition)
-
         return true
     }
 
-    override fun getItemCount(): Int = playlist.size
+    fun getItems(): List<PlaylistItem> = currentList
 
-    fun onSwap(list: List<PlaylistItem>?) {
+    fun getFilename(location: Int): String = currentList[location].file!!.path
 
-        // Seems to stop flickering on resume.
-        val newList: MutableList<PlaylistItem> =
-            if (list == null) mutableListOf() else LinkedList(list)
-
-        val result = DiffUtil.calculateDiff(PlaylistDiffUtil(newList))
-        playlist = newList
-        result.dispatchUpdatesTo(this)
-    }
-
-    fun getItems(): List<PlaylistItem> = playlist
-
-    fun getFilename(location: Int): String = playlist[location].file!!.path
-
-    fun getFile(location: Int): File = playlist[location].file!!
+    fun getFile(location: Int): File = currentList[location].file!!
 
     fun setUseFilename(useFilename: Boolean) {
         this.useFilename = useFilename
     }
 
-    inner class ViewHolder(
-        val view: View
-    ) : RecyclerView.ViewHolder(view),
-        ItemTouchHelperViewHolder {
+    inner class CardViewHolder(
+        val binder: ItemPlaylistCardBinding
+    ) : RecyclerView.ViewHolder(binder.root) {
+        fun onBind(item: PlaylistItem) = with(binder) {
+            playlistItem = item
+            root.click {
+                onClick?.invoke(adapterPosition)
+            }
+            root.longClick {
+                onLongClick?.invoke(adapterPosition)
+                true
+            }
+            executePendingBindings()
+        }
+    }
 
-        private val container: View = view.findViewById(R.id.plist_container)
-        private val handle: View? = view.findViewById(R.id.plist_handle)
-        private val titleText: TextView = view.findViewById(R.id.plist_title)
-        private val infoText: TextView = view.findViewById(R.id.plist_info)
-        private val image: ImageView = view.findViewById(R.id.plist_image)
-
-        fun onBind(item: PlaylistItem) = with(view) {
-
-            // Drag
+    inner class ListViewHolder(
+        val binder: ItemPlaylistBinding
+    ) : RecyclerView.ViewHolder(binder.root), ItemTouchHelperViewHolder {
+        fun onBind(item: PlaylistItem) = with(binder) {
+            playlistItem = item
+            isDraggable = layoutType == LAYOUT_DRAG
+            fileName = useFilename
             if (layoutType == LAYOUT_DRAG) {
-                handle?.let { handle ->
-                    handle.show()
+                handle.let { handle ->
                     handle.touch { _, event ->
                         logD("Touch: ${event.actionMasked}")
-                        isDraggable =
+                        isDragEnabled =
                             if (event.actionMasked == MotionEvent.ACTION_DOWN) {
-                                dragListener?.onStartDrag(this@ViewHolder)
+                                dragListener?.onStartDrag(this@ListViewHolder)
                                 true
                             } else {
                                 false
@@ -136,56 +155,50 @@ class PlaylistAdapter(
                     }
                 }
             }
-
-            if (item.type == PlaylistItem.TYPE_DIRECTORY) {
-                infoText.setTypeface(typeface, Typeface.ITALIC)
-            } else {
-                infoText.setTypeface(typeface, Typeface.NORMAL)
-            }
-
-            infoText.text = item.comment
-            titleText.text = if (useFilename) item.filename else item.name
-            image.setImageResource(item.imageRes)
-
-            container.click {
+            root.click {
                 onClick?.invoke(adapterPosition)
             }
-
-            container.longClick {
+            root.longClick {
                 onLongClick?.invoke(adapterPosition)
                 true
             }
+            executePendingBindings()
         }
 
         override fun onItemSelected() {
-            view.setBackgroundColor(Color.LTGRAY)
+            binder.root.setBackgroundColor(Color.LTGRAY)
             dragListener?.disableSwipe(true)
+            tempList = currentList.toMutableList()
         }
 
         override fun onItemClear() {
-            PlaylistUtils.renumberIds(playlist)
-            view.setBackgroundColor(0)
-
-            dragListener?.onStopDrag(playlist)
+            PlaylistUtils.renumberIds(tempList)
+            binder.root.setBackgroundColor(0)
+            dragListener?.onStopDrag(tempList)
             dragListener?.disableSwipe(false)
         }
     }
+}
 
-    inner class PlaylistDiffUtil(val list: MutableList<PlaylistItem>) : DiffUtil.Callback() {
-        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
-            list[newItemPosition].id == playlist[oldItemPosition].id
+/* Binding Adapter functions */
+@BindingAdapter("android:draggability")
+fun setDraggability(view: View, isVisible: Boolean) {
+    view.visibility = if (isVisible) View.VISIBLE else View.GONE
+}
 
-        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int) =
-            list[newItemPosition] == playlist[oldItemPosition]
+@BindingAdapter("android:boldTextStyle")
+fun setBoldTextStyle(view: TextView, boolean: Boolean) {
+    view.setTypeface(null, if (boolean) Typeface.ITALIC else Typeface.NORMAL)
+}
 
-        override fun getOldListSize() = playlist.size
-
-        override fun getNewListSize() = list.size
+@BindingAdapter("android:srcCompat")
+fun setSrcCompat(view: AppCompatImageView, type: Int) {
+    val image = when (type) {
+        PlaylistItem.TYPE_DIRECTORY,
+        PlaylistItem.TYPE_SPECIAL -> R.drawable.ic_folder
+        PlaylistItem.TYPE_PLAYLIST -> R.drawable.ic_list
+        PlaylistItem.TYPE_FILE -> R.drawable.ic_file
+        else -> throw IllegalArgumentException("Image res is wrong type: $type")
     }
-
-    companion object {
-        const val LAYOUT_LIST = 0
-        const val LAYOUT_CARD = 1
-        const val LAYOUT_DRAG = 2
-    }
+    view.setImageResource(image)
 }
