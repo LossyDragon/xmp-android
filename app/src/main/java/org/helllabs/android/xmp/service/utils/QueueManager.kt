@@ -36,11 +36,13 @@ class QueueManager(
             randomStart = 1
         }
 
-        index = initStart
-        list = fileList.toMutableList()
-        ridx = RandomIndex(randomStart, fileList.size)
         shuffleMode = shuffle
         loopListMode = loop
+        index = initStart
+        list = fileList.toMutableList()
+        if (shuffle)
+            list.random()
+        ridx = RandomIndex(randomStart, list.size)
     }
 
     fun add(fileList: List<String>) {
@@ -54,7 +56,7 @@ class QueueManager(
         return list.size
     }
 
-    operator fun next(): Boolean {
+    fun next(): Boolean {
         index++
         if (index >= list.size) {
             index = if (loopListMode) {
