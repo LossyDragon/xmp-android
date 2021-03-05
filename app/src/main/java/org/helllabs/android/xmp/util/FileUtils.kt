@@ -30,11 +30,6 @@ object FileUtils {
         return line
     }
 
-    // @Throws(IOException::class)
-    // fun removeLineFromFile(file: File, num: Int): Boolean {
-    //     return removeLineFromFile(file, intArrayOf(num))
-    // }
-
     /**
      * Remove a certain line in a file
      */

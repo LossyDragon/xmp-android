@@ -137,15 +137,15 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
                 2 -> playModule(filename)
                 3 -> {
                     addToQueue(filename)
-                    toast("Added to queue")
+                    toast(R.string.msg_queue_added)
                 }
             }
         } else {
-            toast("Unrecognized file format")
+            toast(R.string.msg_file_unrecognized)
         }
     }
 
-    protected fun setSwipeRefresh(swipe: SwipeRefreshLayout, rv: RecyclerView) {
+    protected fun setSwipeRefresh(swipe: SwipeRefreshLayout, recyclerView: RecyclerView) {
         swipe.apply {
             setOnRefreshListener {
                 update()
@@ -154,12 +154,12 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
             setColorSchemeResources(R.color.refresh_color)
         }
 
-        rv.setOnItemTouchListener(
+        recyclerView.setOnItemTouchListener(
             onInterceptTouchEvent = { _, e ->
                 if (e.action == MotionEvent.ACTION_DOWN) {
                     var enable = false
-                    if (rv.childCount > 0) {
-                        enable = !rv.canScrollVertically(-1)
+                    if (recyclerView.childCount > 0) {
+                        enable = !recyclerView.canScrollVertically(-1)
                     }
                     swipe.isEnabled = enable
                 }
@@ -241,8 +241,8 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         val invalid = mutableListOf<String>()
 
         if (list.isEmpty()) {
-            toast("Add to Queue empty list")
-            logW("Add to Queue empty list")
+            toast(R.string.msg_queue_empty)
+            logW("Queue list empty")
             return
         }
 

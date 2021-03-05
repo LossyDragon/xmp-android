@@ -156,7 +156,6 @@ class FilelistActivity : BasePlaylistActivity() {
 
         lifecycleScope.launchWhenStarted {
             viewModel.listState.collect {
-                logD("List State: $it")
                 when (it) {
                     FilelistViewModel.FilelistState.None -> Unit // Do nothing
                     FilelistViewModel.FilelistState.Empty -> onEmpty()
@@ -200,17 +199,9 @@ class FilelistActivity : BasePlaylistActivity() {
     private fun onLongClick(position: Int) {
         val item = mPlaylistAdapter.getFile(position)
         if (item.isDirectory) {
-            val items = listOf(
-                "Add to playlist",
-                "Add to play queue",
-                "Play contents",
-                "Delete directory"
-            )
-
             MaterialDialog(this).show {
-                title(text = "This directory")
-                listItemsSingleChoice(items = items) { _, index, _ ->
-
+                title(R.string.dialog_this_dir_title)
+                listItemsSingleChoice(R.array.fileList_this_directory_array) { _, index, _ ->
                     when (index) {
                         0 -> choosePlaylist(position, addRecursiveToPlaylistChoice)
                         1 -> addToQueue(viewModel.recursiveList(mPlaylistAdapter.getFile(position)))
@@ -221,17 +212,9 @@ class FilelistActivity : BasePlaylistActivity() {
                 positiveButton(R.string.select)
             }
         } else {
-            val items = listOf(
-                "Add to playlist",
-                "Add to play queue",
-                "Play this file",
-                "Play all starting here",
-                "Delete file"
-            )
-
             MaterialDialog(this).show {
-                title(text = "This file")
-                listItemsSingleChoice(items = items) { _, index, _ ->
+                title(R.string.dialog_this_file_title)
+                listItemsSingleChoice(R.array.fileList_this_files_array) { _, index, _ ->
                     when (index) {
                         0 -> choosePlaylist(position, addFileToPlaylistChoice)
                         1 -> addToQueue(mPlaylistAdapter.getFilename(position))
@@ -240,8 +223,8 @@ class FilelistActivity : BasePlaylistActivity() {
                         4 -> {
                             val deleteName = mPlaylistAdapter.getFilename(position)
                             yesNoDialog(
-                                "Delete",
-                                "Are you sure you want to delete ${basename(deleteName)}?"
+                                getString(R.string.dialog_this_file_title_confirm),
+                                getString(R.string.dialog_this_file_message, basename(deleteName))
                             ) {
                                 if (delete(deleteName)) {
                                     viewModel.updateModList(mNavigation.currentDir)
@@ -259,24 +242,16 @@ class FilelistActivity : BasePlaylistActivity() {
     }
 
     private fun onPathClick() {
-        val items = listOf(
-            "Add to playlist",
-            "Recursive add to playlist",
-            "Add to play queue",
-            "Set as default path",
-            "Clear cache"
-        )
-
         MaterialDialog(this).show {
-            title(text = "All files")
-            listItemsSingleChoice(items = items) { _, index, _ ->
+            title(R.string.dialog_all_files_title)
+            listItemsSingleChoice(R.array.fileList_all_files_array) { _, index, _ ->
                 when (index) {
                     0 -> choosePlaylist(0, addFileListToPlaylistChoice)
                     1 -> choosePlaylist(0, addCurrentRecursiveChoice)
                     2 -> addToQueue(viewModel.recursiveList(mNavigation.currentDir))
                     3 -> {
                         PrefManager.mediaPath = mNavigation.currentDir!!.path
-                        toast("Set as default module path")
+                        toast(R.string.msg_default_path_set)
                     }
                     4 -> viewModel.clearCachedEntries(mPlaylistAdapter.filenameList)
                 }
@@ -291,12 +266,12 @@ class FilelistActivity : BasePlaylistActivity() {
 
     private fun pathNotFound(mediaPath: String) {
         MaterialDialog(this).show {
-            title(text = "Path not found")
-            message(text = "$mediaPath not found. Create this directory or change the module path.")
+            title(R.string.dialog_no_path_title)
+            message(text = getString(R.string.dialog_no_path_message, mediaPath))
             positiveButton(R.string.create) {
                 val ret = installAssets(mediaPath, PrefManager.installExamples)
                 if (ret < 0) {
-                    generalError("Error creating directory $mediaPath.")
+                    generalError(getString(R.string.msg_error_create_directory, mediaPath))
                 }
                 mNavigation.startNavigation(File(mediaPath))
                 viewModel.updateModList(mNavigation.currentDir)
@@ -347,11 +322,12 @@ class FilelistActivity : BasePlaylistActivity() {
     private fun deleteDirectory(position: Int) {
         val deleteName = mPlaylistAdapter.getFilename(position)
         val mediaPath = PrefManager.mediaPath
-        val title = getString(R.string.dialog_title_delete_dir)
-        val message = getString(R.string.dialog_msg_delete_dir, basename(deleteName))
 
         if (deleteName.startsWith(mediaPath) && deleteName != mediaPath) {
-            yesNoDialog(title, message) {
+            yesNoDialog(
+                getString(R.string.dialog_title_delete_dir),
+                getString(R.string.dialog_msg_delete_dir, basename(deleteName))
+            ) {
                 if (deleteRecursive(deleteName)) {
                     viewModel.updateModList(mNavigation.currentDir)
                     toast(getString(R.string.msg_dir_deleted))

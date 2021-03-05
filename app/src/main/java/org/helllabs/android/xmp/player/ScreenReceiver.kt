@@ -10,10 +10,9 @@ import android.content.Intent
  */
 class ScreenReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action == Intent.ACTION_SCREEN_OFF) {
-            wasScreenOn = false
-        } else if (intent.action == Intent.ACTION_SCREEN_ON) {
-            wasScreenOn = true
+        when (intent.action) {
+            Intent.ACTION_SCREEN_OFF -> wasScreenOn = false
+            Intent.ACTION_SCREEN_ON -> wasScreenOn = true
         }
     }
 

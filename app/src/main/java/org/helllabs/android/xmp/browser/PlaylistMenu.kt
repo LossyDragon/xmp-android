@@ -245,12 +245,12 @@ class PlaylistMenu : AppCompatActivity() {
         mediaPath = PrefManager.mediaPath
         val browserItem = PlaylistItem(
             PlaylistItem.TYPE_SPECIAL,
-            "File browser",
-            "Files in $mediaPath"
+            getString(R.string.playlist_special_title),
+            getString(R.string.playlist_special_comment, mediaPath)
         )
         list.add(browserItem)
 
-        for (name in PlaylistUtils.listNoSuffix()) {
+        PlaylistUtils.listNoSuffix().forEach { name ->
             val item = PlaylistItem(
                 PlaylistItem.TYPE_PLAYLIST,
                 name,
@@ -260,7 +260,6 @@ class PlaylistMenu : AppCompatActivity() {
         }
 
         PlaylistUtils.renumberIds(playlistAdapter.getItems())
-
         playlistAdapter.submitList(list)
     }
 
@@ -282,7 +281,7 @@ class PlaylistMenu : AppCompatActivity() {
     private fun editPlaylist(data: Intent?) {
 
         if (data == null) {
-            toast("Couldn't edit/delete playlist")
+            toast(R.string.msg_edit_playlist_failed)
             return
         }
 
@@ -296,6 +295,7 @@ class PlaylistMenu : AppCompatActivity() {
             PlaylistAddEdit.RESULT_EDIT_PLAYLIST -> {
                 if (!Playlist.rename(oldName!!, name)) {
                     generalError(getString(R.string.error_rename_playlist))
+                    return // Don't attempt to edit comment if failed.
                 }
 
                 val file = File(Preferences.DATA_DIR, name + Playlist.COMMENT_SUFFIX)
@@ -311,8 +311,8 @@ class PlaylistMenu : AppCompatActivity() {
 
     private fun changeDir() {
         MaterialDialog(this).show {
-            title(text = "Change directory")
-            message(text = "Enter the mod directory:")
+            title(R.string.dialog_change_dir_title)
+            message(R.string.dialog_change_dir_msg)
             input(
                 prefill = mediaPath,
                 waitForPositiveButton = true,

@@ -1,5 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
+    <!-- This Directory Dialog -->
+    <string-array name="fileList_this_directory_array">
+        <item>Add to playlist</item>
+        <item>Add to play queue</item>
+        <item>Play contents</item>
+        <item>Delete directory</item>
+    </string-array>
+
+    <!-- This File Dialog -->
+    <string-array name="fileList_this_files_array">
+        <item>Add to playlist</item>
+        <item>Add to play queue</item>
+        <item>Play this file</item>
+        <item>Play all starting here</item>
+        <item>Delete file</item>
+    </string-array>
+
+    <!-- All Files Dialog -->
+    <string-array name="fileList_all_files_array">
+        <item>Add to playlist</item>
+        <item>Recursive add to playlist</item>
+        <item>Add to play queue</item>
+        <item>Set as default path</item>
+        <item>Clear cache</item>
+    </string-array>
+
+    <!-- Edit Playlist Dialog -->
+    <string-array name="edit_playlist_dialog_array">
+        <item>Remove from playlist</item>
+        <item>Add to play queue</item>
+        <item>Add all to play queue</item>
+        <item>Play this module</item>
+        <item>Play all starting here</item>
+    </string-array>
+
     <string-array name="playlist_mode_array">
         <item>Start playing at selection</item>
         <item>Play selected file</item>

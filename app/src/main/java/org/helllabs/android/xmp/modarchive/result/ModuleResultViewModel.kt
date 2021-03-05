@@ -34,7 +34,7 @@ class ModuleResultViewModel
                     Status.CANCELLED -> _moduleState.value = ModuleState.Cancelled
                     Status.QUEUED -> _moduleState.value = ModuleState.Queued
                     Status.COMPLETED -> _moduleState.value = ModuleState.Complete
-                    else -> Unit // Don't are about the rest
+                    else -> Unit // Don't care about the rest
                 }
 
                 if (data.error != Error.NONE) {
@@ -46,13 +46,11 @@ class ModuleResultViewModel
     }
 
     fun attachObserver() {
-        if (request != null)
-            fetchDownloader.attachFetchObserversForDownload(request!!.id, fetchObserver)
+        fetchDownloader.attachFetchObserversForDownload(request!!.id, fetchObserver)
     }
 
     fun removeObserver() {
-        if (request != null)
-            fetchDownloader.removeFetchObserversForDownload(request!!.id, fetchObserver)
+        fetchDownloader.removeFetchObserversForDownload(request!!.id, fetchObserver)
     }
 
     fun removeFetch() {

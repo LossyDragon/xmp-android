@@ -180,7 +180,6 @@
 
             <PreferenceCategory app:title="@string/pref_category_player_interface">
 
-                <!-- TODO -->
                 <CheckBoxPreference
                     app:defaultValue="true"
                     app:key="show_info_line_hex"

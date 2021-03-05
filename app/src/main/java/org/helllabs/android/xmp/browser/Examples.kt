@@ -21,7 +21,7 @@ fun Context.installAssets(path: String, shouldInstall: Boolean): Int {
 
     // Return false if the filepath is not a directory.
     if (filePath.isDirectory) {
-        logW("install: $path directory not found")
+        logW("Install: $path directory not found")
         return -1
     }
 

@@ -45,7 +45,7 @@ object PlaylistUtils {
     }
 
     fun filesToPlaylist(activity: Activity, fileList: List<String>, playlistName: String) {
-        activity.toast("Please wait, adding files...")
+        activity.toast(R.string.msg_adding_files)
         addFiles(activity, fileList, playlistName)
     }
 

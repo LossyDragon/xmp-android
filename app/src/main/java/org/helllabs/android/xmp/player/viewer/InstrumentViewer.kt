@@ -117,8 +117,7 @@ class InstrumentViewer(context: Context, val background: Int) : Viewer(context, 
                         vol = 60
                     }
 
-                    // TODO: Center or pad bars a bit more
-                    rect[drawX, drawY - fontSize + 1, drawX + drawWidth * 8 / 10] = drawY + 1
+                    rect.set(drawX, drawY - fontSize + 4, drawX + drawWidth * 8 / 10, drawY + 8)
                     canvas.drawRect(rect, barPaint[vol])
                     if (vol > maxVol) {
                         maxVol = vol

@@ -112,17 +112,9 @@ class PlaylistActivity :
     }
 
     private fun onItemLongClick(position: Int) {
-        val items = listOf(
-            "Remove from playlist",
-            "Add to play queue",
-            "Add all to play queue",
-            "Play this module",
-            "Play all starting here"
-        )
-
         MaterialDialog(this).show {
-            title(text = "Edit playlist")
-            listItemsSingleChoice(items = items) { _, index, _ ->
+            title(R.string.dialog_playlist_edit_title)
+            listItemsSingleChoice(R.array.edit_playlist_dialog_array) { _, index, _ ->
                 when (index) {
                     0 -> {
                         mPlaylist!!.remove(position)
