@@ -732,6 +732,7 @@ class PlayerActivity : AppCompatActivity() {
                 viewer.setRotation(playerDisplay.rotation)
 
                 info = Viewer.Info()
+                info!!.type = Xmp.getModType()
                 stopUpdate = false
 
                 if (progressThread == null || !progressThread!!.isAlive) {

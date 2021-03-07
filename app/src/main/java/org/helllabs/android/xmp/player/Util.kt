@@ -1,7 +1,5 @@
 package org.helllabs.android.xmp.player
 
-import org.helllabs.android.xmp.util.logW
-
 object Util {
 
     private val digits = charArrayOf(
@@ -36,24 +34,4 @@ object Util {
         res[1] = hexDigits[(value shr 4) and 0x0f]
         res[2] = hexDigits[value and 0x0f]
     }
-
-    /* Shitty lookup table for Effects*/
-    fun Int.effect(): String =
-        when (this) {
-            in 0..15 -> hexDigits[this].toString()
-            16 -> "G" // FX_GLOBALVOL
-            17 -> "H" // FX_GVOL_SLIDE
-            21 -> "L" // FX_ENVPOS
-            27 -> "Q" // FX_MULTI_RETRIG
-            96 -> "A" // FX_669_PORTA_UP
-            97 -> "B" // FX_669_PORTA_DN
-            98 -> "C" // FX_669_TPORTA
-            99 -> "D" // FX_669_FINETUNE
-            10 -> "E" // FX_669_VIBRATO
-            12 -> "F" // FX_SPEED_CP
-            else -> {
-                logW("Unknown Effect: $this")
-                "?"
-            }
-        }
 }

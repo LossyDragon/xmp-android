@@ -19,6 +19,7 @@ import androidx.media.AudioManagerCompat
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
 import org.greenrobot.eventbus.EventBus
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.preferences.PrefManager
@@ -32,7 +33,6 @@ import org.helllabs.android.xmp.util.*
 import org.helllabs.android.xmp.util.FileUtils.basename
 import org.helllabs.android.xmp.util.InfoCache.delete
 import org.helllabs.android.xmp.util.InfoCache.testModule
-import javax.inject.Inject
 
 // Binder is leaking via leak canary  ¯\_(ツ)_/¯
 // -- I guess it retains it for a very long time? (SO answers)

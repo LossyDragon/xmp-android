@@ -7,9 +7,9 @@ import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.player.Util
 import org.helllabs.android.xmp.player.Util.NOTES
-import org.helllabs.android.xmp.player.Util.effect
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.util.logD
+import org.helllabs.android.xmp.util.logW
 
 @SuppressLint("ViewConstructor")
 class PatternViewer(context: Context, background: Int) : Viewer(context, background) {
@@ -63,6 +63,9 @@ class PatternViewer(context: Context, background: Int) : Viewer(context, backgro
 
     private val fontSize: Float =
         resources.getDimensionPixelSize(R.dimen.patternview_font_size).toFloat()
+
+    private var currentType: String = ""
+    private lateinit var effectsTable: List<EffectList>
 
     init {
 
@@ -177,6 +180,13 @@ class PatternViewer(context: Context, background: Int) : Viewer(context, backgro
             oldPosX = posX
         }
 
+        // Get a table of valid effects
+        if (currentType != info.type) {
+            logD("Refreshing effects list")
+            currentType = info.type
+            effectsTable = Effects.getEffectList(info.type)
+        }
+
         requestCanvasLock { canvas ->
             doDraw(canvas, info)
         }
@@ -270,8 +280,15 @@ class PatternViewer(context: Context, background: Int) : Viewer(context, backgro
 
                 // Effects
                 patternX = (3 + j * 10 + 6) * fontWidth - posX
+                val effectType = effectsTable.find { it.key == rowFxType[j] }?.effect
                 val effect: String = when {
-                    rowFxType[j] > -1 -> rowFxType[j].effect()
+                    rowFxType[j] > -1 ->
+                        if (effectType != null) {
+                            effectType
+                        } else {
+                            logW("Unknown Effect: $currentType | ${rowFxType[j]}")
+                            "?"
+                        }
                     else -> "-"
                 }
                 canvas.drawText(effect, patternX, patternY, paint3)

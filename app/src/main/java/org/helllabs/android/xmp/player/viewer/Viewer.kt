@@ -52,6 +52,7 @@ abstract class Viewer(context: Context, color: Int) :
         val instruments = IntArray(64)
         val keys = IntArray(64)
         val periods = IntArray(64)
+        var type = ""
     }
 
     init {
@@ -168,11 +169,11 @@ abstract class Viewer(context: Context, color: Int) :
         }
     }
 
-    fun setMaxX(x: Int) {
+    internal fun setMaxX(x: Int) {
         synchronized(this) { maxX = x }
     }
 
-    fun setMaxY(y: Int) {
+    internal fun setMaxY(y: Int) {
         synchronized(this) { maxY = y }
     }
 

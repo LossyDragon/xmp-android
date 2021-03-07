@@ -341,7 +341,12 @@ class ChannelViewer(context: Context, background: Int) : Viewer(context, backgro
             )
 
             // Draw scopes
-            rect[drawX + scopeLeft, drawY + 1, drawX + scopeLeft + scopeWidth] = drawY + scopeHeight
+            rect.set(
+                drawX + scopeLeft,
+                drawY + 1,
+                drawX + scopeLeft + scopeWidth,
+                drawY + scopeHeight
+            )
             if (isMuted[chn]) {
                 canvas.drawRect(rect, scopeMutePaint)
                 canvas.drawText(
@@ -425,9 +430,9 @@ class ChannelViewer(context: Context, background: Int) : Viewer(context, backgro
             volX = volLeft + vol * volWidth / 0x40
             volY1 = drawY + 2 * fontHeight
             volY2 = drawY + 2 * fontHeight + fontHeight / 3
-            rect[drawX + volLeft, volY1, drawX + volX] = volY2
+            rect.set(drawX + volLeft, volY1, drawX + volX, volY2)
             canvas.drawRect(rect, meterPaint)
-            rect[drawX + volX + 1, volY1, drawX + volLeft + volWidth] = volY2
+            rect.set(drawX + volX + 1, volY1, drawX + volLeft + volWidth, volY2)
             canvas.drawRect(rect, scopePaint)
 
             // Draw pan
@@ -436,9 +441,9 @@ class ChannelViewer(context: Context, background: Int) : Viewer(context, backgro
             }
 
             panX = panLeft + pan * panWidth / 0x100
-            rect[drawX + panLeft, volY1, drawX + panLeft + panWidth] = volY2
+            rect.set(drawX + panLeft, volY1, drawX + panLeft + panWidth, volY2)
             canvas.drawRect(rect, scopePaint)
-            rect[drawX + panX, volY1, drawX + panX + fontWidth / 2] = volY2
+            rect.set(drawX + panX, volY1, drawX + panX + fontWidth / 2, volY2)
             canvas.drawRect(rect, meterPaint)
         }
     }

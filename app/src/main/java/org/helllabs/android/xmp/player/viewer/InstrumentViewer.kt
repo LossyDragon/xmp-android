@@ -3,13 +3,11 @@ package org.helllabs.android.xmp.player.viewer
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
-import android.os.RemoteException
 import androidx.core.graphics.ColorUtils
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.util.color
 import org.helllabs.android.xmp.util.logD
-import org.helllabs.android.xmp.util.logE
 
 @SuppressLint("ViewConstructor")
 class InstrumentViewer(context: Context, val background: Int) : Viewer(context, background) {
@@ -37,7 +35,7 @@ class InstrumentViewer(context: Context, val background: Int) : Viewer(context, 
         // White text volume shades
         for (i in 0..SHADE_STEPS) {
             val value = (i / SHADE_STEPS.toFloat())
-            logD("Text Value $i: $value")
+            // logD("Text Value $i: $value")
             insPaint.add(
                 Paint().apply {
                     color = ColorUtils.blendARGB(Color.GRAY, Color.WHITE, value)
@@ -52,7 +50,7 @@ class InstrumentViewer(context: Context, val background: Int) : Viewer(context, 
         // Blue bar volume shades
         for (i in SHADE_STEPS downTo 0) {
             val value = (i / SHADE_STEPS.toFloat())
-            logD("Bar Value $i: $value")
+            // logD("Bar Value $i: $value")
             barPaint.add(
                 Paint().apply {
                     color = ColorUtils.blendARGB(startBlue, background, value)
@@ -69,12 +67,7 @@ class InstrumentViewer(context: Context, val background: Int) : Viewer(context, 
         super.setup(modVars)
         logD("Viewer Setup")
 
-        try {
-            insName = Xmp.getInstruments()
-        } catch (e: RemoteException) {
-            logE("Can't get instrument name")
-        }
-
+        insName = Xmp.getInstruments()
         setMaxY(modVars[4] * fontHeight + fontHeight / 2)
     }
 
