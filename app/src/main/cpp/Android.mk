@@ -14,17 +14,18 @@ DEPACKERS_SOURCES := $(addprefix src/depackers/,$(DEPACKERS_OBJS))
 
 LOCAL_MODULE := libxmp-jni
 
-LOCAL_CFLAGS := -O3 -DHAVE_MKSTEMP -DHAVE_FNMATCH -DHAVE_ROUND -I$(LOCAL_PATH)/include \
-		   -I$(LOCAL_PATH)/src -Wno-int-to-pointer-cast -Wno-pointer-to-int-cast
+LOCAL_CFLAGS := -O3 -DHAVE_MKSTEMP -DHAVE_FNMATCH -DHAVE_ROUND \
+ 				-I$(LOCAL_PATH)/include -I$(LOCAL_PATH)/src \
+ 				-Wno-int-to-pointer-cast -Wno-pointer-to-int-cast
 
 LOCAL_SRC_FILES := $(SRC_SOURCES:.o=.c) \
 		   $(LOADERS_SOURCES:.o=.c) \
 		   $(PROWIZ_SOURCES:.o=.c) \
 		   $(DEPACKERS_SOURCES:.o=.c) \
-		   $(LOCAL_PATH)/../xmp-jni.c \
-		   $(LOCAL_PATH)/../opensl.c
+		   $(LOCAL_PATH)/../xmp-jni.cpp \
+		   $(LOCAL_PATH)/../OpenSL.cpp
 
 # for native audio
-LOCAL_LDLIBS := -lOpenSLES
+LOCAL_LDLIBS := -lOpenSLES -llog
 
 include $(BUILD_SHARED_LIBRARY)

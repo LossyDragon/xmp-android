@@ -18,7 +18,7 @@ android {
         versionCode = 87
         versionName = "4.12.0"
 
-        externalNativeBuild.cmake {
+        externalNativeBuild.ndkBuild  {
             abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
         }
 
@@ -28,6 +28,11 @@ android {
     }
 
     buildTypes {
+        debug {
+            externalNativeBuild {
+                ndkBuild.cFlags "-DDEBUG=1"
+            }
+        }
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-project.txt'

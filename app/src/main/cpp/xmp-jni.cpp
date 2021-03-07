@@ -2,20 +2,23 @@
  * If you need a JNI interface for libxmp, check the Libxmp Java API
  * at https://github.com/cmatsuoka/libxmp-java
  */
+#pragma ide diagnostic ignored "UnusedLocalVariable"
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstring>
+#include <cstdio>
+#include <cstdlib>
 #include <pthread.h>
 #include <jni.h>
-#include <string.h>
+#include <android/log.h>
 #include "xmp.h"
-#include "audio.h"
-
-/*  <android/log.h> */
+#include "OpenSL.h"
 
 #define PERIOD_BASE 13696
+#define MAX_BUFFER_SIZE 256
+#define TAG "XMPNative"
+#define LOG(...)  __android_log_print(ANDROID_LOG_INFO, TAG, __VA_ARGS__)
 
-static xmp_context ctx = NULL;
+static xmp_context ctx = nullptr;
 static struct xmp_module_info mi;
 static struct xmp_frame_info *fi;
 
@@ -35,25 +38,49 @@ static int _mod_is_loaded;
 static int _now, _before;
 static int _buffer_num;
 static int _loop_count;
-static pthread_mutex_t _lock;
-
-#define MAX_BUFFER_SIZE 256
 static char _buffer[MAX_BUFFER_SIZE];
 
-#define lock()   pthread_mutex_lock(&_lock)
-#define unlock() pthread_mutex_unlock(&_lock)
+std::mutex jniMutex;
+#define lock() const std::lock_guard<std::mutex> lock(jniMutex);
 
+extern "C" {
+
+static struct xmp_subinstrument *get_subinstrument(int ins, int key) {
+    if (ins >= 0 && ins < mi.mod->ins) {
+        if (mi.mod->xxi[ins].map[key].ins != 0xff) {
+            int mapped = mi.mod->xxi[ins].map[key].ins;
+            return &mi.mod->xxi[ins].sub[mapped];
+        }
+    }
+
+    return nullptr;
+}
+
+int OpenSL::play_buffer(void *buffer, int size, int looped) {
+    int ret = -XMP_END;
+    int num_loop;
+
+    lock()
+
+    if (_playing) {
+        num_loop = looped ? 0 : _loop_count + 1;
+        ret = xmp_play_buffer(ctx, buffer, size, num_loop);
+        xmp_get_frame_info(ctx, &fi[_now]);
+        INC(_before, _buffer_num);
+        _now = (_before + _buffer_num - 1) % _buffer_num;
+        _loop_count = fi[_now].loop_count;
+    }
+
+    return ret;
+}
 
 /* For ModList */
 JNIEXPORT jboolean JNICALL
 Java_org_helllabs_android_xmp_Xmp_init(JNIEnv *env, jobject obj, jint rate, jint ms) {
-    /*if (ctx != NULL)
-        return;*/
 
     ctx = xmp_create_context();
-    pthread_mutex_init(&_lock, NULL);
 
-    if ((_buffer_num = open_audio(rate, ms)) < 0) {
+    if ((_buffer_num = OpenSL::open_audio(rate, ms)) < 0) {
         return JNI_FALSE;
     }
 
@@ -63,8 +90,7 @@ Java_org_helllabs_android_xmp_Xmp_init(JNIEnv *env, jobject obj, jint rate, jint
 JNIEXPORT void JNICALL
 Java_org_helllabs_android_xmp_Xmp_deinit(JNIEnv *env, jobject obj) {
     xmp_free_context(ctx);
-    pthread_mutex_destroy(&_lock);
-    close_audio();
+    OpenSL::close_audio();
 }
 
 JNIEXPORT jint JNICALL
@@ -72,10 +98,10 @@ Java_org_helllabs_android_xmp_Xmp_loadModule(JNIEnv *env, jobject obj, jstring n
     const char *filename;
     int res;
 
-    filename = (*env)->GetStringUTFChars(env, name, NULL);
+    filename = (*env).GetStringUTFChars(name, nullptr);
     /* __android_log_print(ANDROID_LOG_DEBUG, "libxmp", "%s", filename); */
     res = xmp_load_module(ctx, (char *) filename);
-    (*env)->ReleaseStringUTFChars(env, name, filename);
+    (*env).ReleaseStringUTFChars(name, filename);
 
     xmp_get_module_info(ctx, &mi);
 
@@ -90,14 +116,15 @@ JNIEXPORT jboolean JNICALL
 Java_org_helllabs_android_xmp_Xmp_testModule(JNIEnv *env, jobject obj, jstring name, jobject info) {
     const char *filename;
     int i, res;
-    struct xmp_test_info ti;
+    struct xmp_test_info ti{};
 
-    filename = (*env)->GetStringUTFChars(env, name, NULL);
+    filename = (*env).GetStringUTFChars(name, nullptr);
     /* __android_log_print(ANDROID_LOG_DEBUG, "libxmp", "%s", filename); */
     res = xmp_test_module((char *) filename, &ti);
 
     /* If the module title is empty, use the file basename */
-    for (i = strlen(ti.name) - 1; i >= 0; i--) {
+    unsigned char modName = strlen(ti.name) - 1;
+    for (i = modName; i >= 0; i--) {
         if (ti.name[i] == ' ') {
             ti.name[i] = 0;
         } else {
@@ -106,36 +133,31 @@ Java_org_helllabs_android_xmp_Xmp_testModule(JNIEnv *env, jobject obj, jstring n
     }
     if (strlen(ti.name) == 0) {
         const char *x = strrchr(filename, '/');
-        if (x == NULL) {
+        if (x == nullptr) {
             x = filename;
         }
         strncpy(ti.name, x + 1, XMP_NAME_SIZE);
     }
 
-    (*env)->ReleaseStringUTFChars(env, name, filename);
+    (*env).ReleaseStringUTFChars(name, filename);
 
     if (res == 0) {
-        if (info != NULL) {
-            jclass modInfoClass = (*env)->FindClass(env,
-                                                    "org/helllabs/android/xmp/util/ModInfo");
+        if (info != nullptr) {
+            jclass modInfoClass = (*env).FindClass("org/helllabs/android/xmp/util/ModInfo");
             jfieldID field;
 
-            if (modInfoClass == NULL)
+            if (modInfoClass == nullptr)
                 return JNI_FALSE;
 
-            field = (*env)->GetFieldID(env, modInfoClass, "name",
-                                       "Ljava/lang/String;");
-            if (field == NULL)
+            field = (*env).GetFieldID(modInfoClass, "name", "Ljava/lang/String;");
+            if (field == nullptr)
                 return JNI_FALSE;
-            (*env)->SetObjectField(env, info, field,
-                                   (*env)->NewStringUTF(env, ti.name));
+            (*env).SetObjectField(info, field, (*env).NewStringUTF(ti.name));
 
-            field = (*env)->GetFieldID(env, modInfoClass, "type",
-                                       "Ljava/lang/String;");
-            if (field == NULL)
+            field = (*env).GetFieldID(modInfoClass, "type", "Ljava/lang/String;");
+            if (field == nullptr)
                 return JNI_FALSE;
-            (*env)->SetObjectField(env, info, field,
-                                   (*env)->NewStringUTF(env, ti.type));
+            (*env).SetObjectField(info, field, (*env).NewStringUTF(ti.type));
         }
 
         return JNI_TRUE;
@@ -146,12 +168,11 @@ Java_org_helllabs_android_xmp_Xmp_testModule(JNIEnv *env, jobject obj, jstring n
 
 JNIEXPORT jint JNICALL
 Java_org_helllabs_android_xmp_Xmp_releaseModule(JNIEnv *env, jobject obj) {
-    lock();
+    lock()
     if (_mod_is_loaded) {
         _mod_is_loaded = 0;
         xmp_release_module(ctx);
     }
-    unlock();
 
     return 0;
 }
@@ -160,11 +181,10 @@ JNIEXPORT jint JNICALL
 Java_org_helllabs_android_xmp_Xmp_startPlayer(JNIEnv *env, jobject obj, jint rate) {
     int i, ret;
 
-    lock();
+    lock()
 
-    fi = calloc(1, _buffer_num * sizeof(struct xmp_frame_info));
-    if (fi == NULL) {
-        unlock();
+    fi = static_cast<xmp_frame_info *>(calloc(1, _buffer_num * sizeof(struct xmp_frame_info)));
+    if (fi == nullptr) {
         return -101;
     }
 
@@ -176,75 +196,54 @@ Java_org_helllabs_android_xmp_Xmp_startPlayer(JNIEnv *env, jobject obj, jint rat
     _now = _before = 0;
     _loop_count = 0;
     _playing = 1;
-    ret = xmp_start_player(ctx, rate, 0);
 
-    unlock();
+    // Don't pass any format flags.
+    ret = xmp_start_player(ctx, rate, 0 & XMP_FORMAT_UNSIGNED);
 
     return ret;
 }
 
 JNIEXPORT jint JNICALL
 Java_org_helllabs_android_xmp_Xmp_endPlayer(JNIEnv *env, jobject obj) {
-    lock();
+    lock()
     if (_playing) {
         _playing = 0;
         xmp_end_player(ctx);
         free(fi);
-        fi = NULL;
+        fi = nullptr;
     }
-    unlock();
 
     return 0;
 }
 
-int play_buffer(void *buffer, int size, int looped) {
-    int ret = -XMP_END;
-    int num_loop;
-
-    lock();
-
-    if (_playing) {
-        num_loop = looped ? 0 : _loop_count + 1;
-        ret = xmp_play_buffer(ctx, buffer, size, num_loop);
-        xmp_get_frame_info(ctx, &fi[_now]);
-        INC(_before, _buffer_num);
-        _now = (_before + _buffer_num - 1) % _buffer_num;
-        _loop_count = fi[_now].loop_count;
-    }
-
-    unlock();
-
-    return ret;
-}
-
 JNIEXPORT jint JNICALL
 Java_org_helllabs_android_xmp_Xmp_playAudio(JNIEnv *env, jobject obj) {
-    return play_audio();
+    return OpenSL::play_audio();
 }
 
 JNIEXPORT void JNICALL
 Java_org_helllabs_android_xmp_Xmp_dropAudio(JNIEnv *env, jobject obj) {
-    drop_audio();
+    return OpenSL::drop_audio();
 }
 
 JNIEXPORT jboolean JNICALL
 Java_org_helllabs_android_xmp_Xmp_stopAudio(JNIEnv *env, jobject obj) {
-    return stop_audio() == 0 ? JNI_TRUE : JNI_FALSE;
+    return OpenSL::stop_audio() == 0 ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT jboolean JNICALL
 Java_org_helllabs_android_xmp_Xmp_restartAudio(JNIEnv *env, jobject obj) {
-    return restart_audio() == 0 ? JNI_TRUE : JNI_FALSE;
+    return OpenSL::restart_audio() == 0 ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT jboolean JNICALL
 Java_org_helllabs_android_xmp_Xmp_hasFreeBuffer(JNIEnv *env, jobject obj) {
-    return has_free_buffer() ? JNI_TRUE : JNI_FALSE;
+    return OpenSL::has_free_buffer() ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT jint JNICALL
 Java_org_helllabs_android_xmp_Xmp_fillBuffer(JNIEnv *env, jobject obj, jboolean looped) {
-    return fill_buffer(looped);
+    return OpenSL::fill_buffer(looped);
 }
 
 JNIEXPORT jint JNICALL
@@ -276,10 +275,10 @@ Java_org_helllabs_android_xmp_Xmp_restartModule(JNIEnv *env, jobject obj) {
 
 JNIEXPORT jint JNICALL
 Java_org_helllabs_android_xmp_Xmp_seek(JNIEnv *env, jobject obj, jint time) {
-    int ret = 0;
+    int ret;
     int i;
 
-    lock();
+    lock()
 
     ret = xmp_seek_time(ctx, time);
     if (_playing) {
@@ -287,8 +286,6 @@ Java_org_helllabs_android_xmp_Xmp_seek(JNIEnv *env, jobject obj, jint time) {
             fi[i].time = time;
         }
     }
-
-    unlock ();
 
     return ret;
 }
@@ -307,19 +304,18 @@ JNIEXPORT void JNICALL
 Java_org_helllabs_android_xmp_Xmp_getInfo(JNIEnv *env, jobject obj, jintArray values) {
     int v[7];
 
-    lock();
+    lock()
     if (_playing) {
-        v[0] = fi[_before].pos;
-        v[1] = fi[_before].pattern;
-        v[2] = fi[_before].row;
-        v[3] = fi[_before].num_rows;
-        v[4] = fi[_before].frame;
-        v[5] = fi[_before].speed;
-        v[6] = fi[_before].bpm;
+        v[0] = fi[_before].pos /*& 0xff*/;
+        v[1] = fi[_before].pattern /*& 0xff*/;
+        v[2] = fi[_before].row /*& 0xff*/;
+        v[3] = fi[_before].num_rows /*& 0xff*/;
+        v[4] = fi[_before].frame /*& 0xff*/;
+        v[5] = fi[_before].speed /*& 0xff*/;
+        v[6] = fi[_before].bpm /*& 0xff*/;
 
-        (*env)->SetIntArrayRegion(env, values, 0, 7, v);
+        (*env).SetIntArrayRegion(values, 0, 7, v);
     }
-    unlock();
 }
 
 JNIEXPORT void JNICALL
@@ -339,12 +335,12 @@ Java_org_helllabs_android_xmp_Xmp_getLoopCount(JNIEnv *env, jobject obj) {
 
 JNIEXPORT void JNICALL
 Java_org_helllabs_android_xmp_Xmp_getModVars(JNIEnv *env, jobject obj, jintArray vars) {
+    // seq_duration, length, pattern, channel, instruments, sample, num_sequences, _sequence
     int v[8];
 
-    lock();
+    lock()
 
     if (!_mod_is_loaded) {
-        unlock();
         return;
     }
 
@@ -357,20 +353,12 @@ Java_org_helllabs_android_xmp_Xmp_getModVars(JNIEnv *env, jobject obj, jintArray
     v[6] = mi.num_sequences;
     v[7] = _sequence;
 
-    (*env)->SetIntArrayRegion(env, vars, 0, 8, v);
-
-    unlock();
+    (*env).SetIntArrayRegion(vars, 0, 8, v);
 }
 
 JNIEXPORT jstring JNICALL
 Java_org_helllabs_android_xmp_Xmp_getVersion(JNIEnv *env, jobject obj) {
-    char buf[20];
-    snprintf(buf, 20, "%d.%d.%d",
-             (xmp_vercode & 0x00ff0000) >> 16,
-             (xmp_vercode & 0x0000ff00) >> 8,
-             (xmp_vercode & 0x000000ff));
-
-    return (*env)->NewStringUTF(env, buf);
+    return (*env).NewStringUTF(xmp_version);
 }
 
 JNIEXPORT jobjectArray JNICALL
@@ -382,21 +370,21 @@ Java_org_helllabs_android_xmp_Xmp_getFormats(JNIEnv *env, jobject obj) {
     char **list;
     char buf[80];
 
-    list = xmp_get_format_list();
-    for (num = 0; list[num] != NULL; num++);
+    list = (char **) xmp_get_format_list();
+    for (num = 0; list[num] != nullptr; num++);
 
-    stringClass = (*env)->FindClass(env, "java/lang/String");
-    if (stringClass == NULL)
-        return NULL;
+    stringClass = (*env).FindClass("java/lang/String");
+    if (stringClass == nullptr)
+        return nullptr;
 
-    stringArray = (*env)->NewObjectArray(env, num, stringClass, NULL);
-    if (stringArray == NULL)
-        return NULL;
+    stringArray = (*env).NewObjectArray(num, stringClass, nullptr);
+    if (stringArray == nullptr)
+        return nullptr;
 
     for (i = 0; i < num; i++) {
-        s = (*env)->NewStringUTF(env, list[i]);
-        (*env)->SetObjectArrayElement(env, stringArray, i, s);
-        (*env)->DeleteLocalRef(env, s);
+        s = (*env).NewStringUTF(list[i]);
+        (*env).SetObjectArrayElement(stringArray, i, s);
+        (*env).DeleteLocalRef(s);
     }
 
     return stringArray;
@@ -404,22 +392,22 @@ Java_org_helllabs_android_xmp_Xmp_getFormats(JNIEnv *env, jobject obj) {
 
 JNIEXPORT jstring JNICALL
 Java_org_helllabs_android_xmp_Xmp_getModName(JNIEnv *env, jobject obj) {
-    char *s = _mod_is_loaded ? mi.mod->name : "";
-    return (*env)->NewStringUTF(env, s);
+    const char *s = _mod_is_loaded ? mi.mod->name : "";
+    return (*env).NewStringUTF(s);
 }
 
 JNIEXPORT jstring JNICALL
 Java_org_helllabs_android_xmp_Xmp_getModType(JNIEnv *env, jobject obj) {
-    char *s = _mod_is_loaded ? mi.mod->type : "";
-    return (*env)->NewStringUTF(env, s);
+    const char *s = _mod_is_loaded ? mi.mod->type : "";
+    return (*env).NewStringUTF(s);
 }
 
 JNIEXPORT jstring JNICALL
 Java_org_helllabs_android_xmp_Xmp_getComment(JNIEnv *env, jobject obj) {
     if (mi.comment)
-        return (*env)->NewStringUTF(env, mi.comment);
+        return (*env).NewStringUTF(mi.comment);
     else
-        return NULL;
+        return nullptr;
 }
 
 JNIEXPORT jobjectArray JNICALL
@@ -432,40 +420,30 @@ Java_org_helllabs_android_xmp_Xmp_getInstruments(JNIEnv *env, jobject obj) {
     int ins;
 
     if (!_mod_is_loaded)
-        return NULL;
+        return nullptr;
 
-    stringClass = (*env)->FindClass(env, "java/lang/String");
-    if (stringClass == NULL)
-        return NULL;
+    stringClass = (*env).FindClass("java/lang/String");
+    if (stringClass == nullptr)
+        return nullptr;
 
-    stringArray = (*env)->NewObjectArray(env, mi.mod->ins, stringClass, NULL);
-    if (stringArray == NULL)
-        return NULL;
+    stringArray = (*env).NewObjectArray(mi.mod->ins, stringClass, nullptr);
+    if (stringArray == nullptr)
+        return nullptr;
 
     for (i = 0; i < mi.mod->ins; i++) {
         snprintf(buf, 80, "%02X %s", i + 1, mi.mod->xxi[i].name);
-        s = (*env)->NewStringUTF(env, buf);
-        (*env)->SetObjectArrayElement(env, stringArray, i, s);
-        (*env)->DeleteLocalRef(env, s);
+        s = (*env).NewStringUTF(buf);
+        (*env).SetObjectArrayElement(stringArray, i, s);
+        (*env).DeleteLocalRef(s);
     }
 
     return stringArray;
 }
 
-static struct xmp_subinstrument *get_subinstrument(int ins, int key) {
-    if (ins >= 0 && ins < mi.mod->ins) {
-        if (mi.mod->xxi[ins].map[key].ins != 0xff) {
-            int mapped = mi.mod->xxi[ins].map[key].ins;
-            return &mi.mod->xxi[ins].sub[mapped];
-        }
-    }
-
-    return NULL;
-}
-
 JNIEXPORT void JNICALL
 Java_org_helllabs_android_xmp_Xmp_getChannelData(JNIEnv *env, jobject obj, jintArray vol,
-                                                 jintArray finalvol, jintArray pan, jintArray ins,
+                                                 jintArray finalvol,
+                                                 jintArray pan, jintArray ins,
                                                  jintArray key, jintArray period) {
     struct xmp_subinstrument *sub;
     int chn = mi.mod->chn;
@@ -474,7 +452,6 @@ Java_org_helllabs_android_xmp_Xmp_getChannelData(JNIEnv *env, jobject obj, jintA
     lock();
 
     if (!_mod_is_loaded || !_playing) {
-        unlock();
         return;
     }
 
@@ -494,7 +471,7 @@ Java_org_helllabs_android_xmp_Xmp_getChannelData(JNIEnv *env, jobject obj, jintA
             _key[i] = ci->event.note - 1;
             _last_key[i] = _key[i];
             sub = get_subinstrument(ci->instrument, _key[i]);
-            if (sub != NULL) {
+            if (sub != nullptr) {
                 _cur_vol[i] = sub->vol * 0x40 / mi.vol_base;
             }
         } else {
@@ -512,14 +489,12 @@ Java_org_helllabs_android_xmp_Xmp_getChannelData(JNIEnv *env, jobject obj, jintA
         _period[i] = ci->period >> 8;
     }
 
-    (*env)->SetIntArrayRegion(env, vol, 0, chn, _cur_vol);
-    (*env)->SetIntArrayRegion(env, finalvol, 0, chn, _finalvol);
-    (*env)->SetIntArrayRegion(env, pan, 0, chn, _pan);
-    (*env)->SetIntArrayRegion(env, ins, 0, chn, _ins);
-    (*env)->SetIntArrayRegion(env, key, 0, chn, _key);
-    (*env)->SetIntArrayRegion(env, period, 0, chn, _period);
-
-    unlock();
+    (*env).SetIntArrayRegion(vol, 0, chn, _cur_vol);
+    (*env).SetIntArrayRegion(finalvol, 0, chn, _finalvol);
+    (*env).SetIntArrayRegion(pan, 0, chn, _pan);
+    (*env).SetIntArrayRegion(ins, 0, chn, _ins);
+    (*env).SetIntArrayRegion(key, 0, chn, _key);
+    (*env).SetIntArrayRegion(period, 0, chn, _period);
 }
 
 JNIEXPORT void JNICALL
@@ -550,43 +525,37 @@ Java_org_helllabs_android_xmp_Xmp_getPatternRow(JNIEnv *env, jobject obj, jint p
         row_note[i] = e->note;
         row_ins[i] = e->ins;
 
-        // TODO: This is horrible. Would need to make a map of type characters.
         // Get the Effect or Secondary Effect type
         if (e->fxt > 0) {
             row_fxt[i] = e->fxt;
+            row_fxp[i] = e->fxp;
         } else if (e->f2t > 0) {
             row_fxt[i] = e->f2t;
-        } else {
-            row_fxt[i] = -1;
-        }
-
-        // Get the Effect or Secondary Effect parameter
-        if (e->fxp > 0) {
-            row_fxp[i] = e->fxp;
-        } else if (e->f2p > 0) {
             row_fxp[i] = e->f2p;
         } else {
+            row_fxt[i] = -1;
             row_fxp[i] = -1;
         }
     }
 
-    (*env)->SetByteArrayRegion(env, rowNotes, 0, chn, row_note);
-    (*env)->SetByteArrayRegion(env, rowInstruments, 0, chn, row_ins);
-    (*env)->SetIntArrayRegion(env, rowFxType, 0, chn, row_fxt);
-    (*env)->SetIntArrayRegion(env, rowFxParm, 0, chn, row_fxp);
+    (*env).SetByteArrayRegion(rowNotes, 0, chn, reinterpret_cast<const jbyte *>(row_note));
+    (*env).SetByteArrayRegion(rowInstruments, 0, chn, reinterpret_cast<const jbyte *>(row_ins));
+    (*env).SetIntArrayRegion(rowFxType, 0, chn, reinterpret_cast<const jint *>(row_fxt));
+    (*env).SetIntArrayRegion(rowFxParm, 0, chn, reinterpret_cast<const jint *>(row_fxp));
 }
 
 JNIEXPORT void JNICALL
 Java_org_helllabs_android_xmp_Xmp_getSampleData(JNIEnv *env, jobject obj, jboolean trigger,
-                                                jint ins, jint key, jint period, jint chn,
-                                                jint width, jbyteArray buffer) {
+                                                jint ins, jint key,
+                                                jint period, jint chn, jint width,
+                                                jbyteArray buffer) {
     struct xmp_subinstrument *sub;
     struct xmp_sample *xxs;
     int i, pos, transient_size;
     int limit;
     int step, len, lps, lpe;
 
-    lock();
+    lock()
 
     if (!_mod_is_loaded)
         goto err;
@@ -604,19 +573,19 @@ Java_org_helllabs_android_xmp_Xmp_getSampleData(JNIEnv *env, jobject obj, jboole
     }
 
     sub = get_subinstrument(ins, key);
-    if (sub == NULL || sub->sid < 0 || sub->sid >= mi.mod->smp) {
+    if (sub == nullptr || sub->sid < 0 || sub->sid >= mi.mod->smp) {
         goto err;
     }
 
     xxs = &mi.mod->xxs[sub->sid];
-    if (xxs == NULL || xxs->flg & XMP_SAMPLE_SYNTH || xxs->len == 0) {
+    if (xxs == nullptr || xxs->flg & XMP_SAMPLE_SYNTH || xxs->len == 0) {
         goto err;
     }
 
     step = (PERIOD_BASE << 4) / period;
-    len = xxs->len << 5;
-    lps = xxs->lps << 5;
-    lpe = xxs->lpe << 5;
+    len = xxs->len << 5; // Sample Length
+    lps = xxs->lps << 5; // Loop Start
+    lpe = xxs->lpe << 5; // Loop End
 
     pos = _pos[chn];
 
@@ -691,17 +660,13 @@ Java_org_helllabs_android_xmp_Xmp_getSampleData(JNIEnv *env, jobject obj, jboole
 
     _pos[chn] = pos;
 
-    (*env)->SetByteArrayRegion(env, buffer, 0, width, _buffer);
-
-    unlock();
+    (*env).SetByteArrayRegion(buffer, 0, width, reinterpret_cast<const jbyte *>(_buffer));
 
     return;
 
     err:
     memset(_buffer, 0, width);
-    (*env)->SetByteArrayRegion(env, buffer, 0, width, _buffer);
-
-    unlock();
+    (*env).SetByteArrayRegion(buffer, 0, width, reinterpret_cast<const jbyte *>(_buffer));
 }
 
 JNIEXPORT jboolean JNICALL
@@ -719,7 +684,7 @@ Java_org_helllabs_android_xmp_Xmp_setSequence(JNIEnv *env, jobject obj, jint seq
     _loop_count = 0;
 
     xmp_set_position(ctx, mi.seq_data[_sequence].entry_point);
-    xmp_play_buffer(ctx, NULL, 0, 0);
+    xmp_play_buffer(ctx, nullptr, 0, 0);
 
     return JNI_TRUE;
 }
@@ -740,15 +705,16 @@ Java_org_helllabs_android_xmp_Xmp_getSeqVars(JNIEnv *env, jobject obj, jintArray
         v[i] = mi.seq_data[i].duration;
     }
 
-    (*env)->SetIntArrayRegion(env, vars, 0, num, v);
+    (*env).SetIntArrayRegion(vars, 0, num, v);
 }
 
 JNIEXPORT jint JNICALL
 Java_org_helllabs_android_xmp_Xmp_getVolume(JNIEnv *env, jobject obj) {
-    return get_volume();
+    return OpenSL::get_volume();
 }
 
 JNIEXPORT jint JNICALL
 Java_org_helllabs_android_xmp_Xmp_setVolume(JNIEnv *env, jobject obj, jint vol) {
-    return set_volume(vol);
+    return OpenSL::set_volume(vol);
+}
 }
