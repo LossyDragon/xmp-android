@@ -3,7 +3,7 @@ buildscript {
 
     ext.kotlin_version = '1.4.30'
     ext.ktlint_gradle = '9.4.1'
-    ext.hilt_android = '2.31.2-alpha'
+    ext.hilt_android = '2.33-beta'
 
     repositories {
         jcenter()
