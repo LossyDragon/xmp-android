@@ -3,21 +3,23 @@ package org.helllabs.android.xmp.service.receiver
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.support.v4.media.session.MediaControllerCompat.TransportControls
+import android.support.v4.media.session.MediaSessionCompat
 import org.helllabs.android.xmp.service.notifier.Notifier
 
 /**
  * Notification BroadcastReceiver
  */
-class ControllerReceiver(private val controller: TransportControls) : BroadcastReceiver() {
+class ControllerReceiver(private val mediaSession: MediaSessionCompat) : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         intent?.action.let {
-            when (it) {
-                Notifier.ACTION_PLAY -> controller.play()
-                Notifier.ACTION_PAUSE -> controller.pause()
-                Notifier.ACTION_STOP -> controller.stop()
-                Notifier.ACTION_PREV -> controller.skipToPrevious()
-                Notifier.ACTION_NEXT -> controller.skipToNext()
+            with(mediaSession.controller.transportControls) {
+                when (it) {
+                    Notifier.ACTION_PLAY -> play()
+                    Notifier.ACTION_PAUSE -> pause()
+                    Notifier.ACTION_STOP -> stop()
+                    Notifier.ACTION_PREV -> skipToPrevious()
+                    Notifier.ACTION_NEXT -> skipToNext()
+                }
             }
         }
     }

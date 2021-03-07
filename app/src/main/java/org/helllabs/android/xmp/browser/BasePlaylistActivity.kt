@@ -27,7 +27,7 @@ import org.helllabs.android.xmp.util.InfoCache.testModuleForceIfInvalid
 
 abstract class BasePlaylistActivity : AppCompatActivity() {
 
-    private var mModPlayer: PlayerService? = null
+    private lateinit var mModPlayer: PlayerService
     private var mShowToasts = false
     private var mAddList: MutableList<String>? = null
 
@@ -47,13 +47,12 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             val binder = service as PlayerService.PlayerBinder
             mModPlayer = binder.service
-            mModPlayer?.add(mAddList!!.toList())
+            mModPlayer.add(mAddList!!.toList())
             unbindService(this)
-            mModPlayer = null
         }
 
         override fun onServiceDisconnected(className: ComponentName) {
-            mModPlayer = null
+            logW("Service unexpectedly disconnected")
         }
     }
 
@@ -74,11 +73,6 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     public override fun onResume() {
         super.onResume()
         update()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        mModPlayer = null
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -211,7 +205,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     }
 
     private fun playModule(modList: List<String>, start: Int, keepFirst: Boolean) {
-        XmpApplication.instance?.fileList = modList
+        XmpApplication.fileList = modList
         val intent = Intent(this, PlayerActivity::class.java).apply {
             putExtra(PlayerActivity.PARM_SHUFFLE, isShuffleMode)
             putExtra(PlayerActivity.PARM_LOOP, isLoopMode)

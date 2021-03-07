@@ -87,7 +87,9 @@ object Xmp {
         pat: Int,
         row: Int,
         rowNotes: ByteArray,
-        rowInstruments: ByteArray
+        rowInstruments: ByteArray,
+        rowFxType: IntArray,
+        rowFxParm: IntArray
     )
 
     external fun getSampleData(

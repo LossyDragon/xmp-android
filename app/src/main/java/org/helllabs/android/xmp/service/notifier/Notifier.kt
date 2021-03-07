@@ -10,9 +10,8 @@ import android.app.PendingIntent.FLAG_UPDATE_CURRENT
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.support.v4.media.session.MediaSessionCompat
 import androidx.core.app.NotificationCompat
-import androidx.core.content.res.ResourcesCompat
-import androidx.core.graphics.drawable.toBitmap
 import java.util.*
 import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.R
@@ -20,13 +19,16 @@ import org.helllabs.android.xmp.player.PlayerActivity
 import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.service.utils.QueueManager
+import org.helllabs.android.xmp.util.getIconBitmap
 import org.helllabs.android.xmp.util.isAtLeastM
 import org.helllabs.android.xmp.util.isAtLeastO
-import org.helllabs.android.xmp.util.isLessThanR
 
 // With Android 11 (R), you can swipe the media notification away... But is still plays
 // https://www.androidpolice.com/2020/08/07/android-11s-new-media-player-controls-can-be-swiped-away-in-beta-3/
-class Notifier(val service: PlayerService) {
+class Notifier(
+    private val service: PlayerService,
+    private val mediaSession: MediaSessionCompat
+) {
 
     private var queueManager: QueueManager? = null
 
@@ -60,12 +62,6 @@ class Notifier(val service: PlayerService) {
         makePendingIntent(ACTION_STOP)
     )
 
-    val icon = ResourcesCompat.getDrawable(
-        service.resources,
-        R.drawable.ic_xmp_vector,
-        null
-    )!!.toBitmap()
-
     init {
         if (isAtLeastO) {
             createNotificationChannel(service)
@@ -90,21 +86,15 @@ class Notifier(val service: PlayerService) {
 
         // Preference to use the new MediaStyle notification or classic notification
         if (PrefManager.useMediaStyle)
-            mediaStyle.setMediaSession(service.mediaSession.sessionToken)
+            mediaStyle.setMediaSession(mediaSession.sessionToken)
 
         val notification = NotificationCompat.Builder(service, CHANNEL_ID)
             .setContentIntent(getContentIntent())
             .setStyle(mediaStyle)
             .setSmallIcon(R.drawable.ic_notification)
-
-        // Not Targeting R yet
-        if (isLessThanR) {
-            notification.apply {
-                setContentTitle(notifyTitle)
-                setContentText(notifyInfo)
-                setLargeIcon(icon)
-            }
-        }
+            .setContentTitle(notifyTitle)
+            .setContentText(notifyInfo)
+            .setLargeIcon(service.getIconBitmap())
 
         // Action Builders
         notification.addAction(prevAction) // 0
@@ -135,6 +125,7 @@ class Notifier(val service: PlayerService) {
 
     fun cancel() {
         service.stopForeground(true)
+        queueManager = null
     }
 
     private fun formatIndex(index: Int): String {
@@ -143,18 +134,19 @@ class Notifier(val service: PlayerService) {
 
     private fun makePendingIntent(action: String): PendingIntent {
         val intent = Intent().apply { this.action = action }
-        return pendingIntent(intent, 669)
+        return PendingIntent.getBroadcast(
+            service,
+            669,
+            intent,
+            if (isAtLeastM) FLAG_IMMUTABLE or FLAG_UPDATE_CURRENT else FLAG_UPDATE_CURRENT
+        )
     }
 
     private fun getContentIntent(): PendingIntent {
         val intent = Intent(service, PlayerActivity::class.java)
-        return pendingIntent(intent)
-    }
-
-    private fun pendingIntent(intent: Intent, requestCode: Int = 0): PendingIntent {
-        return PendingIntent.getBroadcast(
+        return PendingIntent.getActivity(
             service,
-            requestCode,
+            0,
             intent,
             if (isAtLeastM) FLAG_IMMUTABLE or FLAG_UPDATE_CURRENT else FLAG_UPDATE_CURRENT
         )

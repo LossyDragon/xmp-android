@@ -4,14 +4,10 @@ class Watchdog(private val timeout: Int) : Runnable {
     private var timer = 0
     private var running = false
     private var thread: Thread? = null
-    private var listener: OnTimeoutListener? = null
+    var listener: OnTimeoutListener? = null
 
     interface OnTimeoutListener {
         fun onTimeout()
-    }
-
-    fun setOnTimeoutListener(listener: OnTimeoutListener?) {
-        this.listener = listener
     }
 
     override fun run() {

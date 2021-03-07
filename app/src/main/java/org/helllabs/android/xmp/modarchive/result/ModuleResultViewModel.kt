@@ -46,11 +46,13 @@ class ModuleResultViewModel
     }
 
     fun attachObserver() {
-        fetchDownloader.attachFetchObserversForDownload(request!!.id, fetchObserver)
+        if (request != null)
+            fetchDownloader.attachFetchObserversForDownload(request!!.id, fetchObserver)
     }
 
     fun removeObserver() {
-        fetchDownloader.removeFetchObserversForDownload(request!!.id, fetchObserver)
+        if (request != null)
+            fetchDownloader.removeFetchObserversForDownload(request!!.id, fetchObserver)
     }
 
     fun removeFetch() {

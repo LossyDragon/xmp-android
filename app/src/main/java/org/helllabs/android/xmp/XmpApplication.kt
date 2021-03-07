@@ -14,19 +14,15 @@ import org.helllabs.android.xmp.preferences.PrefManager
 @HiltAndroidApp
 class XmpApplication : Application() {
 
-    var fileList: List<String>? = null
-
     override fun onCreate() {
         super.onCreate()
-        instance = this
 
         // Initialize preferences
         PrefManager.init(applicationContext)
     }
 
     companion object {
-        @get:Synchronized
-        var instance: XmpApplication? = null
-            private set
+        @JvmStatic
+        var fileList: List<String>? = null
     }
 }

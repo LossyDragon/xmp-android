@@ -227,7 +227,7 @@ class ModuleResult : AppCompatActivity() {
             val modList = ArrayList<String>()
 
             modList.add(path)
-            XmpApplication.instance!!.fileList = modList
+            XmpApplication.fileList = modList
 
             logI("Play $path")
             val intent = Intent(this, PlayerActivity::class.java)

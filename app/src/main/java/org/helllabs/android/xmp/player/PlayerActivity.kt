@@ -7,6 +7,7 @@ import android.graphics.drawable.AnimatedVectorDrawable
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.os.IBinder
+import android.support.v4.media.session.MediaSessionCompat
 import android.view.Display
 import android.view.Menu
 import android.view.MenuItem
@@ -76,7 +77,7 @@ class PlayerActivity : AppCompatActivity() {
     private lateinit var channelViewer: Viewer
     private lateinit var instrumentViewer: Viewer
     private lateinit var patternViewer: Viewer
-    private lateinit var sheet: PlayerSheet
+    private var sheet: PlayerSheet? = null
     private lateinit var viewer: Viewer
     private lateinit var infoName: Array<TextView>
     private lateinit var infoType: Array<TextView>
@@ -96,6 +97,9 @@ class PlayerActivity : AppCompatActivity() {
             R.drawable.ic_repeat_one_on
         else
             R.drawable.ic_repeat_one_off
+
+    private val mediaSession: MediaSessionCompat
+        get() = modPlayer.getMediaSession()
 
     private val connection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
@@ -121,10 +125,10 @@ class PlayerActivity : AppCompatActivity() {
             saveAllSeqPreference()
             synchronized(playerLock) {
                 stopUpdate = true
+                isBound = false
                 logI("Service unexpectedly disconnected")
                 finish()
             }
-            isBound = false
         }
     }
 
@@ -151,6 +155,7 @@ class PlayerActivity : AppCompatActivity() {
         synchronized(playerLock) {
             logD("endPlayCallback: End progress thread")
             stopUpdate = true
+            saveAllSeqPreference()
             if (event.result != PlayerService.RESULT_OK) {
                 when (event.result) {
                     PlayerService.RESULT_CANT_OPEN_AUDIO -> toast(R.string.error_opensl)
@@ -158,13 +163,15 @@ class PlayerActivity : AppCompatActivity() {
                     PlayerService.RESULT_WATCHDOG -> toast(R.string.error_watchdog)
                 }
             }
-            if (progressThread != null && progressThread!!.isAlive) {
+            if (progressThread != null) {
                 try {
                     progressThread!!.join()
                 } catch (e: InterruptedException) {
+                    logW("ProgressThread error: \n ${e.printStackTrace()}")
                     /* no-op */
                 }
             }
+
             if (!isFinishing) {
                 finish()
             }
@@ -186,17 +193,6 @@ class PlayerActivity : AppCompatActivity() {
         logD("newSequenceCallback: show new sequence")
         showNewSequence()
     }
-
-    @Suppress("unused", "UNUSED_PARAMETER")
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    fun onServiceFinishedCallback(event: OnServiceStopped) {
-        synchronized(playerLock) {
-            logI("Service finished event")
-            saveAllSeqPreference()
-            stopUpdate = true
-            finish()
-        }
-    }
 // endregion
 
     private val updateInfoRunnable: Runnable = Runnable {
@@ -210,7 +206,7 @@ class PlayerActivity : AppCompatActivity() {
             synchronized(playerLock) {
                 Xmp.getInfo(info!!.values)
                 info!!.time = Xmp.time() / 1000
-                if (modPlayer.updateData) {
+                if (modPlayer.getUpdateData()) {
                     Xmp.getChannelData(
                         info!!.volumes,
                         info!!.finalVols,
@@ -378,7 +374,7 @@ class PlayerActivity : AppCompatActivity() {
                     onStartTrackingTouch = { seeking = true },
                     onStopTrackingTouch = {
                         if (isBound) {
-                            modPlayer.mediaSession.controller
+                            mediaSession.controller
                                 .transportControls.seekTo((it!!.progress * 100).toLong())
                             playTime = Xmp.time() / 100
                         }
@@ -406,10 +402,9 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     public override fun onDestroy() {
-        saveAllSeqPreference()
+        super.onDestroy()
 
-        eventBus.unregister(this)
-        unregisterReceiver(screenReceiver)
+        saveAllSeqPreference()
 
         try {
             unbindService(connection)
@@ -424,8 +419,11 @@ class PlayerActivity : AppCompatActivity() {
             progressThread = null
         }
 
+        eventBus.unregister(this)
+        unregisterReceiver(screenReceiver)
+
+        sheet = null
         isBound = false
-        super.onDestroy()
     }
 
     override fun onPause() {
@@ -460,7 +458,7 @@ class PlayerActivity : AppCompatActivity() {
                 if (modPlayer.deleteFile()) {
                     toast(R.string.msg_file_deleted)
                     setResult(RESULT_FIRST_USER)
-                    modPlayer.mediaSession.controller.transportControls.skipToNext()
+                    mediaSession.controller.transportControls.skipToNext()
                 } else {
                     toast(R.string.msg_cant_delete)
                 }
@@ -515,13 +513,12 @@ class PlayerActivity : AppCompatActivity() {
         } else {
             val extras = intent.extras
             if (extras != null) {
-                val app = application as XmpApplication
-                fileList = app.fileList
+                fileList = XmpApplication.fileList
                 shuffleMode = extras.getBoolean(PARM_SHUFFLE)
                 loopListMode = extras.getBoolean(PARM_LOOP)
                 keepFirst = extras.getBoolean(PARM_KEEPFIRST)
                 start = extras.getInt(PARM_START)
-                app.fileList = null
+                XmpApplication.fileList = null
             } else {
                 reconnect = true
             }
@@ -612,9 +609,9 @@ class PlayerActivity : AppCompatActivity() {
             logD("Play/pause button pressed (paused=$isPaused)")
             if (isBound) {
                 if (isPaused) {
-                    modPlayer.mediaSession.controller.transportControls.play()
+                    mediaSession.controller.transportControls.play()
                 } else {
-                    modPlayer.mediaSession.controller.transportControls.pause()
+                    mediaSession.controller.transportControls.pause()
                 }
             }
         }
@@ -624,7 +621,7 @@ class PlayerActivity : AppCompatActivity() {
         synchronized(playerLock) {
             logD("Stop button pressed")
             if (isBound) {
-                modPlayer.mediaSession.controller.transportControls.stop()
+                mediaSession.controller.transportControls.stop()
             }
         }
     }
@@ -633,7 +630,7 @@ class PlayerActivity : AppCompatActivity() {
         synchronized(playerLock) {
             logD("Back button pressed")
             if (isBound) {
-                modPlayer.mediaSession.controller.transportControls.skipToPrevious()
+                mediaSession.controller.transportControls.skipToPrevious()
                 skipToPrevious = true
             }
         }
@@ -643,7 +640,7 @@ class PlayerActivity : AppCompatActivity() {
         synchronized(playerLock) {
             logD("Next button pressed")
             if (isBound) {
-                modPlayer.mediaSession.controller.transportControls.skipToNext()
+                mediaSession.controller.transportControls.skipToNext()
                 skipToPrevious = false
             }
         }
@@ -681,7 +678,7 @@ class PlayerActivity : AppCompatActivity() {
                 binder.controlsSheet.seekbar.max = time / 100
                 toast(getString(R.string.msg_new_seq_duration, time / 60000, time / 1000 % 60))
                 val sequence = modVars[7]
-                sheet.selectSequence(sequence)
+                sheet?.selectSequence(sequence)
             }
         }
     }
@@ -703,13 +700,13 @@ class PlayerActivity : AppCompatActivity() {
                 val smp = modVars[5]
                 val numSeq = modVars[6]
 
-                sheet.apply {
-                    setDetails(pat, ins, smp, chn, modPlayer.getAllSequences())
-                    clearSequences()
+                sheet?.let {
+                    it.setDetails(pat, ins, smp, chn, modPlayer.getAllSequences())
+                    it.clearSequences()
                     for (i in 0 until numSeq) {
-                        addSequence(i, seqVars[i])
+                        it.addSequence(i, seqVars[i])
                     }
-                    selectSequence(0)
+                    it.selectSequence(0)
                 }
 
                 binder.controlsSheet.buttonLoop.setImageResource(isLoopEnabled)

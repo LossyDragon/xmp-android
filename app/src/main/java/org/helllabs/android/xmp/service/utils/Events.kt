@@ -6,4 +6,3 @@ class EndModCallback
 class EndPlayCallback(var result: Int)
 class PlayStateCallback
 class NewSequenceCallback
-class OnServiceStopped

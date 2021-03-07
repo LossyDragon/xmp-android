@@ -1,6 +1,8 @@
 package org.helllabs.android.xmp.util
 
+import android.content.Context
 import android.content.res.Resources
+import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.text.Html
@@ -10,8 +12,11 @@ import android.view.View
 import android.widget.SeekBar
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.graphics.drawable.toBitmap
 import androidx.recyclerview.widget.RecyclerView
+import org.helllabs.android.xmp.R
 
 /**
  * Log helpers
@@ -45,6 +50,9 @@ val isAtLeastR: Boolean
 /**
  * Resource helpers
  */
+fun Context.getIconBitmap(): Bitmap? =
+    AppCompatResources.getDrawable(this, R.drawable.ic_xmp_vector)?.toBitmap()
+
 inline fun <reified T : Resources> T.drawable(@DrawableRes res: Int): Drawable? =
     ResourcesCompat.getDrawable(this, res, null)
 
