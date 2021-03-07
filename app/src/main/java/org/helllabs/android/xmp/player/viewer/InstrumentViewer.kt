@@ -35,8 +35,8 @@ class InstrumentViewer(context: Context, val background: Int) : Viewer(context, 
 
     init {
         // White text volume shades
-        for (i in 0..10) {
-            val value: Float = (i / 10f)
+        for (i in 0..SHADE_STEPS) {
+            val value = (i / SHADE_STEPS.toFloat())
             logD("Text Value $i: $value")
             insPaint.add(
                 Paint().apply {
@@ -50,8 +50,8 @@ class InstrumentViewer(context: Context, val background: Int) : Viewer(context, 
         }
 
         // Blue bar volume shades
-        for (i in 10 downTo 0) {
-            val value: Float = (i / 10f)
+        for (i in SHADE_STEPS downTo 0) {
+            val value = (i / SHADE_STEPS.toFloat())
             logD("Bar Value $i: $value")
             barPaint.add(
                 Paint().apply {
@@ -110,11 +110,11 @@ class InstrumentViewer(context: Context, val background: Int) : Viewer(context, 
                 }
                 if (info!!.instruments[j] == i) {
                     drawX = 3 * fontWidth + drawWidth * j
-                    vol = info.volumes[j] / 6
+                    vol = info.volumes[j] / 2
 
                     // Clamp
-                    if (vol > 60) {
-                        vol = 60
+                    if (vol > SHADE_STEPS) {
+                        vol = SHADE_STEPS
                     }
 
                     rect.set(drawX, drawY - fontSize + 4, drawX + drawWidth * 8 / 10, drawY + 8)
@@ -126,5 +126,9 @@ class InstrumentViewer(context: Context, val background: Int) : Viewer(context, 
             }
             canvas.drawText(insName[i], 0f, drawY.toFloat(), insPaint[maxVol])
         }
+    }
+
+    companion object {
+        private const val SHADE_STEPS = 32
     }
 }

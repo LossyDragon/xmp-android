@@ -524,10 +524,13 @@ Java_org_helllabs_android_xmp_Xmp_getChannelData(JNIEnv *env, jobject obj, jintA
 
 JNIEXPORT void JNICALL
 Java_org_helllabs_android_xmp_Xmp_getPatternRow(JNIEnv *env, jobject obj, jint pat, jint row,
-                                                jbyteArray rowNotes, jbyteArray rowInstruments) {
+                                                jbyteArray rowNotes, jbyteArray rowInstruments,
+                                                jintArray rowFxType, jintArray rowFxParm) {
     struct xmp_pattern *xxp;
     unsigned char row_note[XMP_MAX_CHANNELS];
     unsigned char row_ins[XMP_MAX_CHANNELS];
+    unsigned int row_fxt[XMP_MAX_CHANNELS];
+    unsigned int row_fxp[XMP_MAX_CHANNELS];
     int chn;
     int i;
 
@@ -546,10 +549,31 @@ Java_org_helllabs_android_xmp_Xmp_getPatternRow(JNIEnv *env, jobject obj, jint p
 
         row_note[i] = e->note;
         row_ins[i] = e->ins;
+
+        // TODO: This is horrible. Would need to make a map of type characters.
+        // Get the Effect or Secondary Effect type
+        if (e->fxt > 0) {
+            row_fxt[i] = e->fxt;
+        } else if (e->f2t > 0) {
+            row_fxt[i] = e->f2t;
+        } else {
+            row_fxt[i] = -1;
+        }
+
+        // Get the Effect or Secondary Effect parameter
+        if (e->fxp > 0) {
+            row_fxp[i] = e->fxp;
+        } else if (e->f2p > 0) {
+            row_fxp[i] = e->f2p;
+        } else {
+            row_fxp[i] = -1;
+        }
     }
 
     (*env)->SetByteArrayRegion(env, rowNotes, 0, chn, row_note);
     (*env)->SetByteArrayRegion(env, rowInstruments, 0, chn, row_ins);
+    (*env)->SetIntArrayRegion(env, rowFxType, 0, chn, row_fxt);
+    (*env)->SetIntArrayRegion(env, rowFxParm, 0, chn, row_fxp);
 }
 
 JNIEXPORT void JNICALL

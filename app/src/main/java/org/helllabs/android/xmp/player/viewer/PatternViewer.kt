@@ -3,22 +3,21 @@ package org.helllabs.android.xmp.player.viewer
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
-import android.os.RemoteException
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.player.Util
 import org.helllabs.android.xmp.player.Util.NOTES
+import org.helllabs.android.xmp.player.Util.effect
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.util.logD
 
 @SuppressLint("ViewConstructor")
 class PatternViewer(context: Context, background: Int) : Viewer(context, background) {
 
-    // TODO: Number row padding (Rows 100+ clips very close to patterns)
-    // TODO: Find a way to accurately implement effects params...
-    // private val muteEffectsPaint: Paint
-    // private var effectsPaint: Paint
-    // private var paint3: Paint = Paint()
+    // Effects paint
+    private val muteEffectsPaint: Paint
+    private var effectsPaint: Paint
+    private var paint3: Paint = Paint()
 
     private val allNotes = mutableListOf<String>()
     private val c = CharArray(3)
@@ -26,6 +25,8 @@ class PatternViewer(context: Context, background: Int) : Viewer(context, backgro
     private val fontWidth: Int
     private val instHexByte = mutableListOf<String>()
     private val rect = Rect()
+    private val rowFxParm = IntArray(64)
+    private val rowFxType = IntArray(64)
     private val rowInsts = ByteArray(64)
     private val rowNotes = ByteArray(64)
     private var hexByte = mutableListOf<String>()
@@ -98,20 +99,20 @@ class PatternViewer(context: Context, background: Int) : Viewer(context, backgro
         }
 
         // Effects Paint
-        // effectsPaint = Paint().apply {
-        //     setARGB(255, 34, 158, 60) // Kinda digging the green.
-        //     typeface = Typeface.MONOSPACE
-        //     textSize = fontSize
-        //     isAntiAlias = true
-        // }
+        effectsPaint = Paint().apply {
+            setARGB(255, 34, 158, 60) // Kinda digging the green.
+            typeface = Typeface.MONOSPACE
+            textSize = fontSize
+            isAntiAlias = true
+        }
 
         // Muted Effects Paint
-        // muteEffectsPaint = Paint().apply {
-        //     setARGB(255, 16, 75, 28) // Darker shade of green
-        //     typeface = Typeface.MONOSPACE
-        //     textSize = fontSize
-        //     isAntiAlias = true
-        // }
+        muteEffectsPaint = Paint().apply {
+            setARGB(255, 16, 75, 28) // Darker shade of green
+            typeface = Typeface.MONOSPACE
+            textSize = fontSize
+            isAntiAlias = true
+        }
 
         // Number Row Text Paint
         numRowsTextPaint = Paint().apply {
@@ -155,7 +156,7 @@ class PatternViewer(context: Context, background: Int) : Viewer(context, backgro
         oldRow = -1f
         oldOrd = -1f
         oldPosX = -1f
-        setMaxX((modVars[3] * 6 + 2) * fontWidth)
+        setMaxX((modVars[3] * 10 + 4 /*6 + 2*/) * fontWidth)
     }
 
     override fun update(info: Info?, paused: Boolean) {
@@ -200,11 +201,11 @@ class PatternViewer(context: Context, background: Int) : Viewer(context, backgro
         canvas.drawColor(bgColor)
 
         // Header
-        rect[0, 0, canvasWidth - 1] = fontHeight - 1
+        rect.set(0, 0, canvasWidth, fontHeight)
         canvas.drawRect(rect, headerPaint)
         for (i in 0 until chn) {
-            adj = if (i + 1 < 10) 1f else 0f
-            headerX = (3 + i * 6 + 1 + adj) * fontWidth - posX.toInt()
+            adj = if (i + 1 < 10) 1f else .5f
+            headerX = (3 + i * 10 + 3.5f + adj) * fontWidth - posX
             if (headerX > -2 * fontWidth && headerX < canvasWidth) {
                 canvas.drawText((i + 1).toString(), headerX, fontSize, headerTextPaint)
             }
@@ -229,30 +230,25 @@ class PatternViewer(context: Context, background: Int) : Viewer(context, backgro
             }
 
             for (j in 0 until chn) {
-                try {
-
-                    // Be very careful here!
-                    // Our variables are latency-compensated but pattern data is current
-                    // so caution is needed to avoid retrieving data using old variables
-                    // from a module with pattern data from a newly loaded one.
-                    if (PlayerService.isPlayerAlive.value == true)
-                        Xmp.getPatternRow(pat, lineInPattern, rowNotes, rowInsts)
-                } catch (e: RemoteException) {
-                    // fail silently
-                }
+                // Be very careful here!
+                // Our variables are latency-compensated but pattern data is current
+                // so caution is needed to avoid retrieving data using old variables
+                // from a module with pattern data from a newly loaded one.
+                if (PlayerService.isPlayerAlive.value == true)
+                    Xmp.getPatternRow(pat, lineInPattern, rowNotes, rowInsts, rowFxType, rowFxParm)
 
                 // is muted paint
                 if (isMuted[j]) {
                     paint1 = muteNotePaint
                     paint2 = muteInsPaint
-                    // paint3 = muteEffectsPaint
+                    paint3 = muteEffectsPaint
                 } else {
                     paint1 = notePaint
                     paint2 = insPaint
-                    // paint3 = effectsPaint
+                    paint3 = effectsPaint
                 }
 
-                patternX = (3 + j * 6) * fontWidth - posX
+                patternX = (3 + j * 10 + 1 /*6*/) * fontWidth - posX
                 if (patternX < -6 * fontWidth || patternX > canvasWidth) {
                     continue
                 }
@@ -268,9 +264,25 @@ class PatternViewer(context: Context, background: Int) : Viewer(context, backgro
                 canvas.drawText(notes, patternX, patternY, paint1)
 
                 // Instruments
-                patternX = (3 + j * 6 + 3) * fontWidth - posX
+                patternX = (3 + j * 10 + 4/*6 + 3*/) * fontWidth - posX
                 val inst = if (rowInsts[j] > 0) instHexByte[rowInsts[j].toInt()] else "--"
                 canvas.drawText(inst, patternX, patternY, paint2)
+
+                // Effects
+                patternX = (3 + j * 10 + 6) * fontWidth - posX
+                val effect: String = when {
+                    rowFxType[j] > -1 -> rowFxType[j].effect()
+                    else -> "-"
+                }
+                canvas.drawText(effect, patternX, patternY, paint3)
+
+                // Effects Params
+                patternX = (3 + j * 10 + 7) * fontWidth - posX
+                val effectParam: String = when {
+                    rowFxParm[j] > -1 -> instHexByte[rowFxParm[j]]
+                    else -> "--"
+                }
+                canvas.drawText(effectParam, patternX, patternY, paint3)
             }
         }
     }
