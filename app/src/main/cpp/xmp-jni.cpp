@@ -533,15 +533,21 @@ Java_org_helllabs_android_xmp_Xmp_getPatternRow(JNIEnv *env, jobject obj, jint p
             row_fxt[i] = e->f2t;
             row_fxp[i] = e->f2p;
         } else {
-            row_fxt[i] = -1;
-            row_fxp[i] = -1;
+            if (e->fxt == 0 && e->fxp > 0) {
+                // Most likely Arpeggio, good enough.
+                row_fxt[i] = e->fxt;
+                row_fxp[i] = e->fxp;
+            } else {
+                row_fxt[i] = -1;
+                row_fxp[i] = -1;
+            }
         }
     }
 
-    (*env).SetByteArrayRegion(rowNotes, 0, chn, reinterpret_cast<const jbyte *>(row_note));
-    (*env).SetByteArrayRegion(rowInstruments, 0, chn, reinterpret_cast<const jbyte *>(row_ins));
-    (*env).SetIntArrayRegion(rowFxType, 0, chn, reinterpret_cast<const jint *>(row_fxt));
-    (*env).SetIntArrayRegion(rowFxParm, 0, chn, reinterpret_cast<const jint *>(row_fxp));
+    (*env).SetByteArrayRegion(rowNotes, 0, chn, reinterpret_cast <const jbyte *>(row_note));
+    (*env).SetByteArrayRegion(rowInstruments, 0, chn, reinterpret_cast <const jbyte *>(row_ins));
+    (*env).SetIntArrayRegion(rowFxType, 0, chn, reinterpret_cast <const jint *>(row_fxt));
+    (*env).SetIntArrayRegion(rowFxParm, 0, chn, reinterpret_cast <const jint *>(row_fxp));
 }
 
 JNIEXPORT void JNICALL
@@ -589,7 +595,7 @@ Java_org_helllabs_android_xmp_Xmp_getSampleData(JNIEnv *env, jobject obj, jboole
 
     pos = _pos[chn];
 
-    /* In case of new keypress, reset sample */
+/* In case of new keypress, reset sample */
     if (trigger == JNI_TRUE || (pos >> 5) >= xxs->len) {
         pos = 0;
     }
@@ -717,4 +723,5 @@ JNIEXPORT jint JNICALL
 Java_org_helllabs_android_xmp_Xmp_setVolume(JNIEnv *env, jobject obj, jint vol) {
     return OpenSL::set_volume(vol);
 }
+
 }
