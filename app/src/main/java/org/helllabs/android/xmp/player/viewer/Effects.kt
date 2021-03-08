@@ -14,6 +14,8 @@ data class EffectList(
     val effect: String
 )
 
+// MMD Common?
+
 object Effects {
     private val effects669: List<EffectList>
         get() {
@@ -43,6 +45,7 @@ object Effects {
                 EffectList(123, "9"), // FX_PER_VIBRATO
                 EffectList(250, "C"), // FX_FAR_DELAY
                 EffectList(15, "F"), // FX_SPEED
+                // EffectList(13, "-"), // FX_BREAK - Is there a symbol
             )
         }
 
@@ -147,7 +150,6 @@ object Effects {
                 EffectList(17, "W"), // FX_GVOL_SLIDE
                 EffectList(8, "X"), // FX_SETPAN
                 EffectList(138, "Y"), // FX_PANBRELLO
-                EffectList(132, "Z"), // FX_FLT_CUTOFF
                 EffectList(141, "S"), // FX_SURROUND ("S9x")
                 EffectList(136, "S"), // FX_IT_ROWDELAY ("SEx")
                 EffectList(14, "S"), // Pattern Delay ("SDx")
@@ -155,6 +157,11 @@ object Effects {
                 EffectList(193, "d"), // FX_VSLIDE_DN_2
                 EffectList(194, "a"), // FX_F_VSLIDE_UP_2
                 EffectList(195, "b"), // FX_F_VSLIDE_DN_2
+                EffectList(132, "S"), // FX_FLT_CUTOFF
+                EffectList(139, "S"), // FX_PANBRELLO_WF ("S5x")
+                EffectList(140, "S"), // FX_HIOFFSET
+                // FX_IT_INSTFUNC ?
+                // FX_FLT_RESN ?
             )
         }
 
@@ -225,6 +232,32 @@ object Effects {
             )
         }
 
+    private val effectsFunk: List<EffectList>
+        get() {
+            // Would need testing
+            logD("FunkTracker Effects")
+            return listOf(
+                EffectList(121, "A"), // A  :Frequency Port Up
+                EffectList(120, "B"), // B  :Frequency Port Dn
+                EffectList(122, "C"), // C  :Frequency Porta
+                EffectList(123, "D"), // D  :Frequency Vibrato
+                // EffectList(, "E"), // E  :Freq Vibrato Fanin
+                // EffectList(, "F"), // F  :Freq Vibrato Fanout
+                EffectList(124, "G"), // G  :Volume Sld Up
+                EffectList(125, "H"), // H  :Volume Slide Down
+                // / EffectList(, "I"), // I  :Volume Porta
+                // / EffectList(, "J"), // J  :Volume Reverb
+                // / EffectList(, "K"), // K  :Tremolo
+                EffectList(0, "L"), // L  :Arpeggio
+                // EffectList(, "M"), // M  :Sample Offset
+                EffectList(12, "N"), // N  :Volume
+                EffectList(127, "O"), // FX_PER_CANCEL
+                EffectList(14, "O"), // FX_EXTENDED
+                EffectList(15, "O"), // FX_SPEED
+
+            )
+        }
+
     private val effectsProTracker: List<EffectList>
         get() {
             logD("ProTracker Effects")
@@ -237,7 +270,7 @@ object Effects {
                 EffectList(5, "5"), // FX_TONE_VSLIDE
                 EffectList(6, "6"), // FX_VIBRA_VSLIDE
                 EffectList(7, "7"), // FX_TREMOLO
-                EffectList(8, "8"), // ?? Set Panning ??
+                EffectList(8, "8"), // FX_SETPAN
                 EffectList(9, "9"), // FX_OFFSET
                 EffectList(10, "A"), // FX_VOLSLIDE
                 EffectList(11, "B"), // FX_JUMP
@@ -256,6 +289,10 @@ object Effects {
                 EffectList(25, "P"), // FX_PANSLIDE
                 EffectList(29, "T"), // FX_TREMOR
                 EffectList(146, "4"), // FX_VIBRATO2
+                EffectList(160, "x"), // FX_VOLSLIDE_UP (Digital Symphony f2t)
+                EffectList(161, "x"), // FX_VOLSLIDE_DN (Digital Symphony f2t)
+                EffectList(171, "F"), // FX_S3M_BPM (DigiBooster Pro f2t)
+                // FX_MED_HOLD ??
             )
         }
 
@@ -270,6 +307,7 @@ object Effects {
                 contains("LIQ", true) -> effectsLiquid
                 contains("Oktalyzer", true) -> effectsOktalyzer
                 contains("STX", true) -> effectsScream2
+                contains("Funk", true) -> effectsFunk
                 else -> effectsProTracker // Most likely PTK based.
             }
         }
