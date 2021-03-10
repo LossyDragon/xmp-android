@@ -11,13 +11,16 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collect
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.databinding.ActivityResultListBinding
+import org.helllabs.android.xmp.databinding.ItemSingleBinding
 import org.helllabs.android.xmp.modarchive.ModArchiveConstants.ARTIST_ID
 import org.helllabs.android.xmp.modarchive.ModArchiveConstants.ERROR
 import org.helllabs.android.xmp.modarchive.ModArchiveConstants.SEARCH_TEXT
 import org.helllabs.android.xmp.modarchive.SearchError
-import org.helllabs.android.xmp.modarchive.adapter.ArtistAdapter
+import org.helllabs.android.xmp.modarchive.adapter.ArtistDiffUtil
+import org.helllabs.android.xmp.modarchive.adapter.ModAdapter
 import org.helllabs.android.xmp.modarchive.result.ArtistResultViewModel.ArtistState
 import org.helllabs.android.xmp.model.ArtistResult
+import org.helllabs.android.xmp.model.Item
 import org.helllabs.android.xmp.util.hide
 import org.helllabs.android.xmp.util.show
 
@@ -26,7 +29,7 @@ class ArtistResult : AppCompatActivity() {
 
     private lateinit var binder: ActivityResultListBinding
 
-    private lateinit var artistAdapter: ArtistAdapter
+    private lateinit var artistAdapter: ModAdapter<Item, ItemSingleBinding>
     private val viewModel: ArtistResultViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,10 +44,12 @@ class ArtistResult : AppCompatActivity() {
 
         binder.appbar.toolbarText.text = getString(R.string.search_artist_title)
 
-        artistAdapter = ArtistAdapter()
-        artistAdapter.onClick = { id ->
+        artistAdapter = ModAdapter(
+            ArtistDiffUtil(),
+            R.layout.item_single
+        ) { item ->
             val intent = Intent(this, SearchListResult::class.java)
-            intent.putExtra(ARTIST_ID, id)
+            intent.putExtra(ARTIST_ID, item.id)
             overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
             startActivity(intent)
         }

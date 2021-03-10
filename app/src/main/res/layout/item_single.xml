@@ -4,8 +4,12 @@
     <data>
 
         <variable
-            name="itemText"
+            name="string"
             type="String" />
+
+        <variable
+            name="item"
+            type="org.helllabs.android.xmp.model.Item" />
     </data>
 
     <TextView
@@ -17,8 +21,9 @@
         android:maxLines="1"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
-        android:text="@{itemText}"
+        android:text="@{item.alias ?? string}"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:textColor="@color/white"
         tools:text="Some line item" />
+
 </layout>

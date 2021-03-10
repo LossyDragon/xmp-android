@@ -11,13 +11,16 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collect
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.databinding.ActivityResultListBinding
+import org.helllabs.android.xmp.databinding.ItemSearchListBinding
 import org.helllabs.android.xmp.modarchive.ModArchiveConstants.ARTIST_ID
 import org.helllabs.android.xmp.modarchive.ModArchiveConstants.ERROR
 import org.helllabs.android.xmp.modarchive.ModArchiveConstants.MODULE_ID
 import org.helllabs.android.xmp.modarchive.ModArchiveConstants.SEARCH_TEXT
 import org.helllabs.android.xmp.modarchive.SearchError
-import org.helllabs.android.xmp.modarchive.adapter.SearchListAdapter
+import org.helllabs.android.xmp.modarchive.adapter.ModAdapter
+import org.helllabs.android.xmp.modarchive.adapter.SearchDiffUtil
 import org.helllabs.android.xmp.modarchive.result.SearchListViewModel.SearchResultState
+import org.helllabs.android.xmp.model.Module
 import org.helllabs.android.xmp.model.SearchListResult
 import org.helllabs.android.xmp.util.hide
 import org.helllabs.android.xmp.util.show
@@ -26,7 +29,7 @@ import org.helllabs.android.xmp.util.show
 class SearchListResult : AppCompatActivity() {
 
     private lateinit var binder: ActivityResultListBinding
-    private lateinit var searchListAdapter: SearchListAdapter
+    private lateinit var searchListAdapter: ModAdapter<Module, ItemSearchListBinding>
     private val viewModel: SearchListViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,10 +42,12 @@ class SearchListResult : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayShowHomeEnabled(true)
 
-        searchListAdapter = SearchListAdapter()
-        searchListAdapter.onClick = { id ->
+        searchListAdapter = ModAdapter(
+            SearchDiffUtil(),
+            R.layout.item_search_list
+        ) { item ->
             val intent = Intent(this, ModuleResult::class.java)
-            intent.putExtra(MODULE_ID, id)
+            intent.putExtra(MODULE_ID, item.id)
             overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
             startActivity(intent)
         }

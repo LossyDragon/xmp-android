@@ -12,8 +12,10 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.databinding.ActivityResultListBinding
+import org.helllabs.android.xmp.databinding.ItemSearchListBinding
 import org.helllabs.android.xmp.modarchive.ModArchiveConstants.MODULE_ID
-import org.helllabs.android.xmp.modarchive.adapter.SearchListAdapter
+import org.helllabs.android.xmp.modarchive.adapter.ModAdapter
+import org.helllabs.android.xmp.modarchive.adapter.SearchDiffUtil
 import org.helllabs.android.xmp.modarchive.result.ModuleResult
 import org.helllabs.android.xmp.model.Module
 import org.helllabs.android.xmp.preferences.PrefManager
@@ -23,7 +25,7 @@ import org.helllabs.android.xmp.util.show
 class SearchHistory : AppCompatActivity() {
 
     private lateinit var binder: ActivityResultListBinding
-    private lateinit var historyAdapter: SearchListAdapter
+    private lateinit var historyAdapter: ModAdapter<Module, ItemSearchListBinding>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,10 +39,12 @@ class SearchHistory : AppCompatActivity() {
 
         binder.appbar.toolbarText.text = getString(R.string.search_history)
 
-        historyAdapter = SearchListAdapter()
-        historyAdapter.onClick = { id ->
+        historyAdapter = ModAdapter(
+            SearchDiffUtil(),
+            R.layout.item_search_list
+        ) { item ->
             val intent = Intent(this, ModuleResult::class.java)
-            intent.putExtra(MODULE_ID, id)
+            intent.putExtra(MODULE_ID, item.id)
             startActivity(intent)
         }
 

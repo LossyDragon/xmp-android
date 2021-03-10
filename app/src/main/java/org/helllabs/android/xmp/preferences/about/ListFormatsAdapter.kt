@@ -38,7 +38,7 @@ class ListFormatsAdapter : ListAdapter<String, ListFormatsAdapter.ListViewHolder
         private val binder: ItemSingleBinding
     ) : RecyclerView.ViewHolder(binder.root) {
         fun onBind(item: String) = with(binder) {
-            itemText = item
+            string = item
             binder.root.longClick {
                 onLongClick?.invoke(item)
                 true

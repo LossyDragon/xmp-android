@@ -5,7 +5,7 @@
     <data>
 
         <variable
-            name="module"
+            name="item"
             type="org.helllabs.android.xmp.model.Module" />
     </data>
 
@@ -25,7 +25,7 @@
             android:layout_marginBottom="3dp"
             android:background="@drawable/fmt"
             android:gravity="center"
-            android:text="@{module.format}"
+            android:text="@{item.format}"
             android:textColor="@color/white"
             android:textSize="12sp"
             tools:text="MOD" />
@@ -40,7 +40,7 @@
             android:ellipsize="end"
             android:maxLines="1"
             android:singleLine="true"
-            android:text="@{module.songTitle}"
+            android:text="@{item.songTitle}"
             android:textAppearance="?android:attr/textAppearanceMedium"
             tools:text="Some song name" />
 
@@ -52,7 +52,7 @@
             android:layout_alignStart="@+id/search_list_line1"
             android:layout_toStartOf="@id/search_list_size"
             android:singleLine="true"
-            android:text="@{String.format(@string/by_artist, module.artist)}"
+            android:text="@{String.format(@string/by_artist, item.artist)}"
             android:textAppearance="?android:attr/textAppearanceSmall"
             android:textColor="?android:attr/textColorSecondary"
             tools:text="by Some Artist" />
@@ -66,7 +66,7 @@
             android:layout_marginStart="4dp"
             android:layout_marginEnd="16dp"
             android:maxLines="1"
-            android:text="@{String.format(@string/size_kb, module.bytesFormatted)}"
+            android:text="@{String.format(@string/size_kb, item.bytesFormatted)}"
             android:textAppearance="?android:attr/textAppearanceSmall"
             android:textColor="?android:attr/textColorSecondary"
             tools:text="669 KB" />
