@@ -9,14 +9,11 @@
 #include <cstdlib>
 #include <pthread.h>
 #include <jni.h>
-#include <android/log.h>
 #include "xmp.h"
 #include "OpenSL.h"
 
 #define PERIOD_BASE 13696
 #define MAX_BUFFER_SIZE 256
-#define TAG "XMPNative"
-#define LOG(...)  __android_log_print(ANDROID_LOG_INFO, TAG, __VA_ARGS__)
 
 static xmp_context ctx = nullptr;
 static struct xmp_module_info mi;

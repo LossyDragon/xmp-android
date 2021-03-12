@@ -350,7 +350,7 @@ class PlayerActivity : AppCompatActivity() {
         patternViewer = PatternViewer(this, color)
         viewer = instrumentViewer
         binder.viewerLayout.addView(viewer)
-        binder.viewerLayout.setOnClickListener {
+        binder.viewerLayout.click {
             synchronized(playerLock) {
                 if (canChangeViewer) {
                     changeViewer()

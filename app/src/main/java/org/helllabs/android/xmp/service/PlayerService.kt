@@ -132,12 +132,13 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
                 Xmp.seek(0)
             } else {
                 Xmp.stopModule()
+                Xmp.dropAudio()
+                discardBuffer = true
                 cmd = CMD_PREV
             }
 
             if (isPlayerPaused) {
                 mediaSession.controller.transportControls.play()
-                discardBuffer = true
             }
 
             updateNotification()

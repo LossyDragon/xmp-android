@@ -3,14 +3,9 @@
 #include <cstdlib>
 #include <unistd.h>
 #include "OpenSL.h"
-#include <android/log.h>
 
 std::mutex openSlMutex;
 #define lock() const std::lock_guard<std::mutex> lock(openSlMutex);
-
-#define TAG "XMP_Native"
-#define LOGE(...)  __android_log_print(ANDROID_LOG_ERROR,TAG,__VA_ARGS__)
-#define LOGW(...)  __android_log_print(ANDROID_LOG_WARN,TAG,__VA_ARGS__)
 
 int OpenSL::fill_buffer(int looped) {
     int ret;
@@ -190,6 +185,7 @@ int OpenSL::opensl_open(int sr, int num) {
         goto err3;
     }
 
+    LOGI("OpenSL Initialization OK");
     return 0;
 
     err3:
