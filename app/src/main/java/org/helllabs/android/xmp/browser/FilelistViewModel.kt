@@ -28,7 +28,7 @@ class FilelistViewModel : ViewModel() {
             _listState.value = try {
                 dir?.listFiles()?.forEach { file ->
                     val item: PlaylistItem = if (file.isDirectory) {
-                        PlaylistItem(TYPE_DIRECTORY, file.name, "Directory") // TODO string
+                        PlaylistItem(TYPE_DIRECTORY, file.name, null)
                     } else {
                         val comment = date.format(file.lastModified()) +
                             String.format(" (%d kB)", file.length() / 1024)

@@ -54,7 +54,7 @@ android {
         freeCompilerArgs += "-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi"
     }
 
-    // Removes:  Coroutines debug artifact
+    // Removes: Coroutines debug artifact
     packagingOptions {
         exclude "DebugProbesKt.bin"
     }

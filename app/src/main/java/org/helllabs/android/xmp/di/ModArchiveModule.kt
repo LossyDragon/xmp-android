@@ -8,9 +8,9 @@ import com.tonyodev.fetch2okhttp.OkHttpDownloader
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.components.ViewModelComponent
 import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
+import dagger.hilt.android.scopes.ViewModelScoped
 import okhttp3.OkHttpClient
 import org.helllabs.android.xmp.api.ApiHelper
 import org.helllabs.android.xmp.api.ApiHelperImpl
@@ -19,14 +19,14 @@ import org.helllabs.android.xmp.modarchive.ModArchiveConstants
 import retrofit2.Retrofit
 
 @Module
-@InstallIn(SingletonComponent::class)
+@InstallIn(ViewModelComponent::class)
 object ModArchiveModule {
 
-    @Singleton
+    @ViewModelScoped
     @Provides
     fun provideOkHttpClient() = OkHttpClient.Builder().build()
 
-    @Singleton
+    @ViewModelScoped
     @Provides
     fun provideFetch(@ApplicationContext context: Context, okHttpClient: OkHttpClient): Fetch {
         val fetchConfiguration = FetchConfiguration.Builder(context)
@@ -38,7 +38,7 @@ object ModArchiveModule {
         return Fetch.Impl.getInstance(fetchConfiguration)
     }
 
-    @Singleton
+    @ViewModelScoped
     @Provides
     fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit =
         Retrofit.Builder()
@@ -47,11 +47,11 @@ object ModArchiveModule {
             .client(okHttpClient)
             .build()
 
+    @ViewModelScoped
     @Provides
-    @Singleton
     fun provideApiService(retrofit: Retrofit): ApiService = retrofit.create(ApiService::class.java)
 
+    @ViewModelScoped
     @Provides
-    @Singleton
     fun provideApiHelper(apiHelper: ApiHelperImpl): ApiHelper = apiHelper
 }

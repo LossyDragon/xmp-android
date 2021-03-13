@@ -56,7 +56,7 @@ class ModuleResultViewModel
     }
 
     fun removeFetch() {
-        // fetchDownloader.close() // TODO: Should release fetch when we're done.
+        fetchDownloader.close()
     }
 
     fun downloadModule(mod: String, url: String, file: String) {

@@ -54,7 +54,7 @@
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
                 android:singleLine="true"
-                android:text="@{playlistItem.comment}"
+                android:text="@{playlistItem.comment ?? @string/directory}"
                 android:textSize="13sp"
                 android:boldTextStyle="@{playlistItem.isDirectory}"
                 tools:text="Some Playlist Info" />

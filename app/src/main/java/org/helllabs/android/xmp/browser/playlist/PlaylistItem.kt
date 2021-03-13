@@ -6,7 +6,7 @@ import java.util.*
 class PlaylistItem(
     val type: Int,
     val name: String,
-    val comment: String
+    val comment: String?
 ) : Comparable<PlaylistItem> {
 
     // Accessors
