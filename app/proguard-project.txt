@@ -45,9 +45,6 @@
 -keepclasseswithmembernames class * {
     @com.tickaroo.tikxml.* <methods>;
 }
-# Keep source file and line number information in crash reports
--renamesourcefileattribute MyApplication
--keepattributes SourceFile,LineNumberTable
 
 # EventBus
 -keepattributes *Annotation*

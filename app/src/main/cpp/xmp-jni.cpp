@@ -180,7 +180,7 @@ Java_org_helllabs_android_xmp_Xmp_startPlayer(JNIEnv *env, jobject obj, jint rat
 
     lock()
 
-    fi = static_cast<xmp_frame_info *>(calloc(1, _buffer_num * sizeof(struct xmp_frame_info)));
+    fi = (xmp_frame_info *) calloc(1, _buffer_num * sizeof(xmp_frame_info));
     if (fi == nullptr) {
         return -101;
     }

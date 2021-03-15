@@ -314,9 +314,12 @@ void OpenSL::opensl_close() {
     player_obj = nullptr;
     output_mix_obj = nullptr;
     engine_obj = nullptr;
-
+    engine_engine = nullptr;
+    player_vol = nullptr;
     player_play = nullptr;
     buffer_queue = nullptr;
+
+    openSLBuffer = nullptr;
 }
 
 void OpenSL::player_callback(SLAndroidSimpleBufferQueueItf bq, void *context) {

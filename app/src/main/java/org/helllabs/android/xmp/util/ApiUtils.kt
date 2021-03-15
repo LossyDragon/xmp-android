@@ -3,6 +3,7 @@ package org.helllabs.android.xmp.util
 import android.content.Context
 import android.content.res.Resources
 import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.text.Html
@@ -12,9 +13,8 @@ import android.view.View
 import android.widget.SeekBar
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
-import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
-import androidx.core.graphics.drawable.toBitmap
 import androidx.recyclerview.widget.RecyclerView
 import org.helllabs.android.xmp.R
 
@@ -50,8 +50,20 @@ val isAtLeastR: Boolean
 /**
  * Resource helpers
  */
-fun Context.getIconBitmap(): Bitmap? =
-    AppCompatResources.getDrawable(this, R.drawable.ic_xmp_vector)?.toBitmap()
+fun Context.getIconBitmap(): Bitmap? {
+    // Emu kept crashing with some reference to this
+    // AppCompatResources.getDrawable(this, R.drawable.ic_xmp_vector)?.toBitmap()
+    val drawable = ContextCompat.getDrawable(this, R.drawable.ic_xmp_vector) ?: return null
+    return Bitmap.createBitmap(
+        drawable.intrinsicWidth,
+        drawable.intrinsicHeight,
+        Bitmap.Config.ARGB_8888
+    ).also {
+        val canvas = Canvas(it)
+        drawable.setBounds(0, 0, canvas.width, canvas.height)
+        drawable.draw(canvas)
+    }
+}
 
 inline fun <reified T : Resources> T.drawable(@DrawableRes res: Int): Drawable? =
     ResourcesCompat.getDrawable(this, res, null)
