@@ -46,7 +46,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     private val connection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             val binder = service as PlayerService.PlayerBinder
-            mModPlayer = binder.service
+            mModPlayer = binder.getService()
             mModPlayer.add(mAddList!!.toList())
             unbindService(this)
         }

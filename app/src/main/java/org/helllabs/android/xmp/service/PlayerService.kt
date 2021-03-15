@@ -17,9 +17,8 @@ import androidx.media.AudioAttributesCompat
 import androidx.media.AudioFocusRequestCompat
 import androidx.media.AudioManagerCompat
 import dagger.hilt.android.AndroidEntryPoint
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import kotlinx.coroutines.*
 import org.greenrobot.eventbus.EventBus
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.preferences.PrefManager
@@ -40,21 +39,26 @@ import org.helllabs.android.xmp.util.InfoCache.testModule
 @AndroidEntryPoint
 class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutListener {
 
-    private val binder: PlayerBinder = PlayerBinder()
+    /* Binder Stuff */
+    private var binder: Binder? = PlayerBinder()
+
+    inner class PlayerBinder : Binder() {
+        fun getService(): PlayerService = this@PlayerService
+    }
 
     @Inject
     lateinit var eventBus: EventBus
 
-    private lateinit var audioFocusRequest: AudioFocusRequestCompat
-    private lateinit var audioManager: AudioManager
-    private lateinit var controllerReceiver: ControllerReceiver
-    private lateinit var currentFileName: String
-    private lateinit var mediaSession: MediaSessionCompat
-    private lateinit var noisyReceiver: NoisyReceiver
-    private lateinit var notifier: Notifier
-    private lateinit var playThread: Thread
-    private lateinit var queue: QueueManager
-    private lateinit var watchdog: Watchdog
+    private var audioFocusRequest: AudioFocusRequestCompat? = null
+    private var audioManager: AudioManager? = null
+    private var controllerReceiver: ControllerReceiver? = null
+    private var currentFileName: String? = null
+    private var mediaSession: MediaSessionCompat? = null
+    private var noisyReceiver: NoisyReceiver? = null
+    private var notifier: Notifier? = null
+    private var playJob: Job? = null
+    private var queue: QueueManager? = null
+    private var watchdog: Watchdog? = null
 
     private var audioInitialized = false
     private var canRelease = false
@@ -73,97 +77,98 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
     private var updateData = false
     private var volume = 0
 
-    private val sessionCallback = object : MediaSessionCompat.Callback() {
-        override fun onMediaButtonEvent(mediaButtonEvent: Intent?): Boolean =
-            onMediaButton(mediaButtonEvent)
+    private var sessionCallback: MediaSessionCompat.Callback? =
+        object : MediaSessionCompat.Callback() {
+            override fun onMediaButtonEvent(mediaButtonEvent: Intent?): Boolean =
+                onMediaButton(mediaButtonEvent)
 
-        override fun onPlay() {
-            if (!hasAudioFocus) {
-                val focus = requestAudioFocus()
-                if (focus) {
-                    hasAudioFocus = focus
-                } else {
-                    logW("Failed to get audio focus on play!")
+            override fun onPlay() {
+                if (!hasAudioFocus) {
+                    val focus = requestAudioFocus()
+                    if (focus) {
+                        hasAudioFocus = focus
+                    } else {
+                        logW("Failed to get audio focus on play!")
+                    }
                 }
+
+                registerReceiver(
+                    noisyReceiver,
+                    IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
+                )
+                isPlayerPaused = false
+
+                // Do not play again if we're calling for stop.
+                if (cmd != CMD_STOP) {
+                    Xmp.restartAudio()
+                }
+
+                notifyPlayPause()
             }
 
-            registerReceiver(
-                noisyReceiver,
-                IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
-            )
-            isPlayerPaused = false
+            override fun onPause() {
+                try {
+                    unregisterReceiver(noisyReceiver)
+                } catch (e: Exception) {
+                    logW("NoisyReciever: ${e.message}")
+                }
 
-            // Do not play again if we're calling for stop.
-            if (cmd != CMD_STOP) {
-                Xmp.restartAudio()
+                Xmp.stopAudio()
+
+                isPlayerPaused = true
+                notifyPlayPause()
             }
 
-            notifyPlayPause()
-        }
-
-        override fun onPause() {
-            try {
-                unregisterReceiver(noisyReceiver)
-            } catch (e: Exception) {
-                logW("NoisyReciever: ${e.message}")
-            }
-
-            Xmp.stopAudio()
-
-            isPlayerPaused = true
-            notifyPlayPause()
-        }
-
-        override fun onSkipToNext() {
-            Xmp.stopModule()
-            Xmp.dropAudio()
-            discardBuffer = true
-            cmd = CMD_NEXT
-
-            if (isPlayerPaused) {
-                mediaSession.controller.transportControls.play()
-            }
-
-            updateNotification()
-        }
-
-        override fun onSkipToPrevious() {
-            if (Xmp.time() > 2000) {
-                Xmp.seek(0)
-            } else {
+            override fun onSkipToNext() {
                 Xmp.stopModule()
                 Xmp.dropAudio()
                 discardBuffer = true
-                cmd = CMD_PREV
+                cmd = CMD_NEXT
+
+                if (isPlayerPaused) {
+                    mediaSession!!.controller.transportControls.play()
+                }
+
+                updateNotification()
             }
 
-            if (isPlayerPaused) {
-                mediaSession.controller.transportControls.play()
+            override fun onSkipToPrevious() {
+                if (Xmp.time() > 2000) {
+                    Xmp.seek(0)
+                } else {
+                    Xmp.stopModule()
+                    Xmp.dropAudio()
+                    discardBuffer = true
+                    cmd = CMD_PREV
+                }
+
+                if (isPlayerPaused) {
+                    mediaSession!!.controller.transportControls.play()
+                }
+
+                updateNotification()
             }
 
-            updateNotification()
+            override fun onFastForward() {
+                mediaSession!!.controller.transportControls.skipToNext()
+            }
+
+            override fun onRewind() {
+                mediaSession!!.controller.transportControls.skipToPrevious()
+            }
+
+            override fun onStop() {
+                Xmp.stopModule()
+                cmd = CMD_STOP
+            }
+
+            override fun onSeekTo(pos: Long) {
+                Xmp.seek(pos.toInt())
+                updateNotification()
+            }
         }
 
-        override fun onFastForward() {
-            mediaSession.controller.transportControls.skipToNext()
-        }
-
-        override fun onRewind() {
-            mediaSession.controller.transportControls.skipToPrevious()
-        }
-
-        override fun onStop() {
-            Xmp.stopModule()
-            cmd = CMD_STOP
-        }
-
-        override fun onSeekTo(pos: Long) {
-            Xmp.seek(pos.toInt())
-            updateNotification()
-        }
-    }
-
-    override fun onBind(intent: Intent): IBinder = binder
+    override fun onBind(intent: Intent): IBinder = binder!!
 
     override fun onCreate() {
         super.onCreate()
@@ -197,17 +202,19 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
         playerAllSequences = PrefManager.allSequences
 
         mediaSession = MediaSessionCompat(this, this::class.java.simpleName)
-        mediaSession.setCallback(sessionCallback)
+        mediaSession!!.setCallback(sessionCallback)
         @Suppress("DEPRECATION") // Needed anymore?
-        mediaSession.setFlags(FLAG_HANDLES_TRANSPORT_CONTROLS and FLAG_HANDLES_TRANSPORT_CONTROLS)
+        mediaSession!!.setFlags(
+            FLAG_HANDLES_TRANSPORT_CONTROLS and FLAG_HANDLES_TRANSPORT_CONTROLS
+        )
 
-        notifier = Notifier(this, mediaSession)
+        notifier = Notifier(this, mediaSession!!)
 
         watchdog = Watchdog(10)
-        watchdog.listener = this
-        watchdog.start()
+        watchdog!!.listener = this
+        watchdog!!.start()
 
-        controllerReceiver = ControllerReceiver(mediaSession)
+        controllerReceiver = ControllerReceiver(mediaSession!!)
         registerReceiver(
             controllerReceiver,
             IntentFilter().apply {
@@ -219,7 +226,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
             }
         )
 
-        noisyReceiver = NoisyReceiver(mediaSession)
+        noisyReceiver = NoisyReceiver(mediaSession!!)
         registerReceiver(
             noisyReceiver,
             IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
@@ -238,12 +245,12 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
             logW("Failed to unregister a receiver: ${e.message}")
         }
 
-        watchdog.stop()
-        notifier.cancel()
+        watchdog!!.stop()
+        notifier!!.cancel()
 
-        mediaSession.isActive = false
-        mediaSession.setCallback(null)
-        mediaSession.release()
+        mediaSession!!.isActive = false
+        mediaSession!!.setCallback(null)
+        mediaSession!!.release()
 
         if (audioInitialized) {
             end(if (hasAudioFocus) RESULT_OK else RESULT_NO_AUDIO_FOCUS)
@@ -253,18 +260,31 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
 
         isPlayerAlive.postValue(false)
 
-        watchdog.listener = null
+        watchdog!!.listener = null
 
-        playThread.interrupt()
-        playThread.join()
+        playJob!!.cancel()
 
         logI("Service destroyed")
+        // Null everything out, reduces Binder leak from ~660kb to ~<10kb
+        audioFocusRequest = null
+        audioManager = null
+        controllerReceiver = null
+        currentFileName = null
+        mediaSession = null
+        noisyReceiver = null
+        notifier = null
+        playJob = null
+        queue = null
+        watchdog = null
+        sessionCallback = null
+        binder = null
+
         super.onDestroy()
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         super.onTaskRemoved(rootIntent)
-        mediaSession.controller.transportControls.stop()
+        mediaSession!!.controller.transportControls.stop()
     }
 
     override fun onTimeout() {
@@ -278,7 +298,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
                 logD("AUDIOFOCUS_GAIN")
                 // We have full audio focus
                 if (hasAudioFocus && canResumePlay) {
-                    mediaSession.controller.transportControls.play()
+                    mediaSession!!.controller.transportControls.play()
                     canResumePlay = false
                 }
                 Xmp.setVolume(volume)
@@ -298,12 +318,12 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
                 if (!isPlayerPaused)
                     canResumePlay = true
 
-                mediaSession.controller.transportControls.pause()
+                mediaSession!!.controller.transportControls.pause()
             }
             AudioManager.AUDIOFOCUS_LOSS -> {
                 logD("AUDIOFOCUS_LOSS")
                 // We lost audio focus for an unknown amount of time, pause.
-                mediaSession.controller.transportControls.pause()
+                mediaSession!!.controller.transportControls.pause()
                 hasAudioFocus = false
                 canResumePlay = false
             }
@@ -329,24 +349,24 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
         }
 
         queue = QueueManager(fileList, start, shuffle, loopList, keepFirst)
-        notifier.setQueue(queue)
+        notifier!!.setQueue(queue)
         cmd = CMD_NONE
 
         if (isPlayerAlive.value == true) {
             logI("Use existing player thread")
             restart = true
             startIndex = if (keepFirst) 0 else start
-            mediaSession.controller.transportControls.skipToNext()
+            mediaSession!!.controller.transportControls.skipToNext()
         } else {
             logI("Start player thread")
-            playThread = Thread(PlayRunnable())
-            playThread.start()
+            playJob = playerJob()
         }
+
         isPlayerAlive.postValue(true)
     }
 
     fun add(fileList: List<String>) {
-        queue.add(fileList)
+        queue!!.add(fileList)
         updateNotification()
     }
 
@@ -382,21 +402,21 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
     // File management
     fun deleteFile(): Boolean {
         logI("Delete file $currentFileName")
-        return delete(currentFileName)
+        return delete(currentFileName!!)
     }
 
     // Get the Modules name, or the filename if empty or untitled
     fun getModName(): String {
         var name = Xmp.getModName()
         if (name.trim { it <= ' ' }.isEmpty() || name == "untitled") {
-            name = basename(currentFileName)
+            name = basename(currentFileName!!)
         }
         return name
     }
 
     fun getUpdateData(): Boolean = updateData
 
-    fun getMediaSession(): MediaSessionCompat = mediaSession
+    fun getMediaSession(): MediaSessionCompat = mediaSession!!
 
     private fun notifyPlayPause() {
         // Notify clients that we paused or played
@@ -405,29 +425,27 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
     }
 
     private fun updateNotification() {
-        val status = if (isPlayerPaused) TYPE_PAUSE else TYPE_TICKER
-        val playbackState = if (isPlayerPaused) STATE_PAUSED else STATE_PLAYING
+        CoroutineScope(Dispatchers.Main).launch {
+            val status = if (isPlayerPaused) TYPE_PAUSE else TYPE_TICKER
+            val playbackState = if (isPlayerPaused) STATE_PAUSED else STATE_PLAYING
 
-        val stateBuilder = Builder()
-            .setState(playbackState, Xmp.time().toLong(), 1F)
-            .setActions(
-                ACTION_PLAY and ACTION_PLAY_PAUSE and
-                    ACTION_PAUSE and ACTION_STOP and
-                    ACTION_SKIP_TO_PREVIOUS and ACTION_SKIP_TO_NEXT and
-                    ACTION_REWIND and ACTION_FAST_FORWARD
-            )
+            val stateBuilder = Builder()
+                .setState(playbackState, Xmp.time().toLong(), 1F)
+                .setActions(
+                    ACTION_PLAY and ACTION_PLAY_PAUSE and
+                        ACTION_PAUSE and ACTION_STOP and
+                        ACTION_SKIP_TO_PREVIOUS and ACTION_SKIP_TO_NEXT and
+                        ACTION_REWIND and ACTION_FAST_FORWARD
+                )
 
-        if (!isPlayerPaused)
-            stateBuilder.setActions(ACTION_SEEK_TO)
+            if (!isPlayerPaused)
+                stateBuilder.setActions(ACTION_SEEK_TO)
 
-        Executors.newSingleThreadScheduledExecutor().schedule(
-            {
-                notifier.notify(getModName(), Xmp.getModType(), queue.index, status)
-                mediaSession.setPlaybackState(stateBuilder.build())
-            },
-            SYNC_DELAY,
-            TimeUnit.MILLISECONDS
-        )
+            delay(SYNC_DELAY)
+            mediaSession!!.setPlaybackState(stateBuilder.build())
+
+            notifier!!.notify(getModName(), Xmp.getModType(), queue!!.index, status)
+        }
     }
 
     private fun notifyNewSequence() {
@@ -437,7 +455,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
 
     private fun end(result: Int) {
         logI("End service with result: $result")
-        mediaSession.controller.transportControls.stop()
+        mediaSession!!.controller.transportControls.stop()
         eventBus.post(EndPlayCallback(result))
 
         // Xmp.stopModule()
@@ -456,7 +474,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
             putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, bitmap)
         }.build()
 
-        mediaSession.setMetadata(metaData)
+        mediaSession!!.setMetadata(metaData)
     }
 
     // Media Button Event Handler
@@ -465,7 +483,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
             val keyEvent = it.getParcelableExtra<Parcelable>(Intent.EXTRA_KEY_EVENT) as KeyEvent
             if (keyEvent.action == KeyEvent.ACTION_DOWN) {
                 logI("Key Even Action received, keycode: ${keyEvent.keyCode}")
-                with(mediaSession.controller.transportControls) {
+                with(mediaSession!!.controller.transportControls) {
                     when (keyEvent.keyCode) {
                         KeyEvent.KEYCODE_MEDIA_PLAY -> play()
                         KeyEvent.KEYCODE_MEDIA_PAUSE -> pause()
@@ -496,7 +514,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
                 setOnAudioFocusChangeListener(this@PlayerService)
                 build()
             }
-        val result: Int = AudioManagerCompat.requestAudioFocus(audioManager, audioFocusRequest)
+        val result: Int = AudioManagerCompat.requestAudioFocus(audioManager!!, audioFocusRequest!!)
 
         logD("Audio Focus was $result")
         return result == AUDIOFOCUS_REQUEST_GRANTED
@@ -504,38 +522,33 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
 
     private fun abandonAudioFocus() {
         if (isAtLeastO) {
-            AudioManagerCompat.abandonAudioFocusRequest(audioManager, audioFocusRequest)
+            AudioManagerCompat.abandonAudioFocusRequest(audioManager!!, audioFocusRequest!!)
         } else {
             @Suppress("DEPRECATION")
-            audioManager.abandonAudioFocus(this)
+            audioManager!!.abandonAudioFocus(this)
         }
     }
     //endregion
 
-    inner class PlayerBinder : Binder() {
-        var service: PlayerService = this@PlayerService
-    }
-
-    private inner class PlayRunnable : Runnable {
-        override fun run() {
+    private fun playerJob(): Job {
+        return CoroutineScope(Dispatchers.Default).launch(CoroutineName("Service Job")) {
             cmd = CMD_NONE
             val vars = IntArray(8)
             var lastRecognized = 0
-
             do {
-                currentFileName = queue.filename // Used in reconnection
+                currentFileName = queue!!.filename // Used in reconnection
 
                 // If this file is unrecognized, and we're going backwards, go to previous
                 // If we're at the start of the list, go to the last recognized file
-                if (currentFileName.isEmpty() || !testModule(currentFileName)) {
+                if (currentFileName!!.isEmpty() || !testModule(currentFileName!!)) {
                     logW("$currentFileName: unrecognized format")
                     if (cmd == CMD_PREV) {
-                        if (queue.index <= 0) {
+                        if (queue!!.index <= 0) {
                             // -1 because we have queue.next() in the while condition
-                            queue.index = lastRecognized - 1
+                            queue!!.index = lastRecognized - 1
                             continue
                         }
-                        queue.previous()
+                        queue!!.previous()
                     }
                     continue
                 }
@@ -547,18 +560,18 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
 
                 // Ditto if we can't load the module
                 logI("Load $currentFileName")
-                if (Xmp.loadModule(currentFileName) < 0) {
+                if (Xmp.loadModule(currentFileName!!) < 0) {
                     logE("Error loading $currentFileName")
                     if (cmd == CMD_PREV) {
-                        if (queue.index <= 0) {
-                            queue.index = lastRecognized - 1
+                        if (queue!!.index <= 0) {
+                            queue!!.index = lastRecognized - 1
                             continue
                         }
-                        queue.previous()
+                        queue!!.previous()
                     }
                     continue
                 }
-                lastRecognized = queue.index
+                lastRecognized = queue!!.index
                 cmd = CMD_NONE
 
                 isLoaded = true
@@ -617,7 +630,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
 
                 // Do this last to avoid static popping.
                 if (isPlayerPaused)
-                    mediaSession.controller.transportControls.play()
+                    mediaSession!!.controller.transportControls.play()
 
                 logI("Enter play loop")
                 do {
@@ -632,12 +645,8 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
 
                         // Wait if paused
                         while (isPlayerPaused && cmd != CMD_STOP) {
-                            try {
-                                Thread.sleep(100)
-                            } catch (e: InterruptedException) {
-                                break
-                            }
-                            watchdog.refresh()
+                            delay(100)
+                            watchdog!!.refresh()
                         }
                         if (discardBuffer) {
                             logD("discard buffer")
@@ -647,18 +656,14 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
 
                         // Wait if no buffers available
                         while (!Xmp.hasFreeBuffer() && !isPlayerPaused && cmd == CMD_NONE) {
-                            try {
-                                Thread.sleep(40)
-                            } catch (e: InterruptedException) {
-                                /* no-op */
-                            }
+                            delay(40)
                         }
 
                         // Fill a new buffer
                         if (Xmp.fillBuffer(looped) < 0) {
                             break
                         }
-                        watchdog.refresh()
+                        watchdog!!.refresh()
                     }
 
                     // Subsong explorer
@@ -683,13 +688,9 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
                 // Study the purpose of this
                 // if we have clients, make sure we can release module
                 var timeout = 0
-                try {
-                    while (!canRelease && timeout < 20) {
-                        Thread.sleep(100)
-                        timeout++
-                    }
-                } catch (e: InterruptedException) {
-                    logE("Sleep interrupted: $e")
+                while (!canRelease && timeout < 20) {
+                    delay(100)
+                    timeout++
                 }
 
                 logI("Release module")
@@ -698,21 +699,19 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
                 // Used when current files are replaced by a new set
                 if (restart) {
                     logI("Restart")
-                    queue.index = startIndex - 1
+                    queue!!.index = startIndex - 1
                     cmd = CMD_NONE
                     restart = false
                 } else if (cmd == CMD_PREV) {
-                    queue.previous()
+                    queue!!.previous()
                 }
-            } while (cmd != CMD_STOP && queue.next())
+            } while (cmd != CMD_STOP && queue!!.next())
 
-            synchronized(playThread) {
-                updateData = false // stop getChannelData update
-            }
+            updateData = false // stop getChannelData update
 
             Xmp.deinit()
 
-            watchdog.stop()
+            watchdog!!.stop()
             abandonAudioFocus()
 
             logI("Stop service")
@@ -738,10 +737,10 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
         // Keep this well under a second to keep activity and notification time in sync.
         private const val SYNC_DELAY = 350L // Millis
 
-        @JvmStatic
+        @JvmField
         var isPlayerAlive: MutableLiveData<Boolean> = MutableLiveData(false)
 
-        @JvmStatic
+        @JvmField
         var isLoaded = false
     }
 }
