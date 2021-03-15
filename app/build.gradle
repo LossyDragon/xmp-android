@@ -18,7 +18,7 @@ android {
         versionCode = 87
         versionName = "4.12.0"
 
-        externalNativeBuild.ndkBuild  {
+        externalNativeBuild.ndkBuild {
             abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
         }
 
@@ -88,7 +88,7 @@ dependencies {
     kapt "com.google.dagger:hilt-compiler:$hilt_android"
 
     // Coroutines
-    def coroutines = "1.4.2"
+    def coroutines = "1.4.3"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines"
 
@@ -105,7 +105,7 @@ dependencies {
     kapt("com.tickaroo.tikxml:processor") { version { strictly "$tikXml" } }
 
     // Other Libs
-    implementation 'com.google.code.gson:gson:2.8.6'
+    implementation 'com.squareup.moshi:moshi-kotlin:1.11.0'
     implementation 'com.github.razir.progressbutton:progressbutton:2.1.0'
     implementation 'com.afollestad.material-dialogs:core:3.3.0'
     implementation 'com.afollestad.material-dialogs:input:3.3.0'

@@ -8,8 +8,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.afollestad.materialdialogs.MaterialDialog
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
+import com.squareup.moshi.JsonAdapter
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.databinding.ActivityResultListBinding
 import org.helllabs.android.xmp.databinding.ItemSearchListBinding
@@ -22,7 +23,11 @@ import org.helllabs.android.xmp.preferences.PrefManager
 import org.helllabs.android.xmp.util.hide
 import org.helllabs.android.xmp.util.show
 
+@AndroidEntryPoint
 class SearchHistory : AppCompatActivity() {
+
+    @Inject
+    lateinit var moshiAdapter: JsonAdapter<List<Module>>
 
     private lateinit var binder: ActivityResultListBinding
     private lateinit var historyAdapter: ModAdapter<Module, ItemSearchListBinding>
@@ -88,8 +93,9 @@ class SearchHistory : AppCompatActivity() {
     }
 
     private fun getHistory(): List<Module> {
-        val type = object : TypeToken<List<Module?>?>() {}.type
-        return Gson().fromJson<List<Module>>(PrefManager.searchHistory, type).orEmpty()
+        return PrefManager.searchHistory?.let {
+            moshiAdapter.fromJson(it)
+        }.orEmpty()
     }
 
     private fun deleteHistory() {

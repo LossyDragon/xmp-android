@@ -13,11 +13,11 @@ import com.github.razir.progressbutton.DrawableButton
 import com.github.razir.progressbutton.attachTextChangeAnimator
 import com.github.razir.progressbutton.bindProgressButton
 import com.github.razir.progressbutton.showProgress
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
+import com.squareup.moshi.JsonAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
 import java.io.IOException
+import javax.inject.Inject
 import kotlinx.coroutines.flow.collect
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.XmpApplication
@@ -35,6 +35,9 @@ import org.helllabs.android.xmp.util.*
 
 @AndroidEntryPoint
 class ModuleResult : AppCompatActivity() {
+
+    @Inject
+    lateinit var moshiAdapter: JsonAdapter<List<Module>>
 
     private lateinit var binder: ActivityResultModuleBinding
 
@@ -370,13 +373,14 @@ class ModuleResult : AppCompatActivity() {
         // Add the current module into the history
         searchHistory.add(module)
 
-        // Convert into GSON and save it
-        PrefManager.searchHistory = Gson().toJson(searchHistory)
+        // Convert into JSON and save it
+        PrefManager.searchHistory = moshiAdapter.toJson(searchHistory)
     }
 
     private fun getSearchHistory(): List<Module> {
-        val type = object : TypeToken<List<Module?>?>() {}.type
-        return Gson().fromJson<List<Module>>(PrefManager.searchHistory, type).orEmpty()
+        return PrefManager.searchHistory?.let {
+            moshiAdapter.fromJson(it)
+        }.orEmpty()
     }
 
     companion object {

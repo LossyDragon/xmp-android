@@ -14,7 +14,6 @@ import android.view.MenuItem
 import android.view.WindowManager
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 import dagger.hilt.android.AndroidEntryPoint
@@ -22,8 +21,8 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.OutputStream
-import java.util.concurrent.Executor
 import javax.inject.Inject
+import kotlinx.coroutines.*
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -51,9 +50,8 @@ class PlayerActivity : AppCompatActivity() {
     lateinit var eventBus: EventBus
 
     private lateinit var playerDisplay: Display
-    private lateinit var executor: Executor
+    private var playerJob: Job? = null
     private val modVars = IntArray(10)
-    private val playerLock = Any() // for sync
     private val seqVars = IntArray(16) // this is MAX_SEQUENCES defined in common.h
     private var currentViewer = 0
     private var fileList: List<String>? = null
@@ -63,7 +61,6 @@ class PlayerActivity : AppCompatActivity() {
     private var keepFirst = false
     private var loopListMode = false
     private var playTime = 0
-    private var progressThread: Thread? = null
     private var screenOn = false
     private var screenReceiver: BroadcastReceiver? = null
     private var seeking = false
@@ -104,31 +101,27 @@ class PlayerActivity : AppCompatActivity() {
     private val connection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             logI("Service connected")
-            synchronized(playerLock) {
-                val binder = service as PlayerService.PlayerBinder
-                modPlayer = binder.service
-                isBound = true
-                flipperPage = 0
-                if (fileList != null && fileList!!.isNotEmpty()) {
-                    // Start new queue
-                    playNewMod(fileList!!, start)
-                    checkPlayState()
-                } else {
-                    // Reconnect to existing service
-                    showNewMod()
-                    checkPlayState()
-                }
+            val binder = service as PlayerService.PlayerBinder
+            modPlayer = binder.getService()
+            isBound = true
+            flipperPage = 0
+            if (fileList != null && fileList!!.isNotEmpty()) {
+                // Start new queue
+                playNewMod(fileList!!, start)
+                checkPlayState()
+            } else {
+                // Reconnect to existing service
+                showNewMod()
+                checkPlayState()
             }
         }
 
         override fun onServiceDisconnected(className: ComponentName) {
             saveAllSeqPreference()
-            synchronized(playerLock) {
-                stopUpdate = true
-                isBound = false
-                logI("Service unexpectedly disconnected")
-                finish()
-            }
+            stopUpdate = true
+            isBound = false
+            logI("Service unexpectedly disconnected")
+            finish()
         }
     }
 
@@ -152,29 +145,21 @@ class PlayerActivity : AppCompatActivity() {
     @Suppress("unused", "UNUSED_PARAMETER")
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun endPlayEvent(event: EndPlayCallback) {
-        synchronized(playerLock) {
-            logD("endPlayCallback: End progress thread")
-            stopUpdate = true
-            saveAllSeqPreference()
-            if (event.result != PlayerService.RESULT_OK) {
-                when (event.result) {
-                    PlayerService.RESULT_CANT_OPEN_AUDIO -> toast(R.string.error_opensl)
-                    PlayerService.RESULT_NO_AUDIO_FOCUS -> toast(R.string.error_audiofocus)
-                    PlayerService.RESULT_WATCHDOG -> toast(R.string.error_watchdog)
-                }
-            }
-            if (progressThread != null) {
-                try {
-                    progressThread!!.join()
-                } catch (e: InterruptedException) {
-                    logW("ProgressThread error: \n ${e.printStackTrace()}")
-                    /* no-op */
-                }
-            }
+        logD("endPlayCallback: End progress thread")
+        stopUpdate = true
+        saveAllSeqPreference()
 
-            if (!isFinishing) {
-                finish()
-            }
+        when (event.result) {
+            PlayerService.RESULT_CANT_OPEN_AUDIO -> toast(R.string.error_opensl)
+            PlayerService.RESULT_NO_AUDIO_FOCUS -> toast(R.string.error_audiofocus)
+            PlayerService.RESULT_WATCHDOG -> toast(R.string.error_watchdog)
+            PlayerService.RESULT_OK -> Unit
+        }
+
+        playerJob!!.cancel()
+
+        if (!isFinishing) {
+            finish()
         }
     }
 
@@ -182,9 +167,7 @@ class PlayerActivity : AppCompatActivity() {
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun pauseEvent(event: PlayStateCallback) {
         logD("pauseCallback")
-        synchronized(playerLock) {
-            checkPlayState()
-        }
+        checkPlayState()
     }
 
     @Suppress("unused", "UNUSED_PARAMETER")
@@ -194,119 +177,6 @@ class PlayerActivity : AppCompatActivity() {
         showNewSequence()
     }
 // endregion
-
-    private val updateInfoRunnable: Runnable = Runnable {
-        if (!modPlayer.isPaused()) {
-            // update seekbar
-            if (!seeking && playTime >= 0) {
-                binder.controlsSheet.seekbar.progress = playTime
-            }
-
-            // get current frame info
-            synchronized(playerLock) {
-                Xmp.getInfo(info!!.values)
-                info!!.time = Xmp.time() / 1000
-                if (modPlayer.getUpdateData()) {
-                    Xmp.getChannelData(
-                        info!!.volumes,
-                        info!!.finalVols,
-                        info!!.pans,
-                        info!!.instruments,
-                        info!!.keys,
-                        info!!.periods
-                    )
-                }
-            }
-
-            /* Display frame info */
-            // Frame Info - Speed
-            if (info!!.values[5] != oldSpd) {
-                s.delete(0, s.length)
-                if (showHex) {
-                    Util.to02X(c, info!!.values[5])
-                    s.append(c)
-                } else {
-                    s.append(info!!.values[5])
-                }
-                binder.controlsSheet.infoLayout.infoSpeed.text = s
-                oldSpd = info!!.values[5]
-            }
-
-            // Frame Info - BPM
-            if (info!!.values[6] != oldBpm) {
-                s.delete(0, s.length)
-                if (showHex) {
-                    Util.to02X(c, info!!.values[6])
-                    s.append(c)
-                } else {
-                    s.append(info!!.values[6])
-                }
-                binder.controlsSheet.infoLayout.infoBpm.text = s
-                oldBpm = info!!.values[6]
-            }
-
-            // Frame Info - Position
-            if (info!!.values[0] != oldPos) {
-                s.delete(0, s.length)
-                if (showHex) {
-                    Util.to02X(c, info!!.values[0])
-                    s.append(c)
-                } else {
-                    s.append(info!!.values[0])
-                }
-                binder.controlsSheet.infoLayout.infoPos.text = s
-                oldPos = info!!.values[0]
-            }
-
-            // Frame Info - Pattern
-            if (info!!.values[1] != oldPat) {
-                s.delete(0, s.length)
-                if (showHex) {
-                    Util.to02X(c, info!!.values[1])
-                    s.append(c)
-                } else {
-                    s.append(info!!.values[1])
-                }
-                binder.controlsSheet.infoLayout.infoPat.text = s
-                oldPat = info!!.values[1]
-            }
-
-            // display playback time
-            if (info!!.time != oldTime) {
-                var t = info!!.time
-                if (t < 0) {
-                    t = 0
-                }
-                s.delete(0, s.length)
-                Util.to2d(c, t / 60)
-                s.append(c)
-                s.append(':')
-                Util.to02d(c, t % 60)
-                s.append(c)
-
-                binder.controlsSheet.timeNow.text = s
-                oldTime = info!!.time
-            }
-
-            // display total playback time
-            if (totalTime != oldTotalTime) {
-                s.delete(0, s.length)
-                Util.to2d(c, totalTime / 60)
-                s.append(c)
-                s.append(':')
-                Util.to02d(c, totalTime % 60)
-                s.append(c)
-
-                binder.controlsSheet.timeTotal.text = s
-                oldTotalTime = totalTime
-            }
-        }
-
-        // always call viewer update (for scrolls during pause)
-        synchronized(playerLock) {
-            viewer.update(info, modPlayer.isPaused())
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -321,7 +191,6 @@ class PlayerActivity : AppCompatActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
         window.statusBarColor = ResourcesCompat.getColor(resources, R.color.primary, null)
 
-        executor = ContextCompat.getMainExecutor(this)
         playerDisplay = if (isAtLeastR) {
             display!!
         } else {
@@ -351,10 +220,8 @@ class PlayerActivity : AppCompatActivity() {
         viewer = instrumentViewer
         binder.viewerLayout.addView(viewer)
         binder.viewerLayout.click {
-            synchronized(playerLock) {
-                if (canChangeViewer) {
-                    changeViewer()
-                }
+            if (canChangeViewer) {
+                changeViewer()
             }
         }
 
@@ -394,30 +261,32 @@ class PlayerActivity : AppCompatActivity() {
             binder.viewerLayout.keepScreenOn = true
         }
 
-        // if (PlayerService.isLoaded) {
-        //    canChangeViewer = true
-        // }
+        if (PlayerService.isLoaded) {
+            canChangeViewer = true
+        }
 
         setResult(RESULT_OK)
     }
 
-    public override fun onDestroy() {
-        super.onDestroy()
-
-        saveAllSeqPreference()
+    override fun onStop() {
+        super.onStop()
 
         try {
             unbindService(connection)
             logI("Unbind service")
         } catch (e: IllegalArgumentException) {
-            logI("Can't unbind unregistered service")
+            logI("Can't unbind service")
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        saveAllSeqPreference()
 
         stopUpdate = true
-        if (progressThread != null && progressThread!!.isAlive) {
-            progressThread!!.interrupt()
-            progressThread = null
-        }
+        playerJob!!.cancel()
+        playerJob = null
 
         eventBus.unregister(this)
         unregisterReceiver(screenReceiver)
@@ -569,80 +438,66 @@ class PlayerActivity : AppCompatActivity() {
     private fun changeViewer() {
         currentViewer++
         currentViewer %= 3
-        synchronized(playerLock) {
-            if (isBound) {
-                binder.viewerLayout.removeAllViews()
-                when (currentViewer) {
-                    0 -> viewer = instrumentViewer
-                    1 -> viewer = channelViewer
-                    2 -> viewer = patternViewer
-                }
-                binder.viewerLayout.addView(viewer)
-                viewer.setup(modVars)
-                viewer.setRotation(playerDisplay.rotation)
+        if (isBound) {
+            binder.viewerLayout.removeAllViews()
+            when (currentViewer) {
+                0 -> viewer = instrumentViewer
+                1 -> viewer = channelViewer
+                2 -> viewer = patternViewer
             }
+            binder.viewerLayout.addView(viewer)
+            viewer.setup(modVars)
+            viewer.setRotation(playerDisplay.rotation)
         }
     }
 
     // Sidebar services
     fun toggleAllSequences(): Boolean {
-        synchronized(playerLock) {
-            if (isBound) {
-                return modPlayer.toggleAllSequences()
-            }
-            return false
+        if (isBound) {
+            return modPlayer.toggleAllSequences()
         }
+        return false
     }
 
     private fun onLoopButton() {
-        synchronized(playerLock) {
-            if (isBound) {
-                modPlayer.toggleLoop()
-                binder.controlsSheet.buttonLoop.setImageResource(isLoopEnabled)
-            }
+        if (isBound) {
+            modPlayer.toggleLoop()
+            binder.controlsSheet.buttonLoop.setImageResource(isLoopEnabled)
         }
     }
 
     private fun onPlayButton() {
-        synchronized(playerLock) {
-            val isPaused = modPlayer.isPaused()
-            logD("Play/pause button pressed (paused=$isPaused)")
-            if (isBound) {
-                if (isPaused) {
-                    mediaSession.controller.transportControls.play()
-                } else {
-                    mediaSession.controller.transportControls.pause()
-                }
+        val isPaused = modPlayer.isPaused()
+        logD("Play/pause button pressed (paused=$isPaused)")
+        if (isBound) {
+            if (isPaused) {
+                mediaSession.controller.transportControls.play()
+            } else {
+                mediaSession.controller.transportControls.pause()
             }
         }
     }
 
     private fun onStopButton() {
-        synchronized(playerLock) {
-            logD("Stop button pressed")
-            if (isBound) {
-                mediaSession.controller.transportControls.stop()
-            }
+        logD("Stop button pressed")
+        if (isBound) {
+            mediaSession.controller.transportControls.stop()
         }
     }
 
     private fun onBackButton() {
-        synchronized(playerLock) {
-            logD("Back button pressed")
-            if (isBound) {
-                mediaSession.controller.transportControls.skipToPrevious()
-                skipToPrevious = true
-            }
+        logD("Back button pressed")
+        if (isBound) {
+            mediaSession.controller.transportControls.skipToPrevious()
+            skipToPrevious = true
         }
     }
 
     private fun onForwardButton() {
-        synchronized(playerLock) {
-            logD("Next button pressed")
-            if (isBound) {
-                mediaSession.controller.transportControls.skipToNext()
-                skipToPrevious = false
-            }
+        logD("Next button pressed")
+        if (isBound) {
+            mediaSession.controller.transportControls.skipToNext()
+            skipToPrevious = false
         }
     }
 
@@ -658,96 +513,81 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     fun playNewSequence(num: Int) {
-        synchronized(playerLock) {
-            if (isBound) {
-                modPlayer.setSequence(num)
-            }
+        if (isBound) {
+            modPlayer.setSequence(num)
         }
     }
 
     private fun showNewSequence() {
-        synchronized(playerLock) {
-            if (isBound) {
-                Xmp.getModVars(modVars)
-            }
-
-            executor.execute {
-                val time = modVars[0]
-                totalTime = time / 1000
-                binder.controlsSheet.seekbar.progress = 0
-                binder.controlsSheet.seekbar.max = time / 100
-                toast(getString(R.string.msg_new_seq_duration, time / 60000, time / 1000 % 60))
-                val sequence = modVars[7]
-                sheet?.selectSequence(sequence)
-            }
+        if (isBound) {
+            Xmp.getModVars(modVars)
         }
+
+        val time = modVars[0]
+        totalTime = time / 1000
+        binder.controlsSheet.seekbar.progress = 0
+        binder.controlsSheet.seekbar.max = time / 100
+        toast(getString(R.string.msg_new_seq_duration, time / 60000, time / 1000 % 60))
+        val sequence = modVars[7]
+        sheet?.selectSequence(sequence)
     }
 
     private fun showNewMod() {
-        executor.execute {
-            logI("Show new module")
-            synchronized(playerLock) {
+        logI("Show new module")
 
-                Xmp.getModVars(modVars)
-                Xmp.getSeqVars(seqVars)
-                playTime = Xmp.time() / 100
+        Xmp.getModVars(modVars)
+        Xmp.getSeqVars(seqVars)
+        playTime = Xmp.time() / 100
 
-                val time = modVars[0]
-                /* val len = vars[1] */
-                val pat = modVars[2]
-                val chn = modVars[3]
-                val ins = modVars[4]
-                val smp = modVars[5]
-                val numSeq = modVars[6]
+        val time = modVars[0]
+        /* val len = vars!![1] */
+        val pat = modVars[2]
+        val chn = modVars[3]
+        val ins = modVars[4]
+        val smp = modVars[5]
+        val numSeq = modVars[6]
 
-                sheet?.let {
-                    it.setDetails(pat, ins, smp, chn, modPlayer.getAllSequences())
-                    it.clearSequences()
-                    for (i in 0 until numSeq) {
-                        it.addSequence(i, seqVars[i])
-                    }
-                    it.selectSequence(0)
-                }
-
-                binder.controlsSheet.buttonLoop.setImageResource(isLoopEnabled)
-
-                totalTime = time / 1000
-                binder.controlsSheet.seekbar.max = time / 100
-                binder.controlsSheet.seekbar.progress = playTime
-                flipperPage = (flipperPage + 1) % 2
-                infoName[flipperPage].text = modPlayer.getModName()
-                infoType[flipperPage].text = Xmp.getModType()
-
-                if (skipToPrevious) {
-                    binder.titleFlipper.setInAnimation(this, R.anim.slide_in_left_slow)
-                    binder.titleFlipper.setOutAnimation(this, R.anim.slide_out_right_slow)
-                } else {
-                    binder.titleFlipper.setInAnimation(this, R.anim.slide_in_right_slow)
-                    binder.titleFlipper.setOutAnimation(this, R.anim.slide_out_left_slow)
-                }
-
-                skipToPrevious = false
-                binder.titleFlipper.showNext()
-                viewer.setup(modVars)
-                viewer.setRotation(playerDisplay.rotation)
-
-                info = Viewer.Info()
-                info!!.type = Xmp.getModType()
-                stopUpdate = false
-
-                if (progressThread == null || !progressThread!!.isAlive) {
-                    progressThread = ProgressThread()
-                    progressThread!!.start()
-                }
+        sheet?.let {
+            it.setDetails(pat, ins, smp, chn, modPlayer.getAllSequences())
+            it.clearSequences()
+            for (i in 0 until numSeq) {
+                it.addSequence(i, seqVars[i])
             }
+            it.selectSequence(0)
         }
+
+        binder.controlsSheet.buttonLoop.setImageResource(isLoopEnabled)
+
+        totalTime = time / 1000
+        binder.controlsSheet.seekbar.max = time / 100
+        binder.controlsSheet.seekbar.progress = playTime
+        flipperPage = (flipperPage + 1) % 2
+        infoName[flipperPage].text = modPlayer.getModName()
+        infoType[flipperPage].text = Xmp.getModType()
+
+        if (skipToPrevious) {
+            binder.titleFlipper.setInAnimation(this, R.anim.slide_in_left_slow)
+            binder.titleFlipper.setOutAnimation(this, R.anim.slide_out_right_slow)
+        } else {
+            binder.titleFlipper.setInAnimation(this, R.anim.slide_in_right_slow)
+            binder.titleFlipper.setOutAnimation(this, R.anim.slide_out_left_slow)
+        }
+
+        skipToPrevious = false
+        binder.titleFlipper.showNext()
+        viewer.setup(modVars)
+        viewer.setRotation(playerDisplay.rotation)
+
+        info = Viewer.Info()
+        info!!.type = Xmp.getModType()
+        stopUpdate = false
+
+        playerJob = progressJob()
     }
 
     private fun playNewMod(fileList: List<String>, start: Int) {
-        synchronized(playerLock) {
-            if (isBound) {
-                modPlayer.play(fileList, start, shuffleMode, loopListMode, keepFirst)
-            }
+        if (isBound) {
+            modPlayer.play(fileList, start, shuffleMode, loopListMode, keepFirst)
         }
     }
 
@@ -772,49 +612,156 @@ class PlayerActivity : AppCompatActivity() {
         }
     }
 
-    private inner class ProgressThread : Thread("Xmp Progress Thread") {
-        var frameStartTime: Long = 0L
-        var frameTime: Long = 0L
-
-        override fun run() {
+    private fun progressJob(): Job {
+        return CoroutineScope(Dispatchers.Main).launch {
             logI("Start progress thread")
+            var frameStartTime: Long
+            var frameTime: Long
             playTime = 0
             do {
+
                 if (stopUpdate) {
                     logI("Stop update")
                     break
                 }
 
-                synchronized(playerLock) {
-                    if (isBound) {
-                        playTime = Xmp.time() / 100
-                    }
+                if (isBound) {
+                    playTime = Xmp.time() / 100
                 }
 
                 if (screenOn) {
-                    executor.execute(updateInfoRunnable)
+                    if (!modPlayer.isPaused()) {
+                        // update seekbar
+                        if (!seeking && playTime >= 0) {
+                            binder.controlsSheet.seekbar.progress = playTime
+                        }
+
+                        // get current frame info
+                        Xmp.getInfo(info!!.values)
+                        info!!.time = Xmp.time() / 1000
+                        if (modPlayer.getUpdateData()) {
+                            Xmp.getChannelData(
+                                info!!.volumes,
+                                info!!.finalVols,
+                                info!!.pans,
+                                info!!.instruments,
+                                info!!.keys,
+                                info!!.periods
+                            )
+                        }
+
+                        /* Display frame info */
+                        // Frame Info - Speed
+                        if (info!!.values[5] != oldSpd) {
+                            s.clear()
+                            if (showHex) {
+                                Util.to02X(c, info!!.values[5])
+                                s.append(c)
+                            } else {
+                                info!!.values[5].let {
+                                    if (it < 10) s.append(0)
+                                    s.append(it)
+                                }
+                            }
+                            binder.controlsSheet.infoLayout.infoSpeed.text = s
+                            oldSpd = info!!.values[5]
+                        }
+
+                        // Frame Info - BPM
+                        if (info!!.values[6] != oldBpm) {
+                            s.clear()
+                            if (showHex) {
+                                Util.to02X(c, info!!.values[6])
+                                s.append(c)
+                            } else {
+                                info!!.values[6].let {
+                                    if (it < 10) s.append(0)
+                                    s.append(it)
+                                }
+                            }
+                            binder.controlsSheet.infoLayout.infoBpm.text = s
+                            oldBpm = info!!.values[6]
+                        }
+
+                        // Frame Info - Position
+                        if (info!!.values[0] != oldPos) {
+                            s.clear()
+                            if (showHex) {
+                                Util.to02X(c, info!!.values[0])
+                                s.append(c)
+                            } else {
+                                info!!.values[0].let {
+                                    if (it < 10) s.append(0)
+                                    s.append(it)
+                                }
+                            }
+                            binder.controlsSheet.infoLayout.infoPos.text = s
+                            oldPos = info!!.values[0]
+                        }
+
+                        // Frame Info - Pattern
+                        if (info!!.values[1] != oldPat) {
+                            s.clear()
+                            if (showHex) {
+                                Util.to02X(c, info!!.values[1])
+                                s.append(c)
+                            } else {
+                                info!!.values[1].let {
+                                    if (it < 10) s.append(0)
+                                    s.append(it)
+                                }
+                            }
+                            binder.controlsSheet.infoLayout.infoPat.text = s
+                            oldPat = info!!.values[1]
+                        }
+
+                        // display playback time
+                        if (info!!.time != oldTime) {
+                            var t = info!!.time
+                            if (t < 0) {
+                                t = 0
+                            }
+                            s.delete(0, s.length)
+                            Util.to2d(c, t / 60)
+                            s.append(c)
+                            s.append(":")
+                            Util.to02d(c, t % 60)
+                            s.append(c)
+
+                            binder.controlsSheet.timeNow.text = s
+                            oldTime = info!!.time
+                        }
+
+                        // display total playback time
+                        if (totalTime != oldTotalTime) {
+                            s.delete(0, s.length)
+                            Util.to2d(c, totalTime / 60)
+                            s.append(c)
+                            s.append(":")
+                            Util.to02d(c, totalTime % 60)
+                            s.append(c)
+
+                            binder.controlsSheet.timeTotal.text = s
+                            oldTotalTime = totalTime
+                        }
+                    }
+
+                    // always call viewer update (for scrolls during pause)
+                    viewer.update(info, modPlayer.isPaused())
                 }
 
                 frameStartTime = System.nanoTime()
                 frameTime = (System.nanoTime() - frameStartTime) / 1000000
 
                 if (frameTime < FRAME_RATE && !stopUpdate) {
-                    try {
-                        sleep(FRAME_RATE - frameTime)
-                    } catch (e: InterruptedException) {
-                        // Ignore
-                    }
+                    delay(FRAME_RATE - frameTime)
                 }
             } while (playTime >= 0)
 
-            executor.execute {
-                synchronized(playerLock) {
-                    logI("Flush interface update")
-                    // finished playing, we can release the module
-                    if (isBound)
-                        modPlayer.allowRelease()
-                }
-            }
+            logI("Flush interface update")
+            // finished playing, we can release the module
+            if (isBound)
+                modPlayer.allowRelease()
         }
     }
 
