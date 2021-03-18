@@ -21,13 +21,12 @@ import javax.inject.Inject
 import kotlinx.coroutines.*
 import org.greenrobot.eventbus.EventBus
 import org.helllabs.android.xmp.Xmp
-import org.helllabs.android.xmp.preferences.PrefManager
-import org.helllabs.android.xmp.service.notifier.Notifier
-import org.helllabs.android.xmp.service.notifier.Notifier.Companion.TYPE_PAUSE
-import org.helllabs.android.xmp.service.notifier.Notifier.Companion.TYPE_TICKER
+import org.helllabs.android.xmp.service.Notifier.Companion.TYPE_PAUSE
+import org.helllabs.android.xmp.service.Notifier.Companion.TYPE_TICKER
 import org.helllabs.android.xmp.service.receiver.ControllerReceiver
 import org.helllabs.android.xmp.service.receiver.NoisyReceiver
 import org.helllabs.android.xmp.service.utils.*
+import org.helllabs.android.xmp.ui.preferences.PrefManager
 import org.helllabs.android.xmp.util.*
 import org.helllabs.android.xmp.util.FileUtils.basename
 import org.helllabs.android.xmp.util.InfoCache.delete

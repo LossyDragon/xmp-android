@@ -1,6 +1,6 @@
 package org.helllabs.android.xmp
 
-import org.helllabs.android.xmp.util.ModInfo
+import org.helllabs.android.xmp.model.ModInfo
 
 object Xmp {
 

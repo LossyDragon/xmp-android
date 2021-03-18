@@ -16,7 +16,7 @@
 package org.helllabs.android.xmp.util.recyclerview
 
 import androidx.recyclerview.widget.RecyclerView
-import org.helllabs.android.xmp.browser.playlist.PlaylistItem
+import org.helllabs.android.xmp.ui.browser.playlist.PlaylistItem
 
 /**
  * Listener for manual initiation of a drag.

@@ -7,7 +7,7 @@
     android:layout_weight="1.0"
     android:gravity="top"
     android:orientation="vertical"
-    tools:context=".browser.FilelistActivity">
+    tools:context=".ui.browser.FilelistActivity">
 
     <include
         android:id="@+id/appbar"

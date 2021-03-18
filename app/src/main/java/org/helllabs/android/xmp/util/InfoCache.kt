@@ -5,7 +5,8 @@ import java.io.File
 import java.io.FileReader
 import java.io.IOException
 import org.helllabs.android.xmp.Xmp
-import org.helllabs.android.xmp.preferences.Preferences
+import org.helllabs.android.xmp.model.ModInfo
+import org.helllabs.android.xmp.ui.preferences.Preferences
 
 object InfoCache {
 

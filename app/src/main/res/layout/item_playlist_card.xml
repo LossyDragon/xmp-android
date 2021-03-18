@@ -7,7 +7,7 @@
 
         <variable
             name="playlistItem"
-            type="org.helllabs.android.xmp.browser.playlist.PlaylistItem" />
+            type="org.helllabs.android.xmp.ui.browser.playlist.PlaylistItem" />
     </data>
 
     <com.google.android.material.card.MaterialCardView

@@ -140,7 +140,7 @@ Java_org_helllabs_android_xmp_Xmp_testModule(JNIEnv *env, jobject obj, jstring n
 
     if (res == 0) {
         if (info != nullptr) {
-            jclass modInfoClass = (*env).FindClass("org/helllabs/android/xmp/util/ModInfo");
+            jclass modInfoClass = (*env).FindClass("org/helllabs/android/xmp/model/ModInfo");
             jfieldID field;
 
             if (modInfoClass == nullptr)

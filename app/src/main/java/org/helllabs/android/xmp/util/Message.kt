@@ -10,7 +10,7 @@ import com.afollestad.materialdialogs.customview.customView
 import com.afollestad.materialdialogs.customview.getCustomView
 import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.preferences.PrefManager
+import org.helllabs.android.xmp.ui.preferences.PrefManager
 
 inline fun <reified T : Context> T.toast(message: String) =
     Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show()

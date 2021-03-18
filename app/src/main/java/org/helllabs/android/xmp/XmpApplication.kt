@@ -2,7 +2,7 @@ package org.helllabs.android.xmp
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp
-import org.helllabs.android.xmp.preferences.PrefManager
+import org.helllabs.android.xmp.ui.preferences.PrefManager
 
 // Someday: JSON playlists
 // Someday: Migrate from OpenSLES to oboe.

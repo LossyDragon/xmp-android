@@ -31,7 +31,7 @@
         tools:replace="supportsRtl">
 
         <activity
-            android:name=".browser.PlaylistMenu"
+            android:name="org.helllabs.android.xmp.ui.browser.PlaylistMenu"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:exported="true"
             android:theme="@style/AppTheme">
@@ -43,12 +43,12 @@
         </activity>
 
         <activity
-            android:name=".browser.PlaylistAddEdit"
-            android:parentActivityName=".browser.PlaylistMenu"
+            android:name="org.helllabs.android.xmp.ui.browser.PlaylistAddEdit"
+            android:parentActivityName="org.helllabs.android.xmp.ui.browser.PlaylistMenu"
             android:theme="@style/AppTheme" />
 
         <activity
-            android:name=".player.PlayerActivity"
+            android:name="org.helllabs.android.xmp.ui.player.PlayerActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:exported="true"
             android:launchMode="singleTop"
@@ -202,63 +202,63 @@
         </activity>
 
         <activity
-            android:name=".browser.FilelistActivity"
+            android:name="org.helllabs.android.xmp.ui.browser.FilelistActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:parentActivityName=".browser.PlaylistMenu" />
+            android:parentActivityName="org.helllabs.android.xmp.ui.browser.PlaylistMenu" />
 
         <activity
-            android:name=".browser.PlaylistActivity"
+            android:name="org.helllabs.android.xmp.ui.browser.PlaylistActivity"
             android:configChanges="keyboardHidden|orientation|screenSize" />
 
         <!-- ModArchive search & download -->
         <activity
-            android:name=".modarchive.Search"
+            android:name="org.helllabs.android.xmp.ui.modarchive.Search"
             android:configChanges="keyboardHidden|orientation|screenSize" />
 
         <activity
-            android:name=".modarchive.SearchError"
+            android:name="org.helllabs.android.xmp.ui.modarchive.SearchError"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:theme="@style/AppTheme" />
 
         <activity
-            android:name=".modarchive.SearchHistory"
+            android:name="org.helllabs.android.xmp.ui.modarchive.SearchHistory"
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:parentActivityName=".modarchive.Search" />
+            android:parentActivityName="org.helllabs.android.xmp.ui.modarchive.Search" />
 
         <activity
-            android:name=".modarchive.result.SearchListResult"
+            android:name="org.helllabs.android.xmp.ui.modarchive.result.SearchListResult"
             android:configChanges="keyboardHidden|orientation|screenSize">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".modarchive.Search" />
+                android:value="org.helllabs.android.xmp.ui.modarchive.Search" />
         </activity>
 
 
         <activity
-            android:name=".modarchive.result.ArtistResult"
+            android:name="org.helllabs.android.xmp.ui.modarchive.result.ArtistResult"
             android:configChanges="keyboardHidden|orientation|screenSize">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".modarchive.Search" />
+                android:value="org.helllabs.android.xmp.ui.modarchive.Search" />
         </activity>
 
         <activity
-            android:name=".modarchive.result.ModuleResult"
+            android:name="org.helllabs.android.xmp.ui.modarchive.result.ModuleResult"
             android:configChanges="keyboardHidden|orientation|screenSize">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".modarchive.Search" />
+                android:value="org.helllabs.android.xmp.ui.modarchive.Search" />
         </activity>
 
         <!-- Preferences -->
         <activity
-            android:name=".preferences.Preferences"
+            android:name="org.helllabs.android.xmp.ui.preferences.Preferences"
             android:theme="@style/AppTheme" />
 
         <activity
-            android:name=".preferences.about.ListFormats"
+            android:name="org.helllabs.android.xmp.ui.preferences.about.ListFormats"
             android:exported="false"
-            android:parentActivityName=".preferences.Preferences"
+            android:parentActivityName="org.helllabs.android.xmp.ui.preferences.Preferences"
             android:theme="@style/AppTheme">
             <intent-filter>
                 <action android:name="org.helllabs.android.xmp.LIST_FORMATS" />
@@ -268,9 +268,9 @@
         </activity>
 
         <activity
-            android:name=".preferences.about.About"
+            android:name="org.helllabs.android.xmp.ui.preferences.about.About"
             android:exported="false"
-            android:parentActivityName=".preferences.Preferences"
+            android:parentActivityName="org.helllabs.android.xmp.ui.preferences.Preferences"
             android:theme="@style/AppTheme">
             <intent-filter>
                 <action android:name="org.helllabs.android.xmp.ABOUT" />
