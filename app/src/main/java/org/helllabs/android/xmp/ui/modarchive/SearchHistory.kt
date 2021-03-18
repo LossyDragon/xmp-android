@@ -102,7 +102,7 @@ class SearchHistory : AppCompatActivity() {
         MaterialDialog(this).show {
             title(text = "Clear search history")
             message(text = "Are you want to clear your module search history?")
-            positiveButton(R.string.result_delete) {
+            positiveButton(R.string.delete) {
                 PrefManager.clearSearchHistory()
                 refreshList()
             }

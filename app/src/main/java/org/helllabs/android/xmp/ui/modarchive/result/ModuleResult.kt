@@ -324,7 +324,7 @@ class ModuleResult : AppCompatActivity() {
             if (localFile(module).exists()) {
                 // module exists, update button to reflect existence and enable Menu Delete
                 deleteMenu?.findItem(R.id.menu_delete)?.isEnabled = true
-                binder.moduleButtonPlay.text = getString(R.string.result_play)
+                binder.moduleButtonPlay.text = getString(R.string.play)
             } else {
                 // module does not exist, update button to download and disable Menu Delete
                 deleteMenu?.findItem(R.id.menu_delete)?.isEnabled = false

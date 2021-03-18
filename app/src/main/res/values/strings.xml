@@ -61,6 +61,7 @@
     <string name="changelog_title">New in version %s</string>
     <string name="changelog">Changelog</string>
 
+    <!-- General -->
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="ok">OK</string>
@@ -71,7 +72,23 @@
     <string name="directory">Directory</string>
     <string name="create">Create</string>
     <string name="delete">Delete</string>
+    <string name="no_comment">No comment</string>
+    <string name="frowny_face">:(</string>
+    <string name="download">Download</string>
+    <string name="select">Select</string>
+    <string name="settings">Settings</string>
+    <string name="random">Random</string>
+    <string name="search">Search</string>
+    <string name="play">Play</string>
 
+    <!-- Directory -->
+    <string name="dirname_theModArchive">TheModArchive</string>
+
+    <!-- Example playlist -->
+    <string name="empty_comment">Long press modules to create new playlists or add to existing playlists. Long press playlists for more options.</string>
+    <string name="empty_playlist">Empty playlist</string>
+
+    <!-- Preferences -->
     <string name="pref_examples_title">Install modules</string>
     <string name="pref_examples_summary">Install example music files when creating modules directory</string>
     <string name="pref_sampling_rate_summary">Set the mixer sampling rate</string>
@@ -96,10 +113,6 @@
     <string name="pref_interpolate_title">Interpolation</string>
     <string name="pref_interp_type_summary">Set sample interpolation method</string>
     <string name="pref_interp_type_title">Interpolation type</string>
-    <string name="pref_headset_pause_summary">Automatically pause replay when headset is disconnected</string>
-    <string name="pref_headset_pause_title">Pause on headset unplug</string>
-    <string name="pref_bluetooth_pause_summary">Automatically pause replay when bluetooth is disconnected</string>
-    <string name="pref_bluetooth_pause_title">Pause on bluetooth disconnection</string>
     <string name="pref_all_sequences_summary">Play all existing patterns/subsongs</string>
     <string name="pref_all_sequences_title">Hidden patterns</string>
     <string name="pref_back_button_navigation_summary">Back button returns to parent directory</string>
@@ -125,7 +138,6 @@
     <string name="pref_use_filename_summary">Display file names instead of titles in playlists</string>
     <string name="pref_enable_delete_title">Enable file delete</string>
     <string name="pref_enable_delete_summary">Display a menu option to delete the currently playing file</string>
-
     <string name="pref_category_sound">Sound settings</string>
     <string name="pref_category_sound_disabled">Sound settings (Disabled when playing)</string>
     <string name="pref_category_files">Playlist settings</string>
@@ -141,50 +153,51 @@
     <string name="pref_category_iface_screen">Screen</string>
     <string name="pref_category_file_general">General</string>
     <string name="pref_category_file_playlists">Playlists</string>
-
     <string name="preferences_pan_separation_dialog">Set the mixer stereo separation:</string>
     <string name="preferences_default_pan_dialog">Set the default pan separation:</string>
+    <string name="pref_category_notifications">Notifications</string>
+    <string name="pref_category_player_interface">Player</string>
+    <string name="pref_draw_lines_summary">Enabling this will render the player viewer at ~50fps and use a better waveform drawing. Older/Lower end phones may experience frame drops.</string>
+    <string name="pref_draw_lines_title">Use better waveform</string>
+    <string name="pref_lib_summary">Code repository for libxmp</string>
+    <string name="pref_lib_title">Libxmp Repo</string>
+    <string name="pref_notification_summary">Use Android\'s Media Style notification or classic notification</string>
+    <string name="pref_notification_title">Use Media Style Notifications</string>
+    <string name="pref_player_hex_summary">Show the player\'s info bar to show hex or decimal values</string>
+    <string name="pref_player_hex_title">Show hex values</string>
+    <string name="pref_site_summary">View more information about libxmp</string>
+    <string name="pref_site_title">Website</string>
+    <string name="pref_support_summary">Create or View issues about Xmp Mod Player</string>
+    <string name="pref_support_title">Support</string>
 
-    <string name="menu_refresh">Refresh</string>
+    <!-- Menus -->
     <string name="menu_prefs">Settings</string>
     <string name="menu_download">Download</string>
     <string name="menu_new_playlist">New playlist</string>
     <string name="menu_delete">Delete</string>
+    <string name="menu_clear_history">Clear history</string>
 
-    <string name="dialog_new_comment">Comment</string>
-    <string name="no_comment">No comment</string>
-    <string name="dialog_new_playlist">New playlist name</string>
-    <string name="empty_playlist">Empty playlist</string>
-    <string name="empty_comment">Long press modules to create new playlists or add to existing playlists. Long press playlists for more options.</string>
-    <string name="unrecognized_format">Unrecognized file format</string>
-
-    <string name="about_author">Written by Claudio Matsuoka</string>
-    <string name="about_version">Version %s</string>
-    <string name="about_xmp">Using libxmp %s written by Claudio Matsuoka and Hipolito Carraro Jr.</string>
-
+    <!-- Errors -->
     <string name="error_datadir">Can\'t create data directory. Please check your storage card and try again.</string>
     <string name="error_create_playlist">Can\'t create playlist.</string>
     <string name="error_rename_playlist">Can\'t rename playlist.</string>
     <string name="error_edit_comment">Can\'t edit comment.</string>
-    <string name="error_exist_dir">Directory does not exist.</string>
     <string name="error_write_to_playlist">Can\'t write to this playlist.</string>
     <string name="error_read_comment">Can\'t read comment.</string>
     <string name="error_storage">Can\'t access external storage.</string>
-    <string name="error_adding_mod">Error adding module</string>
     <string name="error_dir_not_under_moddir">Directory not under mod dir</string>
     <string name="error_no_files_to_play">No files to play</string>
     <string name="error_audiofocus">Audio focus request failed</string>
     <string name="error_opensl">Can\'t open audio device</string>
+    <string name="error_playlist_name">Name cannot be blank</string>
+    <string name="error_watchdog">Stopped by watchdog</string>
 
-    <string name="cache_clear">File cache cleared</string>
-    <string name="cache_clear_error">Error clearing cache</string>
-
+    <!-- Messages -->
     <string name="msg_file_deleted">File deleted</string>
     <string name="msg_cant_delete">Can\'t delete file</string>
     <string name="msg_dir_deleted">Directory deleted</string>
     <string name="msg_cant_delete_dir">Can\'t delete directory</string>
     <string name="msg_select_playlist">Select playlist</string>
-    <string name="msg_no_modules">No modules found.</string>
     <string name="msg_empty_playlist">Empty playlist.</string>
     <string name="msg_no_playlists">No playlists found.</string>
     <string name="msg_shuffle_on">Shuffle on</string>
@@ -195,127 +208,61 @@
     <string name="msg_only_valid_files_added">Only valid files were added to playlist</string>
     <string name="msg_empty_directory">Empty Directory</string>
     <string name="msg_unknown_error">An Unknown error has occurred</string>
+    <string name="msg_queue_empty">Queue list is empty</string>
+    <string name="msg_queue_added">Added to queue</string>
+    <string name="msg_file_unrecognized">Unrecognized file format</string>
+    <string name="msg_adding_files">Please wait, adding files…</string>
+    <string name="msg_new_seq_duration">New sequence duration: %d:%02d</string>
+    <string name="msg_error_create_directory">Error creating directory %s</string>
+    <string name="msg_default_path_set">Set as default module path</string>
+    <string name="msg_delete_file">Are you sure you want to delete %s?</string>
+    <string name="msg_download_cancelled">Download cancelled</string>
+    <string name="msg_edit_playlist_failed">Couldn\'t modify playlist</string>
+    <string name="msg_error_remove_directory">Error removing directory</string>
+    <string name="msg_file_exists">File exists</string>
+    <string name="msg_file_exists_overwrite">This module already exists. Do you want to overwrite?</string>
+    <string name="msg_no_song_info">No song message available.</string>
 
+    <!-- Dialogs -->
+    <string name="dialog_all_files_title">All files</string>
+    <string name="dialog_this_file_title">This File</string>
+    <string name="dialog_this_file_title_confirm">Delete File</string>
+    <string name="dialog_this_file_message">Are you sure you want to delete %s?</string>
+    <string name="dialog_this_dir_title">This directory</string>
+    <string name="dialog_delete_playlist">Delete Playlist</string>
+    <string name="dialog_delete_playlist_message">Are you sure you want to delete %s</string>
+    <string name="dialog_title_delete_dir">Delete directory</string>
+    <string name="dialog_msg_delete_dir">Are you sure you want to delete directory \"%s\" and all its contents?</string>
+    <string name="dialog_change_dir_title">Change directory</string>
+    <string name="dialog_change_dir_msg">Enter the mod directory:</string>
+    <string name="dialog_playlist_edit_title">Edit playlist</string>
+    <string name="dialog_no_path_title">Path not found</string>
+    <string name="dialog_no_path_message">%s not found. Create this directory or change the module path.</string>
+    <string name="dialog_title_song_message">Song Message</string>
+
+    <!-- Buttons -->
     <string name="button_parent_dir">Parent directory</string>
     <string name="button_play_all">Play all</string>
     <string name="button_toggle_loop">Toggle loop</string>
     <string name="button_toggle_shuffle">Toggle shuffle</string>
-    <string name="button_mod_loop">Module loop</string>
-    <string name="button_prev">Previous pattern</string>
-    <string name="button_play_pause">Play or pause</string>
-    <string name="button_stop">Stop</string>
-    <string name="button_next">Next pattern</string>
-
-    <string name="browser_filelist_title">File browser</string>
-    <string name="browser_playlist_title">Playlist</string>
-
-    <string name="search_title">Module search</string>
-    <string name="search_result_title">Search result</string>
-    <string name="search_artist_modules_title">Modules by artist</string>
-    <string name="search_artist_title">Artist search</string>
-    <string name="search_random_title">Random module</string>
-    <string name="search_title_title">Title search</string>
-    <string name="search_no_result">Search returned no results.</string>
-    <string name="search_error">Something wrong happened.</string>
-    <string name="search_artist_no_mods">This artist has no modules.</string>
-    <string name="search_title_or_filename">Title or file name</string>
-    <string name="search_artist">Artist</string>
-    <string name="search_random_pick">Random</string>
-
-    <string name="result_title">Title</string>
-    <string name="result_download">Download</string>
-    <string name="result_delete">Delete</string>
-    <string name="result_play">Play</string>
-
-    <string name="download_cancelled">Download cancelled</string>
-    <string name="file_downloaded">Module downloaded</string>
-    <string name="menu_help">Help</string>
-    <string name="settings">Settings</string>
-    <string name="search_search">Search</string>
-    <string name="msg_sd_no_need">Android versions prior to 19 don\'t require special permissions to access the SD card.</string>
-    <string name="msg_sd_cant_do">This android device can\'t access the SD card. Use the internal emulated SD card instead.</string>
-    <string name="msg_sd_enable_write">Enable write access</string>
-    <string name="msg_sd_instructions">In the following screen select your external (physical) SD card to enable write access. Continue?</string>
-
-    <!-- Sheet -->
-    <string name="sheet_main_song">Main Song</string>
-    <string name="sheet_sub_song">Subsong %d</string>
-    <string name="sheet_details">Module details</string>
-    <string name="sheet_patterns">Patterns:</string>
-    <string name="sheet_instruments">Instruments:</string>
-    <string name="sheet_samples">Samples:</string>
-    <string name="sheet_channels">Channels:</string>
-    <string name="sheet_subsongs">Subsongs</string>
-    <string name="sheet_button_allseqs">Play all subsongs</string>
-    <string name="sheet_button_loopseq">Loop subsong</string>
-
-    <!-- New Strings Below -->
-    <string name="notif_channel_desc">Current module and player controls</string>
-    <string name="notif_channel_name">Xmp</string>
-    <string name="clipboard_copied">Copied to clipboard</string>
-    <string name="pref_support_title">Support</string>
-    <string name="pref_support_summary">Create or View issues about Xmp Mod Player</string>
-    <string name="pref_lib_title">Libxmp Repo</string>
-    <string name="pref_lib_summary">Code repository for libxmp</string>
-    <string name="pref_site_title">Website</string>
-    <string name="pref_site_summary">View more information about libxmp</string>
-    <string name="search_download_provided">Downloads provided by modarchive.org</string>
-    <string name="search_history">Search History</string>
-    <string name="search_helper_text">Minimum of 3 characters</string>
-    <string name="frowny_face">:(</string>
-    <string name="text_license">License</string>
-    <string name="text_song_message">Song Message</string>
-    <string name="text_instruments">Instruments</string>
-    <string name="download">Download</string>
-    <string name="random">Random</string>
-    <string name="search_title_error">Search Error</string>
-    <string name="search_unknown_error">Software Failure.   Press back to continue.\n\nGuru Meditation #35068035.48454C50</string>
-    <string name="search_known_error">%s.  Press back button to continue.</string>
-    <string name="menu_clear_history">Clear history</string>
-    <string name="history_no_items">No items in history.</string>
-    <string name="button_download_unsupported">Unsupported Module</string>
-    <string name="msg_file_exists">File exists</string>
-    <string name="msg_file_exists_overwrite">This module already exists. Do you want to overwrite?</string>
-    <string name="dirname_theModArchive">TheModArchive</string>
-    <string name="msg_error_remove_directory">Error removing directory</string>
-    <string name="msg_delete_file">Are you sure you want to delete %s?</string>
-    <string name="title_delete_file">Delete File</string>
     <string name="button_downloading">Downloading…</string>
-    <string name="search_result_by">%1$s by %2$s (%3$d KB)</string>
-    <string name="msg_download_cancelled">Download cancelled</string>
+    <string name="button_download_unsupported">Unsupported Module</string>
     <string name="button_loading">Loading…</string>
-    <string name="search_module_title">Module Result</string>
-    <string name="by_artist">by %s</string>
-    <string name="size_kb">%d KB</string>
-    <string name="pref_player_hex_summary">Show the player\'s info bar to show hex or decimal values</string>
-    <string name="pref_player_hex_title">Show hex values</string>
-    <string name="pref_draw_lines_title">Use better waveform</string>
-    <string name="pref_draw_lines_summary">Enabling this will render the player viewer at ~50fps and use a better waveform drawing. Older/Lower end phones may experience frame drops.</string>
-    <string name="pref_category_player_interface">Player</string>
-    <string name="hint_playlist_name">Playlist name</string>
-    <string name="hint_playlist_comment">Playlist description (Optional)</string>
-    <string name="hint_search_box">Search Modules</string>
-    <string name="title_edit_playlist">Edit playlist</string>
-    <string name="button_playlist_update">Update Playlist</string>
-    <string name="button_playlist_delete">Delete: %s</string>
     <string name="button_playlist_add">Add new playlist</string>
-    <string name="error_playlist_name">Name cannot be blank</string>
-    <string name="dialog_delete_playlist">Delete Playlist</string>
-    <string name="dialog_delete_playlist_message">Are you sure you want to delete %s</string>
-    <string name="select">Select</string>
-    <string name="info_pattern">&#160;Pat:</string>
-    <string name="info_position">&#160;Pos:</string>
-    <string name="info_bpm">&#160;BPM:</string>
-    <string name="info_speed">Speed:</string>
-    <string name="player_time">&#160;0:00</string>
-    <string name="msg_no_song_info">No song message available.</string>
-    <string name="dialog_title_song_message">Song Message</string>
+    <string name="button_playlist_delete">Delete: %s</string>
+    <string name="button_playlist_update">Update Playlist</string>
+
+    <!-- Button Content Descriptions -->
     <string name="desc_show_module_message">Show Module Message</string>
     <string name="desc_play_or_pause_module">Play or Pause module</string>
     <string name="desc_stop_playing_module">Stop playing module</string>
     <string name="desc_rewind_module_or_skip">Rewind module or skip to previous before 3 seconds.</string>
     <string name="desc_repeat_current_play">Repeat currently playing module</string>
     <string name="desc_skip_to_next_module">Skip to next module</string>
+
+    <!-- Notifications -->
+    <string name="notif_channel_desc">Current module and player controls</string>
+    <string name="notif_channel_name">Xmp</string>
     <string name="notif_play">Play</string>
     <string name="notif_pause">Pause</string>
     <string name="notif_next">Next</string>
@@ -323,31 +270,71 @@
     <string name="notif_stop">Stop</string>
     <string name="notif_paused">Paused</string>
     <string name="notif_unknown">Unknown</string>
-    <string name="pref_category_notifications">Notifications</string>
-    <string name="pref_notification_title">Use Media Style Notifications</string>
-    <string name="pref_notification_summary">Use Android\'s Media Style notification or classic notification</string>
-    <string name="error_watchdog">Stopped by watchdog</string>
-    <string name="dialog_title_delete_dir">Delete directory</string>
-    <string name="dialog_msg_delete_dir">Are you sure you want to delete directory \"%s\" and all its contents?</string>
-    <string name="dialog_change_dir_title">Change directory</string>
-    <string name="dialog_change_dir_msg">Enter the mod directory:</string>
-    <string name="msg_edit_playlist_failed">Couldn\'t modify playlist</string>
-    <string name="playlist_special_title">File browser</string>
+
+    <!-- About (Preferences) -->
+    <string name="about_author">Written by Claudio Matsuoka</string>
+    <string name="about_version">Version %s</string>
+    <string name="about_xmp">Using libxmp %s written by Claudio Matsuoka and Hipolito Carraro Jr.</string>
+
+    <!-- Search Activity -->
+    <string name="search_title">Module search</string>
+    <string name="search_artist_modules_title">Modules by artist</string>
+    <string name="search_artist_title">Artist search</string>
+    <string name="search_random_title">Random module</string>
+    <string name="search_title_title">Title search</string>
+    <string name="search_error">Something wrong happened.</string>
+    <string name="search_title_or_filename">Title or file name</string>
+    <string name="search_artist">Artist</string>
+    <string name="search_random_pick">Random</string>
+    <string name="search_download_provided">Downloads provided by modarchive.org</string>
+    <string name="search_helper_text">Minimum of 3 characters</string>
+    <string name="search_history">Search History</string>
+    <string name="search_known_error">%s.  Press back button to continue.</string>
+    <string name="search_module_title">Module Result</string>
+    <string name="search_result_by">%1$s by %2$s (%3$d KB)</string>
+    <string name="search_title_error">Search Error</string>
+    <string name="search_unknown_error">Software Failure.   Press back to continue.\n\nGuru Meditation #35068035.48454C50</string>
+
+    <!-- Player Bottom Sheet Info Bar -->
+    <string name="info_bpm">&#160;BPM:</string>
+    <string name="info_pattern">&#160;Pat:</string>
+    <string name="info_position">&#160;Pos:</string>
+    <string name="info_speed">Speed:</string>
+
+    <!-- Player Bottom Sheet -->
+    <string name="sheet_main_song">Main Song</string>
+    <string name="sheet_sub_song">Subsong %d</string>
+    <string name="sheet_details">Module details</string>
+    <string name="sheet_patterns">Patterns:</string>
+    <string name="sheet_instruments">Instruments:</string>
+    <string name="sheet_samples">Samples:</string>
+    <string name="sheet_channels">Channels:</string>
+    <string name="sheet_button_allseqs">Play all subsongs</string>
+
+    <!-- Player Bottom Sheet Other -->
+    <string name="player_time">&#160;0:00</string>
+
+    <!-- Edit Text Hints -->
+    <string name="hint_playlist_comment">Playlist description (Optional)</string>
+    <string name="hint_playlist_name">Playlist name</string>
+    <string name="hint_search_box">Search Modules</string>
+
+    <!-- Unsorted/New Strings Below -->
+    <string name="browser_filelist_title">File browser</string>
+    <string name="cache_clear">File cache cleared</string>
+    <string name="browser_playlist_title">Playlist</string>
+    <string name="by_artist">by %s</string>
+    <string name="cache_clear_error">Error clearing cache</string>
+    <string name="clipboard_copied">Copied to clipboard</string>
+    <string name="history_no_items">No items in history.</string>
     <string name="playlist_special_comment">Files in %s</string>
-    <string name="dialog_playlist_edit_title">Edit playlist</string>
-    <string name="dialog_no_path_title">Path not found</string>
-    <string name="dialog_no_path_message">%s not found. Create this directory or change the module path.</string>
-    <string name="msg_error_create_directory">Error creating directory %s</string>
-    <string name="msg_default_path_set">Set as default module path</string>
-    <string name="dialog_all_files_title">All files</string>
-    <string name="dialog_this_file_title">This File</string>
-    <string name="dialog_this_file_title_confirm">Delete File</string>
-    <string name="dialog_this_file_message">Are you sure you want to delete %s?</string>
-    <string name="dialog_this_dir_title">This directory</string>
-    <string name="msg_queue_empty">Queue list is empty</string>
-    <string name="msg_queue_added">Added to queue</string>
-    <string name="msg_file_unrecognized">Unrecognized file format</string>
-    <string name="msg_adding_files">Please wait, adding files…</string>
-    <string name="msg_new_seq_duration">New sequence duration: %d:%02d</string>
+    <string name="playlist_special_title">File browser</string>
+    <string name="size_kb">%d KB</string>
+    <string name="text_instruments">Instruments</string>
+    <string name="text_license">License</string>
+    <string name="text_song_message">Song Message</string>
+    <string name="title_delete_file">Delete File</string>
+    <string name="title_edit_playlist">Edit playlist</string>
+    <string name="unrecognized_format">Unrecognized file format</string>
 
 </resources>

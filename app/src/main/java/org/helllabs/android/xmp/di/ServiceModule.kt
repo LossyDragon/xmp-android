@@ -13,5 +13,5 @@ object ServiceModule {
 
     @ServiceScoped
     @Provides
-    fun provideEventBus() = EventBus.getDefault()
+    fun provideEventBus(): EventBus = EventBus.getDefault()
 }
