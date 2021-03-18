@@ -17,8 +17,8 @@ android {
         //noinspection OldTargetApi
         targetSdkVersion 29
 
-        versionCode = 87
-        versionName = "4.12.0"
+        versionCode = 90
+        versionName = "4.15.0"
 
         externalNativeBuild.ndkBuild {
             abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'

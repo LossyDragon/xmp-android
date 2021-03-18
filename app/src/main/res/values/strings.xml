@@ -8,6 +8,16 @@
     </string>
 
     <string name="changelog_text">
+        \nVersion 4.15.0:\n
+        • Numerous fixes in libxmp\n
+        • Refreshed UI\n
+        • Migrated project to Kotlin\n
+        • Updated dependencies\n
+        • Android 10 (API 29) compatibility\n
+        • Raised minimum support to Lollipop (API 21)\n
+        • Added media session\n
+        • Player views can be smoother (in options)\n
+        • Various fixes and refactoring under the hood\n
         \nVersion 4.12.0:\n
         • Improve XM and STM compatibility\n
         • Improve Android Oreo compatibility\n
@@ -48,7 +58,7 @@
         • Fix GAL4 number of patterns\n
         • Add support to TP1, TP2 and PP10 formats\n
     </string>
-    <string name="changelog_title">New in version 4.12.0</string>
+    <string name="changelog_title">New in version %s</string>
     <string name="changelog">Changelog</string>
 
     <string name="yes">Yes</string>

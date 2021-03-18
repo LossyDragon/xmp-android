@@ -2,10 +2,12 @@ package org.helllabs.android.xmp.util
 
 import android.app.Activity
 import android.content.Context
+import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.StringRes
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.customview.customView
+import com.afollestad.materialdialogs.customview.getCustomView
 import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.preferences.PrefManager
@@ -50,6 +52,8 @@ fun Activity.showChangeLog() {
     if (lastViewed < versionCode) {
         MaterialDialog(this).show {
             customView(R.layout.layout_changelog)
+            val version: TextView = getCustomView().findViewById(R.id.changelog_version_title)
+            version.text = getString(R.string.changelog_title, BuildConfig.VERSION_NAME)
             cancelOnTouchOutside(false)
             title(text = "Changelog")
             positiveButton(text = "Dismiss") {
