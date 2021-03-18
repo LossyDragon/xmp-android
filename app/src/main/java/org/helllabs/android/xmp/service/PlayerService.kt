@@ -201,7 +201,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
         isPlayerPaused = false
         playerAllSequences = PrefManager.allSequences
 
-        mediaSession = MediaSessionCompat(this, this::class.java.simpleName)
+        mediaSession = MediaSessionCompat(this, "PlayerService")
         mediaSession!!.setCallback(sessionCallback)
         @Suppress("DEPRECATION") // Needed anymore?
         mediaSession!!.setFlags(
@@ -442,7 +442,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
                 stateBuilder.setActions(ACTION_SEEK_TO)
 
             delay(SYNC_DELAY)
-            mediaSession!!.setPlaybackState(stateBuilder.build())
+            mediaSession?.setPlaybackState(stateBuilder.build())
 
             notifier!!.notify(getModName(), Xmp.getModType(), queue!!.index, status)
         }

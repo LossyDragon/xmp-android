@@ -3,6 +3,8 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 apply plugin: 'dagger.hilt.android.plugin'
 apply plugin: "org.jlleitschuh.gradle.ktlint"
+apply plugin: 'com.google.gms.google-services'
+apply plugin: 'com.google.firebase.crashlytics'
 
 // https://developer.android.com/ndk/downloads
 android {
@@ -25,10 +27,21 @@ android {
         // ModArchive API Key
         // Must be in your global gradle.properties. ex: C:\Users\<name>\.gradle
         buildConfigField("String", "API_KEY", "$modArchiveApiKey")
+
+        // Pretty print compiled apk with version into and date
+        applicationVariants.all { variant ->
+            variant.outputs.all {
+                def date = new Date()
+                def formattedDate = date.format('YYYYMMdd')
+                outputFileName = "xmp-${versionName}-${versionCode}-${formattedDate}.apk"
+            }
+        }
     }
 
     buildTypes {
         debug {
+            firebaseCrashlytics.nativeSymbolUploadEnabled true
+            jniDebuggable true
             externalNativeBuild {
                 ndkBuild.cFlags "-DDEBUG=1"
             }
@@ -109,6 +122,12 @@ dependencies {
     implementation 'com.github.razir.progressbutton:progressbutton:2.1.0'
     implementation 'com.afollestad.material-dialogs:core:3.3.0'
     implementation 'com.afollestad.material-dialogs:input:3.3.0'
+
+    // NDK build: gradlew app:assemblerelease app:uploadCrashlyticsSymbolFilerelease
+    // TO BE REMOVED WHEN NOT DEBUGGING
+    implementation platform('com.google.firebase:firebase-bom:26.2.0')
+    implementation 'com.google.firebase:firebase-analytics-ktx'
+    implementation 'com.google.firebase:firebase-crashlytics-ndk'
 
     // LeakCanary
     debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.6'

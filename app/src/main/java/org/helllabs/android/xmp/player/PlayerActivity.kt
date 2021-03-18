@@ -17,10 +17,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.res.ResourcesCompat
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 import dagger.hilt.android.AndroidEntryPoint
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
-import java.io.OutputStream
 import javax.inject.Inject
 import kotlinx.coroutines.*
 import org.greenrobot.eventbus.EventBus
@@ -156,7 +152,7 @@ class PlayerActivity : AppCompatActivity() {
             PlayerService.RESULT_OK -> Unit
         }
 
-        playerJob!!.cancel()
+        playerJob?.cancel()
 
         if (!isFinishing) {
             finish()
@@ -229,7 +225,6 @@ class PlayerActivity : AppCompatActivity() {
         infoType = arrayOf(binder.infoType0, binder.infoType1)
 
         binder.controlsSheet.apply {
-            buttonPlay.setImageResource(R.drawable.ic_pause) // To be removed when animated.
             buttonPrev.click { onBackButton() }
             buttonForward.click { onForwardButton() }
             buttonPlay.click { onPlayButton() }
@@ -285,7 +280,7 @@ class PlayerActivity : AppCompatActivity() {
         saveAllSeqPreference()
 
         stopUpdate = true
-        playerJob!!.cancel()
+        playerJob?.cancel()
         playerJob = null
 
         eventBus.unregister(this)
@@ -293,6 +288,10 @@ class PlayerActivity : AppCompatActivity() {
 
         sheet = null
         isBound = false
+
+        // Clear app cache for any files from intents.
+        if (cacheDir.listFiles()!!.isNotEmpty())
+            cacheDir.deleteRecursively()
     }
 
     override fun onPause() {
@@ -356,7 +355,7 @@ class PlayerActivity : AppCompatActivity() {
         var path: String? = null
         if (intent.data != null) {
             path = if (intent.action == Intent.ACTION_VIEW) {
-                handleIntentAction(intent)
+                FileUtils.getPathFromUri(this, intent.data!!)
             } else {
                 intent.data!!.path
             }
@@ -364,7 +363,7 @@ class PlayerActivity : AppCompatActivity() {
 
         if (path != null) {
             // from intent filter
-            logI("Player started from intent filter")
+            logI("Player started from intent filter $path")
             fileList = listOf(path)
             shuffleMode = false
             loopListMode = false
@@ -404,41 +403,10 @@ class PlayerActivity : AppCompatActivity() {
         }
     }
 
-    private fun handleIntentAction(intent: Intent): String? {
-        logD("Handing incoming intent")
-        val uri = intent.data
-        val uriString: String = (uri?.toString() ?: return null)
-        val fileName = "temp." + uriString.substring(uriString.lastIndexOf('.') + 1)
-        val output = File(this.externalCacheDir, fileName)
-
-        // Lets delete  the temp file to ensure a clean copy.
-        if (output.exists()) {
-            if (!output.delete()) {
-                logE("Failed to delete temp file!")
-            }
-        }
-        try {
-            val inputStream = contentResolver.openInputStream(uri)
-            val outputStream: OutputStream = FileOutputStream(output)
-            val buffer = ByteArray(1024)
-            var length: Int
-            while (inputStream!!.read(buffer).also { length = it } > 0) {
-                outputStream.write(buffer, 0, length)
-            }
-            outputStream.close()
-            inputStream.close()
-        } catch (e: IOException) {
-            logE("Error creating temp file:")
-            e.printStackTrace()
-            return null
-        }
-        return output.path
-    }
-
     private fun changeViewer() {
-        currentViewer++
-        currentViewer %= 3
         if (isBound) {
+            currentViewer++
+            currentViewer %= 3
             binder.viewerLayout.removeAllViews()
             when (currentViewer) {
                 0 -> viewer = instrumentViewer
@@ -461,15 +429,16 @@ class PlayerActivity : AppCompatActivity() {
 
     private fun onLoopButton() {
         if (isBound) {
+            logD("Loop button pressed")
             modPlayer.toggleLoop()
             binder.controlsSheet.buttonLoop.setImageResource(isLoopEnabled)
         }
     }
 
     private fun onPlayButton() {
-        val isPaused = modPlayer.isPaused()
-        logD("Play/pause button pressed (paused=$isPaused)")
         if (isBound) {
+            val isPaused = modPlayer.isPaused()
+            logD("Play/pause button pressed (paused=$isPaused)")
             if (isPaused) {
                 mediaSession.controller.transportControls.play()
             } else {
@@ -479,23 +448,23 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     private fun onStopButton() {
-        logD("Stop button pressed")
         if (isBound) {
+            logD("Stop button pressed")
             mediaSession.controller.transportControls.stop()
         }
     }
 
     private fun onBackButton() {
-        logD("Back button pressed")
         if (isBound) {
+            logD("Back button pressed")
             mediaSession.controller.transportControls.skipToPrevious()
             skipToPrevious = true
         }
     }
 
     private fun onForwardButton() {
-        logD("Next button pressed")
         if (isBound) {
+            logD("Next button pressed")
             mediaSession.controller.transportControls.skipToNext()
             skipToPrevious = false
         }
@@ -521,15 +490,15 @@ class PlayerActivity : AppCompatActivity() {
     private fun showNewSequence() {
         if (isBound) {
             Xmp.getModVars(modVars)
-        }
 
-        val time = modVars[0]
-        totalTime = time / 1000
-        binder.controlsSheet.seekbar.progress = 0
-        binder.controlsSheet.seekbar.max = time / 100
-        toast(getString(R.string.msg_new_seq_duration, time / 60000, time / 1000 % 60))
-        val sequence = modVars[7]
-        sheet?.selectSequence(sequence)
+            val time = modVars[0]
+            totalTime = time / 1000
+            binder.controlsSheet.seekbar.progress = 0
+            binder.controlsSheet.seekbar.max = time / 100
+            toast(getString(R.string.msg_new_seq_duration, time / 60000, time / 1000 % 60))
+            val sequence = modVars[7] // Current Sequence
+            sheet?.selectSequence(sequence)
+        }
     }
 
     private fun showNewMod() {
@@ -539,13 +508,13 @@ class PlayerActivity : AppCompatActivity() {
         Xmp.getSeqVars(seqVars)
         playTime = Xmp.time() / 100
 
-        val time = modVars[0]
-        /* val len = vars!![1] */
-        val pat = modVars[2]
-        val chn = modVars[3]
-        val ins = modVars[4]
-        val smp = modVars[5]
-        val numSeq = modVars[6]
+        val time = modVars[0] // Sequence duration
+        // val len = modVars[1] // Module length in patterns
+        val pat = modVars[2] // Number of patterns
+        val chn = modVars[3] // Tracks per pattern
+        val ins = modVars[4] // Number of instruments
+        val smp = modVars[5] // Number of samples
+        val numSeq = modVars[6] // Number of valid sequences
 
         sheet?.let {
             it.setDetails(pat, ins, smp, chn, modPlayer.getAllSequences())
@@ -582,6 +551,7 @@ class PlayerActivity : AppCompatActivity() {
         info!!.type = Xmp.getModType()
         stopUpdate = false
 
+        playerJob?.cancel()
         playerJob = progressJob()
     }
 
@@ -592,15 +562,17 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     private fun checkPlayState() {
-        binder.controlsSheet.buttonPlay.apply {
-            if (modPlayer.isPaused()) {
-                this.setImageResource(R.drawable.anim_play_pause)
-            } else {
-                this.setImageResource(R.drawable.anim_pause_play)
+        if (isBound) {
+            binder.controlsSheet.buttonPlay.apply {
+                if (modPlayer.isPaused()) {
+                    setImageResource(R.drawable.anim_play_pause)
+                } else {
+                    setImageResource(R.drawable.anim_pause_play)
+                }
             }
-        }
 
-        animatePlayButton()
+            animatePlayButton()
+        }
     }
 
     private fun animatePlayButton() {
@@ -625,11 +597,9 @@ class PlayerActivity : AppCompatActivity() {
                     break
                 }
 
-                if (isBound) {
-                    playTime = Xmp.time() / 100
-                }
+                playTime = Xmp.time() / 100
 
-                if (screenOn) {
+                if (screenOn && isBound) {
                     if (!modPlayer.isPaused()) {
                         // update seekbar
                         if (!seeking && playTime >= 0) {
@@ -762,6 +732,8 @@ class PlayerActivity : AppCompatActivity() {
             // finished playing, we can release the module
             if (isBound)
                 modPlayer.allowRelease()
+
+            cancel()
         }
     }
 

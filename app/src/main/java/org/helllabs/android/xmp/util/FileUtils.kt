@@ -1,8 +1,52 @@
 package org.helllabs.android.xmp.util
 
+import android.content.Context
+import android.net.Uri
+import android.provider.OpenableColumns
 import java.io.*
+import java.lang.Exception
 
 object FileUtils {
+
+    /**
+     * Get the File from an Intent URI
+     * @param context activity context
+     * @param uri the URI scheme from another application (ie: file manager)
+     * @return a copy of the file in application cache dir.
+     */
+    fun getPathFromUri(context: Context, uri: Uri): String {
+        val dest = File(context.cacheDir, getNameFromUri(context, uri))
+        try {
+            context.contentResolver.openInputStream(uri).use { ins ->
+                dest.outputStream().use { out ->
+                    ins!!.copyTo(out)
+                    out.flush()
+                    out.close()
+                }
+            }
+        } catch (ex: Exception) {
+            logE("URI Get File: ${ex.message}")
+            ex.printStackTrace()
+        }
+        return dest.path
+    }
+
+    /**
+     * Query the name from a URI (content://...)
+     * @param context activity context
+     * @param uri the URI scheme from another application (ie: file manager)
+     * @return the actual name and extension of the file.
+     */
+    private fun getNameFromUri(context: Context, uri: Uri): String {
+        val cursor = context.contentResolver.query(uri, null, null, null, null)!!
+        val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+        cursor.moveToFirst()
+        val name = cursor.getString(nameIndex)
+
+        cursor.close()
+
+        return name
+    }
 
     @Throws(IOException::class)
     fun writeToFile(file: File, line: String) {
