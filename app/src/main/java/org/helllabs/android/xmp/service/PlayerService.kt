@@ -734,7 +734,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
         private const val DUCK_VOLUME = 0x500
 
         // Keep this well under a second to keep activity and notification time in sync.
-        private const val SYNC_DELAY = 350L // Millis
+        private const val SYNC_DELAY = 150L // Millis
 
         @JvmField
         var isPlayerAlive: MutableLiveData<Boolean> = MutableLiveData(false)

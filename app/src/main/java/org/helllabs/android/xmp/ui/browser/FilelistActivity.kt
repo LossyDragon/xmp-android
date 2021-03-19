@@ -4,10 +4,9 @@ import android.os.Bundle
 import android.view.*
 import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.DividerItemDecoration
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.list.listItemsSingleChoice
+import com.reddit.indicatorfastscroll.FastScrollItemIndicator
 import java.io.File
 import java.util.*
 import kotlinx.coroutines.flow.collect
@@ -103,7 +102,6 @@ class FilelistActivity : BasePlaylistActivity() {
 
         setContentView(binder.root)
         setSupportActionBar(binder.appbar.toolbar)
-        binder.appbar.toolbarText.text = getString(R.string.browser_filelist_title)
 
         mNavigation = FilelistNavigation()
 
@@ -111,14 +109,12 @@ class FilelistActivity : BasePlaylistActivity() {
         mPlaylistAdapter.onClick = { position -> onClick(position) }
         mPlaylistAdapter.onLongClick = { position -> onLongClick(position) }
 
-        binder.apply {
+        with(binder) {
+            appbar.toolbarText.text = getString(R.string.browser_filelist_title)
             upButton.click { parentDir() }
             modlistListview.apply {
                 adapter = mPlaylistAdapter
                 setHasFixedSize(true)
-                addItemDecoration(
-                    DividerItemDecoration(this@FilelistActivity, LinearLayoutManager.HORIZONTAL)
-                )
             }
             currentPath.apply {
                 val textColor = currentTextColor
@@ -134,11 +130,26 @@ class FilelistActivity : BasePlaylistActivity() {
                     true
                 }
             }
+            fastscroller.setupWithRecyclerView(
+                modlistListview,
+                { pos ->
+                    val item = mPlaylistAdapter.currentList[pos]
+                    if (item.isDirectory) {
+                        FastScrollItemIndicator.Icon(R.drawable.ic_folder)
+                    } else {
+                        FastScrollItemIndicator.Text(
+                            item?.filename?.substring(0, 1)?.toUpperCase(Locale.getDefault())
+                                ?: "..."
+                        )
+                    }
+                },
+            )
+            fastscrollerThumb.setupWithFastScroller(fastscroller)
         }
 
         // Check if directory exists
         val modDir = File(PrefManager.mediaPath)
-        if (modDir.isDirectory) {
+        if (modDir.exists() && modDir.isDirectory) {
             mNavigation.startNavigation(modDir)
             viewModel.updateModList(mNavigation.currentDir)
         } else {
@@ -292,21 +303,21 @@ class FilelistActivity : BasePlaylistActivity() {
     private fun onLoad() {
         mPlaylistAdapter.submitList(null) // Stop flicker
         binder.modlistSpinner.show()
-        binder.currentPath.text = mNavigation.currentDir!!.path
+        binder.currentPath.text = mNavigation.currentDir?.path ?: "..." // Could be non-existent.
     }
 
     private fun onEmpty() {
         binder.apply {
             modlistSpinner.hide()
-            emptyMessage.show()
-            emptyMessage.text = getString(R.string.msg_empty_directory)
+            errorLayout.layout.show()
+            errorLayout.message.text = getString(R.string.msg_empty_directory)
         }
     }
 
     private fun onLoaded(list: List<PlaylistItem>) {
         binder.apply {
             modlistSpinner.hide()
-            emptyMessage.hide()
+            errorLayout.layout.hide()
         }
         mPlaylistAdapter.submitList(list)
     }
@@ -314,8 +325,8 @@ class FilelistActivity : BasePlaylistActivity() {
     private fun onError(error: String?) {
         binder.apply {
             modlistSpinner.hide()
-            emptyMessage.show()
-            emptyMessage.text = error ?: getString(R.string.msg_unknown_error)
+            errorLayout.layout.show()
+            errorLayout.message.text = error ?: getString(R.string.msg_unknown_error)
         }
     }
 

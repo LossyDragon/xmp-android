@@ -5,8 +5,6 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.DividerItemDecoration
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.afollestad.materialdialogs.MaterialDialog
 import com.squareup.moshi.JsonAdapter
 import dagger.hilt.android.AndroidEntryPoint
@@ -42,8 +40,6 @@ class SearchHistory : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayShowHomeEnabled(true)
 
-        binder.appbar.toolbarText.text = getString(R.string.search_history)
-
         historyAdapter = ModAdapter(
             SearchDiffUtil(),
             R.layout.item_search_list
@@ -53,15 +49,10 @@ class SearchHistory : AppCompatActivity() {
             startActivity(intent)
         }
 
-        binder.resultSpinner.hide()
-        binder.resultList.apply {
-            adapter = historyAdapter
-            addItemDecoration(
-                DividerItemDecoration(
-                    this@SearchHistory,
-                    LinearLayoutManager.HORIZONTAL
-                )
-            )
+        with(binder) {
+            appbar.toolbarText.text = getString(R.string.search_history)
+            resultSpinner.hide()
+            resultList.adapter = historyAdapter
         }
 
         refreshList()

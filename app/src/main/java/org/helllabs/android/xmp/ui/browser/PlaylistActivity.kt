@@ -1,9 +1,7 @@
 package org.helllabs.android.xmp.ui.browser
 
 import android.os.Bundle
-import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.ItemTouchHelper
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.list.listItemsSingleChoice
@@ -49,7 +47,6 @@ class PlaylistActivity :
 
         setContentView(binder.root)
         setSupportActionBar(binder.appbar.toolbar)
-        binder.appbar.toolbarText.text = getString(R.string.browser_playlist_title)
 
         val name = intent.extras?.getString("name") ?: return
 
@@ -64,15 +61,13 @@ class PlaylistActivity :
         mPlaylistAdapter.onLongClick = { position -> onItemLongClick(position) }
         mPlaylistAdapter.dragListener = this
 
-        binder.apply {
+        with(binder) {
+            appbar.toolbarText.text = getString(R.string.browser_playlist_title)
             currentListName.text = name
             currentListDescription.text = mPlaylist!!.comment
             plistList.apply {
                 adapter = mPlaylistAdapter
                 setHasFixedSize(true)
-                addItemDecoration(
-                    DividerItemDecoration(this@PlaylistActivity, LinearLayoutManager.HORIZONTAL)
-                )
             }
         }
 
@@ -134,8 +129,13 @@ class PlaylistActivity :
 
     public override fun update() {
         mPlaylistAdapter.submitList(mPlaylist!!.list)
-        binder.emptyMessage.apply {
-            if (mPlaylistAdapter.getItems().isEmpty()) show() else hide()
+        with(binder) {
+            if (mPlaylistAdapter.getItems().isEmpty()) {
+                errorLayout.layout.show()
+                errorLayout.message.text = getString(R.string.msg_empty_playlist)
+            } else {
+                errorLayout.layout.hide()
+            }
         }
     }
 }

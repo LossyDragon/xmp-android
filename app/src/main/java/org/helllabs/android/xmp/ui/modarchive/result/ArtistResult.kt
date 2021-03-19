@@ -5,8 +5,6 @@ import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.DividerItemDecoration
-import androidx.recyclerview.widget.LinearLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collect
 import org.helllabs.android.xmp.R
@@ -42,8 +40,6 @@ class ArtistResult : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayShowHomeEnabled(true)
 
-        binder.appbar.toolbarText.text = getString(R.string.search_artist_title)
-
         artistAdapter = ModAdapter(
             ArtistDiffUtil(),
             R.layout.item_single
@@ -54,15 +50,9 @@ class ArtistResult : AppCompatActivity() {
             startActivity(intent)
         }
 
-        binder.resultList.apply {
-            layoutManager = LinearLayoutManager(this@ArtistResult)
-            adapter = artistAdapter
-            addItemDecoration(
-                DividerItemDecoration(
-                    this@ArtistResult,
-                    LinearLayoutManager.HORIZONTAL
-                )
-            )
+        with(binder) {
+            appbar.toolbarText.text = getString(R.string.search_artist_title)
+            resultList.adapter = artistAdapter
         }
 
         lifecycleScope.launchWhenStarted {

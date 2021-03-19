@@ -1,12 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:layout_weight="1.0"
-    android:gravity="top"
-    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     tools:context=".ui.browser.PlaylistActivity">
 
     <include
@@ -14,9 +11,11 @@
         layout="@layout/layout_appbar" />
 
     <LinearLayout
+        android:id="@+id/playlist_info"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        app:layout_constraintTop_toBottomOf="@id/appbar">
 
         <TextView
             android:id="@+id/current_list_name"
@@ -51,44 +50,37 @@
 
     </LinearLayout>
 
-    <FrameLayout
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeContainer"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
+        app:layout_constraintBottom_toTopOf="@id/list_controls"
+        app:layout_constraintTop_toBottomOf="@id/playlist_info">
 
-        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-            android:id="@+id/swipeContainer"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/plist_list"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                app:fastScrollEnabled="true"
-                app:fastScrollHorizontalThumbDrawable="@drawable/thumb_drawable"
-                app:fastScrollHorizontalTrackDrawable="@drawable/thumb_line_drawable"
-                app:fastScrollVerticalThumbDrawable="@drawable/thumb_drawable"
-                app:fastScrollVerticalTrackDrawable="@drawable/thumb_line_drawable"
-                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                tools:listitem="@layout/item_playlist" />
-
-        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
-
-        <TextView
-            android:id="@+id/empty_message"
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/plist_list"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:gravity="center"
-            android:text="@string/msg_empty_playlist"
-            android:textSize="24sp"
-            android:visibility="gone"
-            tools:visibility="visible" />
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            tools:listitem="@layout/item_playlist" />
 
-    </FrameLayout>
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    <include
+        android:id="@+id/errorLayout"
+        layout="@layout/layout_error_message"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@id/list_controls"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/playlist_info" />
 
     <include
         android:id="@+id/list_controls"
-        layout="@layout/layout_list_controls" />
+        layout="@layout/layout_list_controls"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        app:layout_constraintBottom_toBottomOf="parent" />
 
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -5,9 +5,6 @@ import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.DividerItemDecoration
-import androidx.recyclerview.widget.LinearLayoutManager
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collect
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.databinding.ActivityResultListBinding
@@ -25,7 +22,6 @@ import org.helllabs.android.xmp.ui.modarchive.result.SearchListViewModel.SearchR
 import org.helllabs.android.xmp.util.hide
 import org.helllabs.android.xmp.util.show
 
-@AndroidEntryPoint
 class SearchListResult : AppCompatActivity() {
 
     private lateinit var binder: ActivityResultListBinding
@@ -52,15 +48,7 @@ class SearchListResult : AppCompatActivity() {
             startActivity(intent)
         }
 
-        binder.resultList.apply {
-            adapter = searchListAdapter
-            addItemDecoration(
-                DividerItemDecoration(
-                    this@SearchListResult,
-                    LinearLayoutManager.HORIZONTAL
-                )
-            )
-        }
+        binder.resultList.adapter = searchListAdapter
 
         lifecycleScope.launchWhenStarted {
             viewModel.searchResultState.collect {

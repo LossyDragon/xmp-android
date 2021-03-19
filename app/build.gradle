@@ -120,6 +120,7 @@ dependencies {
     // Other Libs
     implementation 'com.squareup.moshi:moshi-kotlin:1.11.0'
     implementation 'com.github.razir.progressbutton:progressbutton:2.1.0'
+    implementation 'com.reddit:indicator-fast-scroll:1.4.0'
     implementation 'com.afollestad.material-dialogs:core:3.3.0'
     implementation 'com.afollestad.material-dialogs:input:3.3.0'
 
