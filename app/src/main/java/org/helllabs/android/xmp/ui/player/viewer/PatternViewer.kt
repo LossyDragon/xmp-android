@@ -65,7 +65,7 @@ class PatternViewer(context: Context, background: Int) : Viewer(context, backgro
         resources.getDimensionPixelSize(R.dimen.patternview_font_size).toFloat()
 
     private var currentType: String = ""
-    private lateinit var effectsTable: List<EffectList>
+    private lateinit var effectsTable: MutableMap<Int, String>
 
     init {
 
@@ -203,7 +203,7 @@ class PatternViewer(context: Context, background: Int) : Viewer(context, backgro
 
         // Get the number of rows dynamically
         // Side effect of https://github.com/cmatsuoka/xmp-android/pull/15
-        if (numRows > 0 && hexByte.size != numRows) {
+        if (numRows > hexByte.size) {
             resizeRows()
         }
 
@@ -280,7 +280,7 @@ class PatternViewer(context: Context, background: Int) : Viewer(context, backgro
 
                 // Effects
                 patternX = (3 + j * 10 + 6) * fontWidth - posX
-                val effectType = effectsTable.find { it.key == rowFxType[j] }?.effect
+                val effectType = effectsTable[rowFxType[j]]
                 val effect: String = when {
                     rowFxType[j] > -1 ->
                         if (effectType != null) {

@@ -119,8 +119,6 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
             }
 
             override fun onSkipToNext() {
-                Xmp.stopModule()
-                Xmp.dropAudio()
                 discardBuffer = true
                 cmd = CMD_NEXT
 
@@ -135,8 +133,6 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
                 if (Xmp.time() > 2000) {
                     Xmp.seek(0)
                 } else {
-                    Xmp.stopModule()
-                    Xmp.dropAudio()
                     discardBuffer = true
                     cmd = CMD_PREV
                 }
@@ -424,26 +420,26 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
     }
 
     private fun updateNotification() {
+        val status = if (isPlayerPaused) TYPE_PAUSE else TYPE_TICKER
+        val playbackState = if (isPlayerPaused) STATE_PAUSED else STATE_PLAYING
+
+        val stateBuilder = Builder()
+            .setState(playbackState, Xmp.time().toLong(), 1F)
+            .setActions(
+                ACTION_PLAY and ACTION_PLAY_PAUSE and
+                    ACTION_PAUSE and ACTION_STOP and
+                    ACTION_SKIP_TO_PREVIOUS and ACTION_SKIP_TO_NEXT and
+                    ACTION_REWIND and ACTION_FAST_FORWARD
+            )
+
+        if (!isPlayerPaused)
+            stateBuilder.setActions(ACTION_SEEK_TO)
+
         CoroutineScope(Dispatchers.Main).launch {
-            val status = if (isPlayerPaused) TYPE_PAUSE else TYPE_TICKER
-            val playbackState = if (isPlayerPaused) STATE_PAUSED else STATE_PLAYING
-
-            val stateBuilder = Builder()
-                .setState(playbackState, Xmp.time().toLong(), 1F)
-                .setActions(
-                    ACTION_PLAY and ACTION_PLAY_PAUSE and
-                        ACTION_PAUSE and ACTION_STOP and
-                        ACTION_SKIP_TO_PREVIOUS and ACTION_SKIP_TO_NEXT and
-                        ACTION_REWIND and ACTION_FAST_FORWARD
-                )
-
-            if (!isPlayerPaused)
-                stateBuilder.setActions(ACTION_SEEK_TO)
-
             delay(SYNC_DELAY)
             mediaSession?.setPlaybackState(stateBuilder.build())
 
-            notifier!!.notify(getModName(), Xmp.getModType(), queue!!.index, status)
+            notifier?.notify(getModName(), Xmp.getModType(), queue!!.index, status)
         }
     }
 
@@ -647,8 +643,10 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
                             delay(100)
                             watchdog!!.refresh()
                         }
+
                         if (discardBuffer) {
                             logD("discard buffer")
+                            Xmp.stopModule()
                             Xmp.dropAudio()
                             break
                         }
@@ -662,6 +660,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
                         if (Xmp.fillBuffer(looped) < 0) {
                             break
                         }
+
                         watchdog!!.refresh()
                     }
 

@@ -165,13 +165,16 @@ Java_org_helllabs_android_xmp_Xmp_testModule(JNIEnv *env, jobject obj, jstring n
 
 JNIEXPORT jint JNICALL
 Java_org_helllabs_android_xmp_Xmp_releaseModule(JNIEnv *env, jobject obj) {
+    int res = 0;
+
     lock()
     if (_mod_is_loaded) {
         _mod_is_loaded = 0;
         xmp_release_module(ctx);
+        res = 1;
     }
 
-    return 0;
+    return res;
 }
 
 JNIEXPORT jint JNICALL
@@ -202,15 +205,18 @@ Java_org_helllabs_android_xmp_Xmp_startPlayer(JNIEnv *env, jobject obj, jint rat
 
 JNIEXPORT jint JNICALL
 Java_org_helllabs_android_xmp_Xmp_endPlayer(JNIEnv *env, jobject obj) {
+    int res = 0;
+
     lock()
     if (_playing) {
         _playing = 0;
         xmp_end_player(ctx);
         free(fi);
         fi = nullptr;
+        res = 1;
     }
 
-    return 0;
+    return res;
 }
 
 JNIEXPORT jint JNICALL
