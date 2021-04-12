@@ -1,6 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- Preference Theme -->
+    <string-array name="themeListArray">
+        <item>@string/pref_theme_array_light</item>
+        <item>@string/pref_theme_array_dark</item>
+        <item>@string/pref_theme_array_default</item>
+    </string-array>
+
+    <!-- Preference Theme -->
+    <string-array name="themeEntryArray">
+        <item>light</item>
+        <item>dark</item>
+        <item>default</item>
+    </string-array>
+
     <!-- This Directory Dialog -->
     <string-array name="fileList_this_directory_array">
         <item>Add to playlist</item>

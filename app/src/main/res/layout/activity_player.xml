@@ -4,7 +4,7 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:orientation="vertical"
-    tools:context=".ui.player.PlayerActivity">
+    tools:context=".presentation.ui.player.PlayerActivity">
 
     <ViewFlipper
         android:id="@+id/title_flipper"
@@ -24,7 +24,7 @@
                 android:fontFamily="@font/font_michroma"
                 android:gravity="center"
                 android:includeFontPadding="false"
-                android:paddingStart="2dp"
+                android:paddingStart="0dp"
                 android:paddingEnd="0dp"
                 android:singleLine="true"
                 android:textAppearance="?android:attr/textAppearanceLarge"
@@ -42,7 +42,7 @@
                 android:paddingBottom="2dp"
                 android:singleLine="true"
                 android:textAppearance="?android:attr/textAppearanceMedium"
-                android:textColor="@color/colorLightGray"
+                android:textColor="@color/lightgray"
                 android:textSize="12sp"
                 tools:text="info_type_0" />
 
@@ -77,7 +77,7 @@
                 android:paddingBottom="2dp"
                 android:singleLine="true"
                 android:textAppearance="?android:attr/textAppearanceMedium"
-                android:textColor="@color/colorLightGray"
+                android:textColor="@color/lightgray"
                 android:textSize="12sp" />
 
         </LinearLayout>
@@ -94,9 +94,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
-        <include
-            android:id="@+id/controlsSheet"
-            layout="@layout/layout_player_controls" />
+        <include layout="@layout/layout_player_controls" />
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </LinearLayout>

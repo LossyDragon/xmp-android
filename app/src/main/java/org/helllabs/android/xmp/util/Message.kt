@@ -1,62 +1,65 @@
 package org.helllabs.android.xmp.util
 
-import android.app.Activity
 import android.content.Context
-import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.StringRes
+import androidx.lifecycle.LifecycleOwner
 import com.afollestad.materialdialogs.MaterialDialog
-import com.afollestad.materialdialogs.customview.customView
-import com.afollestad.materialdialogs.customview.getCustomView
+import com.afollestad.materialdialogs.lifecycle.lifecycleOwner
 import org.helllabs.android.xmp.BuildConfig
+import org.helllabs.android.xmp.PrefManager
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.ui.preferences.PrefManager
 
 inline fun <reified T : Context> T.toast(message: String) =
-    Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show()
+    Toast.makeText(applicationContext, message, Toast.LENGTH_LONG).show()
 
 inline fun <reified T : Context> T.toast(@StringRes resId: Int) =
-    Toast.makeText(applicationContext, this.getString(resId), Toast.LENGTH_SHORT).show()
+    Toast.makeText(applicationContext, this.getString(resId), Toast.LENGTH_LONG).show()
 
-fun Activity.fatalError(message: String) {
+fun Context.errorDialog(
+    owner: LifecycleOwner,
+    message: String,
+    onConfirm: () -> Unit
+) {
     MaterialDialog(this).show {
+        lifecycleOwner(owner)
         title(R.string.error)
         message(text = message)
-        positiveButton(R.string.exit) {
-            finish()
+        positiveButton(R.string.dismiss) {
+            onConfirm()
         }
     }
 }
 
-fun Activity.generalError(message: String) {
+fun Context.yesNoDialog(
+    owner: LifecycleOwner,
+    @StringRes title: Int,
+    message: String,
+    @StringRes confirmText: Int = R.string.yes,
+    @StringRes dismissText: Int = R.string.no,
+    onConfirm: () -> Unit,
+    onDismiss: (() -> Unit)? = null,
+) {
     MaterialDialog(this).show {
-        title(R.string.error)
+        lifecycleOwner(owner)
+        title(title)
         message(text = message)
-        positiveButton(R.string.dismiss)
+        positiveButton(confirmText) { onConfirm() }
+        negativeButton(dismissText) { onDismiss?.invoke() }
     }
 }
 
-fun Activity.yesNoDialog(title: String, message: String, block: () -> Unit) {
-    MaterialDialog(this).show {
-        title(text = title)
-        message(text = message)
-        positiveButton(R.string.yes) { block() }
-        negativeButton(R.string.no)
-    }
-}
-
-fun Activity.showChangeLog() {
+fun Context.showChangeLog(owner: LifecycleOwner) {
     val versionCode = BuildConfig.VERSION_CODE
     val lastViewed = PrefManager.changelogVersion
 
     if (lastViewed < versionCode) {
         MaterialDialog(this).show {
-            customView(R.layout.layout_changelog)
-            val version: TextView = getCustomView().findViewById(R.id.changelog_version_title)
-            version.text = getString(R.string.changelog_title, BuildConfig.VERSION_NAME)
+            lifecycleOwner(owner)
+            title(text = getString(R.string.changelog_title, BuildConfig.VERSION_NAME))
+            message(R.string.changelog_text)
             cancelOnTouchOutside(false)
-            title(text = "Changelog")
-            positiveButton(text = "Dismiss") {
+            positiveButton(R.string.dismiss) {
                 PrefManager.changelogVersion = versionCode
             }
         }

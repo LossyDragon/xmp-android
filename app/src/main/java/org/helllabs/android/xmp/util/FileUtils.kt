@@ -5,6 +5,9 @@ import android.net.Uri
 import android.provider.OpenableColumns
 import java.io.*
 import java.lang.Exception
+import org.helllabs.android.xmp.PrefManager
+import org.helllabs.android.xmp.model.Module
+import org.helllabs.android.xmp.presentation.ui.search.ModArchiveConstants
 
 object FileUtils {
 
@@ -112,5 +115,36 @@ object FileUtils {
 
     fun basename(pathname: String): String {
         return File(pathname).name.orEmpty()
+    }
+
+    fun localFile(module: Module?): File? {
+        if (module == null)
+            return null
+
+        val url = module.url
+        val moduleFilename = url!!.substring(url.lastIndexOf('#') + 1, url.length)
+        return File(getDownloadPath(module), moduleFilename)
+    }
+
+    fun localFile(url: String, path: String): File {
+        val filename = url.substring(url.lastIndexOf('#') + 1, url.length)
+        return File(path, filename)
+    }
+
+    fun getDownloadPath(module: Module?): String {
+        val sb = StringBuilder()
+        sb.append(PrefManager.mediaPath)
+
+        if (PrefManager.useModArchiveFolder) {
+            sb.append(File.separatorChar)
+            sb.append(ModArchiveConstants.DEFAULT_FOLDER)
+        }
+
+        if (PrefManager.useArtistFolder) {
+            sb.append(File.separatorChar)
+            sb.append(module!!.getArtist().asHtml())
+        }
+
+        return sb.toString()
     }
 }

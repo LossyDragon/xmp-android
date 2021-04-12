@@ -2,7 +2,7 @@
 buildscript {
 
     ext.kotlin_version = '1.4.30'
-    ext.ktlint_gradle = '9.4.1'
+    ext.ktlint_gradle = '10.0.0'
     ext.hilt_android = '2.33-beta'
 
     repositories {
@@ -11,14 +11,10 @@ buildscript {
         maven { url "https://plugins.gradle.org/m2/" } // ktlint-gradle
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.0.0-alpha10'
+        classpath 'com.android.tools.build:gradle:7.0.0-alpha12'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "com.google.dagger:hilt-android-gradle-plugin:$hilt_android"
         classpath "org.jlleitschuh.gradle:ktlint-gradle:$ktlint_gradle"
-
-        // TO BE REMOVED WHEN NOT DEBUGGING
-        classpath 'com.google.gms:google-services:4.3.5'
-        classpath 'com.google.firebase:firebase-crashlytics-gradle:2.5.1'
     }
 }
 

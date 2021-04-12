@@ -15,127 +15,33 @@
     <!-- Downside from above is progress bar thinks it's being touched, apply the same to it. -->
     <!-- https://stackoverflow.com/a/36586790 -->
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <androidx.appcompat.widget.LinearLayoutCompat
         android:id="@+id/controlsLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/bottom_sheet"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent">
+        android:orientation="vertical">
 
         <ImageView
             android:id="@+id/sheetHandle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:src="@drawable/ic_sheet_handle"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:ignore="ContentDescription" />
-
-        <include
-            android:id="@+id/info_layout"
-            layout="@layout/layout_control_info"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:layout_marginBottom="10dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/sheetHandle" />
+            android:layout_gravity="center"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:src="@drawable/ic_sheet_handle"
+            tools:ignore="ContentDescription" />
 
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/time_now"
+        <androidx.compose.ui.platform.ComposeView
+            android:id="@+id/composedPlayerLayout"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:text="@string/player_time"
-            android:textColor="@color/white"
-            android:textSize="16sp"
-            app:layout_constraintBottom_toBottomOf="@id/seekbar"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@id/seekbar" />
+            android:layout_height="match_parent" />
 
-        <androidx.appcompat.widget.AppCompatSeekBar
-            android:id="@+id/seekbar"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:layout_marginBottom="10dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:progress="50"
-            app:layout_constraintBottom_toTopOf="@id/button_play"
-            app:layout_constraintEnd_toStartOf="@id/time_total"
-            app:layout_constraintStart_toEndOf="@id/time_now"
-            app:layout_constraintTop_toBottomOf="@id/info_layout" />
+    </androidx.appcompat.widget.LinearLayoutCompat>
 
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/time_total"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="10dp"
-            android:text="@string/player_time"
-            android:textColor="@color/white"
-            android:textSize="16sp"
-            app:layout_constraintBottom_toBottomOf="@id/seekbar"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/seekbar" />
-
-        <androidx.appcompat.widget.AppCompatImageButton
-            android:id="@+id/button_stop"
-            style="@style/PlayerButtons"
-            android:contentDescription="@string/desc_stop_playing_module"
-            app:layout_constraintBottom_toBottomOf="@id/button_prev"
-            app:layout_constraintEnd_toStartOf="@id/button_prev"
-            app:layout_constraintTop_toTopOf="@id/button_prev"
-            app:srcCompat="@drawable/ic_stop" />
-
-        <androidx.appcompat.widget.AppCompatImageButton
-            android:id="@+id/button_prev"
-            style="@style/PlayerButtons"
-            android:contentDescription="@string/desc_rewind_module_or_skip"
-            app:layout_constraintBottom_toBottomOf="@id/button_play"
-            app:layout_constraintEnd_toStartOf="@id/button_play"
-            app:layout_constraintTop_toTopOf="@id/button_play"
-            app:srcCompat="@drawable/ic_previous" />
-
-        <androidx.appcompat.widget.AppCompatImageButton
-            android:id="@+id/button_play"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_marginBottom="20dp"
-            android:background="@drawable/button_fab_background"
-            android:contentDescription="@string/desc_play_or_pause_module"
-            android:stateListAnimator="@animator/button_elevation"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
-
-        <androidx.appcompat.widget.AppCompatImageButton
-            android:id="@+id/button_forward"
-            style="@style/PlayerButtons"
-            android:contentDescription="@string/desc_skip_to_next_module"
-            app:layout_constraintBottom_toBottomOf="@id/button_play"
-            app:layout_constraintStart_toEndOf="@id/button_play"
-            app:layout_constraintTop_toTopOf="@id/button_play"
-            app:srcCompat="@drawable/ic_forward" />
-
-        <androidx.appcompat.widget.AppCompatImageButton
-            android:id="@+id/button_loop"
-            style="@style/PlayerButtons"
-            android:contentDescription="@string/desc_repeat_current_play"
-            app:layout_constraintBottom_toBottomOf="@id/button_forward"
-            app:layout_constraintStart_toEndOf="@id/button_forward"
-            app:layout_constraintTop_toTopOf="@id/button_forward"
-            app:srcCompat="@drawable/ic_repeat_one_off" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <include
-        android:id="@+id/info_pane"
-        layout="@layout/layout_bottom_sheet" />
+    <androidx.compose.ui.platform.ComposeView
+        android:id="@+id/composedInfoLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent" />
 
 </LinearLayout>

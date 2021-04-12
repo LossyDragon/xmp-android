@@ -1,129 +1,28 @@
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!--
-        Base application theme, dependent on API level. This theme is replaced
-        by AppBaseTheme from res/values-vXX/styles.xml on newer devices.
-    -->
-    <style name="AppBaseTheme" parent="@style/Theme.MaterialComponents.NoActionBar">
-        <!--
-            Theme customizations available in newer API levels can go in
-            res/values-vXX/styles.xml, while customizations related to
-            backward-compatibility can go here.
-        -->
-
-        <item name="colorPrimary">@color/primary</item>
+    <style name="ComposeTheme" parent="@style/Theme.AppCompat.DayNight.NoActionBar">
 
         <!-- Material Dialogs -->
         <item name="md_corner_radius">8dp</item>
-        <item name="md_color_title">?colorOnBackground</item>
-        <item name="md_color_content">?colorOnBackground</item>
-        <item name="md_color_button_text">?colorOnBackground</item>
-
-        <!-- Should help with Material Dialog inputs not be so ugly -->
-        <!-- https://github.com/afollestad/material-dialogs/issues/1989 -->
-        <item name="textInputStyle">@style/TextInputStyle</item>
+        <item name="md_color_button_text">@color/dialogButtons</item>
     </style>
 
-    <!-- Application theme. -->
-    <style name="AppTheme" parent="AppBaseTheme">
-        <!-- All customizations that are NOT specific to a particular API-level can go here. -->
+    <style name="CompatComposeTheme" parent="@style/Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryDark">@color/primary_dark</item>
         <item name="colorAccent">@color/accent</item>
 
+        <!-- Compat colors for item_playlist -->
+        <item name="android:textColor">@color/compatColor</item>
+        <item name="tint">@color/compatColor</item>
+
+        <!-- Material Dialogs -->
+        <item name="md_corner_radius">8dp</item>
+        <item name="md_color_button_text">@color/dialogButtons</item>
+
         <!-- Status & Navigation -->
         <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">@color/section_background_darker</item>
-
+        <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
-
-    <style name="SidebarTheme" parent="AppTheme">
-        <item name="android:padding">4dp</item>
-        <item name="android:background">@color/gray</item>
-        <item name="android:textColor">@color/lightgray</item>
-    </style>
-
-    <style name="SidebarDetailsTheme" parent="AppTheme">
-        <item name="android:paddingLeft">4dp</item>
-        <item name="android:paddingRight">4dp</item>
-        <item name="android:textSize">14sp</item>
-        <item name="android:textColor">@color/lightgray</item>
-    </style>
-
-    <style name="SidebarSectionTheme" parent="AppTheme">
-        <item name="android:textSize">16sp</item>
-        <item name="android:background">@drawable/section_background</item>
-        <item name="android:textColor">@color/white</item>
-    </style>
-
-    <!-- Module Search Buttons -->
-    <style name="SearchActivityButtons" parent="Widget.MaterialComponents.Button.Icon">
-        <item name="android:textColor">@color/white</item>
-        <item name="drawableTint">@color/white</item>
-        <item name="iconTint">@color/white</item>
-        <item name="iconGravity">textStart</item>
-        <item name="backgroundTint">@drawable/button_search_background</item>
-        <item name="android:layout_marginTop">16dp</item>
-        <item name="android:layout_marginBottom">32sp</item>
-    </style>
-
-    <!-- Module Search Result Buttons -->
-    <style name="ModuleResultButton" parent="Widget.MaterialComponents.Button">
-        <item name="backgroundTint">@drawable/button_search_background</item>
-    </style>
-
-    <!-- CardViews -->
-    <style name="CardStyle" parent="Widget.MaterialComponents.CardView">
-        <item name="cardBackgroundColor">@color/cardColor</item>
-        <item name="android:layout_marginStart">8dp</item>
-        <item name="android:layout_marginEnd">8dp</item>
-        <item name="android:layout_marginTop">8dp</item>
-        <item name="cornerRadius">4dp</item>
-        <item name="cardElevation">4dp</item>
-        <item name="contentPadding">10dp</item>
-    </style>
-
-    <!-- Fab Buttons -->
-    <style name="FabStyle" parent="Widget.MaterialComponents.ExtendedFloatingActionButton">
-        <item name="android:textColor">@color/white</item>
-        <item name="iconTint">@color/white</item>
-        <item name="backgroundTint">@color/primary</item>
-    </style>
-
-    <!-- Playlist Buttons -->
-    <style name="PlaylistButtons" parent="AppTheme">
-        <item name="android:scaleX">1.2</item>
-        <item name="android:scaleY">1.2</item>
-        <item name="android:layout_width">0dp</item>
-        <item name="android:layout_height">match_parent</item>
-        <item name="android:layout_weight">1</item>
-        <item name="android:background">?selectableItemBackgroundBorderless</item>
-    </style>
-
-    <!--Player Buttons -->
-    <style name="PlayerButtons" parent="AppTheme">
-        <item name="android:scaleX">1.2</item>
-        <item name="android:scaleY">1.2</item>
-        <item name="android:padding">12dp</item>
-        <item name="android:layout_marginStart">10dp</item>
-        <item name="android:layout_marginEnd">10dp</item>
-        <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:background">?selectableItemBackgroundBorderless</item>
-    </style>
-
-    <!-- Player Info Line -->
-    <style name="PlayerInfoLine" parent="AppTheme">
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_width">wrap_content</item>
-        <item name="singleLine">true</item>
-        <item name="android:textColor">@color/white</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:textSize">15sp</item>
-        <item name="android:typeface">monospace</item>
-    </style>
-
-    <!-- Material dialog input fix -->
-    <style name="TextInputStyle" parent="@style/Widget.Design.TextInputLayout" />
 
 </resources>

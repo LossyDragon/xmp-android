@@ -8,7 +8,7 @@
     </string>
 
     <string name="changelog_text">
-        \nVersion 4.15.0:\n
+        Version 4.15.0:\n
         • Numerous fixes in libxmp\n
         • Refreshed UI\n
         • Migrated project to Kotlin\n
@@ -58,7 +58,7 @@
         • Fix GAL4 number of patterns\n
         • Add support to TP1, TP2 and PP10 formats\n
     </string>
-    <string name="changelog_title">New in version %s</string>
+    <string name="changelog_title">What\'s new in version %s</string>
     <string name="changelog">Changelog</string>
 
     <!-- General -->
@@ -81,14 +81,14 @@
     <string name="search">Search</string>
     <string name="play">Play</string>
 
-    <!-- Directory -->
-    <string name="dirname_theModArchive">TheModArchive</string>
-
     <!-- Example playlist -->
     <string name="empty_comment">Long press modules to create new playlists or add to existing playlists. Long press playlists for more options.</string>
     <string name="empty_playlist">Empty playlist</string>
 
     <!-- Preferences -->
+    <string name="pref_theme_array_light">Light</string>
+    <string name="pref_theme_array_dark">Dark</string>
+    <string name="pref_theme_array_default">System Default</string>
     <string name="pref_examples_title">Install modules</string>
     <string name="pref_examples_summary">Install example music files when creating modules directory</string>
     <string name="pref_sampling_rate_summary">Set the mixer sampling rate</string>
@@ -237,7 +237,7 @@
     <string name="dialog_change_dir_msg">Enter the mod directory:</string>
     <string name="dialog_playlist_edit_title">Edit playlist</string>
     <string name="dialog_no_path_title">Path not found</string>
-    <string name="dialog_no_path_message">%s not found. Create this directory or change the module path.</string>
+    <string name="dialog_no_path_message">%s not found. Create this directory?</string>
     <string name="dialog_title_song_message">Song Message</string>
 
     <!-- Buttons -->
@@ -289,17 +289,17 @@
     <string name="search_download_provided">Downloads provided by modarchive.org</string>
     <string name="search_helper_text">Minimum of 3 characters</string>
     <string name="search_history">Search History</string>
-    <string name="search_known_error">%s.  Press back button to continue.</string>
+    <string name="search_known_error">%s.\nPress back button to continue.\n\nGuru Meditation #35068035.48454C50</string>
     <string name="search_module_title">Module Result</string>
     <string name="search_result_by">%1$s by %2$s (%3$d KB)</string>
     <string name="search_title_error">Search Error</string>
     <string name="search_unknown_error">Software Failure.   Press back to continue.\n\nGuru Meditation #35068035.48454C50</string>
 
     <!-- Player Bottom Sheet Info Bar -->
-    <string name="info_bpm">&#160;BPM:</string>
-    <string name="info_pattern">&#160;Pat:</string>
-    <string name="info_position">&#160;Pos:</string>
-    <string name="info_speed">Speed:</string>
+    <string name="info_speed">Speed:%s</string>
+    <string name="info_bpm">BPM:%s</string>
+    <string name="info_position">Pos:%s</string>
+    <string name="info_pattern">Pat:%s</string>
 
     <!-- Player Bottom Sheet -->
     <string name="sheet_main_song">Main Song</string>
@@ -336,5 +336,8 @@
     <string name="title_delete_file">Delete File</string>
     <string name="title_edit_playlist">Edit playlist</string>
     <string name="unrecognized_format">Unrecognized file format</string>
+    <string name="dialog_clear_history_title">Clear search history</string>
+    <string name="unplayable_item">Unplayable Item</string>
+    <string name="dialog_clear_history_msg">Are you want to clear your module search history?</string>
 
 </resources>

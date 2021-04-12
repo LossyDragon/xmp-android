@@ -14,10 +14,10 @@ import android.support.v4.media.session.MediaSessionCompat
 import androidx.core.app.NotificationCompat
 import java.util.*
 import org.helllabs.android.xmp.BuildConfig
+import org.helllabs.android.xmp.PrefManager
 import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.presentation.ui.player.PlayerActivity
 import org.helllabs.android.xmp.service.utils.QueueManager
-import org.helllabs.android.xmp.ui.player.PlayerActivity
-import org.helllabs.android.xmp.ui.preferences.PrefManager
 import org.helllabs.android.xmp.util.getIconBitmap
 import org.helllabs.android.xmp.util.isAtLeastM
 import org.helllabs.android.xmp.util.isAtLeastO

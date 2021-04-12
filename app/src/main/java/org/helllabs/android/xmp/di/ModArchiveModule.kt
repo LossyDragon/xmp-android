@@ -1,6 +1,10 @@
 package org.helllabs.android.xmp.di
 
 import android.content.Context
+import com.squareup.moshi.JsonAdapter
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.Types
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.tickaroo.tikxml.retrofit.TikXmlConverterFactory
 import com.tonyodev.fetch2.Fetch
 import com.tonyodev.fetch2.FetchConfiguration
@@ -15,12 +19,27 @@ import okhttp3.OkHttpClient
 import org.helllabs.android.xmp.api.ApiHelper
 import org.helllabs.android.xmp.api.ApiHelperImpl
 import org.helllabs.android.xmp.api.ApiService
-import org.helllabs.android.xmp.ui.modarchive.ModArchiveConstants
+import org.helllabs.android.xmp.presentation.ui.search.ModArchiveConstants
 import retrofit2.Retrofit
 
 @Module
 @InstallIn(ViewModelComponent::class)
 object ModArchiveModule {
+
+    @ViewModelScoped
+    @Provides
+    fun provideMoshiAdapter(): JsonAdapter<List<org.helllabs.android.xmp.model.Module>> {
+        val moshi = Moshi.Builder()
+            .addLast(KotlinJsonAdapterFactory())
+            .build()
+
+        val listData = Types.newParameterizedType(
+            MutableList::class.java,
+            org.helllabs.android.xmp.model.Module::class.java
+        )
+
+        return moshi.adapter(listData)
+    }
 
     @ViewModelScoped
     @Provides

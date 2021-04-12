@@ -15,26 +15,24 @@
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         tools:ignore="ScopedStorage" />
 
-    <!-- allowNativeHeapPointerTagging: to be removed when not debugging -->
     <application
         android:name="XmpApplication"
         android:allowBackup="true"
-        android:allowNativeHeapPointerTagging="false"
         android:description="@string/app_description"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:requestLegacyExternalStorage="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="false"
-        android:theme="@style/AppTheme"
+        android:theme="@style/ComposeTheme"
         tools:ignore="AllowBackup"
         tools:replace="supportsRtl">
 
         <activity
-            android:name="org.helllabs.android.xmp.ui.browser.PlaylistMenu"
+            android:name="org.helllabs.android.xmp.presentation.ui.playlists.PlaylistMenu"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:exported="true"
-            android:theme="@style/AppTheme">
+            android:theme="@style/ComposeTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -43,16 +41,16 @@
         </activity>
 
         <activity
-            android:name="org.helllabs.android.xmp.ui.browser.PlaylistAddEdit"
-            android:parentActivityName="org.helllabs.android.xmp.ui.browser.PlaylistMenu"
-            android:theme="@style/AppTheme" />
+            android:name="org.helllabs.android.xmp.presentation.ui.playlistEdit.PlaylistEdit"
+            android:parentActivityName="org.helllabs.android.xmp.presentation.ui.playlists.PlaylistMenu"
+            android:theme="@style/ComposeTheme" />
 
         <activity
-            android:name="org.helllabs.android.xmp.ui.player.PlayerActivity"
+            android:name="org.helllabs.android.xmp.presentation.ui.player.PlayerActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:exported="true"
             android:launchMode="singleTop"
-            android:theme="@style/AppTheme">
+            android:theme="@style/CompatComposeTheme">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
@@ -202,64 +200,76 @@
         </activity>
 
         <activity
-            android:name="org.helllabs.android.xmp.ui.browser.FilelistActivity"
+            android:name=".presentation.ui.fileBrowser.FilelistActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:parentActivityName="org.helllabs.android.xmp.ui.browser.PlaylistMenu" />
+            android:parentActivityName="org.helllabs.android.xmp.presentation.ui.playlists.PlaylistMenu"
+            android:theme="@style/ComposeTheme" />
 
         <activity
-            android:name="org.helllabs.android.xmp.ui.browser.PlaylistActivity"
-            android:configChanges="keyboardHidden|orientation|screenSize" />
+            android:name="org.helllabs.android.xmp.presentation.ui.playlistDetail.PlaylistActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:theme="@style/CompatComposeTheme" />
 
         <!-- ModArchive search & download -->
         <activity
-            android:name="org.helllabs.android.xmp.ui.modarchive.Search"
-            android:configChanges="keyboardHidden|orientation|screenSize" />
-
-        <activity
-            android:name="org.helllabs.android.xmp.ui.modarchive.SearchError"
+            android:name="org.helllabs.android.xmp.presentation.ui.search.Search"
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:theme="@style/AppTheme" />
+            android:theme="@style/ComposeTheme" />
 
         <activity
-            android:name="org.helllabs.android.xmp.ui.modarchive.SearchHistory"
+            android:name="org.helllabs.android.xmp.presentation.ui.search.SearchError"
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:parentActivityName="org.helllabs.android.xmp.ui.modarchive.Search" />
-
-        <activity
-            android:name="org.helllabs.android.xmp.ui.modarchive.result.SearchListResult"
-            android:configChanges="keyboardHidden|orientation|screenSize">
+            android:parentActivityName=".presentation.ui.search.Search"
+            android:theme="@style/ComposeTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="org.helllabs.android.xmp.ui.modarchive.Search" />
+                android:value="org.helllabs.android.xmp.presentation.ui.search.Search" />
+        </activity>
+
+        <activity
+            android:name="org.helllabs.android.xmp.presentation.ui.search.SearchHistory"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:parentActivityName="org.helllabs.android.xmp.presentation.ui.search.Search"
+            android:theme="@style/ComposeTheme" />
+
+        <activity
+            android:name="org.helllabs.android.xmp.presentation.ui.search.searchResult.SearchListResult"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:theme="@style/ComposeTheme">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="org.helllabs.android.xmp.presentation.ui.search.Search" />
         </activity>
 
 
         <activity
-            android:name="org.helllabs.android.xmp.ui.modarchive.result.ArtistResult"
-            android:configChanges="keyboardHidden|orientation|screenSize">
+            android:name="org.helllabs.android.xmp.presentation.ui.search.searchResult.ArtistResult"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:theme="@style/ComposeTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="org.helllabs.android.xmp.ui.modarchive.Search" />
+                android:value="org.helllabs.android.xmp.presentation.ui.search.Search" />
         </activity>
 
         <activity
-            android:name="org.helllabs.android.xmp.ui.modarchive.result.ModuleResult"
-            android:configChanges="keyboardHidden|orientation|screenSize">
+            android:name="org.helllabs.android.xmp.presentation.ui.search.searchResult.ModuleResult"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:theme="@style/ComposeTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="org.helllabs.android.xmp.ui.modarchive.Search" />
+                android:value="org.helllabs.android.xmp.presentation.ui.search.Search" />
         </activity>
 
         <!-- Preferences -->
         <activity
-            android:name="org.helllabs.android.xmp.ui.preferences.Preferences"
-            android:theme="@style/AppTheme" />
+            android:name="org.helllabs.android.xmp.presentation.ui.preferences.Preferences"
+            android:theme="@style/CompatComposeTheme" />
 
         <activity
-            android:name="org.helllabs.android.xmp.ui.preferences.about.ListFormats"
+            android:name="org.helllabs.android.xmp.presentation.ui.preferences.Formats"
             android:exported="false"
-            android:parentActivityName="org.helllabs.android.xmp.ui.preferences.Preferences"
-            android:theme="@style/AppTheme">
+            android:parentActivityName="org.helllabs.android.xmp.presentation.ui.preferences.Preferences"
+            android:theme="@style/ComposeTheme">
             <intent-filter>
                 <action android:name="org.helllabs.android.xmp.LIST_FORMATS" />
 
@@ -268,10 +278,10 @@
         </activity>
 
         <activity
-            android:name="org.helllabs.android.xmp.ui.preferences.about.About"
+            android:name="org.helllabs.android.xmp.presentation.ui.preferences.About"
             android:exported="false"
-            android:parentActivityName="org.helllabs.android.xmp.ui.preferences.Preferences"
-            android:theme="@style/AppTheme">
+            android:parentActivityName="org.helllabs.android.xmp.presentation.ui.preferences.Preferences"
+            android:theme="@style/ComposeTheme">
             <intent-filter>
                 <action android:name="org.helllabs.android.xmp.ABOUT" />
 
@@ -279,24 +289,8 @@
             </intent-filter>
         </activity>
 
+        <!-- Service -->
         <service android:name=".service.PlayerService" />
-
-        <!--        <receiver-->
-        <!--            android:name=".service.receiver.MediaButtonsReceiver"-->
-        <!--            android:enabled="true">-->
-        <!--            <intent-filter android:priority="2147483647">-->
-        <!--                <action android:name="android.intent.action.MEDIA_BUTTON" />-->
-        <!--            </intent-filter>-->
-        <!--        </receiver>-->
-
-        <!--        <receiver-->
-        <!--            android:name=".service.receiver.RemoteControlReceiver"-->
-        <!--            android:enabled="true">-->
-        <!--            <intent-filter>-->
-        <!--                <action android:name="android.intent.action.MEDIA_BUTTON" />-->
-        <!--            </intent-filter>-->
-        <!--        </receiver>-->
-        <!--        <receiver android:name=".service.receiver.NotificationActionReceiver" />-->
 
     </application>
 

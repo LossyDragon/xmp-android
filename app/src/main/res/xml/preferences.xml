@@ -4,6 +4,16 @@
     android:key="settings"
     android:title="@string/settings">
 
+    <PreferenceCategory app:title="Theme">
+        <ListPreference
+            app:defaultValue="default"
+            app:entries="@array/themeListArray"
+            app:entryValues="@array/themeEntryArray"
+            app:key="themePref"
+            app:summary="Choose the interface theme for the application"
+            app:title="Choose theme" />
+    </PreferenceCategory>
+
     <PreferenceCategory android:title="@string/pref_category_preferences">
         <PreferenceScreen
             android:key="playlist_settings"

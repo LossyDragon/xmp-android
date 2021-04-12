@@ -20,13 +20,13 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlinx.coroutines.*
 import org.greenrobot.eventbus.EventBus
+import org.helllabs.android.xmp.PrefManager
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.service.Notifier.Companion.TYPE_PAUSE
 import org.helllabs.android.xmp.service.Notifier.Companion.TYPE_TICKER
 import org.helllabs.android.xmp.service.receiver.ControllerReceiver
 import org.helllabs.android.xmp.service.receiver.NoisyReceiver
 import org.helllabs.android.xmp.service.utils.*
-import org.helllabs.android.xmp.ui.preferences.PrefManager
 import org.helllabs.android.xmp.util.*
 import org.helllabs.android.xmp.util.FileUtils.basename
 import org.helllabs.android.xmp.util.InfoCache.delete
@@ -257,7 +257,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
 
         watchdog!!.listener = null
 
-        playJob!!.cancel()
+        playJob?.cancel()
 
         logI("Service destroyed")
         // Null everything out, reduces Binder leak from ~660kb to ~<10kb
@@ -452,8 +452,6 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
         logI("End service with result: $result")
         mediaSession!!.controller.transportControls.stop()
         eventBus.post(EndPlayCallback(result))
-
-        // Xmp.stopModule()
 
         stopSelf()
     }

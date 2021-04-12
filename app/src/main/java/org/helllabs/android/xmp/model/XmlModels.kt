@@ -100,9 +100,9 @@ data class Sponsor(
     @PropertyElement
     var link: String? = null
 ) {
-    fun hasSponsor(): Boolean {
-        return !text.isNullOrEmpty() && !link.isNullOrEmpty()
-    }
+    // fun hasSponsor(): Boolean {
+    //     return !text.isNullOrEmpty() && !link.isNullOrEmpty()
+    // }
 }
 
 @Xml(name = "module")
@@ -176,17 +176,33 @@ data class Module(
     @Element
     var artistInfo: ArtistInfo? = null
 ) {
-    fun getBytesFormatted(): Int =
-        bytes?.div(1024) ?: 0
+
+    fun getLicence(): License = license ?: License()
+
+    fun getBytesFormatted(): Int = bytes?.div(1024) ?: 0
 
     fun getArtist(): String =
         artistInfo?.artist?.alias ?: artistInfo?.guessed_artist?.alias ?: "unknown"
 
+    @JvmName("getFormatText")
+    fun getFormat(): String = format.orEmpty()
+
+    @JvmName("getFilenameText")
+    fun getFilename(): String = filename.orEmpty()
+
     fun getSongTitle(): String =
         if (!songtitle.isNullOrEmpty()) songtitle.asHtml() else "(untitled)"
 
-    @JvmName("getCommentDetails")
-    fun getComment(): String = comment.asHtml()
+    fun parseComment(): String {
+        val lines = comment?.split("\n")?.toTypedArray().orEmpty()
+        val buffer = StringBuilder()
+
+        lines.forEach {
+            buffer.appendLine(it.asHtml())
+        }
+
+        return buffer.toString()
+    }
 
     fun parseInstruments(): String {
         val lines = instruments?.split("\n")?.toTypedArray().orEmpty()
@@ -255,7 +271,11 @@ data class License(
 
     @PropertyElement
     var legalurl: String? = null
-)
+) {
+    fun getLegalUrl(): String = legalurl.orEmpty()
+
+    fun getLegalTitle(): String = title.orEmpty()
+}
 
 @Xml(name = "artist_info")
 data class ArtistInfo(
