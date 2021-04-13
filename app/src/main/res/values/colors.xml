@@ -11,6 +11,6 @@
 
     <color name="compatColor">@color/section_background_darker</color>
 
-    <color name="gray">#FF282828</color>
+    <!--<color name="gray">#FF282828</color>-->
     <color name="lightgray">#FFc0c0c0</color>
 </resources>
