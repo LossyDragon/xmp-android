@@ -339,5 +339,13 @@
     <string name="dialog_clear_history_title">Clear search history</string>
     <string name="unplayable_item">Unplayable Item</string>
     <string name="dialog_clear_history_msg">Are you want to clear your module search history?</string>
+    <string name="permission_denied">Xmp mod player needs both Read and Write external permissions
+        to add and edit playlists. Along with downloading any modules to external storage.
+        \n\nThe application has extremely limited functionality without these permissions granted.
+    </string>
+    <string name="pref_reset_media_path_title">Reset media path</string>
+    <string name="pref_reset_media_path_summary">Media path set in a invalid location? Click this to reset to defaults.</string>
+    <string name="dialog_reset_media_path_title">Reset media path</string>
+    <string name="dialog_reset_media_path_message">Are you sure you want to reset your media path?\nYou can reset your path settings by using the \"Modules pathname\" preference or by long holding a path crumb in file manager.</string>
 
 </resources>

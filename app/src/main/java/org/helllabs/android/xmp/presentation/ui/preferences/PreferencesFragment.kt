@@ -3,7 +3,10 @@ package org.helllabs.android.xmp.presentation.ui.preferences
 import android.os.Bundle
 import android.view.MenuItem
 import androidx.preference.*
+import com.afollestad.materialdialogs.MaterialDialog
+import com.afollestad.materialdialogs.lifecycle.lifecycleOwner
 import java.io.File
+import org.helllabs.android.xmp.PrefManager
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.util.logD
@@ -36,6 +39,22 @@ class PreferencesFragment : PreferenceFragmentCompat() {
                     activity?.toast(R.string.cache_clear)
                 } else {
                     activity?.toast(R.string.cache_clear_error)
+                }
+                true
+            }
+        }
+
+        findPreference<Preference>("reset_media_path")?.let {
+            it.onPreferenceClickListener = Preference.OnPreferenceClickListener {
+                MaterialDialog(requireContext()).show {
+                    lifecycleOwner(this@PreferencesFragment)
+                    title(R.string.dialog_reset_media_path_title)
+                    message(R.string.dialog_reset_media_path_message)
+                    positiveButton(R.string.ok) {
+                        PrefManager.removePref("media_path")
+                        logD("Media path is now ${PrefManager.mediaPath}")
+                    }
+                    negativeButton(R.string.cancel)
                 }
                 true
             }

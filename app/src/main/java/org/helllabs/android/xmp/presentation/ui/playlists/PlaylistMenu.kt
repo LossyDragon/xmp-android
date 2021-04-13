@@ -1,11 +1,13 @@
 package org.helllabs.android.xmp.presentation.ui.playlists
 
+import android.Manifest.permission.READ_EXTERNAL_STORAGE
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions
+import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.activity.viewModels
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -16,8 +18,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import com.google.accompanist.insets.LocalWindowInsets
 import com.google.accompanist.insets.toPaddingValues
@@ -47,11 +47,50 @@ class PlaylistMenu : ComponentActivity() {
 
     private val viewModel: PlaylistMenuViewModel by viewModels()
 
+    private val mediaPath: String
+        get() = PrefManager.mediaPath
+
+    private val resultRefresh = registerForActivityResult(StartActivityForResult()) {
+        logD("Activity Result Refresh")
+        viewModel.getPlaylists()
+    }
+    private val resultAdd = registerForActivityResult(StartActivityForResult()) {
+        logD("Activity Result Add")
+        addPlaylist(it.data)
+    }
+    private val resultEdit = registerForActivityResult(StartActivityForResult()) {
+        logD("Activity Result Edit")
+        editPlaylist(it.data)
+    }
+    private val permissions = registerForActivityResult(RequestMultiplePermissions()) { perm ->
+        var read = false
+        var write = false
+
+        perm.entries.forEach {
+            logD("${it.key} = ${it.value}")
+            if (it.key == READ_EXTERNAL_STORAGE && it.value == true) read = true
+            if (it.key == WRITE_EXTERNAL_STORAGE && it.value == true) write = true
+        }
+
+        if (read && write) {
+            showChangeLog(this) {
+                setupDataDir()
+                viewModel.getPlaylists()
+            }
+        } else {
+            errorDialog(this, getString(R.string.permission_denied), R.string.exit) {
+                finish()
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         // Set this for all Compose activities.
         WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        checkPermissions()
 
         logI("Start application")
         setContent {
@@ -66,26 +105,18 @@ class PlaylistMenu : ComponentActivity() {
                 )
             }
 
-            // Show Changelog
-            context.showChangeLog(this)
-
             PlaylistMenuLayout(
                 menuDownloadClick = {
-                    Intent(this, Search::class.java).also {
-                        startActivityForResult(it, REFRESH_REQUEST)
-                    }
+                    resultRefresh.launch(Intent(this, Search::class.java))
                 },
                 menuSettingsClick = {
-                    Intent(this, Preferences::class.java).also {
-                        startActivityForResult(it, REFRESH_REQUEST)
-                    }
+                    resultRefresh.launch(Intent(this, Preferences::class.java))
                 },
                 fabClick = {
-                    Intent(this, PlaylistEdit::class.java).also {
-                        startActivityForResult(it, MOD_ADD_REQUEST)
-                    }
+                    resultAdd.launch(Intent(this, PlaylistEdit::class.java))
                 },
                 titleClick = { startPlayerActivity() },
+                mediaPath = mediaPath,
                 playlistItems = list.value,
                 playlistClick = { index, item ->
                     val intent: Intent
@@ -95,7 +126,7 @@ class PlaylistMenu : ComponentActivity() {
                         intent = Intent(this, PlaylistActivity::class.java)
                         intent.putExtra("name", item.name)
                     }
-                    startActivityForResult(intent, REFRESH_REQUEST)
+                    resultRefresh.launch(intent)
                 },
                 playlistLongClick = { index, item ->
                     if (index == 0) {
@@ -107,58 +138,15 @@ class PlaylistMenu : ComponentActivity() {
                             putExtra(PlaylistEdit.EXTRA_COMMENT, item.comment)
                             putExtra(PlaylistEdit.EXTRA_TYPE, item.type)
                         }
-                        startActivityForResult(intent, MOD_EDIT_REQUEST)
+                        resultEdit.launch(intent)
                     }
                 }
             )
         }
-
-        val hasPermission = ContextCompat.checkSelfPermission(
-            this,
-            WRITE_EXTERNAL_STORAGE
-        ) == PackageManager.PERMISSION_GRANTED
-        if (hasPermission) {
-            setupDataDir()
-            viewModel.getPlaylists()
-        } else {
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(WRITE_EXTERNAL_STORAGE),
-                REQUEST_WRITE_STORAGE
-            )
-        }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (resultCode == RESULT_OK) {
-            when (requestCode) {
-                REFRESH_REQUEST -> viewModel.getPlaylists()
-                MOD_ADD_REQUEST -> addPlaylist(data)
-                MOD_EDIT_REQUEST -> editPlaylist(data)
-            }
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        viewModel.getPlaylists()
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_WRITE_STORAGE) {
-            if (grantResults.isNotEmpty() &&
-                grantResults[0] == PackageManager.PERMISSION_GRANTED
-            ) {
-                setupDataDir()
-                viewModel.getPlaylists()
-            }
-        }
+    private fun checkPermissions() {
+        permissions.launch(arrayOf(WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE))
     }
 
     // Create application directory and populate with empty playlist
@@ -234,13 +222,6 @@ class PlaylistMenu : ComponentActivity() {
 
         viewModel.getPlaylists()
     }
-
-    companion object {
-        private const val MOD_ADD_REQUEST = 1
-        private const val MOD_EDIT_REQUEST = 2
-        private const val REFRESH_REQUEST = 3
-        private const val REQUEST_WRITE_STORAGE = 112
-    }
 }
 
 @Composable
@@ -250,10 +231,12 @@ fun PlaylistMenuLayout(
     menuSettingsClick: () -> Unit,
     fabClick: () -> Unit,
     titleClick: () -> Unit,
+    mediaPath: String,
     playlistItems: MutableList<PlaylistItem>,
     playlistClick: (index: Int, item: PlaylistItem) -> Unit,
     playlistLongClick: (index: Int, item: PlaylistItem) -> Unit,
 ) {
+
     AppTheme(
         isDarkTheme = isDarkTheme
     ) {
@@ -275,9 +258,8 @@ fun PlaylistMenuLayout(
             // We're injecting the 'Special' card here because has string resources.
             val special = playlistItems.find { it.type == PlaylistItem.TYPE_SPECIAL }
             if (special != null) {
-                val path = PrefManager.mediaPath
                 special.name = stringResource(id = R.string.playlist_special_title)
-                special.comment = stringResource(id = R.string.playlist_special_comment, path)
+                special.comment = stringResource(id = R.string.playlist_special_comment, mediaPath)
             }
 
             // Handle null or empty comments
@@ -324,6 +306,7 @@ fun PlayListMenuPreview() {
         menuSettingsClick = {},
         fabClick = {},
         titleClick = {},
+        mediaPath = "sdcard/mod/",
         playlistItems = list,
         playlistClick = { _, _ -> },
         playlistLongClick = { _, _ -> }
@@ -343,6 +326,7 @@ fun PlayListMenuPreviewDark() {
         menuSettingsClick = {},
         fabClick = {},
         titleClick = {},
+        mediaPath = "sdcard/mod/",
         playlistItems = list,
         playlistClick = { _, _ -> },
         playlistLongClick = { _, _ -> }

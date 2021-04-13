@@ -26,6 +26,11 @@
                     android:summary="@string/pref_media_path_summary"
                     android:title="@string/pref_media_path_title" />
 
+                <Preference
+                    android:key="reset_media_path"
+                    android:summary="@string/pref_reset_media_path_summary"
+                    android:title="@string/pref_reset_media_path_title" />
+
                 <CheckBoxPreference
                     android:defaultValue="true"
                     android:key="examples"

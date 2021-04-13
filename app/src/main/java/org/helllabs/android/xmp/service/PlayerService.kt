@@ -375,8 +375,6 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
         return playerAllSequences
     }
 
-    fun getLoop(): Boolean = looped
-
     fun getAllSequences(): Boolean = playerAllSequences
 
     fun isPaused(): Boolean = isPlayerPaused

@@ -229,8 +229,8 @@ class Playlist(val name: String) {
                     optionName(newName, SHUFFLE_MODE),
                     getBooleanPref(optionName(oldName, SHUFFLE_MODE), DEFAULT_SHUFFLE_MODE)
                 )
-                removeBooleanPref(optionName(oldName, SHUFFLE_MODE))
-                removeBooleanPref(optionName(oldName, LOOP_MODE))
+                removePref(optionName(oldName, SHUFFLE_MODE))
+                removePref(optionName(oldName, LOOP_MODE))
             }
 
             return true
@@ -264,8 +264,8 @@ class Playlist(val name: String) {
         fun delete(name: String) {
             ListFile(name).delete()
             CommentFile(name).delete()
-            PrefManager.removeBooleanPref(optionName(name, SHUFFLE_MODE))
-            PrefManager.removeBooleanPref(optionName(name, LOOP_MODE))
+            PrefManager.removePref(optionName(name, SHUFFLE_MODE))
+            PrefManager.removePref(optionName(name, LOOP_MODE))
         }
 
         /**

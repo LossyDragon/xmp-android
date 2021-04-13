@@ -78,7 +78,10 @@ class ModuleResult : ComponentActivity() {
         setContent {
             val viewModelState = viewModel.moduleState.collectAsState()
             var appTitle by rememberSaveable {
-                mutableStateOf(if (id < 0) R.string.search_random_title else R.string.search_module_title)
+                mutableStateOf(
+                    if (id < 0) R.string.search_random_title
+                    else R.string.search_module_title
+                )
             }
             ModuleResultScreen(
                 isDarkTheme = isSystemInDarkTheme(),

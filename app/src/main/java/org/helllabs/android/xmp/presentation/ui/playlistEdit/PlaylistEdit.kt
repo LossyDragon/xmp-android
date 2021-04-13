@@ -169,7 +169,7 @@ fun PlaylistEditLayout(
                     onValueChange = { comment = it },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(
-                        onDone = { keyboardController?.hideSoftwareKeyboard() }
+                        onDone = { keyboardController?.hide() }
                     ),
                     maxLines = 3,
                     label = { Text(stringResource(id = R.string.hint_playlist_comment)) },

@@ -19,13 +19,14 @@ inline fun <reified T : Context> T.toast(@StringRes resId: Int) =
 fun Context.errorDialog(
     owner: LifecycleOwner,
     message: String,
+    @StringRes buttonText: Int = R.string.dismiss,
     onConfirm: () -> Unit
 ) {
     MaterialDialog(this).show {
         lifecycleOwner(owner)
         title(R.string.error)
         message(text = message)
-        positiveButton(R.string.dismiss) {
+        positiveButton(buttonText) {
             onConfirm()
         }
     }
@@ -49,7 +50,7 @@ fun Context.yesNoDialog(
     }
 }
 
-fun Context.showChangeLog(owner: LifecycleOwner) {
+fun Context.showChangeLog(owner: LifecycleOwner, onConfirm: () -> Unit) {
     val versionCode = BuildConfig.VERSION_CODE
     val lastViewed = PrefManager.changelogVersion
 
@@ -61,7 +62,11 @@ fun Context.showChangeLog(owner: LifecycleOwner) {
             cancelOnTouchOutside(false)
             positiveButton(R.string.dismiss) {
                 PrefManager.changelogVersion = versionCode
+                onConfirm()
             }
         }
+    } else {
+        // We've already showed the changelog, continue executing.
+        onConfirm()
     }
 }
