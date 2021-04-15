@@ -134,7 +134,7 @@ class PatternViewer(context: Context, background: Int) : Viewer(context, backgro
         }
 
         // Header Paint
-        headerPaint = Paint().apply { setARGB(255, 140, 140, 220) }
+        headerPaint = Paint().apply { setARGB(255, 20, 38, 74) }
 
         // Bar Paint
         barPaint = Paint().apply { setARGB(255, 40, 40, 40) }
