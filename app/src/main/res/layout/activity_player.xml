@@ -83,18 +83,9 @@
         </LinearLayout>
     </ViewFlipper>
 
-    <!-- Moved flipper out of Coordinator layout, it gives the bottom sheet a "max height" -->
-    <androidx.coordinatorlayout.widget.CoordinatorLayout
+    <androidx.compose.ui.platform.ComposeView
+        android:id="@+id/composedPlayerLayout"
         android:layout_width="match_parent"
-        android:layout_height="fill_parent"
-        android:orientation="vertical">
+        android:layout_height="fill_parent" />
 
-        <FrameLayout
-            android:id="@+id/viewerLayout"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-
-        <include layout="@layout/layout_player_controls" />
-
-    </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </LinearLayout>

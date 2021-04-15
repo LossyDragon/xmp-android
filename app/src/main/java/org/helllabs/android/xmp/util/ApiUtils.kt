@@ -4,17 +4,13 @@ import android.content.Context
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.drawable.Drawable
 import android.os.Build
 import android.text.Html
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import androidx.annotation.ColorRes
-import androidx.annotation.DrawableRes
 import androidx.core.content.ContextCompat
-import androidx.core.content.res.ResourcesCompat
-import com.google.android.material.slider.Slider
 import java.util.*
 import org.helllabs.android.xmp.R
 
@@ -63,9 +59,6 @@ fun Context.getIconBitmap(): Bitmap? {
     }
 }
 
-inline fun <reified T : Resources> T.drawable(@DrawableRes res: Int): Drawable? =
-    ResourcesCompat.getDrawable(this, res, null)
-
 inline fun <reified T : Resources> T.color(@ColorRes res: Int): Int {
     return if (isAtLeastM) {
         getColor(res, null)
@@ -113,27 +106,4 @@ fun View.longClick(l: (v: View) -> Boolean) {
 
 fun View.touch(l: (view: View, event: MotionEvent) -> Boolean) {
     setOnTouchListener(l)
-}
-
-/**
- * addOnSliderTouchListener(
- * onStartTrackingTouch = { slider -> },
- * onStopTrackingTouch = { slider -> }
- * )
- */
-fun Slider.addOnSliderTouchListener(
-    onStartTrackingTouch: ((slider: Slider) -> Unit)? = null,
-    onStopTrackingTouch: ((slider: Slider) -> Unit)? = null,
-): Slider.OnSliderTouchListener {
-    val listener = object : Slider.OnSliderTouchListener {
-        override fun onStartTrackingTouch(slider: Slider) {
-            onStartTrackingTouch?.invoke(slider)
-        }
-
-        override fun onStopTrackingTouch(slider: Slider) {
-            onStopTrackingTouch?.invoke(slider)
-        }
-    }
-    addOnSliderTouchListener(listener)
-    return listener
 }

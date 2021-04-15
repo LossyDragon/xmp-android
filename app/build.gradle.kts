@@ -186,7 +186,8 @@ tasks {
     // gradlew buildlibxmp
     val buildlibxmp by registering(Exec::class) {
         this.dependsOn(getlibxmp)
-        val args = "autoconf && ./configure && make && make check && (cd test-dev; autoconf && ./configure && make) && exit"
+        val args = "autoconf && ./configure && make && make check && " +
+            "(cd test-dev; autoconf && ./configure && make) && exit"
         this.workingDir = File("../app/src/main/cpp/libxmp")
         this.commandLine("bash", "-c", args)
     }
