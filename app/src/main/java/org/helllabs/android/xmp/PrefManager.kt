@@ -80,11 +80,6 @@ object PrefManager {
         get() = prefs.getString(MEDIA_PATH, Preferences.DEFAULT_MEDIA_PATH)!!
         set(value) = prefs.edit { putString(MEDIA_PATH, value) }
 
-    // Not used in code anymore
-    // var backButtonNavigation: Boolean
-    //     get() = prefs.getBoolean(BACK_BUTTON_NAVIGATION, true)
-    //     set(value) = prefs.edit { putBoolean(BACK_BUTTON_NAVIGATION, value) }
-
     var installExamples: Boolean
         get() = prefs.getBoolean(EXAMPLES, true)
         set(value) = prefs.edit { putBoolean(EXAMPLES, value) }

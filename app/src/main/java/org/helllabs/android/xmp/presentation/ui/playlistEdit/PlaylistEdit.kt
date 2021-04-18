@@ -17,6 +17,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
@@ -32,7 +33,6 @@ import org.helllabs.android.xmp.presentation.components.AppBar
 import org.helllabs.android.xmp.presentation.theme.AppTheme
 import org.helllabs.android.xmp.presentation.theme.darkPrimary
 import org.helllabs.android.xmp.presentation.theme.systemDarkTheme
-import org.helllabs.android.xmp.presentation.theme.white
 import org.helllabs.android.xmp.util.logD
 import org.helllabs.android.xmp.util.toast
 import org.helllabs.android.xmp.util.yesNoDialog
@@ -216,7 +216,7 @@ fun PlaylistEditLayout(
                 ) {
                     Text(
                         text = stringResource(id = addText),
-                        color = white
+                        color = Color.White
                     )
                 }
                 if (isEditing) {
@@ -229,7 +229,7 @@ fun PlaylistEditLayout(
                     ) {
                         Text(
                             text = stringResource(id = R.string.button_playlist_delete, intentName),
-                            color = white
+                            color = Color.White
                         )
                     }
                 }

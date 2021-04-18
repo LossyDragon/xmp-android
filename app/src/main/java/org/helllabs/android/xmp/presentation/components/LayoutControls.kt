@@ -23,6 +23,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.presentation.theme.AppTheme
+import org.helllabs.android.xmp.presentation.theme.green
 import org.helllabs.android.xmp.presentation.theme.sectionBackground
 
 @Composable
@@ -57,7 +58,7 @@ fun LayoutControls(
                 modifier = Modifier.scale(1.2f),
                 imageVector = Icons.Default.Repeat,
                 contentDescription = stringResource(id = R.string.button_toggle_loop),
-                tint = if (isLoopEnabled) Color.Green else Color.White
+                tint = if (isLoopEnabled) green else Color.White
             )
         }
         IconButton(onClick = { onShuffle() }) {
@@ -65,7 +66,7 @@ fun LayoutControls(
                 modifier = Modifier.scale(1.2f),
                 imageVector = Icons.Default.Shuffle,
                 contentDescription = stringResource(id = R.string.button_toggle_shuffle),
-                tint = if (isShuffleEnabled) Color.Green else Color.White
+                tint = if (isShuffleEnabled) green else Color.White
             )
         }
     }

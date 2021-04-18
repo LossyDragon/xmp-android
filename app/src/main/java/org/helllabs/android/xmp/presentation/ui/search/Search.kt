@@ -41,7 +41,6 @@ import org.helllabs.android.xmp.presentation.components.AppBar
 import org.helllabs.android.xmp.presentation.components.RadioGroup
 import org.helllabs.android.xmp.presentation.theme.AppTheme
 import org.helllabs.android.xmp.presentation.theme.systemDarkTheme
-import org.helllabs.android.xmp.presentation.theme.transparent
 import org.helllabs.android.xmp.presentation.ui.search.ModArchiveConstants.MODULE_ID
 import org.helllabs.android.xmp.presentation.ui.search.ModArchiveConstants.SEARCH_TEXT
 import org.helllabs.android.xmp.presentation.ui.search.searchResult.ArtistResult
@@ -234,7 +233,7 @@ fun SearchLayout(
                         defaultElevation = 0.dp,
                         pressedElevation = 0.dp
                     ),
-                    colors = ButtonDefaults.buttonColors(backgroundColor = transparent),
+                    colors = ButtonDefaults.buttonColors(backgroundColor = Color.Transparent),
                     onClick = { onHistory() }
                 ) {
                     Row(

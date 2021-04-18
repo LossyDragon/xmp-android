@@ -13,6 +13,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -113,7 +114,7 @@ fun GuruFrame(message: String) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(12.dp)
-            .border(5.dp, if (frameState) errorRed else transparent),
+            .border(5.dp, if (frameState) Color.Red else Color.Transparent),
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -123,7 +124,7 @@ fun GuruFrame(message: String) {
             textAlign = TextAlign.Center,
             fontFamily = topazFontFamily,
             fontSize = 16.sp,
-            color = errorRed
+            color = Color.Red
         )
     }
 }

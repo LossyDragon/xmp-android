@@ -179,7 +179,7 @@ fun PlayerButtons(
                 modifier = Modifier.scale(1.2f),
                 imageVector = repeat,
                 contentDescription = stringResource(id = R.string.button_play_all),
-                tint = if (isRepeating) Color.Green else Color.White
+                tint = if (isRepeating) green else Color.White
             )
         }
     }

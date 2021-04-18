@@ -175,6 +175,8 @@ ktlint {
     disabledRules.add("no-wildcard-imports")
 }
 
+// Gradle Task -> ktlintFormat
+// Gradle Task -> xmp
 tasks {
     val fetchXmp by registering(Exec::class) {
         val args = "rm -rf libxmp && git clone https://github.com/libxmp/libxmp.git && exit"
