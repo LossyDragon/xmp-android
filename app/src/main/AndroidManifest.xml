@@ -44,7 +44,8 @@
         <activity
             android:name="org.helllabs.android.xmp.presentation.ui.playlistEdit.PlaylistEdit"
             android:parentActivityName="org.helllabs.android.xmp.presentation.ui.playlists.PlaylistMenu"
-            android:theme="@style/ComposeTheme" />
+            android:theme="@style/ComposeTheme"
+            android:windowSoftInputMode="adjustResize" />
 
         <activity
             android:name="org.helllabs.android.xmp.presentation.ui.player.PlayerActivity"
@@ -215,7 +216,8 @@
         <activity
             android:name="org.helllabs.android.xmp.presentation.ui.search.Search"
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:theme="@style/ComposeTheme" />
+            android:theme="@style/ComposeTheme"
+            android:windowSoftInputMode="adjustResize" />
 
         <activity
             android:name="org.helllabs.android.xmp.presentation.ui.search.SearchError"

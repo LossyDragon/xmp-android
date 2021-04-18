@@ -16,13 +16,17 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
+import com.google.accompanist.insets.navigationBarsWithImePadding
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.presentation.components.AppBar
 import org.helllabs.android.xmp.presentation.theme.AppTheme
@@ -33,7 +37,6 @@ import org.helllabs.android.xmp.util.logD
 import org.helllabs.android.xmp.util.toast
 import org.helllabs.android.xmp.util.yesNoDialog
 
-// TODO: Keyboard integration
 class PlaylistEdit : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -110,10 +113,6 @@ class PlaylistEdit : ComponentActivity() {
     }
 }
 
-// TODO: OutlinedTextField missing error field information
-// See: https://stackoverflow.com/q/65642533/13225929
-// And: https://issuetracker.google.com/issues/182142737
-
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun PlaylistEditLayout(
@@ -133,7 +132,6 @@ fun PlaylistEditLayout(
     var name by rememberSaveable { mutableStateOf(intentName) }
     var comment by rememberSaveable { mutableStateOf(intentComment) }
     val addText = if (isEditing) R.string.button_playlist_update else R.string.button_playlist_add
-    val keyboardController = LocalSoftwareKeyboardController.current
 
     AppTheme(
         isDarkTheme = isDarkTheme
@@ -150,26 +148,58 @@ fun PlaylistEditLayout(
                 modifier = Modifier
                     .verticalScroll(rememberScrollState())
                     .padding(16.dp)
+                    .navigationBarsWithImePadding()
             ) {
+                val focusManager = LocalFocusManager.current
+
+                // More error fields to be added:
+                // See: https://stackoverflow.com/q/65642533/13225929
+                // https://issuetracker.google.com/issues/182142737
                 OutlinedTextField(
                     modifier = Modifier
-                        .padding(top = 12.dp, bottom = 12.dp)
+                        .padding(top = 12.dp, bottom = 4.dp)
                         .fillMaxWidth(),
                     value = name,
                     onValueChange = { name = it },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    isError = name.isEmpty(),
+                    keyboardActions = KeyboardActions(
+                        onNext = {
+                            focusManager.moveFocus(FocusDirection.Down)
+                        }
+                    ),
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        imeAction = ImeAction.Next,
+                        keyboardType = KeyboardType.Text
+                    ),
                     maxLines = 1,
                     label = { Text(stringResource(id = R.string.hint_playlist_name)) },
                 )
+                val helperText = stringResource(id = R.string.playlist_edit_helper_text)
+                Text(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 15.dp),
+                    text = if (name.isEmpty()) helperText else "",
+                    fontSize = 10.sp
+                )
+                // More error fields to be added:
+                // See: https://stackoverflow.com/q/65642533/13225929
+                // https://issuetracker.google.com/issues/182142737
                 OutlinedTextField(
                     modifier = Modifier
                         .padding(top = 12.dp, bottom = 12.dp)
                         .fillMaxWidth(),
                     value = comment,
                     onValueChange = { comment = it },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(
-                        onDone = { keyboardController?.hide() }
+                        onDone = {
+                            onEdit(name, comment)
+                            focusManager.clearFocus()
+                        }
+                    ),
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        imeAction = ImeAction.Done,
+                        keyboardType = KeyboardType.Text
                     ),
                     maxLines = 3,
                     label = { Text(stringResource(id = R.string.hint_playlist_comment)) },
@@ -181,6 +211,7 @@ fun PlaylistEditLayout(
                     onClick = {
                         onEdit(name, comment)
                     },
+                    enabled = name.isNotBlank(),
                     colors = ButtonDefaults.buttonColors(backgroundColor = darkPrimary)
                 ) {
                     Text(

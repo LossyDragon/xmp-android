@@ -13,6 +13,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
+import com.google.accompanist.insets.ExperimentalAnimatedInsets
 import com.google.accompanist.insets.ProvideWindowInsets
 import com.google.accompanist.systemuicontroller.LocalSystemUiController
 import com.google.accompanist.systemuicontroller.rememberAndroidSystemUiController
@@ -54,6 +55,7 @@ fun systemDarkTheme(): Boolean {
     }
 }
 
+@OptIn(ExperimentalAnimatedInsets::class)
 @Composable
 fun AppTheme(
     isDarkTheme: Boolean = systemDarkTheme(),
@@ -67,7 +69,7 @@ fun AppTheme(
         content = {
             val controller = rememberAndroidSystemUiController()
             CompositionLocalProvider(LocalSystemUiController provides controller) {
-                ProvideWindowInsets {
+                ProvideWindowInsets(windowInsetsAnimationsEnabled = true) {
                     val systemUiController = LocalSystemUiController.current
                     val useDarkIcons = MaterialTheme.colors.isLight
                     val backgroundColor = MaterialTheme.colors.background.copy(alpha = .75f)

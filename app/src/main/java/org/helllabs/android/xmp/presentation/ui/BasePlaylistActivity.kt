@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
 import androidx.activity.ComponentActivity
+import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import java.util.*
 import org.helllabs.android.xmp.PrefManager
 import org.helllabs.android.xmp.R
@@ -13,6 +14,7 @@ import org.helllabs.android.xmp.presentation.ui.player.PlayerActivity
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.util.InfoCache.testModule
 import org.helllabs.android.xmp.util.InfoCache.testModuleForceIfInvalid
+import org.helllabs.android.xmp.util.logD
 import org.helllabs.android.xmp.util.logI
 import org.helllabs.android.xmp.util.logW
 import org.helllabs.android.xmp.util.toast
@@ -26,6 +28,11 @@ abstract class BasePlaylistActivity : ComponentActivity() {
     protected abstract var isLoopMode: Boolean
     protected abstract val allFiles: List<String>
     protected open fun update() {}
+
+    private val resultPlay = registerForActivityResult(StartActivityForResult()) {
+        logD("Activity Result Play Mod")
+        if (it.resultCode != RESULT_OK) update()
+    }
 
     // Connection
     private val connection: ServiceConnection = object : ServiceConnection {
@@ -44,15 +51,6 @@ abstract class BasePlaylistActivity : ComponentActivity() {
     public override fun onResume() {
         super.onResume()
         update()
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        logI("Activity result $requestCode,$resultCode")
-        when (requestCode) {
-            SETTINGS_REQUEST -> Unit
-            PLAY_MOD_REQUEST -> if (resultCode != RESULT_OK) update()
-        }
     }
 
     open fun onItemClick(
@@ -101,7 +99,7 @@ abstract class BasePlaylistActivity : ComponentActivity() {
         playModule(modList, start, false)
     }
 
-    private fun playModule(modList: List<String>, start: Int, keepFirst: Boolean) {
+    protected fun playModule(modList: List<String>, start: Int, keepFirst: Boolean) {
         XmpApplication.fileList = modList
         val intent = Intent(this, PlayerActivity::class.java).apply {
             putExtra(PlayerActivity.PARM_SHUFFLE, isShuffleMode)
@@ -111,7 +109,7 @@ abstract class BasePlaylistActivity : ComponentActivity() {
         }
 
         logI("Start Player activity")
-        startActivityForResult(intent, PLAY_MOD_REQUEST)
+        resultPlay.launch(intent)
     }
 
     protected fun addToQueue(filename: String) {
@@ -159,10 +157,5 @@ abstract class BasePlaylistActivity : ComponentActivity() {
                 playModule(realList)
             }
         }
-    }
-
-    companion object {
-        private const val SETTINGS_REQUEST = 45
-        private const val PLAY_MOD_REQUEST = 669
     }
 }

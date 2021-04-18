@@ -30,14 +30,13 @@ import java.io.File
 import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.PrefManager
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.model.BreadCrumb
 import org.helllabs.android.xmp.model.PlaylistItem
 import org.helllabs.android.xmp.presentation.components.*
 import org.helllabs.android.xmp.presentation.theme.AppTheme
 import org.helllabs.android.xmp.presentation.theme.systemDarkTheme
 import org.helllabs.android.xmp.presentation.ui.BasePlaylistActivity
-import org.helllabs.android.xmp.presentation.utils.installAssets
 import org.helllabs.android.xmp.presentation.utils.playlist.PlaylistUtils
+import org.helllabs.android.xmp.util.FileUtils
 import org.helllabs.android.xmp.util.FileUtils.basename
 import org.helllabs.android.xmp.util.InfoCache.delete
 import org.helllabs.android.xmp.util.InfoCache.deleteRecursive
@@ -133,23 +132,20 @@ class FilelistActivity : BasePlaylistActivity() {
 
         logD("onCreate")
         setContent {
-            val state = viewModel.listState.collectAsState()
             var isLoop: Boolean by remember { mutableStateOf(isLoopMode) }
             var isShuffle: Boolean by remember { mutableStateOf(isShuffleMode) }
 
             FileListLayout(
                 isDarkTheme = systemDarkTheme(),
+                viewModel = viewModel,
                 onBack = { onBackPressed() },
                 onClick = { index, file, list ->
-                    if (file.isDirectory)
-                        viewModel.getDirectoryList(file)
-                    else
-                        onItemClick(
-                            index,
-                            file.path,
-                            PlaylistUtils.getDirectoryCount(list),
-                            PlaylistUtils.getFilePathList(list)
-                        )
+                    onItemClick(
+                        index,
+                        file.path,
+                        PlaylistUtils.getDirectoryCount(list),
+                        PlaylistUtils.getFilePathList(list)
+                    )
                 },
                 onLongClick = { index, file, list ->
                     if (file.isDirectory) {
@@ -157,9 +153,6 @@ class FilelistActivity : BasePlaylistActivity() {
                     } else {
                         dialogFile(index, file, list)
                     }
-                },
-                onCrumbClick = {
-                    viewModel.getDirectoryList(File(it))
                 },
                 onCrumbLongClick = { path, list ->
                     dialogPath(path, list)
@@ -180,14 +173,8 @@ class FilelistActivity : BasePlaylistActivity() {
                     isShuffle = it // Force recompose
                     isShuffleMode = it
                 },
-                onUpdate = {
-                    viewModel.getDirectoryList(File(viewModel.currentFile.value))
-                },
                 isLoop = isLoop,
                 isShuffle = isShuffle,
-                filelistState = state,
-                crumbs = viewModel.crumbState.value,
-                currentPath = viewModel.currentFile.value
             )
         }
 
@@ -243,8 +230,9 @@ class FilelistActivity : BasePlaylistActivity() {
                     3 -> {
                         val dirCount = PlaylistUtils.getDirectoryCount(list)
                         playModule(
-                            PlaylistUtils.getFilePathList(list),
-                            position - dirCount
+                            modList = PlaylistUtils.getFilePathList(list),
+                            start = position - dirCount,
+                            keepFirst = true
                         )
                     }
                     // Delete file
@@ -360,20 +348,16 @@ class FilelistActivity : BasePlaylistActivity() {
 @Composable
 fun FileListLayout(
     isDarkTheme: Boolean,
+    viewModel: FilelistViewModel,
     onBack: () -> Unit,
     onClick: (index: Int, file: File, list: List<PlaylistItem>) -> Unit,
     onLongClick: (index: Int, file: File, list: List<PlaylistItem>) -> Unit,
-    onCrumbClick: (path: String) -> Unit,
     onCrumbLongClick: (path: String, list: List<PlaylistItem>) -> Unit,
     onPlay: () -> Unit,
     onLoop: (value: Boolean) -> Unit,
     onShuffle: (value: Boolean) -> Unit,
-    onUpdate: () -> Unit,
     isLoop: Boolean,
     isShuffle: Boolean,
-    filelistState: State<FilelistViewModel.FileListState>,
-    currentPath: String,
-    crumbs: List<BreadCrumb>,
 ) {
     AppTheme(
         isDarkTheme = isDarkTheme,
@@ -399,6 +383,9 @@ fun FileListLayout(
                 val listState = rememberLazyListState()
                 val scope = rememberCoroutineScope()
                 var itemList by remember { mutableStateOf(listOf<PlaylistItem>()) }
+                val crumbs = viewModel.crumbState.value
+                val currentPath = viewModel.currentFile.value
+                val filelistState = viewModel.listState.collectAsState()
 
                 LazyRow(
                     state = listState,
@@ -411,7 +398,7 @@ fun FileListLayout(
                     items(crumbs) { item ->
                         ItemBreadCrumb(
                             crumb = item.name,
-                            onClick = { onCrumbClick(item.path) },
+                            onClick = { viewModel.getDirectoryList(File(item.path)) },
                             onLongClick = { onCrumbLongClick(item.path, itemList) }
                         )
                     }
@@ -455,7 +442,8 @@ fun FileListLayout(
                                     confirmText = R.string.create,
                                     dismissText = R.string.cancel,
                                     onConfirm = {
-                                        val ret = context.installAssets(
+                                        val ret = FileUtils.installAssets(
+                                            context,
                                             currentPath,
                                             PrefManager.installExamples
                                         )
@@ -470,7 +458,8 @@ fun FileListLayout(
                                                 )
                                             }
                                         } else {
-                                            onUpdate()
+                                            val file = File(viewModel.currentFile.value)
+                                            viewModel.getDirectoryList(file)
                                         }
                                     }
                                 )
@@ -490,7 +479,12 @@ fun FileListLayout(
                             ItemList(
                                 item = item,
                                 isDraggable = false,
-                                onClick = { onClick(index, item.file!!, itemList) },
+                                onClick = {
+                                    if (item.file!!.isDirectory)
+                                        viewModel.getDirectoryList(item.file!!)
+                                    else
+                                        onClick(index, item.file!!, itemList)
+                                },
                                 onLongClick = { onLongClick(index, item.file!!, itemList) }
                             )
                         }

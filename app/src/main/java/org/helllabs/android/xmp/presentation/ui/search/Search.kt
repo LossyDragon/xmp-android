@@ -8,6 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.ClickableText
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
@@ -24,14 +25,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
+import com.google.accompanist.insets.navigationBarsWithImePadding
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.presentation.components.AppBar
 import org.helllabs.android.xmp.presentation.components.RadioGroup
@@ -47,7 +51,6 @@ import org.helllabs.android.xmp.presentation.utils.annotatedLinkString
 import org.helllabs.android.xmp.util.logD
 import org.helllabs.android.xmp.util.upperCase
 
-// TODO, keyboard operations.
 class Search : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -116,20 +119,38 @@ fun SearchLayout(
             var search by rememberSaveable { mutableStateOf("") }
             var selection by rememberSaveable { mutableStateOf(0) }
             val smallDpi = LocalContext.current.resources.displayMetrics.densityDpi <= DENSITY_HIGH
+            val focusManager = LocalFocusManager.current
+            val isSearchValid = search.length >= 3
 
             Column(
                 modifier = Modifier
                     .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
+                    .padding(16.dp)
+                    .navigationBarsWithImePadding(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // More error fields to be added:
+                // See: https://stackoverflow.com/q/65642533/13225929
+                // https://issuetracker.google.com/issues/182142737
                 OutlinedTextField(
                     modifier = Modifier
                         .padding(top = 12.dp, bottom = 4.dp)
                         .fillMaxWidth(),
                     value = search,
                     onValueChange = { search = it },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    isError = !isSearchValid,
+                    keyboardActions = KeyboardActions(
+                        onSearch = {
+                            if (isSearchValid) {
+                                onSearch(selection, search)
+                            }
+                            focusManager.clearFocus()
+                        }
+                    ),
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        imeAction = ImeAction.Search,
+                        keyboardType = KeyboardType.Text
+                    ),
                     maxLines = 1,
                     label = { Text(stringResource(id = R.string.hint_search_box)) },
                 )
@@ -158,7 +179,7 @@ fun SearchLayout(
                             .align(Alignment.CenterStart)
                             .fillMaxWidth(.5f)
                             .padding(end = 16.dp),
-                        enabled = search.length >= 3,
+                        enabled = isSearchValid,
                         onClick = { onSearch(selection, search) }
                     ) {
                         Row(
