@@ -62,13 +62,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_1_8
     }
 
-    externalNativeBuild.ndkBuild.path("src/main/cpp/Android.mk")
-
-    // Removes: Coroutines debug artifact
-    packagingOptions.resources.excludes.add("DebugProbesKt.bin")
-
-    buildFeatures.compose = true
-
     // Hush: ExperimentalCoroutinesApi
     // Then: ExperimentalFoundationApi
     kotlinOptions {
@@ -80,14 +73,20 @@ android {
         )
     }
 
+    externalNativeBuild.ndkBuild.path("src/main/cpp/Android.mk")
+
+    // Removes: Coroutines debug artifact
+    packagingOptions.resources.excludes.add("DebugProbesKt.bin")
+
+    buildFeatures.compose = true
+
     composeOptions {
         kotlinCompilerExtensionVersion = Dependencies.composeVersion
     }
 }
 
 dependencies {
-    val kotlinVersion = Dependencies.kotlinVersion
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
+    implementation(kotlin("stdlib-jdk8", Dependencies.kotlinVersion))
 
     /*******************
      * Jetpack Compose *
@@ -177,24 +176,22 @@ ktlint {
 }
 
 tasks {
-    // gradlew ktLint
-    val lintclean by registering {
-        ktlintFormat
-    }
-
-    // gradlew getlibxmp
-    val getlibxmp by registering(Exec::class) {
+    val fetchXmp by registering(Exec::class) {
         val args = "rm -rf libxmp && git clone https://github.com/libxmp/libxmp.git && exit"
-        this.workingDir = File("../app/src/main/cpp")
-        this.commandLine("bash", "-c", args)
+        workingDir = File("../app/src/main/cpp")
+        commandLine("bash", "-c", args)
     }
 
-    // gradlew buildlibxmp
-    val buildlibxmp by registering(Exec::class) {
-        this.dependsOn(getlibxmp)
+    val buildXmp by registering(Exec::class) {
         val args = "autoconf && ./configure && make && make check && " +
             "(cd test-dev; autoconf && ./configure && make) && exit"
-        this.workingDir = File("../app/src/main/cpp/libxmp")
-        this.commandLine("bash", "-c", args)
+        workingDir = File("../app/src/main/cpp/libxmp")
+        commandLine("bash", "-c", args)
+    }
+
+    // Combined task to fetch a new copy of libxmp, then build it.
+    register("xmp") {
+        dependsOn(fetchXmp)
+        dependsOn(buildXmp).mustRunAfter(fetchXmp)
     }
 }

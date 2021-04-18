@@ -27,3 +27,7 @@ buildscript {
 plugins {
     id("org.jlleitschuh.gradle.ktlint") version Dependencies.ktlintGradle
 }
+
+tasks.register("clean", Delete::class) {
+    delete(rootProject.buildDir)
+}
