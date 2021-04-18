@@ -9,7 +9,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.model.BreadCrumb
 import org.helllabs.android.xmp.model.ModInfo
@@ -37,6 +36,7 @@ class FilelistViewModel : ViewModel() {
 
         if (!file.exists()) {
             _listState.value = FileListState.NotFound
+            logW("File ${file.name} was not found.")
             return
         }
 
@@ -91,11 +91,7 @@ class FilelistViewModel : ViewModel() {
             return emptyList()
         }
 
-        // TODO this blocks the UI
-        return runBlocking {
-            _listState.value = FileListState.AllFiles
-            walkDownPath(file)
-        }
+        return walkDownPath(file)
     }
 
     private fun getCommentData(file: File): String? {
@@ -109,12 +105,15 @@ class FilelistViewModel : ViewModel() {
     }
 
     private fun walkDownPath(file: File): List<String> {
-        return file
+        val list = file
             .walkTopDown()
             .filter { it.isFile }
             .map { it.path }
             .sortedBy { it.toLowerCase(Locale.getDefault()) }
             .toList()
+
+        _listState.value = FileListState.AllFiles
+        return list
     }
 
     fun clearCachedEntries(list: List<String>) {

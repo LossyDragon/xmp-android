@@ -39,24 +39,16 @@ fun PlayerInfo(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         // Speed
-        Row {
-            SingleLineText(text = stringResource(id = R.string.info_speed, speed))
-        }
+        SingleLineText(text = stringResource(id = R.string.info_speed, speed))
         Spacer(modifier = Modifier.width(5.dp))
         // BPM
-        Row {
-            SingleLineText(text = stringResource(id = R.string.info_bpm, bpm))
-        }
+        SingleLineText(text = stringResource(id = R.string.info_bpm, bpm))
         Spacer(modifier = Modifier.width(5.dp))
         // Pos
-        Row {
-            SingleLineText(text = stringResource(id = R.string.info_position, pos))
-        }
+        SingleLineText(text = stringResource(id = R.string.info_position, pos))
         Spacer(modifier = Modifier.width(5.dp))
         // Pat
-        Row {
-            SingleLineText(text = stringResource(id = R.string.info_pattern, pat))
-        }
+        SingleLineText(text = stringResource(id = R.string.info_pattern, pat))
     }
 }
 
@@ -126,6 +118,7 @@ fun PlayerTimeBar(
 
 @Composable
 fun PlayerButtons(
+    modifier: Modifier = Modifier,
     onStop: () -> Unit,
     onPrev: () -> Unit,
     onPlay: () -> Unit,
@@ -135,7 +128,7 @@ fun PlayerButtons(
     isRepeating: Boolean
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -263,7 +256,14 @@ fun DetailsSheet(
             showScrollAt = 0,
             shouldPadBottom = false,
             additionalBottomPad = 0.dp,
-            boxContent = { }
+            boxContent = {
+                if (list.isEmpty()) {
+                    ErrorLayout(
+                        message = stringResource(id = R.string.msg_no_subsongs),
+                        color = Color.White
+                    )
+                }
+            }
         ) {
             itemsIndexed(items = list) { index, _ ->
                 RadioButtonItem(

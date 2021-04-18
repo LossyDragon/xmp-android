@@ -148,6 +148,10 @@ class PlaylistActivity :
         mPlaylist.commit()
     }
 
+    public override fun update() {
+        mPlaylistAdapter.submitList(mPlaylist.list)
+    }
+
     override fun onStartDrag(viewHolder: RecyclerView.ViewHolder) {
         mItemTouchHelper.startDrag(viewHolder)
     }
@@ -179,10 +183,6 @@ class PlaylistActivity :
             }
             positiveButton(R.string.select)
         }
-    }
-
-    public override fun update() {
-        mPlaylistAdapter.submitList(mPlaylist.list)
     }
 }
 

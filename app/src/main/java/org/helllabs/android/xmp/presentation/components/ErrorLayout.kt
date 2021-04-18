@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -14,7 +15,8 @@ import org.helllabs.android.xmp.presentation.theme.AppTheme
 
 @Composable
 fun ErrorLayout(
-    message: String? = stringResource(id = R.string.search_error)
+    message: String? = stringResource(id = R.string.search_error),
+    color: Color = Color.Unspecified,
 ) {
     Column(
         modifier = Modifier
@@ -26,13 +28,15 @@ fun ErrorLayout(
             modifier = Modifier.fillMaxWidth(),
             fontSize = 32.sp,
             textAlign = TextAlign.Center,
-            text = stringResource(id = R.string.frowny_face)
+            text = stringResource(id = R.string.frowny_face),
+            color = color,
         )
         Text(
             modifier = Modifier.fillMaxWidth(),
             fontSize = 18.sp,
             textAlign = TextAlign.Center,
-            text = message!!
+            text = message!!,
+            color = color,
         )
     }
 }

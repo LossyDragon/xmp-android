@@ -19,7 +19,10 @@ import androidx.compose.material.BottomSheetScaffold
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -89,7 +92,6 @@ class PlayerActivity : ComponentActivity() {
     private lateinit var instrumentViewer: Viewer
     private lateinit var patternViewer: Viewer
 
-    // private var sheet: PlayerSheet? = null
     private lateinit var viewer: Viewer
     private lateinit var infoName: Array<TextView>
     private lateinit var infoType: Array<TextView>
@@ -109,7 +111,7 @@ class PlayerActivity : ComponentActivity() {
 
     private val connection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
-            logI("Service connected")
+            this@PlayerActivity.logI("Service connected")
             val binder = service as PlayerService.PlayerBinder
             modPlayer = binder.getService()
             isBound = true
@@ -309,13 +311,6 @@ class PlayerActivity : ComponentActivity() {
 
         viewer.keepScreenOn = PrefManager.keepScreenOn
 
-        // TODO implement again via compose
-        // if (!PrefManager.showInfoLine) {
-        //     findViewById<TextView>(R.id.time_now).hide()
-        //     findViewById<TextView>(R.id.time_total).hide()
-        //     findViewById<LinearLayout>(R.id.infoLayout).hide()
-        // }
-
         if (PlayerService.isLoaded) {
             canChangeViewer = true
         }
@@ -407,7 +402,18 @@ class PlayerActivity : ComponentActivity() {
         var reconnect = false
         var fromHistory = false
 
-        logI("New intent")
+        // When running in background and clicked fom notification, it'll restart the list
+        if (intent.flags and Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT != 0) {
+            logD("Brought back to front")
+            return
+        }
+
+        // Then brought to background, then foreground, tapping the notification will new task it.
+        if (intent.flags and Intent.FLAG_ACTIVITY_NEW_TASK != 0) {
+            logD("New Task")
+            return
+        }
+
         if (intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY != 0) {
             logI("Player started from history")
             fromHistory = true
@@ -415,6 +421,7 @@ class PlayerActivity : ComponentActivity() {
 
         var path: String? = null
         if (intent.data != null) {
+            logD("Intent: ${intent.flags}")
             path = if (intent.action == Intent.ACTION_VIEW) {
                 FileUtils.getPathFromUri(this, intent.data!!)
             } else {
@@ -539,11 +546,10 @@ class PlayerActivity : ComponentActivity() {
         viewModel.setSeekPos(playTime)
         viewModel.setSeekMax(time / 100F)
 
-        flipperPage = (flipperPage + 1) % 2
-        infoName[flipperPage].text = modPlayer.getModName()
-        infoType[flipperPage].text = Xmp.getModType()
-
         with(findViewById<ViewFlipper>(R.id.title_flipper)) {
+            flipperPage = (flipperPage + 1) % 2
+            infoName[flipperPage].text = modPlayer.getModName()
+            infoType[flipperPage].text = Xmp.getModType()
             if (skipToPrevious) {
                 setInAnimation(this@PlayerActivity, R.anim.slide_in_left_slow)
                 setOutAnimation(this@PlayerActivity, R.anim.slide_out_right_slow)
@@ -554,6 +560,7 @@ class PlayerActivity : ComponentActivity() {
             skipToPrevious = false
             showNext()
         }
+
         viewer.setup(modVars)
         viewer.setRotation(playerDisplay.rotation)
 
@@ -822,6 +829,7 @@ fun PlayerSheetPeekContent(
     onNext: () -> Unit,
     onRepeat: () -> Unit,
 ) {
+    val showInfo by remember { mutableStateOf(PrefManager.showInfoLine) }
     val spd = viewModel.infoSpeed.observeAsState("00")
     val bpm = viewModel.infoBpm.observeAsState("00")
     val pos = viewModel.infoPos.observeAsState("00")
@@ -838,21 +846,29 @@ fun PlayerSheetPeekContent(
             .fillMaxWidth()
             .height(155.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
         Spacer(modifier = Modifier.height(8.dp))
-        Icon(painterResource(id = R.drawable.ic_sheet_handle), null, tint = lightGray)
-        Spacer(modifier = Modifier.height(8.dp))
-        PlayerInfo(speed = spd.value, bpm = bpm.value, pos = pos.value, pat = pat.value)
-        Spacer(modifier = Modifier.height(12.dp))
-        PlayerTimeBar(
-            currentTime = now.value,
-            totalTime = total.value,
-            position = position.value,
-            range = positionMax.value,
-            onSeek = { onSeek(it) },
+        Icon(
+            painter = painterResource(id = R.drawable.ic_sheet_handle),
+            tint = lightGray,
+            contentDescription = null
         )
+        if (showInfo) {
+            Spacer(modifier = Modifier.height(8.dp))
+            PlayerInfo(speed = spd.value, bpm = bpm.value, pos = pos.value, pat = pat.value)
+            Spacer(modifier = Modifier.height(12.dp))
+            PlayerTimeBar(
+                currentTime = now.value,
+                totalTime = total.value,
+                position = position.value,
+                range = positionMax.value,
+                onSeek = { onSeek(it) },
+            )
+        }
         Spacer(modifier = Modifier.height(18.dp))
         PlayerButtons(
+            modifier = if (!showInfo) Modifier.fillMaxHeight() else Modifier,
             onStop = { onStop() },
             onPrev = { onPrev() },
             onPlay = { onPlay() },

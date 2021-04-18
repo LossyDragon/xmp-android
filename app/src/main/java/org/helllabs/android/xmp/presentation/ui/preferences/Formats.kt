@@ -18,6 +18,7 @@ import javax.inject.Inject
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.presentation.components.AppBar
+import org.helllabs.android.xmp.presentation.components.ErrorLayout
 import org.helllabs.android.xmp.presentation.components.ItemSingle
 import org.helllabs.android.xmp.presentation.components.LazyColumnWithTopScroll
 import org.helllabs.android.xmp.presentation.theme.AppTheme
@@ -78,7 +79,10 @@ fun FormatsLayout(
             LazyColumnWithTopScroll(
                 modifier = Modifier.fillMaxSize(),
                 showScrollAt = 15,
-                boxContent = {},
+                boxContent = {
+                    if (formatsList.isEmpty())
+                        ErrorLayout(message = stringResource(id = R.string.msg_no_formats))
+                },
                 lazyContent = {
                     itemsIndexed(items = formatsList) { _, item ->
                         ItemSingle(

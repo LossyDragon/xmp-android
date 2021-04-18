@@ -12,6 +12,52 @@ import org.helllabs.android.xmp.presentation.ui.search.ModArchiveConstants
 object FileUtils {
 
     /**
+     * Handles installing sample modules from assets into the specified folder
+     * @param context resource management.
+     * @param path the directory to install the sample(s).
+     * @param shouldInstall return false if we shouldn't install the sample.
+     */
+    fun installAssets(context: Context, path: String, shouldInstall: Boolean): Int {
+
+        val filePath = File(path)
+
+        // Ignore installing examples if preference is false
+        if (!shouldInstall) {
+            return 0
+        }
+
+        // Return false if the filepath is not a directory.
+        if (filePath.isDirectory) {
+            logW("Install: $path directory not found")
+            return -1
+        }
+
+        // Try and make the directory.
+        if (!filePath.mkdirs()) {
+            logE("Can't create directory: $path")
+            return -1
+        }
+
+        val am = context.assets
+        val assets: Array<String>? = am.list("mod")
+
+        // Asset folder is empty.
+        if (assets.isNullOrEmpty()) {
+            return 0
+        }
+
+        assets.forEach { item ->
+            am.open("mod/$item").use { stream ->
+                File("$path/$item").outputStream().use {
+                    stream.copyTo(it)
+                }
+            }
+        }
+
+        return 1
+    }
+
+    /**
      * Get the File from an Intent URI
      * @param context activity context
      * @param uri the URI scheme from another application (ie: file manager)
