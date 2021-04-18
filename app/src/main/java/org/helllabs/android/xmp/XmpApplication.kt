@@ -21,7 +21,6 @@ class XmpApplication : Application() {
     }
 
     companion object {
-        @JvmStatic
         var fileList: List<String>? = null
     }
 }

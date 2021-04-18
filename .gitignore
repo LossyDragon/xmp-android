@@ -32,6 +32,8 @@ app/app.iml
 *~
 *.swp
 
+app/release/output-metadata.json
+
 # libxmp
 /app/src/main/cpp/libxmp/
 # AS seems to like these 2 test folders.

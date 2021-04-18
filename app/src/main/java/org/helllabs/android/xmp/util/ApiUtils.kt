@@ -88,14 +88,6 @@ fun String.upperCase(): String = this.toUpperCase(Locale.getDefault())
 /**
  * View helpers
  */
-fun View.hide() {
-    visibility = View.GONE
-}
-
-fun View.show() {
-    visibility = View.VISIBLE
-}
-
 fun View.click(l: (v: View) -> Unit) {
     setOnClickListener(l)
 }

@@ -19,13 +19,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
-import java.util.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.presentation.components.AppBar
 import org.helllabs.android.xmp.presentation.theme.*
 import org.helllabs.android.xmp.presentation.ui.search.ModArchiveConstants.ERROR
+import org.helllabs.android.xmp.util.upperCase
 
 class SearchError : ComponentActivity() {
 
@@ -48,7 +48,7 @@ class SearchError : ComponentActivity() {
             message = if (message.trim { it <= ' ' }.isEmpty()) {
                 getString(R.string.search_unknown_error)
             } else {
-                val err = message.substring(0, 1).toUpperCase(Locale.US) + message.substring(1)
+                val err = message.substring(0, 1).upperCase() + message.substring(1)
                 getString(R.string.search_known_error, err)
             }
         }

@@ -1,3 +1,6 @@
+import java.text.SimpleDateFormat
+import java.util.Date
+
 plugins {
     id("com.android.application")
     kotlin("android")
@@ -29,13 +32,15 @@ android {
         buildConfigField("String", "API_KEY", apiKey as String)
 
         // Pretty print compiled apk with version into and date
-//        applicationVariants.all { variant ->
-//            variant.outputs.all {
-//                def date = new Date()
-//                def formattedDate = date . format ('YYYYMMdd')
-//                outputFileName = "xmp-${versionName}-${versionCode}-${formattedDate}.apk"
-//            }
-//        }
+        applicationVariants.all {
+            outputs.forEach { output ->
+                if (output is com.android.build.gradle.internal.api.BaseVariantOutputImpl) {
+                    val date = SimpleDateFormat("YYYYMMdd").format(Date())
+                    val type = buildType.name
+                    output.outputFileName = "xmp-$type-$versionName-$versionCode-$date.apk"
+                }
+            }
+        }
     }
 
     buildTypes {
@@ -98,14 +103,15 @@ dependencies {
     implementation("androidx.activity:activity-compose:1.3.0-alpha06")
     implementation("androidx.constraintlayout:constraintlayout-compose:1.0.0-alpha05")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:1.0.0-alpha04")
-    implementation("com.google.accompanist:accompanist-insets:0.7.0")
-    implementation("com.google.accompanist:accompanist-systemuicontroller:0.7.0")
+
+    val accompanist = "0.7.1"
+    implementation("com.google.accompanist:accompanist-insets:$accompanist")
+    implementation("com.google.accompanist:accompanist-systemuicontroller:$accompanist")
 
     /************************
      * Android Support Libs *
      ************************/
     implementation("com.google.android.material:material:1.3.0")
-    implementation("androidx.coordinatorlayout:coordinatorlayout:1.1.0")
     implementation("androidx.preference:preference-ktx:1.1.1")
     implementation("androidx.media:media:1.3.0")
 
@@ -172,7 +178,7 @@ ktlint {
 
 tasks {
     // gradlew ktLint
-    val ktLint by registering {
+    val lintclean by registering {
         ktlintFormat
     }
 

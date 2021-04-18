@@ -5,6 +5,7 @@
         <!-- Material Dialogs -->
         <item name="md_corner_radius">8dp</item>
         <item name="md_color_button_text">@color/dialogButtons</item>
+        <item name="md_color_widget">@color/accent</item>
     </style>
 
     <style name="CompatComposeTheme" parent="@style/Theme.MaterialComponents.DayNight.NoActionBar">
