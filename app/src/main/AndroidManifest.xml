@@ -13,6 +13,9 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission
+        android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
+    <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         tools:ignore="ScopedStorage" />
 
@@ -30,7 +33,7 @@
         tools:replace="supportsRtl">
 
         <activity
-            android:name="org.helllabs.android.xmp.presentation.ui.playlists.PlaylistMenu"
+            android:name="org.helllabs.android.xmp.presentation.ui.playlistMenu.PlaylistMenu"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:exported="true"
             android:theme="@style/ComposeTheme">
@@ -43,7 +46,7 @@
 
         <activity
             android:name="org.helllabs.android.xmp.presentation.ui.playlistEdit.PlaylistEdit"
-            android:parentActivityName="org.helllabs.android.xmp.presentation.ui.playlists.PlaylistMenu"
+            android:parentActivityName="org.helllabs.android.xmp.presentation.ui.playlistMenu.PlaylistMenu"
             android:theme="@style/ComposeTheme"
             android:windowSoftInputMode="adjustResize" />
 
@@ -204,7 +207,7 @@
         <activity
             android:name=".presentation.ui.fileBrowser.FilelistActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:parentActivityName="org.helllabs.android.xmp.presentation.ui.playlists.PlaylistMenu"
+            android:parentActivityName="org.helllabs.android.xmp.presentation.ui.playlistMenu.PlaylistMenu"
             android:theme="@style/ComposeTheme" />
 
         <activity

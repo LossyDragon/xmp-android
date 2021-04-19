@@ -125,7 +125,6 @@ object PlaylistUtils {
             val playlist = Playlist(name)
             playlist.comment = comment
             playlist.commit()
-            true
         } catch (e: IOException) {
             false
         }

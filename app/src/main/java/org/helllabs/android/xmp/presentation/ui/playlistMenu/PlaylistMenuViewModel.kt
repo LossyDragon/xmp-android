@@ -1,4 +1,4 @@
-package org.helllabs.android.xmp.presentation.ui.playlists
+package org.helllabs.android.xmp.presentation.ui.playlistMenu
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData

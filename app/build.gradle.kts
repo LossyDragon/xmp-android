@@ -17,7 +17,7 @@ android {
     defaultConfig {
         applicationId = "org.helllabs.android.xmp"
         minSdk = 21
-        targetSdk = 29
+        targetSdk = 30
 
         versionCode = 90
         versionName = "4.15.0"

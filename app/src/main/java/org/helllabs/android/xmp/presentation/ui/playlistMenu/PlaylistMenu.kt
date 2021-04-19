@@ -1,14 +1,19 @@
-package org.helllabs.android.xmp.presentation.ui.playlists
+package org.helllabs.android.xmp.presentation.ui.playlistMenu
 
 import android.Manifest.permission.READ_EXTERNAL_STORAGE
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.content.Intent
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.Scaffold
@@ -54,6 +59,17 @@ class PlaylistMenu : ComponentActivity() {
         logD("Activity Result Refresh")
         viewModel.getPlaylists()
     }
+    private val resultManageStorage = registerForActivityResult(StartActivityForResult()) {
+        logD("Activity Result Manage Storage")
+        if (isAtLeastR) {
+            if (Environment.isExternalStorageManager()) {
+                setupDataDir()
+                viewModel.getPlaylists()
+            } else {
+                toast(R.string.api_30_perms_denied)
+            }
+        }
+    }
     private val resultAdd = registerForActivityResult(StartActivityForResult()) {
         logD("Activity Result Add")
         addPlaylist(it.data)
@@ -74,8 +90,12 @@ class PlaylistMenu : ComponentActivity() {
 
         if (read && write) {
             showChangeLog(this) {
-                setupDataDir()
-                viewModel.getPlaylists()
+                if (isAtLeastR && !Environment.isExternalStorageManager()) {
+                    askForApi30Permissions()
+                } else {
+                    setupDataDir()
+                    viewModel.getPlaylists()
+                }
             }
         } else {
             errorDialog(this, getString(R.string.permission_denied), R.string.exit) {
@@ -221,6 +241,26 @@ class PlaylistMenu : ComponentActivity() {
         }
 
         viewModel.getPlaylists()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.R)
+    private fun askForApi30Permissions() {
+        //https://support.google.com/googleplay/android-developer/answer/10467955
+        // XMP-Android may fall under the category "Document management apps" or "Exceptions"
+        // IMPORTANT: This needs to be approved by google for Play Store submission.
+        yesNoDialog(
+            owner = this,
+            title = R.string.dialog_api_30_title,
+            message = getString(R.string.dialog_api_30_message),
+            confirmText = R.string.grant,
+            dismissText = R.string.cancel,
+            onConfirm = {
+                val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION).apply {
+                    data = Uri.fromParts("package", packageName, null)
+                }
+                resultManageStorage.launch(intent)
+            },
+        )
     }
 }
 

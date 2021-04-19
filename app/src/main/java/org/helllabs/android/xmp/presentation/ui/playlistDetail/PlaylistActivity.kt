@@ -48,6 +48,7 @@ import org.helllabs.android.xmp.presentation.utils.playlist.PlaylistUtils
 import org.helllabs.android.xmp.presentation.utils.recyclerview.OnStartDragListener
 import org.helllabs.android.xmp.presentation.utils.recyclerview.SimpleItemTouchHelperCallback
 import org.helllabs.android.xmp.util.logE
+import org.helllabs.android.xmp.util.toast
 
 class PlaylistActivity :
     BasePlaylistActivity(),
@@ -104,7 +105,6 @@ class PlaylistActivity :
         setContent {
             var isLoop: Boolean by remember { mutableStateOf(isLoopMode) }
             var isShuffle: Boolean by remember { mutableStateOf(isShuffleMode) }
-            var noFiles: Boolean by remember { mutableStateOf(false) }
 
             PlaylistActivityScreen(
                 isDarkTheme = isSystemInDarkTheme(),
@@ -118,7 +118,8 @@ class PlaylistActivity :
                 onPlay = {
                     val list = allFiles
                     if (list.isEmpty()) {
-                        noFiles = true
+                        // Sanity check
+                        toast(R.string.error_no_files_to_play)
                     } else {
                         playModule(list)
                     }
@@ -131,8 +132,6 @@ class PlaylistActivity :
                     isShuffle = it // Force recompose
                     isShuffleMode = it
                 },
-                emptyList = noFiles,
-                onEmptyList = { noFiles = false }
             )
         }
     }
@@ -197,8 +196,6 @@ fun PlaylistActivityScreen(
     onPlay: () -> Unit,
     onLoop: (value: Boolean) -> Unit,
     onShuffle: (value: Boolean) -> Unit,
-    emptyList: Boolean,
-    onEmptyList: () -> Unit,
     mPlaylistAdapter: PlaylistAdapter?, // Only nullable for previewing
     touchHelper: ItemTouchHelper?, // Only nullable for previewing
 ) {
@@ -225,17 +222,6 @@ fun PlaylistActivityScreen(
                     .navigationBarsPadding()
             ) {
                 val (infoBar, customView, controls, snack) = createRefs()
-
-                // Lazy
-                if (emptyList) {
-                    scope.launch {
-                        scaffoldState.snackbarHostState.showSnackbar(
-                            message = context.getString(R.string.error_no_files_to_play),
-                            actionLabel = context.getString(R.string.ok)
-                        )
-                    }
-                    onEmptyList()
-                }
 
                 Column(
                     modifier = Modifier
@@ -309,7 +295,18 @@ fun PlaylistActivityScreen(
                             top.linkTo(customView.bottom)
                             bottom.linkTo(parent.bottom)
                         },
-                    onPlay = { onPlay() },
+                    onPlay = {
+                        if (mPlaylistAdapter!!.currentList.isEmpty()) {
+                            scope.launch {
+                                scaffoldState.snackbarHostState.showSnackbar(
+                                    message = context.getString(R.string.error_no_files_to_play),
+                                    actionLabel = context.getString(R.string.ok)
+                                )
+                            }
+                            return@LayoutControls
+                        }
+                        onPlay()
+                    },
                     onLoop = { onLoop(!isLoop) },
                     onShuffle = { onShuffle(!isShuffle) },
                     isLoopEnabled = isLoop,
@@ -333,8 +330,6 @@ fun PlaylistActivityScreenPreview() {
         onPlay = {},
         onLoop = {},
         onShuffle = {},
-        emptyList = false,
-        onEmptyList = {},
         mPlaylistAdapter = null,
         touchHelper = null,
     )
@@ -353,8 +348,6 @@ fun PlaylistActivityScreenPreviewDark() {
         onPlay = {},
         onLoop = {},
         onShuffle = {},
-        emptyList = false,
-        onEmptyList = {},
         mPlaylistAdapter = null,
         touchHelper = null,
     )

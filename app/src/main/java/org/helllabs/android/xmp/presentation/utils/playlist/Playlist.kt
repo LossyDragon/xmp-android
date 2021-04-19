@@ -61,16 +61,21 @@ class Playlist(val name: String) {
     /**
      * Save the current playlist.
      */
-    fun commit() {
+    fun commit(): Boolean {
+        var success = false
         logI("Commit playlist $name")
         if (mListChanged) {
-            writeList(name)
+            success = writeList(name)
             mListChanged = false
         }
         if (mCommentChanged) {
-            writeComment(name)
+            success = writeComment(name)
             mCommentChanged = false
         }
+
+        if (!success)
+            return false
+
         var saveModes = false
         if (isShuffleMode != readShuffleModePref(name)) {
             saveModes = true
@@ -82,6 +87,7 @@ class Playlist(val name: String) {
             PrefManager.setBooleanPref(optionName(name, SHUFFLE_MODE), isShuffleMode)
             PrefManager.setBooleanPref(optionName(name, LOOP_MODE), isLoopMode)
         }
+        return true
     }
 
     /**
@@ -143,11 +149,11 @@ class Playlist(val name: String) {
         return true
     }
 
-    private fun writeList(name: String) {
+    private fun writeList(name: String): Boolean {
         logI("Write list")
         val file: File = ListFile(name, ".new")
         file.delete()
-        try {
+        return try {
             val out = BufferedWriter(FileWriter(file), 512)
             for (item in list) {
                 out.write(item.toString())
@@ -156,22 +162,26 @@ class Playlist(val name: String) {
             val oldFile: File = ListFile(name)
             oldFile.delete()
             file.renameTo(oldFile)
+            true
         } catch (e: IOException) {
             logE("Error writing playlist file " + file.path)
+            false
         }
     }
 
-    private fun writeComment(name: String) {
+    private fun writeComment(name: String): Boolean {
         logI("Write comment")
         val file: File = CommentFile(name, ".new")
         file.delete()
-        try {
+        return try {
             writeToFile(file, comment!!)
             val oldFile: File = CommentFile(name)
             oldFile.delete()
             file.renameTo(oldFile)
+            true
         } catch (e: IOException) {
             logE("Error writing comment file " + file.path)
+            false
         }
     }
 
