@@ -352,10 +352,10 @@
     <string name="msg_no_formats">No known formats were provided.</string>
     <string name="playlist_edit_helper_text">Playlist name cannot be empty to save</string>
     <string name="dialog_api_30_title">Grant full storage access</string>
-    <string name="dialog_api_30_message">"Staring from Android 11 (API 30), storage related access has been restricted.
+    <string name="dialog_api_30_message">"Starting from Android 11 (API 30), storage related access has been restricted.
         \nXMP uses a file browser system to access, play, and manage modules in storage.
         \nGranting this permission will allow Xmp Mod Player to manage playlists, read and modify items within the file browser.
         \nDenying access will severely limit the applications functionality.</string>
-    <string name="api_30_perms_denied">"Request managing storage denied. "</string>
+    <string name="api_30_perms_denied">"Request managing storage denied."</string>
 
 </resources>
