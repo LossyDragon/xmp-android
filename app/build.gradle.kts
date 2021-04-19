@@ -19,7 +19,7 @@ android {
         minSdk = 21
         targetSdk = 30
 
-        versionCode = 90
+        versionCode = 92
         versionName = "4.15.0"
 
         externalNativeBuild.ndkBuild {
@@ -49,11 +49,9 @@ android {
             externalNativeBuild.ndkBuild.cFlags("-DDEBUG=1")
         }
         release {
+            isJniDebuggable = true
             isMinifyEnabled = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+            proguardFiles(getDefaultProguardFile("proguard-android.txt"), "proguard-project.txt")
         }
     }
 
