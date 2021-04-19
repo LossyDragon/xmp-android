@@ -19,9 +19,6 @@
 #   public *;
 #}
 
-# We really want shrink but no obfuscation
--dontobfuscate
-
 -keep public class org.helllabs.android.xmp.Xmp {
     public *;
 }

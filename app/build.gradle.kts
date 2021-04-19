@@ -49,7 +49,6 @@ android {
             externalNativeBuild.ndkBuild.cFlags("-DDEBUG=1")
         }
         release {
-            isJniDebuggable = true
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android.txt"), "proguard-project.txt")
         }
