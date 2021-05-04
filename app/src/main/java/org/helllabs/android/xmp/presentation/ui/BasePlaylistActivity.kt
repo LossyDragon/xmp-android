@@ -31,7 +31,7 @@ abstract class BasePlaylistActivity : ComponentActivity() {
 
     private val resultPlay = registerForActivityResult(StartActivityForResult()) {
         logD("Activity Result Play Mod")
-        if (it.resultCode != RESULT_OK) update()
+        update()
     }
 
     // Connection

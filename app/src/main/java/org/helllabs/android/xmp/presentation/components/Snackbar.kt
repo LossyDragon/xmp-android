@@ -10,7 +10,7 @@ import androidx.compose.ui.unit.dp
 import org.helllabs.android.xmp.util.upperCase
 
 @Composable
-fun DialogSnackbar(
+fun Snackbar(
     snackBarState: SnackbarHostState,
     modifier: Modifier = Modifier,
     onDismiss: () -> Unit

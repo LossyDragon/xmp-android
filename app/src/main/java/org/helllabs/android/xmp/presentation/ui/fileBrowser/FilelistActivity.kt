@@ -9,10 +9,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.Divider
-import androidx.compose.material.Scaffold
-import androidx.compose.material.rememberScaffoldState
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,7 +23,6 @@ import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.lifecycle.lifecycleOwner
 import com.afollestad.materialdialogs.list.listItemsSingleChoice
 import com.google.accompanist.insets.navigationBarsPadding
-import java.io.File
 import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.PrefManager
 import org.helllabs.android.xmp.R
@@ -43,6 +39,7 @@ import org.helllabs.android.xmp.util.InfoCache.deleteRecursive
 import org.helllabs.android.xmp.util.logD
 import org.helllabs.android.xmp.util.toast
 import org.helllabs.android.xmp.util.yesNoDialog
+import java.io.File
 
 class FilelistActivity : BasePlaylistActivity() {
 
@@ -380,35 +377,26 @@ private fun FileListLayout(
                     .navigationBarsPadding()
             ) {
                 val (crumb, divider, list, controls, snack) = createRefs()
-                val listState = rememberLazyListState()
                 val scope = rememberCoroutineScope()
                 var itemList by remember { mutableStateOf(listOf<PlaylistItem>()) }
-                val crumbs = viewModel.crumbState.value
                 val currentPath = viewModel.currentFile.value
                 val filelistState = viewModel.listState.collectAsState()
 
-                LazyRow(
-                    state = listState,
+                BreadCrumbLayout(
                     modifier = Modifier.constrainAs(crumb) {
                         width = Dimension.fillToConstraints
                         top.linkTo(parent.top)
                     },
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    items(crumbs) { item ->
-                        ItemBreadCrumb(
-                            crumb = item.name,
-                            onClick = { viewModel.getDirectoryList(File(item.path)) },
-                            onLongClick = { onCrumbLongClick(item.path, itemList) }
-                        )
-                    }
-                }
-                Divider(
-                    Modifier.constrainAs(divider) {
+                    dividerModifier = Modifier.constrainAs(divider) {
                         width = Dimension.fillToConstraints
                         top.linkTo(crumb.bottom)
+                    },
+                    viewModel = viewModel,
+                    onCrumbLongClick = { path ->
+                        onCrumbLongClick(path, itemList)
                     }
                 )
+
                 LazyColumnWithTopScroll(
                     modifier = Modifier.constrainAs(list) {
                         height = Dimension.fillToConstraints
@@ -490,6 +478,7 @@ private fun FileListLayout(
                         }
                     }
                 )
+
                 LayoutControls(
                     modifier = Modifier
                         .constrainAs(controls) {
@@ -506,7 +495,7 @@ private fun FileListLayout(
                     isShuffleEnabled = isShuffle,
                 )
 
-                DialogSnackbar(
+                Snackbar(
                     modifier = Modifier.constrainAs(snack) {
                         width = Dimension.fillToConstraints
                         bottom.linkTo(controls.top)
@@ -516,11 +505,38 @@ private fun FileListLayout(
                         scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
                     }
                 )
-
-                // Scroll the crumbs so the most recent folder is visible.
-                if (crumbs.isNotEmpty()) // Stop a rare crash if crumbs is somehow empty.
-                    scope.launch { listState.animateScrollToItem(crumbs.size) }
             }
         }
     }
+}
+
+@Composable
+private fun BreadCrumbLayout(
+    modifier: Modifier,
+    dividerModifier: Modifier,
+    viewModel: FilelistViewModel,
+    onCrumbLongClick: (path: String) -> Unit,
+) {
+    val listState = rememberLazyListState()
+    val crumbs = viewModel.crumbState.value
+    LazyRow(
+        state = listState,
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        items(crumbs) { item ->
+            ItemBreadCrumb(
+                crumb = item.name,
+                onClick = { viewModel.getDirectoryList(File(item.path)) },
+                onLongClick = { onCrumbLongClick(item.path) }
+            )
+        }
+    }
+    Divider(dividerModifier)
+
+    // Scroll the crumbs so the most recent folder is visible.
+    if (crumbs.isNotEmpty()) // Stop a rare crash if crumbs is somehow empty.
+        LaunchedEffect(crumbs) {
+            listState.animateScrollToItem(crumbs.size)
+        }
 }

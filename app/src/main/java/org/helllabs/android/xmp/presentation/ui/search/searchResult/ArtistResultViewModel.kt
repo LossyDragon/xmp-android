@@ -25,11 +25,13 @@ constructor(
             _artistState.value = ArtistState.Load
             _artistState.value = try {
                 val result = repository.getArtistSearch(query)
+
                 if (!result.error.isNullOrBlank()) {
                     ArtistState.SoftError(result.error!!)
-                } else {
-                    ArtistState.SearchResult(result)
+                    return@launch
                 }
+
+                ArtistState.SearchResult(result)
             } catch (e: Exception) {
                 ArtistState.Error(e.localizedMessage)
             }

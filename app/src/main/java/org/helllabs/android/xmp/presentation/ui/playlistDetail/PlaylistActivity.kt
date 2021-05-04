@@ -37,7 +37,7 @@ import org.helllabs.android.xmp.PrefManager
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.model.PlaylistItem
 import org.helllabs.android.xmp.presentation.components.AppBar
-import org.helllabs.android.xmp.presentation.components.DialogSnackbar
+import org.helllabs.android.xmp.presentation.components.Snackbar
 import org.helllabs.android.xmp.presentation.components.ErrorLayout
 import org.helllabs.android.xmp.presentation.components.LayoutControls
 import org.helllabs.android.xmp.presentation.theme.AppTheme
@@ -278,7 +278,7 @@ private fun PlaylistActivityScreen(
                         }
                     },
                 )
-                DialogSnackbar(
+                Snackbar(
                     modifier = Modifier.constrainAs(snack) {
                         width = Dimension.fillToConstraints
                         bottom.linkTo(controls.top)

@@ -44,7 +44,7 @@ import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.model.Module
 import org.helllabs.android.xmp.presentation.components.AppBar
 import org.helllabs.android.xmp.presentation.components.DeleteMenu
-import org.helllabs.android.xmp.presentation.components.DialogSnackbar
+import org.helllabs.android.xmp.presentation.components.Snackbar
 import org.helllabs.android.xmp.presentation.components.ErrorLayout
 import org.helllabs.android.xmp.presentation.theme.AppTheme
 import org.helllabs.android.xmp.presentation.theme.sectionBackground
@@ -314,7 +314,7 @@ private fun ModuleResultScreen(
                     module = module,
                 )
 
-                DialogSnackbar(
+                Snackbar(
                     modifier = Modifier.constrainAs(snack) {
                         width = Dimension.fillToConstraints
                         bottom.linkTo(buttons.top)

@@ -31,7 +31,7 @@ android {
         val apiKey = project.property("modArchiveApiKey")
         buildConfigField("String", "API_KEY", apiKey as String)
 
-        // Pretty print compiled apk with version into and date
+        // Pretty print compiled apk with: release type, version name, version code, and date.
         applicationVariants.all {
             outputs.forEach { output ->
                 if (output is com.android.build.gradle.internal.api.BaseVariantOutputImpl) {
@@ -60,7 +60,7 @@ android {
     }
 
     // Hush: ExperimentalCoroutinesApi
-    // Then: ExperimentalFoundationApi
+    // Hush: ExperimentalFoundationApi
     kotlinOptions {
         jvmTarget = "1.8"
         useIR = true
@@ -165,6 +165,9 @@ dependencies {
     // debugImplementation("com.squareup.leakcanary:leakcanary-android:2.6")
 }
 
+/******************
+ * ktLint options *
+ ******************/
 ktlint {
     android.set(true)
     // ignoreFailures.set(true)
@@ -172,9 +175,13 @@ ktlint {
     disabledRules.add("no-wildcard-imports")
 }
 
-// Gradle Task -> ktlintFormat
-// Gradle Task -> xmp
+/****************
+ * Gradle Tasks *
+ ****************/
 tasks {
+    // Register: ktlintFormat
+    // Register: xmp
+
     val fetchXmp by registering(Exec::class) {
         val args = "rm -rf libxmp && git clone https://github.com/libxmp/libxmp.git && exit"
         workingDir = File("../app/src/main/cpp")

@@ -24,11 +24,13 @@ class SearchListViewModel
             _searchResultState.value = SearchResultState.Load
             _searchResultState.value = try {
                 val result = repository.getFileNameOrTitle(query)
+
                 if (!result.error.isNullOrBlank()) {
                     SearchResultState.SoftError(result.error!!)
-                } else {
-                    SearchResultState.SearchResult(result)
+                    return@launch
                 }
+
+                SearchResultState.SearchResult(result)
             } catch (e: Exception) {
                 SearchResultState.Error(e.localizedMessage)
             }
@@ -39,11 +41,13 @@ class SearchListViewModel
             _searchResultState.value = SearchResultState.Load
             _searchResultState.value = try {
                 val result = repository.getArtistById(id)
+
                 if (!result.error.isNullOrBlank()) {
                     SearchResultState.SoftError(result.error!!)
-                } else {
-                    SearchResultState.SearchResult(result)
+                    return@launch
                 }
+
+                SearchResultState.SearchResult(result)
             } catch (e: Exception) {
                 SearchResultState.Error(e.localizedMessage)
             }
