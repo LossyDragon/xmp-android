@@ -229,11 +229,10 @@ class PlayerActivity : ComponentActivity() {
             findViewById(R.id.info_type_1)
         )
 
-        // Viewer
         // Get the background color of the activity.
-        var color: Int = android.graphics.Color.parseColor("#FF000000")
-        val background = window.decorView.background
-        if (background is ColorDrawable) color = background.color
+        val color: Int = resources.color(R.color.playerScreenBackground)
+
+        // Viewer
         instrumentViewer = InstrumentViewer(this, color)
         channelViewer = ChannelViewer(this, color)
         patternViewer = PatternViewer(this, color)

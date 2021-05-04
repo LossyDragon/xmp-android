@@ -13,4 +13,5 @@
 
     <!--<color name="gray">#FF282828</color>-->
     <color name="lightgray">#FFc0c0c0</color>
+    <color name="playerScreenBackground">@color/white</color>
 </resources>
