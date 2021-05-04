@@ -400,15 +400,16 @@ class PlayerActivity : ComponentActivity() {
 
         var reconnect = false
         var fromHistory = false
+        val isPlayerAlive = PlayerService.isPlayerAlive.value // Dumb
 
         // When running in background and clicked fom notification, it'll restart the list
-        if (intent.flags and Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT != 0) {
+        if (isPlayerAlive == true && intent.flags and Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT != 0) {
             logD("Brought back to front")
             return
         }
 
         // Then brought to background, then foreground, tapping the notification will new task it.
-        if (intent.flags and Intent.FLAG_ACTIVITY_NEW_TASK != 0) {
+        if (isPlayerAlive == true && intent.flags and Intent.FLAG_ACTIVITY_NEW_TASK != 0) {
             logD("New Task")
             return
         }
