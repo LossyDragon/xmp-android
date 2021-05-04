@@ -7,6 +7,8 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.Scaffold
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ClearAll
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -100,7 +102,13 @@ private fun SearchHistoryLayout(
                 AppBar(
                     title = appTitle,
                     navIconClick = { onBack() },
-                    menuActions = { if (!isListEmpty) DeleteMenu { onClear() } },
+                    menuActions = {
+                        if (!isListEmpty)
+                            DeleteMenu(
+                                deleteClick = { onClear() },
+                                image = Icons.Default.ClearAll
+                            )
+                    },
                 )
             }
         ) {

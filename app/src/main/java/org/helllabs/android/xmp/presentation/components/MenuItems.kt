@@ -7,6 +7,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import org.helllabs.android.xmp.R
@@ -34,10 +35,11 @@ fun MainMenuItems(
 @Composable
 fun DeleteMenu(
     deleteClick: () -> Unit,
+    image: ImageVector = Icons.Default.Delete
 ) {
     IconButton(onClick = { deleteClick() }) {
         Icon(
-            imageVector = Icons.Default.Delete,
+            imageVector = image,
             contentDescription = stringResource(id = R.string.delete)
         )
     }
@@ -75,7 +77,7 @@ private fun HistoryMenuPreview() {
     AppTheme(false) {
         AppBar(
             title = stringResource(id = R.string.app_name),
-            menuActions = { DeleteMenu {} }
+            menuActions = { DeleteMenu({}) }
         )
     }
 }
@@ -86,7 +88,7 @@ private fun HistoryMenuPreviewDark() {
     AppTheme(true) {
         AppBar(
             title = stringResource(id = R.string.app_name),
-            menuActions = { DeleteMenu {} }
+            menuActions = { DeleteMenu({}) }
         )
     }
 }

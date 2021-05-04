@@ -224,7 +224,7 @@ private fun ModuleResultScreen(
                 AppBar(
                     title = stringResource(id = appTitle),
                     navIconClick = { onBack() },
-                    menuActions = { if (moduleExists) DeleteMenu { onDelete(module!!) } },
+                    menuActions = { if (moduleExists) DeleteMenu({ onDelete(module!!) }) },
                 )
             },
             scaffoldState = scaffoldState,
