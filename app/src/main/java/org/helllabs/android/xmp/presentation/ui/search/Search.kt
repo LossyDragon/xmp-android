@@ -92,7 +92,7 @@ class Search : ComponentActivity() {
 
 // This is a bit cluttered.
 @Composable
-fun SearchLayout(
+private fun SearchLayout(
     isDarkTheme: Boolean = systemDarkTheme(),
     appTitle: String,
     onBack: () -> Unit,
@@ -284,7 +284,7 @@ fun SearchLayout(
 
 @Preview
 @Composable
-fun SearchLayoutPreview() {
+private fun SearchLayoutPreview() {
     SearchLayout(
         isDarkTheme = false,
         appTitle = stringResource(id = R.string.search_title),
@@ -297,7 +297,7 @@ fun SearchLayoutPreview() {
 
 @Preview
 @Composable
-fun SearchLayoutPreviewDark() {
+private fun SearchLayoutPreviewDark() {
     SearchLayout(
         isDarkTheme = true,
         appTitle = stringResource(id = R.string.search_title),

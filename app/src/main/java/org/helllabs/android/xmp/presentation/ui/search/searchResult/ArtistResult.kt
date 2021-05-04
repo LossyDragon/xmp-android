@@ -71,7 +71,7 @@ class ArtistResult : ComponentActivity() {
 }
 
 @Composable
-fun ArtistLayout(
+private fun ArtistLayout(
     isDarkTheme: Boolean = systemDarkTheme(),
     appTitle: String,
     onBack: () -> Unit,

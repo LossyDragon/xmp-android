@@ -104,7 +104,7 @@ fun ItemList(
 
 @Preview
 @Composable
-fun ItemListPreview() {
+private fun ItemListPreview() {
     AppTheme(false) {
         ItemList(
             item = PlaylistItem(
@@ -121,7 +121,7 @@ fun ItemListPreview() {
 
 @Preview
 @Composable
-fun ItemListPreviewDark() {
+private fun ItemListPreviewDark() {
     AppTheme(true) {
         ItemList(
             item = PlaylistItem(

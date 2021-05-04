@@ -265,7 +265,7 @@ class PlaylistMenu : ComponentActivity() {
 }
 
 @Composable
-fun PlaylistMenuLayout(
+private fun PlaylistMenuLayout(
     isDarkTheme: Boolean = systemDarkTheme(),
     menuDownloadClick: () -> Unit,
     menuSettingsClick: () -> Unit,
@@ -335,7 +335,7 @@ fun PlaylistMenuLayout(
 
 @Preview
 @Composable
-fun PlayListMenuPreview() {
+private fun PlayListMenuPreview() {
     val list = mutableListOf(
         PlaylistItem(PlaylistItem.TYPE_SPECIAL, "File Explorer", "Explorer Comment"),
         PlaylistItem(PlaylistItem.TYPE_PLAYLIST, "Playlist", "Playlist Comment"),
@@ -355,7 +355,7 @@ fun PlayListMenuPreview() {
 
 @Preview
 @Composable
-fun PlayListMenuPreviewDark() {
+private fun PlayListMenuPreviewDark() {
     val list = mutableListOf(
         PlaylistItem(PlaylistItem.TYPE_SPECIAL, "File Explorer", "Explorer Comment"),
         PlaylistItem(PlaylistItem.TYPE_PLAYLIST, "Playlist", "Playlist Comment"),

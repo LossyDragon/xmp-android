@@ -106,7 +106,7 @@ fun ItemModule(
 
 @Preview
 @Composable
-fun ItemModulePreview() {
+private fun ItemModulePreview() {
     AppTheme(false) {
         ItemModule(
             item = Module(
@@ -121,7 +121,7 @@ fun ItemModulePreview() {
 
 @Preview
 @Composable
-fun ItemModulePreviewDark() {
+private fun ItemModulePreviewDark() {
     AppTheme(true) {
         ItemModule(
             item = Module(

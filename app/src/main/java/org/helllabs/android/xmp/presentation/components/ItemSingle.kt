@@ -44,7 +44,7 @@ fun ItemSingle(
 
 @Preview
 @Composable
-fun ItemSinglePreview() {
+private fun ItemSinglePreview() {
     AppTheme(false) {
         ItemSingle("Single Item", {}, {})
     }
@@ -52,7 +52,7 @@ fun ItemSinglePreview() {
 
 @Preview
 @Composable
-fun ItemSinglePreviewDark() {
+private fun ItemSinglePreviewDark() {
     AppTheme(true) {
         ItemSingle("Single Item", {}, {})
     }

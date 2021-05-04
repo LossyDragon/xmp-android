@@ -346,7 +346,7 @@ class FilelistActivity : BasePlaylistActivity() {
 }
 
 @Composable
-fun FileListLayout(
+private fun FileListLayout(
     isDarkTheme: Boolean,
     viewModel: FilelistViewModel,
     onBack: () -> Unit,

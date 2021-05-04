@@ -748,7 +748,7 @@ class PlayerActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun PlayerLayout(
+private fun PlayerLayout(
     @ColorRes background: Int,
     viewModel: PlayerActivityViewModel,
     viewer: Viewer,
@@ -792,7 +792,7 @@ fun PlayerLayout(
 }
 
 @Composable
-fun PlayerSheetLayout(
+private fun PlayerSheetLayout(
     viewModel: PlayerActivityViewModel,
     onSeek: (Float) -> Unit,
     onStop: () -> Unit,
@@ -820,7 +820,7 @@ fun PlayerSheetLayout(
 }
 
 @Composable
-fun PlayerSheetPeekContent(
+private fun PlayerSheetPeekContent(
     viewModel: PlayerActivityViewModel,
     onSeek: (Float) -> Unit,
     onStop: () -> Unit,
@@ -882,7 +882,7 @@ fun PlayerSheetPeekContent(
 }
 
 @Composable
-fun PlayerSheetContent(
+private fun PlayerSheetContent(
     viewModel: PlayerActivityViewModel,
     onAllSeq: (Boolean) -> Unit,
     onSequence: (Int) -> Unit,
@@ -916,7 +916,7 @@ fun PlayerSheetContent(
 }
 
 @Composable
-fun PlayerFrameLayout(viewer: Viewer, onFrameClick: () -> Unit) {
+private fun PlayerFrameLayout(viewer: Viewer, onFrameClick: () -> Unit) {
     AndroidView(
         modifier = Modifier.padding(bottom = 155.dp),
         factory = { context ->

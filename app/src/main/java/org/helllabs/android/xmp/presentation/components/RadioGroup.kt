@@ -73,7 +73,7 @@ fun RadioButtonItem(
 
 @Preview
 @Composable
-fun RadioGroupPreview() {
+private fun RadioGroupPreview() {
     val list = listOf("Item 1", "Item 2", "Item 3")
     AppTheme(false) {
         RadioGroup(radioList = list, selectedOption = 0, onSelected = {})
@@ -82,7 +82,7 @@ fun RadioGroupPreview() {
 
 @Preview
 @Composable
-fun RadioGroupPreviewDark() {
+private fun RadioGroupPreviewDark() {
     AppTheme(true) {
         val list = listOf("Item 1", "Item 2", "Item 3")
         RadioGroup(radioList = list, selectedOption = 0, onSelected = {})

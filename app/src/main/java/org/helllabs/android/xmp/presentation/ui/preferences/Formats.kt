@@ -59,7 +59,7 @@ class Formats : ComponentActivity() {
 }
 
 @Composable
-fun FormatsLayout(
+private fun FormatsLayout(
     isDarkTheme: Boolean = systemDarkTheme(),
     onBack: () -> Unit,
     formatsList: List<String>,
@@ -102,7 +102,7 @@ fun FormatsLayout(
 
 @Preview
 @Composable
-fun ListFormatsLayoutPreview() {
+private fun ListFormatsLayoutPreview() {
     val list = listOf("String 1", "String 2", "String 3", "String 4", "String 5")
     FormatsLayout(
         isDarkTheme = false,
@@ -114,7 +114,7 @@ fun ListFormatsLayoutPreview() {
 
 @Preview
 @Composable
-fun ListFormatsLayoutPreviewDark() {
+private fun ListFormatsLayoutPreviewDark() {
     val list = listOf("String 1", "String 2", "String 3", "String 4", "String 5")
     FormatsLayout(
         isDarkTheme = true,

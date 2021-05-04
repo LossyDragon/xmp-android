@@ -32,7 +32,7 @@ fun ProgressbarIndicator(
 
 @Preview
 @Composable
-fun ProgressbarIndicatorPreview() {
+private fun ProgressbarIndicatorPreview() {
     AppTheme(false) {
         ProgressbarIndicator(isLoading = true)
     }

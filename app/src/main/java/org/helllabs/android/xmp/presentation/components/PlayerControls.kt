@@ -283,7 +283,7 @@ fun DetailsSheet(
  ***********/
 
 @Composable
-fun SingleLineText(text: String) {
+private fun SingleLineText(text: String) {
     Text(
         text = text,
         fontSize = 15.sp,
@@ -295,7 +295,7 @@ fun SingleLineText(text: String) {
 }
 
 @Composable
-fun ModuleSection(
+private fun ModuleSection(
     text: String,
     content: @Composable RowScope.() -> Unit
 ) {
@@ -321,7 +321,7 @@ fun ModuleSection(
 }
 
 @Composable
-fun ModuleInsDetails(
+private fun ModuleInsDetails(
     string: String,
     number: Int,
 ) {
@@ -355,7 +355,7 @@ fun ModuleInsDetails(
 
 @Preview
 @Composable
-fun PlayerInfoPreview() {
+private fun PlayerInfoPreview() {
     AppTheme(false) {
         PlayerInfo()
     }
@@ -363,7 +363,7 @@ fun PlayerInfoPreview() {
 
 @Preview
 @Composable
-fun PlayerTimeBarPreview() {
+private fun PlayerTimeBarPreview() {
     AppTheme(false) {
         PlayerTimeBar(
             currentTime = "00:00",
@@ -377,7 +377,7 @@ fun PlayerTimeBarPreview() {
 
 @Preview
 @Composable
-fun PlayerButtonsPreview() {
+private fun PlayerButtonsPreview() {
     AppTheme(false) {
         PlayerButtons(
             onStop = {},
@@ -393,7 +393,7 @@ fun PlayerButtonsPreview() {
 
 @Preview
 @Composable
-fun DetailsSheetPreview() {
+private fun DetailsSheetPreview() {
     val moduleDetails = List(50) { Random.nextInt(1, 1000) }
     val sequences = List(50) { Random.nextInt(1000, 100000) }
     AppTheme(false) {

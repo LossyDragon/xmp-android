@@ -47,7 +47,7 @@ fun ErrorLayout(
 
 @Preview
 @Composable
-fun ErrorLayoutPreview() {
+private fun ErrorLayoutPreview() {
     AppTheme(false) {
         ErrorLayout("Some very long error message that should wrap around")
     }

@@ -65,7 +65,7 @@ fun ScrollFab(
 
 @Preview
 @Composable
-fun FabPreview() {
+private fun FabPreview() {
     AppTheme(false) {
         ExtendedFab {}
     }
@@ -73,7 +73,7 @@ fun FabPreview() {
 
 @Preview
 @Composable
-fun ScrollFabPreview() {
+private fun ScrollFabPreview() {
     AppTheme(false) {
         ScrollFab(onClick = { }, shouldPadBottom = false)
     }

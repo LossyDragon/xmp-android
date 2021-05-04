@@ -186,7 +186,7 @@ class PlaylistActivity :
 }
 
 @Composable
-fun PlaylistActivityScreen(
+private fun PlaylistActivityScreen(
     isDarkTheme: Boolean,
     onBack: () -> Unit,
     name: String,
@@ -319,7 +319,7 @@ fun PlaylistActivityScreen(
 
 @Preview
 @Composable
-fun PlaylistActivityScreenPreview() {
+private fun PlaylistActivityScreenPreview() {
     PlaylistActivityScreen(
         isDarkTheme = false,
         onBack = {},
@@ -337,7 +337,7 @@ fun PlaylistActivityScreenPreview() {
 
 @Preview
 @Composable
-fun PlaylistActivityScreenPreviewDark() {
+private fun PlaylistActivityScreenPreviewDark() {
     PlaylistActivityScreen(
         isDarkTheme = true,
         onBack = {},

@@ -83,7 +83,7 @@ class SearchHistory : ComponentActivity() {
 }
 
 @Composable
-fun SearchHistoryLayout(
+private fun SearchHistoryLayout(
     isDarkTheme: Boolean = systemDarkTheme(),
     appTitle: String,
     onBack: () -> Unit,
@@ -131,7 +131,7 @@ fun SearchHistoryLayout(
 
 @Preview
 @Composable
-fun SearchHistoryPreview() {
+private fun SearchHistoryPreview() {
     val items = mutableListOf<Module>()
     for (i in 0..5) {
         items.add(
@@ -156,7 +156,7 @@ fun SearchHistoryPreview() {
 
 @Preview
 @Composable
-fun SearchHistoryPreviewDark() {
+private fun SearchHistoryPreviewDark() {
     val items = mutableListOf<Module>()
     for (i in 0..5) {
         items.add(

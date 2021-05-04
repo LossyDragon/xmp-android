@@ -115,7 +115,7 @@ class PlaylistEdit : ComponentActivity() {
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun PlaylistEditLayout(
+private fun PlaylistEditLayout(
     isDarkTheme: Boolean = systemDarkTheme(),
     isEditing: Boolean = false,
     intentName: String,
@@ -244,7 +244,7 @@ fun PlaylistEditLayout(
 
 @Preview
 @Composable
-fun PlaylistAddEditPreview() {
+private fun PlaylistAddEditPreview() {
     PlaylistEditLayout(
         isDarkTheme = false,
         isEditing = true,
@@ -258,7 +258,7 @@ fun PlaylistAddEditPreview() {
 
 @Preview
 @Composable
-fun PlaylistAddEditPreviewDark() {
+private fun PlaylistAddEditPreviewDark() {
     PlaylistEditLayout(
         isDarkTheme = true,
         isEditing = true,

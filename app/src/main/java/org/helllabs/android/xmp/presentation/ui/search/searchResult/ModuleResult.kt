@@ -202,7 +202,7 @@ class ModuleResult : ComponentActivity() {
 }
 
 @Composable
-fun ModuleResultScreen(
+private fun ModuleResultScreen(
     isDarkTheme: Boolean,
     @StringRes appTitle: Int,
     onBack: () -> Unit,
@@ -362,7 +362,7 @@ fun ModuleResultScreen(
 }
 
 @Composable
-fun ButtonBar(
+private fun ButtonBar(
     modifier: Modifier,
     playButtonText: String,
     isLoading: Boolean,
@@ -402,7 +402,7 @@ fun ButtonBar(
 }
 
 @Composable
-fun ModuleLayout(
+private fun ModuleLayout(
     modifier: Modifier,
     module: Module?,
 ) {
@@ -497,7 +497,7 @@ fun ModuleLayout(
 }
 
 @Composable
-fun HeaderText(text: String) {
+private fun HeaderText(text: String) {
     Text(
         fontWeight = FontWeight.Bold,
         fontStyle = FontStyle.Italic,
@@ -506,7 +506,7 @@ fun HeaderText(text: String) {
 }
 
 @Composable
-fun MonoSpaceText(text: String) {
+private fun MonoSpaceText(text: String) {
     Text(
         modifier = Modifier.padding(start = 10.dp, end = 10.dp),
         fontFamily = FontFamily.Monospace,
@@ -517,7 +517,7 @@ fun MonoSpaceText(text: String) {
 
 @Preview
 @Composable
-fun ModuleLayoutPreview() {
+private fun ModuleLayoutPreview() {
     AppTheme(true) {
         ModuleLayout(modifier = Modifier, module = Module())
     }
@@ -525,7 +525,7 @@ fun ModuleLayoutPreview() {
 
 @Preview
 @Composable
-fun ButtonBarPreview() {
+private fun ButtonBarPreview() {
     AppTheme(true) {
         ButtonBar(
             modifier = Modifier,

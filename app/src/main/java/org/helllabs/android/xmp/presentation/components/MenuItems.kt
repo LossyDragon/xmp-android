@@ -49,7 +49,7 @@ fun DeleteMenu(
 
 @Preview
 @Composable
-fun MenuAppBarPreview() {
+private fun MenuAppBarPreview() {
     AppTheme(false) {
         AppBar(
             title = stringResource(id = R.string.app_name),
@@ -60,7 +60,7 @@ fun MenuAppBarPreview() {
 
 @Preview
 @Composable
-fun MenuAppBarPreviewDark() {
+private fun MenuAppBarPreviewDark() {
     AppTheme(true) {
         AppBar(
             title = stringResource(id = R.string.app_name),
@@ -71,7 +71,7 @@ fun MenuAppBarPreviewDark() {
 
 @Preview
 @Composable
-fun HistoryMenuPreview() {
+private fun HistoryMenuPreview() {
     AppTheme(false) {
         AppBar(
             title = stringResource(id = R.string.app_name),
@@ -82,7 +82,7 @@ fun HistoryMenuPreview() {
 
 @Preview
 @Composable
-fun HistoryMenuPreviewDark() {
+private fun HistoryMenuPreviewDark() {
     AppTheme(true) {
         AppBar(
             title = stringResource(id = R.string.app_name),

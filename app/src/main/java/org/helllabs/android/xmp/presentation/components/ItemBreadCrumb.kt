@@ -53,7 +53,7 @@ fun ItemBreadCrumb(
 
 @Preview
 @Composable
-fun ItemBreadCrumbPreview() {
+private fun ItemBreadCrumbPreview() {
     AppTheme(false) {
         ItemBreadCrumb(
             crumb = "Some Bread Crumb",
@@ -65,7 +65,7 @@ fun ItemBreadCrumbPreview() {
 
 @Preview
 @Composable
-fun ItemBreadCrumbPreviewDark() {
+private fun ItemBreadCrumbPreviewDark() {
     AppTheme(true) {
         ItemBreadCrumb(
             crumb = "Some Bread Crumb",

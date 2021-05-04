@@ -103,7 +103,7 @@ fun AppBarText(
 
 @Preview
 @Composable
-fun AppBarPreview() {
+private fun AppBarPreview() {
     AppTheme(false) {
         AppBar(
             title = stringResource(id = R.string.app_name),
@@ -114,7 +114,7 @@ fun AppBarPreview() {
 
 @Preview
 @Composable
-fun AppBarPreviewDark() {
+private fun AppBarPreviewDark() {
     AppTheme(true) {
         AppBar(
             annotatedTitle = themedText(R.string.app_name),

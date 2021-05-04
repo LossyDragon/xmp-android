@@ -78,7 +78,7 @@ fun LayoutControls(
 
 @Preview
 @Composable
-fun LayoutControlsPreview() {
+private fun LayoutControlsPreview() {
     AppTheme(false) {
         LayoutControls(
             onPlay = {},
@@ -92,7 +92,7 @@ fun LayoutControlsPreview() {
 
 @Preview
 @Composable
-fun LayoutControlsPreviewDark() {
+private fun LayoutControlsPreviewDark() {
     AppTheme(true) {
         LayoutControls(
             onPlay = {},

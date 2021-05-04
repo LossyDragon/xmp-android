@@ -76,7 +76,7 @@ class SearchError : ComponentActivity() {
 }
 
 @Composable
-fun ErrorLayout(
+private fun ErrorLayout(
     isDarkTheme: Boolean = systemDarkTheme(),
     appTitle: String,
     onBack: () -> Unit,
@@ -99,7 +99,7 @@ fun ErrorLayout(
 }
 
 @Composable
-fun GuruFrame(message: String) {
+private fun GuruFrame(message: String) {
     val scope = rememberCoroutineScope()
     var frameState by remember { mutableStateOf(true) }
 
@@ -135,7 +135,7 @@ fun GuruFrame(message: String) {
 
 @Preview
 @Composable
-fun ErrorLayoutPreview() {
+private fun ErrorLayoutPreview() {
     ErrorLayout(
         isDarkTheme = false,
         appTitle = stringResource(id = R.string.search_title_error),
@@ -146,7 +146,7 @@ fun ErrorLayoutPreview() {
 
 @Preview
 @Composable
-fun ErrorLayoutPreviewDark() {
+private fun ErrorLayoutPreviewDark() {
     ErrorLayout(
         isDarkTheme = true,
         appTitle = stringResource(id = R.string.search_title_error),

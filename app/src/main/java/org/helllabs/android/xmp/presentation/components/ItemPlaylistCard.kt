@@ -81,7 +81,7 @@ fun ItemPlaylistCard(
 
 @Preview
 @Composable
-fun ItemPlaylistCardPreview() {
+private fun ItemPlaylistCardPreview() {
     AppTheme(false) {
         ItemPlaylistCard(
             playlist = PlaylistItem(
@@ -97,7 +97,7 @@ fun ItemPlaylistCardPreview() {
 
 @Preview
 @Composable
-fun ItemPlaylistCardPreviewDark() {
+private fun ItemPlaylistCardPreviewDark() {
     AppTheme(true) {
         ItemPlaylistCard(
             playlist = PlaylistItem(

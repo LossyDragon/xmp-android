@@ -50,7 +50,7 @@ class About : ComponentActivity() {
 }
 
 @Composable
-fun AboutLayout(
+private fun AboutLayout(
     isDarkTheme: Boolean = systemDarkTheme(),
     onBack: () -> Unit,
     appVersion: String,
@@ -95,7 +95,7 @@ fun AboutLayout(
 }
 
 @Composable
-fun AboutText(string: String, textAlign: TextAlign = TextAlign.Center) {
+private fun AboutText(string: String, textAlign: TextAlign = TextAlign.Center) {
     Text(
         modifier = Modifier
             .fillMaxWidth()
@@ -111,7 +111,7 @@ fun AboutText(string: String, textAlign: TextAlign = TextAlign.Center) {
 
 @Preview
 @Composable
-fun AboutLayoutPreview() {
+private fun AboutLayoutPreview() {
     AboutLayout(
         isDarkTheme = false,
         onBack = { },
@@ -122,7 +122,7 @@ fun AboutLayoutPreview() {
 
 @Preview
 @Composable
-fun AboutLayoutPreviewDark() {
+private fun AboutLayoutPreviewDark() {
     AboutLayout(
         isDarkTheme = true,
         onBack = { },

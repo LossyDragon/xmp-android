@@ -80,7 +80,7 @@ class SearchListResult : ComponentActivity() {
 }
 
 @Composable
-fun SearchLayout(
+private fun SearchLayout(
     isDarkTheme: Boolean = systemDarkTheme(),
     appTitle: String,
     onBack: () -> Unit,
