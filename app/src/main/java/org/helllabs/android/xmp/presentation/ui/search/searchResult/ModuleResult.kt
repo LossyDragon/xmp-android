@@ -42,10 +42,12 @@ import org.helllabs.android.xmp.PrefManager
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.model.Module
+import org.helllabs.android.xmp.model.ModuleResult
+import org.helllabs.android.xmp.model.Sponsor
 import org.helllabs.android.xmp.presentation.components.AppBar
 import org.helllabs.android.xmp.presentation.components.DeleteMenu
-import org.helllabs.android.xmp.presentation.components.Snackbar
 import org.helllabs.android.xmp.presentation.components.ErrorLayout
+import org.helllabs.android.xmp.presentation.components.Snackbar
 import org.helllabs.android.xmp.presentation.theme.AppTheme
 import org.helllabs.android.xmp.presentation.theme.sectionBackground
 import org.helllabs.android.xmp.presentation.ui.player.PlayerActivity
@@ -216,7 +218,7 @@ private fun ModuleResultScreen(
         isDarkTheme = isDarkTheme,
         onlyStyleStatusBar = true,
     ) {
-        var module by remember { mutableStateOf<Module?>(null) }
+        var moduleResult by remember { mutableStateOf<ModuleResult?>(null) }
         var moduleExists by rememberSaveable { mutableStateOf(false) }
         val scaffoldState = rememberScaffoldState()
         Scaffold(
@@ -224,7 +226,9 @@ private fun ModuleResultScreen(
                 AppBar(
                     title = stringResource(id = appTitle),
                     navIconClick = { onBack() },
-                    menuActions = { if (moduleExists) DeleteMenu({ onDelete(module!!) }) },
+                    menuActions = {
+                        if (moduleExists) DeleteMenu({ onDelete(moduleResult!!.module!!) })
+                    },
                 )
             },
             scaffoldState = scaffoldState,
@@ -275,7 +279,7 @@ private fun ModuleResultScreen(
                 }
                 is ModuleState.SearchResult -> {
                     isLoading = false
-                    module = state.result.module!!
+                    moduleResult = state.result
                 }
                 is ModuleState.SoftError -> {
                     context.logW(state.softError)
@@ -311,7 +315,7 @@ private fun ModuleResultScreen(
                         start.linkTo(parent.start)
                         end.linkTo(parent.end)
                     },
-                    module = module,
+                    moduleResult = moduleResult,
                 )
 
                 Snackbar(
@@ -325,9 +329,9 @@ private fun ModuleResultScreen(
                     }
                 )
 
-                moduleExists = FileUtils.localFile(module)?.exists() ?: false
+                moduleExists = FileUtils.localFile(moduleResult?.module)?.exists() ?: false
                 val isUnSupported =
-                    listOf(*ModArchiveConstants.UNSUPPORTED).contains(module?.format)
+                    listOf(*ModArchiveConstants.UNSUPPORTED).contains(moduleResult?.module?.format)
                 if (!isLoading) {
                     context.logD("State: isLoading: $isLoading for Buttons")
                     buttonText =
@@ -350,7 +354,7 @@ private fun ModuleResultScreen(
                     isLoading = isLoading,
                     isUnsupported = isUnSupported,
                     onPlay = {
-                        onPlay(module!!)
+                        onPlay(moduleResult!!.module!!)
                     },
                     onRandom = {
                         onRandom()
@@ -404,11 +408,12 @@ private fun ButtonBar(
 @Composable
 private fun ModuleLayout(
     modifier: Modifier,
-    module: Module?,
+    moduleResult: ModuleResult?,
 ) {
-    if (module == null)
+    if (moduleResult == null)
         return
 
+    val module = moduleResult.module!!
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
     var moduleFile by rememberSaveable { mutableStateOf(module.filename) }
@@ -493,6 +498,26 @@ private fun ModuleLayout(
         // Instruments Content
         MonoSpaceText(text = module.parseInstruments())
         Spacer(modifier = Modifier.height(10.dp))
+        // Sponsor
+        if (moduleResult.hasSponsor()) {
+            val sponsor = moduleResult.sponsor!!.details!!
+            val sponsorLink = annotatedLink(sponsor.text!!, sponsor.link!!)
+            HeaderText(stringResource(id = R.string.text_sponsor))
+            Spacer(modifier = Modifier.height(10.dp))
+            // Sponsor Content
+            ClickableText(
+                text = sponsorLink,
+                style = TextStyle(fontSize = 16.sp),
+                onClick = {
+                    sponsorLink
+                        .getStringAnnotations("URL", it, it)
+                        .firstOrNull()?.let { stringAnnotation ->
+                            uriHandler.openUri(stringAnnotation.item)
+                        }
+                }
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+        }
     }
 }
 
@@ -519,7 +544,7 @@ private fun MonoSpaceText(text: String) {
 @Composable
 private fun ModuleLayoutPreview() {
     AppTheme(true) {
-        ModuleLayout(modifier = Modifier, module = Module())
+        ModuleLayout(modifier = Modifier, moduleResult = ModuleResult(sponsor = Sponsor()))
     }
 }
 

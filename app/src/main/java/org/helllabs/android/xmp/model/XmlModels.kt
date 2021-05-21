@@ -34,6 +34,10 @@ data class ModuleResult(
             "totalpages=$totalpages, " + "module=$module" +
             ")"
     }
+
+    fun hasSponsor(): Boolean {
+        return sponsor?.details != null && !sponsor!!.details!!.text.isNullOrEmpty()
+    }
 }
 
 @Xml(name = "modarchive")
@@ -91,19 +95,24 @@ data class SearchListResult(
  */
 @Xml(name = "sponsor")
 data class Sponsor(
+    @Element
+    var details: SponsorDetails? = null
+)
+
+@Xml(name = "details")
+data class SponsorDetails(
     @PropertyElement
-    var advert: String? = null, // Unknown property
+    var link: String? = null,
+
+    @PropertyElement
+    var image: String? = null,
 
     @PropertyElement
     var text: String? = null,
 
     @PropertyElement
-    var link: String? = null
-) {
-    // fun hasSponsor(): Boolean {
-    //     return !text.isNullOrEmpty() && !link.isNullOrEmpty()
-    // }
-}
+    var imagehtml: String? = null
+)
 
 @Xml(name = "module")
 data class Module(

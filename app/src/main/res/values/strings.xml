@@ -333,6 +333,7 @@
     <string name="size_kb">%d KB</string>
     <string name="text_instruments">Instruments</string>
     <string name="text_license">License</string>
+    <string name="text_sponsor">Sponsor</string>
     <string name="text_song_message">Song Message</string>
     <string name="title_delete_file">Delete File</string>
     <string name="title_edit_playlist">Edit playlist</string>
