@@ -245,7 +245,7 @@ class PlaylistMenu : ComponentActivity() {
 
     @RequiresApi(Build.VERSION_CODES.R)
     private fun askForApi30Permissions() {
-        //https://support.google.com/googleplay/android-developer/answer/10467955
+        // https://support.google.com/googleplay/android-developer/answer/10467955
         // XMP-Android may fall under the category "Document management apps" or "Exceptions"
         // IMPORTANT: This needs to be approved by google for Play Store submission.
         yesNoDialog(

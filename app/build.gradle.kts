@@ -19,7 +19,7 @@ android {
         minSdk = 21
         targetSdk = 30
 
-        versionCode = 92
+        versionCode = 94
         versionName = "4.15.0"
 
         externalNativeBuild.ndkBuild {
@@ -31,12 +31,13 @@ android {
         val apiKey = project.property("modArchiveApiKey")
         buildConfigField("String", "API_KEY", apiKey as String)
 
+        // TODO: Yay, it broke
         // Pretty print compiled apk with: release type, version name, version code, and date.
-        applicationVariants.all {
-            outputs.forEach { output ->
+        androidComponents.onVariants { variant ->
+            variant.outputs.forEach { output ->
                 if (output is com.android.build.gradle.internal.api.BaseVariantOutputImpl) {
                     val date = SimpleDateFormat("YYYYMMdd").format(Date())
-                    val type = buildType.name
+                    val type = variant.buildType
                     output.outputFileName = "xmp-$type-$versionName-$versionCode-$date.apk"
                 }
             }
@@ -55,14 +56,14 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 
     // Hush: ExperimentalCoroutinesApi
     // Hush: ExperimentalFoundationApi
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "11"
         useIR = true
         freeCompilerArgs = listOf(
             "-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi",
@@ -96,11 +97,11 @@ dependencies {
     implementation("androidx.compose.runtime:runtime-livedata:$composeVersion")
     implementation("androidx.compose.ui:ui-tooling:$composeVersion")
     implementation("androidx.compose.ui:ui:$composeVersion")
-    implementation("androidx.activity:activity-compose:1.3.0-alpha07")
-    implementation("androidx.constraintlayout:constraintlayout-compose:1.0.0-alpha05")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:1.0.0-alpha04")
+    implementation("androidx.activity:activity-compose:1.3.0-alpha08")
+    implementation("androidx.constraintlayout:constraintlayout-compose:1.0.0-alpha07")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:1.0.0-alpha05")
 
-    val accompanist = "0.7.1"
+    val accompanist = "0.10.0"
     implementation("com.google.accompanist:accompanist-insets:$accompanist")
     implementation("com.google.accompanist:accompanist-systemuicontroller:$accompanist")
 
@@ -108,7 +109,7 @@ dependencies {
      * Android Support Libs *
      ************************/
     implementation("androidx.preference:preference-ktx:1.1.1")
-    implementation("androidx.media:media:1.3.0")
+    implementation("androidx.media:media:1.3.1")
 
     /*************************
      * AIDL-like replacement *
@@ -119,14 +120,13 @@ dependencies {
      * Dep Injection *
      *****************/
     val hiltVersion = Dependencies.hiltAndroid
-    implementation("androidx.hilt:hilt-lifecycle-viewmodel:1.0.0-alpha03")
     implementation("com.google.dagger:hilt-android:$hiltVersion")
     kapt("com.google.dagger:hilt-compiler:$hiltVersion")
 
     /**************
      * Coroutines *
      **************/
-    val coroutines = "1.4.3"
+    val coroutines = "1.5.0"
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines")
 
@@ -135,7 +135,7 @@ dependencies {
      *******************/
     implementation("androidx.tonyodev.fetch2:xfetch2:3.1.6")
     implementation("androidx.tonyodev.fetch2okhttp:xfetch2okhttp:3.1.6")
-    implementation("com.squareup.okhttp3:okhttp:4.9.0")
+    implementation("com.squareup.okhttp3:okhttp:4.9.1")
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
 
     /************************
@@ -149,7 +149,7 @@ dependencies {
     /****************
      * JSON Adapter *
      ****************/
-    implementation("com.squareup.moshi:moshi-kotlin:1.11.0")
+    implementation("com.squareup.moshi:moshi-kotlin:1.12.0")
 
     /***********
      * Dialogs *
@@ -183,14 +183,14 @@ tasks {
 
     val fetchXmp by registering(Exec::class) {
         val args = "rm -rf libxmp && git clone https://github.com/libxmp/libxmp.git && exit"
-        workingDir = File("../app/src/main/cpp")
+        workingDir(File("../app/src/main/cpp"))
         commandLine("bash", "-c", args)
     }
 
     val buildXmp by registering(Exec::class) {
         val args = "autoconf && ./configure && make && make check && " +
             "(cd test-dev; autoconf && ./configure && make) && exit"
-        workingDir = File("../app/src/main/cpp/libxmp")
+        workingDir(File("../app/src/main/cpp/libxmp"))
         commandLine("bash", "-c", args)
     }
 

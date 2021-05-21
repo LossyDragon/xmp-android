@@ -6,7 +6,6 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.darkColors
 import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
@@ -15,8 +14,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import com.google.accompanist.insets.ExperimentalAnimatedInsets
 import com.google.accompanist.insets.ProvideWindowInsets
-import com.google.accompanist.systemuicontroller.LocalSystemUiController
-import com.google.accompanist.systemuicontroller.rememberAndroidSystemUiController
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import org.helllabs.android.xmp.PrefManager
 
 private val LightThemeColors = lightColors(
@@ -67,31 +65,29 @@ fun AppTheme(
         typography = Typography,
         shapes = AppShapes,
         content = {
-            val controller = rememberAndroidSystemUiController()
-            CompositionLocalProvider(LocalSystemUiController provides controller) {
-                ProvideWindowInsets(windowInsetsAnimationsEnabled = true) {
-                    val systemUiController = LocalSystemUiController.current
-                    val useDarkIcons = MaterialTheme.colors.isLight
-                    val backgroundColor = MaterialTheme.colors.background.copy(alpha = .75f)
-                    SideEffect {
-                        if (onlyStyleStatusBar) {
-                            with(systemUiController) {
-                                setStatusBarColor(
-                                    color = backgroundColor,
-                                    darkIcons = useDarkIcons
-                                )
-                                setNavigationBarColor(color = sectionBackgroundDark)
-                            }
-                        } else {
-                            systemUiController.setSystemBarsColor(
-                                color = backgroundColor,
-                                darkIcons = useDarkIcons
-                            )
-                        }
-                    }
+            val systemUiController = rememberSystemUiController()
+            val useDarkIcons = MaterialTheme.colors.isLight
+            val backgroundColor = MaterialTheme.colors.background.copy(alpha = .75f)
 
-                    content()
+            SideEffect {
+                if (onlyStyleStatusBar) {
+                    with(systemUiController) {
+                        setStatusBarColor(
+                            color = backgroundColor,
+                            darkIcons = useDarkIcons
+                        )
+                        setNavigationBarColor(color = sectionBackgroundDark)
+                    }
+                } else {
+                    systemUiController.setSystemBarsColor(
+                        color = backgroundColor,
+                        darkIcons = useDarkIcons
+                    )
                 }
+            }
+
+            ProvideWindowInsets(windowInsetsAnimationsEnabled = true) {
+                content()
             }
         },
     )

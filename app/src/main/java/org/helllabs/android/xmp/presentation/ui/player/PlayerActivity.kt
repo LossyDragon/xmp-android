@@ -746,7 +746,7 @@ class PlayerActivity : ComponentActivity() {
     }
 }
 
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterialApi::class) // BottomSheetScaffold
 @Composable
 private fun PlayerLayout(
     @ColorRes background: Int,
