@@ -2,6 +2,4 @@
 <resources>
     <color name="compatColor">@color/white</color>
 
-    <!-- mimics MaterialTheme style -->
-    <color name="playerScreenBackground">#121212</color>
 </resources>

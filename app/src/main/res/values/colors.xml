@@ -13,5 +13,8 @@
 
     <!--<color name="gray">#FF282828</color>-->
     <color name="lightgray">#FFc0c0c0</color>
+
+    <!-- mimics MaterialTheme style -->
     <color name="playerScreenBackground">@color/white</color>
+    <color name="playerScreenBackgroundDark">#121212</color>
 </resources>

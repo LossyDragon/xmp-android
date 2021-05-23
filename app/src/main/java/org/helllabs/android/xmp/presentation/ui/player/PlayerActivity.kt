@@ -230,7 +230,23 @@ class PlayerActivity : ComponentActivity() {
         )
 
         // Get the background color of the activity.
-        val color: Int = resources.color(R.color.playerScreenBackground)
+        val color = resources.color(
+            when (PrefManager.themePref) {
+                "dark" -> {
+                    R.color.playerScreenBackgroundDark
+                }
+                "light" -> {
+                    R.color.playerScreenBackground
+                }
+                else -> {
+                    when (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
+                        Configuration.UI_MODE_NIGHT_NO -> R.color.playerScreenBackground
+                        Configuration.UI_MODE_NIGHT_YES -> R.color.playerScreenBackgroundDark
+                        else -> R.color.playerScreenBackgroundDark // Fallback
+                    }
+                }
+            }
+        )
 
         // Viewer
         instrumentViewer = InstrumentViewer(this, color)
