@@ -5,12 +5,10 @@ import android.view.MenuItem
 import androidx.preference.*
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.lifecycle.lifecycleOwner
-import java.io.File
 import org.helllabs.android.xmp.PrefManager
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.util.logD
-import org.helllabs.android.xmp.util.toast
 
 class PreferencesFragment : PreferenceFragmentCompat() {
 
@@ -32,17 +30,6 @@ class PreferencesFragment : PreferenceFragmentCompat() {
                 }
             }
         )
-
-        findPreference<Preference>("clear_cache")?.let {
-            it.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-                if (deleteCache(activity?.externalCacheDir!!)) {
-                    activity?.toast(R.string.cache_clear)
-                } else {
-                    activity?.toast(R.string.cache_clear_error)
-                }
-                true
-            }
-        }
 
         findPreference<Preference>("reset_media_path")?.let {
             it.onPreferenceClickListener = Preference.OnPreferenceClickListener {
@@ -112,28 +99,5 @@ class PreferencesFragment : PreferenceFragmentCompat() {
         }
 
         return super.onOptionsItemSelected(item)
-    }
-
-    companion object {
-        fun deleteCache(file: File): Boolean = deleteCache(file, true)
-
-        @Suppress("SameParameterValue")
-        private fun deleteCache(file: File, flag: Boolean): Boolean {
-            var booleanFlag = flag
-
-            if (!file.exists()) {
-                return true
-            }
-
-            if (file.isDirectory) {
-                for (cacheFile in file.listFiles()!!) {
-                    booleanFlag = booleanFlag and deleteCache(cacheFile)
-                }
-            }
-
-            booleanFlag = booleanFlag and file.delete()
-
-            return booleanFlag
-        }
     }
 }

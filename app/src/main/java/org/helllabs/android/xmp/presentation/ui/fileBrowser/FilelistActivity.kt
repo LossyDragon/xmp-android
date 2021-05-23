@@ -23,6 +23,7 @@ import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.lifecycle.lifecycleOwner
 import com.afollestad.materialdialogs.list.listItemsSingleChoice
 import com.google.accompanist.insets.navigationBarsPadding
+import java.io.File
 import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.PrefManager
 import org.helllabs.android.xmp.R
@@ -32,14 +33,8 @@ import org.helllabs.android.xmp.presentation.theme.AppTheme
 import org.helllabs.android.xmp.presentation.theme.systemDarkTheme
 import org.helllabs.android.xmp.presentation.ui.BasePlaylistActivity
 import org.helllabs.android.xmp.presentation.utils.playlist.PlaylistUtils
-import org.helllabs.android.xmp.util.FileUtils
+import org.helllabs.android.xmp.util.*
 import org.helllabs.android.xmp.util.FileUtils.basename
-import org.helllabs.android.xmp.util.InfoCache.delete
-import org.helllabs.android.xmp.util.InfoCache.deleteRecursive
-import org.helllabs.android.xmp.util.logD
-import org.helllabs.android.xmp.util.toast
-import org.helllabs.android.xmp.util.yesNoDialog
-import java.io.File
 
 class FilelistActivity : BasePlaylistActivity() {
 
@@ -240,7 +235,7 @@ class FilelistActivity : BasePlaylistActivity() {
                             R.string.dialog_this_file_title_confirm,
                             getString(R.string.dialog_this_file_message, basename(deleteName)),
                             onConfirm = {
-                                if (delete(deleteName)) {
+                                if (FileUtils.delete(file)) {
                                     with(viewModel) {
                                         getDirectoryList(File(currentFile.value))
                                     }
@@ -276,10 +271,6 @@ class FilelistActivity : BasePlaylistActivity() {
                         viewModel.getDirectoryList(File(PrefManager.mediaPath))
                         toast(R.string.msg_default_path_set)
                     }
-                    // Clear cache
-                    4 -> with(viewModel) {
-                        clearCachedEntries(PlaylistUtils.getFilePathList(list))
-                    }
                 }
             }
             positiveButton(R.string.select)
@@ -287,15 +278,15 @@ class FilelistActivity : BasePlaylistActivity() {
     }
 
     private fun deleteDirectory(file: File) {
-        val deleteName = file.name
+        val deletePath = file.path
         val mediaPath = PrefManager.mediaPath
-        if (deleteName.startsWith(mediaPath) && deleteName != mediaPath) {
+        if (deletePath.contains(mediaPath) && deletePath != mediaPath) {
             yesNoDialog(
                 this@FilelistActivity,
                 R.string.dialog_title_delete_dir,
-                getString(R.string.dialog_msg_delete_dir, basename(deleteName)),
+                getString(R.string.dialog_msg_delete_dir, basename(file.name)),
                 onConfirm = {
-                    if (deleteRecursive(deleteName)) {
+                    if (FileUtils.deleteRecursive(deletePath)) {
                         with(viewModel) {
                             getDirectoryList(File(currentFile.value))
                         }

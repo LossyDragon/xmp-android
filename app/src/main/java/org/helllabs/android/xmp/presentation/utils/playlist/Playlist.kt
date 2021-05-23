@@ -5,10 +5,10 @@ import java.util.*
 import org.helllabs.android.xmp.PrefManager
 import org.helllabs.android.xmp.model.PlaylistItem
 import org.helllabs.android.xmp.presentation.ui.preferences.Preferences
+import org.helllabs.android.xmp.util.FileUtils
 import org.helllabs.android.xmp.util.FileUtils.readFromFile
 import org.helllabs.android.xmp.util.FileUtils.removeLineFromFile
 import org.helllabs.android.xmp.util.FileUtils.writeToFile
-import org.helllabs.android.xmp.util.InfoCache.fileExists
 import org.helllabs.android.xmp.util.logE
 import org.helllabs.android.xmp.util.logI
 
@@ -117,7 +117,7 @@ class Playlist(val name: String) {
                 val comment = if (fields.size > 1) fields[1] else ""
                 val title = if (fields.size > 2) fields[2] else ""
 
-                if (fileExists(filename)) {
+                if (FileUtils.fileExists(filename)) {
                     val item = PlaylistItem(PlaylistItem.TYPE_FILE, title, comment)
                     item.file = File(filename)
                     list.add(item)

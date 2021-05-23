@@ -38,7 +38,6 @@
         <item>Recursive add to playlist</item>
         <item>Add to play queue</item>
         <item>Set as default path</item>
-        <item>Clear cache</item>
     </string-array>
 
     <!-- Edit Playlist Dialog -->

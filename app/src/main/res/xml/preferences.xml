@@ -61,11 +61,6 @@
                     android:persistent="true"
                     android:summary="@string/pref_back_button_navigation_summary"
                     android:title="@string/pref_back_button_navigation_title" />
-
-                <Preference
-                    android:key="clear_cache"
-                    android:summary="@string/pref_clear_cache_summary"
-                    android:title="@string/pref_clear_cache_title" />
             </PreferenceCategory>
         </PreferenceScreen>
         <PreferenceScreen

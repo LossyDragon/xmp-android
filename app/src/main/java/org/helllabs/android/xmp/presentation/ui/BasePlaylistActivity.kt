@@ -12,12 +12,7 @@ import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.presentation.ui.player.PlayerActivity
 import org.helllabs.android.xmp.service.PlayerService
-import org.helllabs.android.xmp.util.InfoCache.testModule
-import org.helllabs.android.xmp.util.InfoCache.testModuleForceIfInvalid
-import org.helllabs.android.xmp.util.logD
-import org.helllabs.android.xmp.util.logI
-import org.helllabs.android.xmp.util.logW
-import org.helllabs.android.xmp.util.toast
+import org.helllabs.android.xmp.util.*
 
 abstract class BasePlaylistActivity : ComponentActivity() {
 
@@ -63,7 +58,7 @@ abstract class BasePlaylistActivity : ComponentActivity() {
          * Test module again if invalid, in case a new file format is added to the
          * player library and the file was previously unrecognized and cached as invalid.
          */
-        if (testModuleForceIfInvalid(filePath)) {
+        if (ModuleUtils.testModule(filePath)) {
             when (PrefManager.playlistMode.toInt()) {
                 // Start playing at selection
                 1 -> {
@@ -113,7 +108,7 @@ abstract class BasePlaylistActivity : ComponentActivity() {
     }
 
     protected fun addToQueue(filename: String) {
-        if (testModule(filename)) {
+        if (ModuleUtils.testModule(filename)) {
             if (PlayerService.isPlayerAlive.value == true) {
                 mAddList = ArrayList()
                 mAddList!!.add(filename)
@@ -136,7 +131,7 @@ abstract class BasePlaylistActivity : ComponentActivity() {
         }
 
         list.forEach {
-            if (testModule(it)) {
+            if (ModuleUtils.testModule(it)) {
                 realList.add(it)
             } else {
                 invalid.add(it)

@@ -127,8 +127,6 @@
     <string name="pref_buffer_ms_summary">Sound buffer duration</string>
     <string name="pref_buffer_ms_title">Buffer size</string>
     <string name="pref_buffer_ms_dialog">Set the size of sound buffer in milliseconds:</string>
-    <string name="pref_clear_cache_summary">Clear module information cache</string>
-    <string name="pref_clear_cache_title">Clear cache</string>
     <string name="pref_show_toast_title">Display toasts</string>
     <string name="pref_show_toast_summary">Enable interface help messages</string>
     <string name="pref_show_info_line_title">Replay status</string>
@@ -322,10 +320,8 @@
 
     <!-- Unsorted/New Strings Below -->
     <string name="browser_filelist_title">File browser</string>
-    <string name="cache_clear">File cache cleared</string>
     <string name="browser_playlist_title">Playlist</string>
     <string name="by_artist">by %s</string>
-    <string name="cache_clear_error">Error clearing cache</string>
     <string name="clipboard_copied">Copied to clipboard</string>
     <string name="history_no_items">No items in history.</string>
     <string name="playlist_special_comment">Files in %s</string>

@@ -65,7 +65,6 @@ class Preferences : AppCompatActivity() {
         private val SD_DIR: File = Environment.getExternalStorageDirectory()
 
         val DATA_DIR = File(SD_DIR, "Xmp for Android")
-        val CACHE_DIR = File(SD_DIR, "Android/data/org.helllabs.android.xmp/cache/")
         val DEFAULT_MEDIA_PATH = "$SD_DIR/mod"
 
         fun checkStorage(): Boolean {
