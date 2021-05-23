@@ -10,6 +10,9 @@ import dagger.hilt.android.HiltAndroidApp
 // Someday: Favorites option - Claudio
 // Someday: Simple Player Activity (non Viewers)
 
+// Composable lists broken. Wont draw texts in certain cases
+// Look: https://issuetracker.google.com/issues/188855913
+
 @HiltAndroidApp
 class XmpApplication : Application() {
 

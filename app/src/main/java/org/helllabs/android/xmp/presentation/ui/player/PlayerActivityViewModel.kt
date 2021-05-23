@@ -1,10 +1,14 @@
 package org.helllabs.android.xmp.presentation.ui.player
 
+import android.widget.TextView
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 
 class PlayerActivityViewModel : ViewModel() {
+
+    lateinit var infoName: Array<TextView>
+    lateinit var infoType: Array<TextView>
 
     private val _infoSpeed = MutableLiveData<String>()
     val infoSpeed: LiveData<String> = _infoSpeed

@@ -377,6 +377,8 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
 
     fun isPaused(): Boolean = isPlayerPaused
 
+    fun isLooped(): Boolean = looped
+
     fun setSequence(seq: Int): Boolean {
         val ret = Xmp.setSequence(seq)
         if (ret) {
@@ -391,10 +393,10 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
     }
 
     // File management
-    fun deleteFile(): Boolean {
-        logI("Delete file $currentFileName")
-        return delete(currentFileName!!)
-    }
+//    fun deleteFile(): Boolean {
+//        logI("Delete file $currentFileName")
+//        return delete(currentFileName!!)
+//    }
 
     // Get the Modules name, or the filename if empty or untitled
     fun getModName(): String {

@@ -1,8 +1,8 @@
 package org.helllabs.android.xmp.presentation.ui.player
 
 import android.content.*
+import android.content.Intent
 import android.content.res.Configuration
-import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.os.IBinder
 import android.support.v4.media.session.MediaControllerCompat.TransportControls
@@ -48,10 +48,7 @@ import org.helllabs.android.xmp.presentation.components.PlayerInfo
 import org.helllabs.android.xmp.presentation.components.PlayerTimeBar
 import org.helllabs.android.xmp.presentation.theme.lightGray
 import org.helllabs.android.xmp.presentation.theme.sectionBackground
-import org.helllabs.android.xmp.presentation.ui.player.viewer.ChannelViewer
-import org.helllabs.android.xmp.presentation.ui.player.viewer.InstrumentViewer
-import org.helllabs.android.xmp.presentation.ui.player.viewer.PatternViewer
-import org.helllabs.android.xmp.presentation.ui.player.viewer.Viewer
+import org.helllabs.android.xmp.presentation.ui.player.viewer.*
 import org.helllabs.android.xmp.presentation.ui.playlistMenu.PlaylistMenu
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.service.utils.*
@@ -93,8 +90,6 @@ class PlayerActivity : ComponentActivity() {
     private lateinit var patternViewer: Viewer
 
     private lateinit var viewer: Viewer
-    private lateinit var infoName: Array<TextView>
-    private lateinit var infoType: Array<TextView>
 
     // Update Runnable Loops
     private var oldSpd = -1
@@ -111,19 +106,24 @@ class PlayerActivity : ComponentActivity() {
 
     private val connection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
-            this@PlayerActivity.logI("Service connected")
             val binder = service as PlayerService.PlayerBinder
             modPlayer = binder.getService()
             isBound = true
             flipperPage = 0
+
             if (fileList != null && fileList!!.isNotEmpty()) {
                 // Start new queue
                 playNewMod(fileList!!, start)
-                // checkPlayState()
+                this@PlayerActivity.logD("Service connected: new queue")
             } else {
                 // Reconnect to existing service
                 showNewMod()
-                // checkPlayState()
+                this@PlayerActivity.logD("Service connected: Reconnect")
+            }
+
+            with(viewModel) {
+                setPlaying(!modPlayer.isPaused())
+                setRepeat(modPlayer.isLooped())
             }
         }
 
@@ -178,7 +178,6 @@ class PlayerActivity : ComponentActivity() {
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun pauseEvent(event: PlayStateCallback) {
         logD("pauseCallback")
-        // checkPlayState()
     }
 
     @Suppress("unused", "UNUSED_PARAMETER")
@@ -220,11 +219,11 @@ class PlayerActivity : ComponentActivity() {
         }
         registerReceiver(screenReceiver, filter)
 
-        infoName = arrayOf(
+        viewModel.infoName = arrayOf(
             findViewById(R.id.info_name_0),
             findViewById(R.id.info_name_1)
         )
-        infoType = arrayOf(
+        viewModel.infoType = arrayOf(
             findViewById(R.id.info_type_0),
             findViewById(R.id.info_type_1)
         )
@@ -377,35 +376,6 @@ class PlayerActivity : ComponentActivity() {
         showHex = PrefManager.showInfoLineHex
     }
 
-    // We don't have an action bar, so this is only a phone with a hardware menu button.
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        if (PrefManager.enableDelete) {
-            menuInflater.inflate(R.menu.menu_delete, menu)
-            return true
-        }
-        return super.onCreateOptionsMenu(menu)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == R.id.menu_delete) {
-            yesNoDialog(
-                this,
-                R.string.delete,
-                getString(R.string.msg_delete_file, modPlayer.getModName()),
-                onConfirm = {
-                    if (modPlayer.deleteFile()) {
-                        toast(R.string.msg_file_deleted)
-                        setResult(RESULT_FIRST_USER)
-                        mediaControls.skipToNext()
-                    } else {
-                        toast(R.string.msg_cant_delete)
-                    }
-                }
-            )
-        }
-        return true
-    }
-
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         viewer.setRotation(playerDisplay.rotation)
@@ -413,22 +383,10 @@ class PlayerActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        logI("onNewIntent()")
 
         var reconnect = false
         var fromHistory = false
-        val isPlayerAlive = PlayerService.isPlayerAlive.value // Dumb
-
-        // When running in background and clicked fom notification, it'll restart the list
-        if (isPlayerAlive == true && intent.flags and Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT != 0) {
-            logD("Brought back to front")
-            return
-        }
-
-        // Then brought to background, then foreground, tapping the notification will new task it.
-        if (isPlayerAlive == true && intent.flags and Intent.FLAG_ACTIVITY_NEW_TASK != 0) {
-            logD("New Task")
-            return
-        }
 
         if (intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY != 0) {
             logI("Player started from history")
@@ -473,6 +431,7 @@ class PlayerActivity : ComponentActivity() {
                 XmpApplication.fileList = null
             } else {
                 reconnect = true
+                fileList = null // IDK why
             }
         }
 
@@ -564,8 +523,8 @@ class PlayerActivity : ComponentActivity() {
 
         with(findViewById<ViewFlipper>(R.id.title_flipper)) {
             flipperPage = (flipperPage + 1) % 2
-            infoName[flipperPage].text = modPlayer.getModName()
-            infoType[flipperPage].text = Xmp.getModType()
+            viewModel.infoName[flipperPage].text = modPlayer.getModName()
+            viewModel.infoType[flipperPage].text = Xmp.getModType()
             if (skipToPrevious) {
                 setInAnimation(this@PlayerActivity, R.anim.slide_in_left_slow)
                 setOutAnimation(this@PlayerActivity, R.anim.slide_out_right_slow)

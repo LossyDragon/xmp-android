@@ -37,9 +37,9 @@ import org.helllabs.android.xmp.PrefManager
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.model.PlaylistItem
 import org.helllabs.android.xmp.presentation.components.AppBar
-import org.helllabs.android.xmp.presentation.components.Snackbar
 import org.helllabs.android.xmp.presentation.components.ErrorLayout
 import org.helllabs.android.xmp.presentation.components.LayoutControls
+import org.helllabs.android.xmp.presentation.components.Snackbar
 import org.helllabs.android.xmp.presentation.theme.AppTheme
 import org.helllabs.android.xmp.presentation.ui.BasePlaylistActivity
 import org.helllabs.android.xmp.presentation.utils.internalTextGenerator
