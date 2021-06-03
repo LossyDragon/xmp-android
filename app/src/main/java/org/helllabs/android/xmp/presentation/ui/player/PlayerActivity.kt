@@ -208,7 +208,6 @@ class PlayerActivity : ComponentActivity() {
         }
 
         eventBus.register(this)
-        // sheet = PlayerSheet(this)
 
         // INITIALIZE RECEIVER by jwei512
         screenOn = true

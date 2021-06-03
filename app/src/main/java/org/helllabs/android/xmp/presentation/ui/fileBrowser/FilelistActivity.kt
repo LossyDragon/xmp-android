@@ -371,7 +371,7 @@ private fun FileListLayout(
                 val scope = rememberCoroutineScope()
                 var itemList by remember { mutableStateOf(listOf<PlaylistItem>()) }
                 val currentPath = viewModel.currentFile.value
-                val filelistState = viewModel.listState.collectAsState()
+                val fileListState = viewModel.listState.collectAsState()
 
                 BreadCrumbLayout(
                     modifier = Modifier.constrainAs(crumb) {
@@ -399,7 +399,7 @@ private fun FileListLayout(
                     showScrollAt = 10,
                     shouldPadBottom = false,
                     boxContent = {
-                        when (val state = filelistState.value) {
+                        when (val state = fileListState.value) {
                             FilelistViewModel.FileListState.None -> Unit
                             FilelistViewModel.FileListState.Load -> {
                                 CircularProgressIndicator(

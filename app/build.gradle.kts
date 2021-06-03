@@ -12,7 +12,7 @@ plugins {
 // https://developer.android.com/ndk/downloads
 android {
     compileSdk = 30
-    ndkVersion = "23.0.7196353-beta2"
+    ndkVersion = "23.0.7344513-beta4"
 
     defaultConfig {
         applicationId = "org.helllabs.android.xmp"
@@ -31,14 +31,13 @@ android {
         val apiKey = project.property("modArchiveApiKey")
         buildConfigField("String", "API_KEY", apiKey as String)
 
-        // TODO: Yay, it broke
         // Pretty print compiled apk with: release type, version name, version code, and date.
         androidComponents.onVariants { variant ->
             variant.outputs.forEach { output ->
-                if (output is com.android.build.gradle.internal.api.BaseVariantOutputImpl) {
+                if (output is com.android.build.api.variant.impl.VariantOutputImpl) {
                     val date = SimpleDateFormat("YYYYMMdd").format(Date())
-                    val type = variant.buildType
-                    output.outputFileName = "xmp-$type-$versionName-$versionCode-$date.apk"
+                    val type = output.baseName
+                    output.outputFileName.set("xmp-$type-$versionName-$versionCode-$date.apk")
                 }
             }
         }
@@ -64,7 +63,6 @@ android {
     // Hush: ExperimentalFoundationApi
     kotlinOptions {
         jvmTarget = "11"
-        useIR = true
         freeCompilerArgs = listOf(
             "-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi",
             "-Xopt-in=kotlin.RequiresOptIn"
@@ -97,9 +95,9 @@ dependencies {
     implementation("androidx.compose.runtime:runtime-livedata:$composeVersion")
     implementation("androidx.compose.ui:ui-tooling:$composeVersion")
     implementation("androidx.compose.ui:ui:$composeVersion")
-    implementation("androidx.activity:activity-compose:1.3.0-alpha08")
+    implementation("androidx.activity:activity-compose:1.3.0-beta01")
     implementation("androidx.constraintlayout:constraintlayout-compose:1.0.0-alpha07")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:1.0.0-alpha05")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:1.0.0-alpha06")
 
     val accompanist = "0.10.0"
     implementation("com.google.accompanist:accompanist-insets:$accompanist")

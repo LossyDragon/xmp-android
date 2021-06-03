@@ -1,5 +1,4 @@
 <resources>
-    <color name="section_background">#FF202020</color>
     <color name="primary">#1a305d</color>
     <color name="primary_dark">#801a305d</color>
     <color name="accent">#3460ba</color>
@@ -17,4 +16,6 @@
     <!-- mimics MaterialTheme style -->
     <color name="playerScreenBackground">@color/white</color>
     <color name="playerScreenBackgroundDark">#121212</color>
+
+<!--    <color name="section_background">#FF202020</color>-->
 </resources>

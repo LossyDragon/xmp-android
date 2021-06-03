@@ -83,7 +83,7 @@ fun String?.asHtml(): String {
     }
 }
 
-fun String.upperCase(): String = this.toUpperCase(Locale.getDefault())
+fun String.upperCase(): String = this.uppercase(Locale.getDefault())
 
 /**
  * View helpers

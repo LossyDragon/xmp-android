@@ -32,6 +32,7 @@ app/app.iml
 *~
 *.swp
 
+app/debug/output-metadata.json
 app/release/output-metadata.json
 
 # libxmp

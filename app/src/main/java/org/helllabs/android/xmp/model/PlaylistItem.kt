@@ -34,7 +34,7 @@ class PlaylistItem(
         return if (d1 != null && d2 != null && d1 xor d2) {
             if (d1) -1 else 1
         } else {
-            name.toLowerCase(locale).compareTo(other.name.toLowerCase(locale))
+            name.lowercase(locale).compareTo(other.name.lowercase(locale))
         }
     }
 

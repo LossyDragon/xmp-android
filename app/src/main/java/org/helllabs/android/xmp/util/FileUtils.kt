@@ -194,13 +194,13 @@ object FileUtils {
         return sb.toString()
     }
 
-    fun delete(file: File): Boolean {
-        return file.delete()
-    }
-
     fun fileExists(filename: String): Boolean {
         val file = File(filename)
         return file.isFile
+    }
+
+    fun delete(file: File): Boolean {
+        return file.delete()
     }
 
     fun deleteRecursive(filename: String): Boolean {

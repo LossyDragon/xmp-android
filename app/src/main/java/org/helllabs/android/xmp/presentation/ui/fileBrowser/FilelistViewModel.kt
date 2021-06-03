@@ -108,7 +108,7 @@ class FilelistViewModel : ViewModel() {
             .walkTopDown()
             .filter { it.isFile }
             .map { it.path }
-            .sortedBy { it.toLowerCase(Locale.getDefault()) }
+            .sortedBy { it.lowercase(Locale.getDefault()) }
             .toList()
 
         _listState.value = FileListState.AllFiles
