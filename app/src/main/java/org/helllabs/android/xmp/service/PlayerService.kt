@@ -22,6 +22,7 @@ import kotlinx.coroutines.*
 import org.greenrobot.eventbus.EventBus
 import org.helllabs.android.xmp.PrefManager
 import org.helllabs.android.xmp.Xmp
+import org.helllabs.android.xmp.model.ModInfo
 import org.helllabs.android.xmp.service.Notifier.Companion.TYPE_PAUSE
 import org.helllabs.android.xmp.service.Notifier.Companion.TYPE_TICKER
 import org.helllabs.android.xmp.service.receiver.ControllerReceiver
@@ -531,7 +532,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
 
                 // If this file is unrecognized, and we're going backwards, go to previous
                 // If we're at the start of the list, go to the last recognized file
-                if (currentFileName!!.isEmpty() || !ModuleUtils.testModule(currentFileName!!)) {
+                if (currentFileName!!.isEmpty() || !Xmp.testModule(currentFileName!!, ModInfo())) {
                     logW("$currentFileName: unrecognized format")
                     if (cmd == CMD_PREV) {
                         if (queue!!.index <= 0) {

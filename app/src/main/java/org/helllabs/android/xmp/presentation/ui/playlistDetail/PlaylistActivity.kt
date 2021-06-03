@@ -18,7 +18,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -42,7 +41,6 @@ import org.helllabs.android.xmp.presentation.components.LayoutControls
 import org.helllabs.android.xmp.presentation.components.Snackbar
 import org.helllabs.android.xmp.presentation.theme.AppTheme
 import org.helllabs.android.xmp.presentation.ui.BasePlaylistActivity
-import org.helllabs.android.xmp.presentation.utils.internalTextGenerator
 import org.helllabs.android.xmp.presentation.utils.playlist.Playlist
 import org.helllabs.android.xmp.presentation.utils.playlist.PlaylistUtils
 import org.helllabs.android.xmp.presentation.utils.recyclerview.OnStartDragListener
@@ -196,8 +194,8 @@ private fun PlaylistActivityScreen(
     onPlay: () -> Unit,
     onLoop: (value: Boolean) -> Unit,
     onShuffle: (value: Boolean) -> Unit,
-    mPlaylistAdapter: PlaylistAdapter?, // Only nullable for previewing
-    touchHelper: ItemTouchHelper?, // Only nullable for previewing
+    mPlaylistAdapter: PlaylistAdapter,
+    touchHelper: ItemTouchHelper,
 ) {
     AppTheme(
         isDarkTheme = isDarkTheme,
@@ -251,7 +249,7 @@ private fun PlaylistActivityScreen(
                     Divider()
                 }
 
-                if (mPlaylistAdapter != null && mPlaylistAdapter.currentList.isEmpty()) {
+                if (mPlaylistAdapter.currentList.isEmpty()) {
                     ErrorLayout(stringResource(id = R.string.empty_playlist))
                 }
 
@@ -274,7 +272,7 @@ private fun PlaylistActivityScreen(
                             layoutManager = LinearLayoutManager(context)
                             setHasFixedSize(true)
                         }.also {
-                            touchHelper?.attachToRecyclerView(it)
+                            touchHelper.attachToRecyclerView(it)
                         }
                     },
                 )
@@ -296,7 +294,7 @@ private fun PlaylistActivityScreen(
                             bottom.linkTo(parent.bottom)
                         },
                     onPlay = {
-                        if (mPlaylistAdapter!!.currentList.isEmpty()) {
+                        if (mPlaylistAdapter.currentList.isEmpty()) {
                             scope.launch {
                                 scaffoldState.snackbarHostState.showSnackbar(
                                     message = context.getString(R.string.error_no_files_to_play),
@@ -315,40 +313,4 @@ private fun PlaylistActivityScreen(
             }
         }
     }
-}
-
-@Preview
-@Composable
-private fun PlaylistActivityScreenPreview() {
-    PlaylistActivityScreen(
-        isDarkTheme = false,
-        onBack = {},
-        name = internalTextGenerator(),
-        comment = internalTextGenerator(),
-        isLoop = true,
-        isShuffle = true,
-        onPlay = {},
-        onLoop = {},
-        onShuffle = {},
-        mPlaylistAdapter = null,
-        touchHelper = null,
-    )
-}
-
-@Preview
-@Composable
-private fun PlaylistActivityScreenPreviewDark() {
-    PlaylistActivityScreen(
-        isDarkTheme = true,
-        onBack = {},
-        name = internalTextGenerator(),
-        comment = internalTextGenerator(),
-        isLoop = true,
-        isShuffle = true,
-        onPlay = {},
-        onLoop = {},
-        onShuffle = {},
-        mPlaylistAdapter = null,
-        touchHelper = null,
-    )
 }

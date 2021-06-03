@@ -6,7 +6,7 @@ import java.io.File
 import java.io.IOException
 import java.util.*
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.Xmp.testModule
+import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.model.ModInfo
 import org.helllabs.android.xmp.model.PlaylistItem
 import org.helllabs.android.xmp.presentation.ui.preferences.Preferences
@@ -51,7 +51,7 @@ object PlaylistUtils {
         val modInfo = ModInfo()
         var hasInvalid = false
         for (filename in fileList) {
-            if (testModule(filename, modInfo)) {
+            if (Xmp.testModule(filename, modInfo)) {
                 val item = PlaylistItem(PlaylistItem.TYPE_FILE, modInfo.name, modInfo.type)
                 item.file = File(filename)
                 list.add(item)
