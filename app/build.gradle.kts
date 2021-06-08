@@ -9,10 +9,9 @@ plugins {
     id("org.jlleitschuh.gradle.ktlint")
 }
 
-// https://developer.android.com/ndk/downloads
 android {
     compileSdk = 30
-    ndkVersion = "23.0.7344513-beta4"
+    ndkVersion = Dependencies.androidNdk
 
     defaultConfig {
         applicationId = "org.helllabs.android.xmp"
@@ -87,21 +86,19 @@ dependencies {
     /*******************
      * Jetpack Compose *
      *******************/
-    val composeVersion = Dependencies.composeVersion
-    implementation("androidx.compose.foundation:foundation:$composeVersion")
-    implementation("androidx.compose.material:material-icons-core:$composeVersion")
-    implementation("androidx.compose.material:material-icons-extended:$composeVersion")
-    implementation("androidx.compose.material:material:$composeVersion")
-    implementation("androidx.compose.runtime:runtime-livedata:$composeVersion")
-    implementation("androidx.compose.ui:ui-tooling:$composeVersion")
-    implementation("androidx.compose.ui:ui:$composeVersion")
-    implementation("androidx.activity:activity-compose:1.3.0-beta01")
-    implementation("androidx.constraintlayout:constraintlayout-compose:1.0.0-alpha07")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:1.0.0-alpha06")
+    implementation(Dependencies.Compose.activity)
+    implementation(Dependencies.Compose.constraint)
+    implementation(Dependencies.Compose.foundation)
+    implementation(Dependencies.Compose.iconsCore)
+    implementation(Dependencies.Compose.iconsExt)
+    implementation(Dependencies.Compose.livedata)
+    implementation(Dependencies.Compose.material)
+    implementation(Dependencies.Compose.tooling)
+    implementation(Dependencies.Compose.ui)
+    implementation(Dependencies.Compose.viewmodel)
 
-    val accompanist = "0.10.0"
-    implementation("com.google.accompanist:accompanist-insets:$accompanist")
-    implementation("com.google.accompanist:accompanist-systemuicontroller:$accompanist")
+    implementation(Dependencies.Accompanist.insets)
+    implementation(Dependencies.Accompanist.controller)
 
     /************************
      * Android Support Libs *
@@ -117,16 +114,14 @@ dependencies {
     /*****************
      * Dep Injection *
      *****************/
-    val hiltVersion = Dependencies.hiltAndroid
-    implementation("com.google.dagger:hilt-android:$hiltVersion")
-    kapt("com.google.dagger:hilt-compiler:$hiltVersion")
+    implementation(Dependencies.Hilt.android)
+    kapt(Dependencies.Hilt.compiler)
 
     /**************
      * Coroutines *
      **************/
-    val coroutines = "1.5.0"
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines")
+    implementation(Dependencies.Coroutines.android)
+    implementation(Dependencies.Coroutines.core)
 
     /*******************
      * Http & Download *
@@ -139,10 +134,9 @@ dependencies {
     /************************
      * Retrofit XML Parsing *
      ************************/
-    val tikXml = "0.8.13"
-    implementation("com.tickaroo.tikxml:annotation") { version { strictly(tikXml) } }
-    implementation("com.tickaroo.tikxml:retrofit-converter") { version { strictly(tikXml) } }
-    kapt("com.tickaroo.tikxml:processor") { version { strictly(tikXml) } }
+    implementation(Dependencies.Xml.annotation) { version { strictly(Dependencies.Xml.tikXml) } }
+    implementation(Dependencies.Xml.retrofit) { version { strictly(Dependencies.Xml.tikXml) } }
+    kapt(Dependencies.Xml.processor) { version { strictly(Dependencies.Xml.tikXml) } }
 
     /****************
      * JSON Adapter *
@@ -152,9 +146,8 @@ dependencies {
     /***********
      * Dialogs *
      ***********/
-    val materialDialogs = "3.3.0"
-    implementation("com.afollestad.material-dialogs:core:$materialDialogs")
-    implementation("com.afollestad.material-dialogs:lifecycle:$materialDialogs")
+    implementation(Dependencies.Dialogs.core)
+    implementation(Dependencies.Dialogs.lifecycle)
 
     /**************
      * LeakCanary *

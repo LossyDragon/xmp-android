@@ -276,7 +276,6 @@ private fun PlaylistMenuLayout(
     playlistClick: (index: Int, item: PlaylistItem) -> Unit,
     playlistLongClick: (index: Int, item: PlaylistItem) -> Unit,
 ) {
-
     AppTheme(
         isDarkTheme = isDarkTheme
     ) {
