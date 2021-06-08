@@ -1,9 +1,11 @@
 package org.helllabs.android.xmp.presentation.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.Card
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -24,7 +26,7 @@ import org.helllabs.android.xmp.model.PlaylistItem.Companion.TYPE_PLAYLIST
 import org.helllabs.android.xmp.model.PlaylistItem.Companion.TYPE_SPECIAL
 import org.helllabs.android.xmp.presentation.theme.AppTheme
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
 @Composable
 fun ItemPlaylistCard(
     playlist: PlaylistItem,
@@ -38,13 +40,14 @@ fun ItemPlaylistCard(
         else -> throw IllegalArgumentException("Card should only use Type Special or Playlist!")
     }
 
-    Card(
+    CardClickable(
         shape = MaterialTheme.shapes.medium,
         modifier = Modifier
             .padding(6.dp)
-            .fillMaxWidth()
-            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
+            .fillMaxWidth(),
         elevation = 4.dp,
+        onClick = { onClick() },
+        onLongClick = { onLongClick() }
     ) {
         Row(
             modifier = Modifier.padding(top = 8.dp, bottom = 8.dp, end = 12.dp),
