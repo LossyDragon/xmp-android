@@ -123,10 +123,10 @@ class PlaylistAdapter(
         fun onBind(item: PlaylistItem) = with(binder) {
             playlistItem = item
             root.click {
-                onClick?.invoke(adapterPosition)
+                onClick?.invoke(absoluteAdapterPosition)
             }
             root.longClick {
-                onLongClick?.invoke(adapterPosition)
+                onLongClick?.invoke(absoluteAdapterPosition)
                 true
             }
             executePendingBindings()
@@ -156,10 +156,10 @@ class PlaylistAdapter(
                 }
             }
             root.click {
-                onClick?.invoke(adapterPosition)
+                onClick?.invoke(absoluteAdapterPosition)
             }
             root.longClick {
-                onLongClick?.invoke(adapterPosition)
+                onLongClick?.invoke(absoluteAdapterPosition)
                 true
             }
             executePendingBindings()

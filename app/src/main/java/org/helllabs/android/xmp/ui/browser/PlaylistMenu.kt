@@ -9,6 +9,7 @@ import android.text.SpannableString
 import android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
 import android.text.style.ForegroundColorSpan
 import android.view.*
+import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -35,6 +36,20 @@ class PlaylistMenu : AppCompatActivity() {
 
     private lateinit var playlistAdapter: PlaylistAdapter
     private lateinit var mediaPath: String
+
+    private var resultAdd = registerForActivityResult(StartActivityForResult()) {
+        if (it.resultCode == RESULT_OK)
+            addPlaylist(it.data)
+    }
+
+    private var resultEdit = registerForActivityResult(StartActivityForResult()) {
+        if (it.resultCode == RESULT_OK)
+            editPlaylist(it.data)
+    }
+
+    private var resultUpdate = registerForActivityResult(StartActivityForResult()) {
+        updateList()
+    }
 
     private lateinit var binder: ActivityPlaylistMenuBinding
 
@@ -90,8 +105,7 @@ class PlaylistMenu : AppCompatActivity() {
 
         // FAB
         binder.fab.click {
-            val intent = Intent(this, PlaylistAddEdit::class.java)
-            startActivityForResult(intent, MOD_ADD_REQUEST)
+            resultAdd.launch(Intent(this, PlaylistAddEdit::class.java))
         }
 
         if (!Preferences.checkStorage()) {
@@ -132,17 +146,6 @@ class PlaylistMenu : AppCompatActivity() {
         updateList()
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (resultCode == RESULT_OK) {
-            when (requestCode) {
-                SETTINGS_REQUEST, PLAYLIST_REQUEST -> updateList()
-                MOD_ADD_REQUEST -> addPlaylist(data)
-                MOD_EDIT_REQUEST -> editPlaylist(data)
-            }
-        }
-    }
-
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<String>,
@@ -170,8 +173,7 @@ class PlaylistMenu : AppCompatActivity() {
         when (item.itemId) {
             android.R.id.home -> startPlayerActivity()
             R.id.menu_prefs -> {
-                val intent = Intent(this, Preferences::class.java)
-                startActivityForResult(intent, SETTINGS_REQUEST)
+                resultUpdate.launch(Intent(this, Preferences::class.java))
             }
             R.id.menu_download -> {
                 val intent = Intent(this, Search::class.java)
@@ -197,7 +199,7 @@ class PlaylistMenu : AppCompatActivity() {
             intent = Intent(this@PlaylistMenu, PlaylistActivity::class.java)
             intent.putExtra("name", playlistAdapter.currentList[position].name)
         }
-        startActivityForResult(intent, PLAYLIST_REQUEST)
+        resultUpdate.launch(intent)
     }
 
     private fun onLongClick(position: Int) {
@@ -211,7 +213,7 @@ class PlaylistMenu : AppCompatActivity() {
                 putExtra(PlaylistAddEdit.EXTRA_COMMENT, playlist.comment)
                 putExtra(PlaylistAddEdit.EXTRA_TYPE, playlist.type)
             }
-            startActivityForResult(intent, MOD_EDIT_REQUEST)
+            resultEdit.launch(intent)
         }
     }
 
@@ -330,10 +332,6 @@ class PlaylistMenu : AppCompatActivity() {
     }
 
     companion object {
-        private const val MOD_ADD_REQUEST = 1
-        private const val MOD_EDIT_REQUEST = 2
-        private const val SETTINGS_REQUEST = 45
-        private const val PLAYLIST_REQUEST = 46
         private const val REQUEST_WRITE_STORAGE = 112
     }
 }

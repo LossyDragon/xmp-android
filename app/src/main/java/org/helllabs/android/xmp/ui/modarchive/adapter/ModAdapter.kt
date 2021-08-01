@@ -30,7 +30,7 @@ class ModAdapter<T : Any, VB : ViewDataBinding>(
             )
         ).apply {
             binder.root.click {
-                onClick.invoke(getItem(adapterPosition))
+                onClick.invoke(getItem(absoluteAdapterPosition))
             }
         }
     }

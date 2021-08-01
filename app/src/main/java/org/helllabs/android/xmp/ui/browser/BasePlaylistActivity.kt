@@ -8,6 +8,7 @@ import android.os.IBinder
 import android.view.Menu
 import android.view.MenuItem
 import android.view.MotionEvent
+import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -28,8 +29,12 @@ import org.helllabs.android.xmp.util.InfoCache.testModuleForceIfInvalid
 abstract class BasePlaylistActivity : AppCompatActivity() {
 
     private lateinit var mModPlayer: PlayerService
-    private var mShowToasts = false
     private var mAddList: MutableList<String>? = null
+
+    private val requestPlay = registerForActivityResult(StartActivityForResult()) {
+        if (it.resultCode != RESULT_OK)
+            update()
+    }
 
     protected lateinit var mPlaylistAdapter: PlaylistAdapter
     protected abstract var isShuffleMode: Boolean
@@ -58,8 +63,6 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
 
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        mShowToasts = PrefManager.showToast
     }
 
     // Let the menu's inflate after the layout's inflated.
@@ -73,15 +76,6 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     public override fun onResume() {
         super.onResume()
         update()
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        logI("Activity result $requestCode,$resultCode")
-        when (requestCode) {
-            SETTINGS_REQUEST -> mShowToasts = PrefManager.showToast
-            PLAY_MOD_REQUEST -> if (resultCode != RESULT_OK) update()
-        }
     }
 
     // Menu
@@ -102,8 +96,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
                 return true
             }
             R.id.menu_prefs -> {
-                val intent = Intent(this, Preferences::class.java)
-                startActivityForResult(intent, SETTINGS_REQUEST)
+                startActivity(Intent(this, Preferences::class.java))
             }
             R.id.menu_download -> {
                 val intent = Intent(this, Search::class.java)
@@ -175,7 +168,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
             click {
                 isLoopMode = !isLoopMode
                 setImageResource(loopIcon)
-                if (mShowToasts)
+                if (PrefManager.showToast)
                     toast(if (isLoopMode) R.string.msg_loop_on else R.string.msg_loop_off)
             }
         }
@@ -184,7 +177,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
             click {
                 isShuffleMode = !isShuffleMode
                 setImageResource(shuffleIcon)
-                if (mShowToasts)
+                if (PrefManager.showToast)
                     toast(if (isShuffleMode) R.string.msg_shuffle_on else R.string.msg_shuffle_off)
             }
         }
@@ -214,7 +207,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         }
 
         logI("Start Player activity")
-        startActivityForResult(intent, PLAY_MOD_REQUEST)
+        requestPlay.launch(intent)
     }
 
     protected fun addToQueue(filename: String) {
@@ -262,10 +255,5 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
                 playModule(realList)
             }
         }
-    }
-
-    companion object {
-        private const val SETTINGS_REQUEST = 45
-        private const val PLAY_MOD_REQUEST = 669
     }
 }
