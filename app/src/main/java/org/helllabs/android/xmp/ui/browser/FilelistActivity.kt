@@ -1,5 +1,6 @@
 package org.helllabs.android.xmp.ui.browser
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.*
 import androidx.activity.viewModels
@@ -138,7 +139,7 @@ class FilelistActivity : BasePlaylistActivity() {
                         FastScrollItemIndicator.Icon(R.drawable.ic_folder)
                     } else {
                         FastScrollItemIndicator.Text(
-                            item?.filename?.substring(0, 1)?.toUpperCase(Locale.getDefault())
+                            item?.filename?.substring(0, 1)?.uppercase(Locale.getDefault())
                                 ?: "..."
                         )
                     }
@@ -207,6 +208,7 @@ class FilelistActivity : BasePlaylistActivity() {
         }
     }
 
+    @SuppressLint("CheckResult")
     private fun onLongClick(position: Int) {
         val item = mPlaylistAdapter.getFile(position)
         if (item.isDirectory) {
@@ -252,6 +254,7 @@ class FilelistActivity : BasePlaylistActivity() {
         }
     }
 
+    @SuppressLint("CheckResult")
     private fun onPathClick() {
         MaterialDialog(this).show {
             title(R.string.dialog_all_files_title)
@@ -351,6 +354,7 @@ class FilelistActivity : BasePlaylistActivity() {
         }
     }
 
+    @SuppressLint("CheckResult")
     private fun choosePlaylist(fileSelection: Int, choice: PlaylistChoice) {
 
         // Return if no playlists exist

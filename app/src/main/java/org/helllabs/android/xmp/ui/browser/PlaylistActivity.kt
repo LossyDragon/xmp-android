@@ -1,5 +1,6 @@
 package org.helllabs.android.xmp.ui.browser
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
@@ -106,6 +107,7 @@ class PlaylistActivity :
         binder.swipeContainer.isEnabled = isDisabled
     }
 
+    @SuppressLint("CheckResult")
     private fun onItemLongClick(position: Int) {
         MaterialDialog(this).show {
             title(R.string.dialog_playlist_edit_title)

@@ -42,8 +42,6 @@ val isAtLeastN: Boolean
     get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
 val isAtLeastO: Boolean
     get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
-val isLessThanR: Boolean
-    get() = Build.VERSION.SDK_INT < Build.VERSION_CODES.R
 val isAtLeastR: Boolean
     get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
 

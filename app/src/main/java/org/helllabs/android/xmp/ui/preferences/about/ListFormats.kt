@@ -52,7 +52,7 @@ class ListFormats : AppCompatActivity() {
                 { pos ->
                     val item = formatsAdapter.currentList[pos]
                     FastScrollItemIndicator.Text(
-                        item.substring(0, 1).toUpperCase(Locale.getDefault())
+                        item.substring(0, 1).uppercase(Locale.getDefault())
                     )
                 }
             )

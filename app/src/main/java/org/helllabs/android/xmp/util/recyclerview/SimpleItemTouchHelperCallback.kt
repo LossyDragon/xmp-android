@@ -60,7 +60,7 @@ class SimpleItemTouchHelperCallback(
         }
 
         // Notify the adapter of the move
-        return mAdapter.onItemMove(source.adapterPosition, target.adapterPosition)
+        return mAdapter.onItemMove(source.absoluteAdapterPosition, target.absoluteAdapterPosition)
     }
 
     override fun onSwiped(viewHolder: RecyclerView.ViewHolder, i: Int) {

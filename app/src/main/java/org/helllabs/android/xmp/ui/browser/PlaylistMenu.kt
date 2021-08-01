@@ -1,6 +1,7 @@
 package org.helllabs.android.xmp.ui.browser
 
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+import android.annotation.SuppressLint
 import android.content.*
 import android.content.pm.PackageManager
 import android.os.*
@@ -309,6 +310,7 @@ class PlaylistMenu : AppCompatActivity() {
         updateList()
     }
 
+    @SuppressLint("CheckResult")
     private fun changeDir() {
         MaterialDialog(this).show {
             title(R.string.dialog_change_dir_title)

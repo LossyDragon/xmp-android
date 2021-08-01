@@ -39,7 +39,7 @@ class SearchError : AppCompatActivity(), Runnable {
             message = if (message.trim { it <= ' ' }.isEmpty()) {
                 getString(R.string.search_unknown_error)
             } else {
-                val err = message.substring(0, 1).toUpperCase(Locale.US) + message.substring(1)
+                val err = message.substring(0, 1).uppercase(Locale.US) + message.substring(1)
                 getString(R.string.search_known_error, err)
             }
         }

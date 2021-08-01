@@ -35,8 +35,7 @@ interface ItemTouchHelperAdapter {
      * @param toPosition   Then resolved position of the moved item.
      * @return True if the item was moved to the new adapter position.
      *
-     * @see RecyclerView.getAdapterPositionFor
-     * @see RecyclerView.ViewHolder.getAdapterPosition
+     * @see RecyclerView.ViewHolder.getAbsoluteAdapterPosition
      */
     fun onItemMove(fromPosition: Int, toPosition: Int): Boolean
 
