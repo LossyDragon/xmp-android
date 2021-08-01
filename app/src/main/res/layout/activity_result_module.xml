@@ -139,7 +139,8 @@
                         android:textColor="@android:color/tertiary_text_dark"
                         android:textSize="12sp"
                         android:visibility="invisible"
-                        tools:text="sponsor" />
+                        tools:text="sponsor"
+                        tools:visibility="visible" />
 
                 </LinearLayout>
             </ScrollView>

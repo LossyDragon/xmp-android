@@ -212,15 +212,18 @@ class ModuleResult : AppCompatActivity() {
             binder.moduleCommentText.text = module.getComment()
         }
 
-        val sponsor = result.sponsor
-        if (sponsor!!.hasSponsor()) {
-            binder.moduleSponsor.show()
-            binder.moduleSponsor.text = (
-                "Download mirrors provided by <a href=\"" +
-                    sponsor.link + "\">" +
-                    sponsor.text + "</a>"
-                ).asHtml()
-            binder.moduleSponsor.movementMethod = LinkMovementMethod.getInstance()
+        if (result.hasSponsor()) {
+            val sponsor = result.sponsor!!
+            with(binder.moduleSponsor) {
+                isClickable = true
+                movementMethod = LinkMovementMethod.getInstance()
+                text = (
+                    "Download mirrors provided by\n<a href=\"" +
+                        sponsor.details!!.link + "\">" +
+                        sponsor.details!!.text + "</a>"
+                    ).asHtml()
+                show()
+            }
         }
     }
 

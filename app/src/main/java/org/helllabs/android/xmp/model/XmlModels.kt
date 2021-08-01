@@ -1,5 +1,7 @@
 package org.helllabs.android.xmp.model
 
+import android.text.Spanned
+import androidx.core.text.toSpanned
 import com.tickaroo.tikxml.annotation.Element
 import com.tickaroo.tikxml.annotation.Path
 import com.tickaroo.tikxml.annotation.PropertyElement
@@ -33,6 +35,10 @@ data class ModuleResult(
             "sponsor=$sponsor, " + "results=$results, " +
             "totalpages=$totalpages, " + "module=$module" +
             ")"
+    }
+
+    fun hasSponsor(): Boolean {
+        return sponsor?.details != null && !sponsor!!.details!!.text.isNullOrEmpty()
     }
 }
 
@@ -91,19 +97,24 @@ data class SearchListResult(
  */
 @Xml(name = "sponsor")
 data class Sponsor(
+    @Element
+    var details: SponsorDetails? = null
+)
+
+@Xml(name = "details")
+data class SponsorDetails(
     @PropertyElement
-    var advert: String? = null, // Unknown property
+    var link: String? = null,
+
+    @PropertyElement
+    var image: String? = null,
 
     @PropertyElement
     var text: String? = null,
 
     @PropertyElement
-    var link: String? = null
-) {
-    fun hasSponsor(): Boolean {
-        return !text.isNullOrEmpty() && !link.isNullOrEmpty()
-    }
-}
+    var imagehtml: String? = null
+)
 
 @Xml(name = "module")
 data class Module(
@@ -182,11 +193,11 @@ data class Module(
     fun getArtist(): String =
         artistInfo?.artist?.alias ?: artistInfo?.guessed_artist?.alias ?: "unknown"
 
-    fun getSongTitle(): String =
-        if (!songtitle.isNullOrEmpty()) songtitle.asHtml() else "(untitled)"
+    fun getSongTitle(): Spanned =
+        if (!songtitle.isNullOrEmpty()) songtitle.asHtml() else "(untitled)".toSpanned()
 
     @JvmName("getCommentDetails")
-    fun getComment(): String = comment.asHtml()
+    fun getComment(): Spanned = comment.asHtml()
 
     fun parseInstruments(): String {
         val lines = instruments?.split("\n")?.toTypedArray().orEmpty()

@@ -7,6 +7,7 @@ import android.graphics.Canvas
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.text.Html
+import android.text.Spanned
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
@@ -15,6 +16,7 @@ import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.text.toSpanned
 import androidx.recyclerview.widget.RecyclerView
 import org.helllabs.android.xmp.R
 
@@ -78,15 +80,15 @@ inline fun <reified T : Resources> T.color(@ColorRes res: Int): Int {
 /**
  * Format helpers
  */
-fun String?.asHtml(): String {
+fun String?.asHtml(): Spanned {
     if (this.isNullOrEmpty()) {
-        return ""
+        return "".toSpanned()
     }
     return if (isAtLeastN) {
-        Html.fromHtml(this, Html.FROM_HTML_MODE_LEGACY).toString()
+        Html.fromHtml(this, Html.FROM_HTML_MODE_LEGACY)
     } else {
         @Suppress("DEPRECATION")
-        Html.fromHtml(this).toString()
+        Html.fromHtml(this)
     }
 }
 
