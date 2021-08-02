@@ -20,7 +20,6 @@ import java.util.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.databinding.ActivityPlaylistMenuBinding
 import org.helllabs.android.xmp.service.PlayerService
-import org.helllabs.android.xmp.ui.browser.playlist.Playlist
 import org.helllabs.android.xmp.ui.browser.playlist.PlaylistAdapter
 import org.helllabs.android.xmp.ui.browser.playlist.PlaylistAdapter.Companion.LAYOUT_CARD
 import org.helllabs.android.xmp.ui.browser.playlist.PlaylistItem
@@ -109,7 +108,11 @@ class PlaylistMenu : AppCompatActivity() {
         }
 
         if (!Preferences.checkStorage()) {
-            fatalError(getString(R.string.error_storage))
+            dialogMessage(
+                lifecycleOwner = this,
+                message = getString(R.string.error_storage),
+                block = { finish() }
+            )
         }
 
         if (isAtLeastM) {
@@ -133,7 +136,7 @@ class PlaylistMenu : AppCompatActivity() {
         }
 
         // Show Changelog
-        showChangeLog()
+        showChangeLog(this)
 
         if (intent.flags and Intent.FLAG_ACTIVITY_NEW_TASK != 0) {
             startPlayerActivity()
@@ -223,11 +226,17 @@ class PlaylistMenu : AppCompatActivity() {
             if (Preferences.DATA_DIR.mkdirs()) {
                 createEmptyPlaylist(
                     this,
+                    this,
                     getString(R.string.empty_playlist),
                     getString(R.string.empty_comment)
                 )
             } else {
-                fatalError(getString(R.string.error_datadir))
+                dialogMessage(
+                    lifecycleOwner = this,
+                    title = R.string.error,
+                    message = getString(R.string.error_datadir),
+                    block = { finish() }
+                )
             }
         }
     }
@@ -257,7 +266,7 @@ class PlaylistMenu : AppCompatActivity() {
             val item = PlaylistItem(
                 PlaylistItem.TYPE_PLAYLIST,
                 name,
-                Playlist.readComment(this, name)
+                PlaylistUtils.readComment(this, this, name)
             )
             list.add(item)
         }
@@ -274,8 +283,11 @@ class PlaylistMenu : AppCompatActivity() {
 
         val name = data.getStringExtra(PlaylistAddEdit.EXTRA_NAME)!!
         val comment = data.getStringExtra(PlaylistAddEdit.EXTRA_COMMENT)!!
-        if (!createEmptyPlaylist(this, name, comment)) {
-            generalError(getString(R.string.error_create_playlist))
+        if (!createEmptyPlaylist(this, this, name, comment)) {
+            dialogMessage(
+                lifecycleOwner = this,
+                message = getString(R.string.error_create_playlist),
+            )
         }
 
         updateList()
@@ -294,16 +306,22 @@ class PlaylistMenu : AppCompatActivity() {
         val oldName = data.getStringExtra(PlaylistAddEdit.EXTRA_OLD_NAME)
 
         when (id) {
-            PlaylistAddEdit.RESULT_DELETE_PLAYLIST -> Playlist.delete(name)
+            PlaylistAddEdit.RESULT_DELETE_PLAYLIST -> PlaylistUtils.delete(name)
             PlaylistAddEdit.RESULT_EDIT_PLAYLIST -> {
-                if (!Playlist.rename(oldName!!, name)) {
-                    generalError(getString(R.string.error_rename_playlist))
+                if (!PlaylistUtils.rename(oldName!!, name)) {
+                    dialogMessage(
+                        lifecycleOwner = this,
+                        message = getString(R.string.error_rename_playlist),
+                    )
                     return // Don't attempt to edit comment if failed.
                 }
 
-                val file = File(Preferences.DATA_DIR, name + Playlist.COMMENT_SUFFIX)
-                if (!Playlist.editComment(file, comment)) {
-                    generalError(getString(R.string.error_edit_comment))
+                val file = File(Preferences.DATA_DIR, name + PlaylistUtils.COMMENT_SUFFIX)
+                if (!PlaylistUtils.editComment(file, comment)) {
+                    dialogMessage(
+                        lifecycleOwner = this,
+                        message = getString(R.string.error_edit_comment),
+                    )
                 }
             }
             else -> throw IllegalArgumentException("Edit playlist id was not correct: $id")

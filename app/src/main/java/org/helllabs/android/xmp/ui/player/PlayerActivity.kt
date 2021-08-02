@@ -320,8 +320,9 @@ class PlayerActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == R.id.menu_delete) {
             yesNoDialog(
-                getString(R.string.delete),
-                getString(R.string.msg_delete_file, modPlayer.getModName())
+                lifecycleOwner = this,
+                title = getString(R.string.delete),
+                message = getString(R.string.msg_delete_file, modPlayer.getModName())
             ) {
                 if (modPlayer.deleteFile()) {
                     toast(R.string.msg_file_deleted)

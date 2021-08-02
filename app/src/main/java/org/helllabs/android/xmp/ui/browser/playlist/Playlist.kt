@@ -1,42 +1,45 @@
 package org.helllabs.android.xmp.ui.browser.playlist
 
-import android.app.Activity
 import java.io.*
 import java.util.*
-import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.ui.browser.playlist.PlaylistUtils.COMMENT_SUFFIX
+import org.helllabs.android.xmp.ui.browser.playlist.PlaylistUtils.DEFAULT_LOOP_MODE
+import org.helllabs.android.xmp.ui.browser.playlist.PlaylistUtils.DEFAULT_SHUFFLE_MODE
+import org.helllabs.android.xmp.ui.browser.playlist.PlaylistUtils.LOOP_MODE
+import org.helllabs.android.xmp.ui.browser.playlist.PlaylistUtils.PLAYLIST_SUFFIX
+import org.helllabs.android.xmp.ui.browser.playlist.PlaylistUtils.SHUFFLE_MODE
 import org.helllabs.android.xmp.ui.preferences.PrefManager
 import org.helllabs.android.xmp.ui.preferences.Preferences
 import org.helllabs.android.xmp.util.FileUtils.readFromFile
 import org.helllabs.android.xmp.util.FileUtils.removeLineFromFile
 import org.helllabs.android.xmp.util.FileUtils.writeToFile
 import org.helllabs.android.xmp.util.InfoCache.fileExists
-import org.helllabs.android.xmp.util.generalError
 import org.helllabs.android.xmp.util.logE
 import org.helllabs.android.xmp.util.logI
 
 class Playlist(val name: String) {
 
-    var comment: String? = null
     private var mListChanged = false
     private var mCommentChanged = false
+
+    var comment: String = ""
     var isShuffleMode = false
     var isLoopMode = false
-    val list: MutableList<PlaylistItem>
+    val list = mutableListOf<PlaylistItem>()
 
-    private class ListFile : File {
+    class ListFile : File {
         constructor(name: String) : super(Preferences.DATA_DIR, name + PLAYLIST_SUFFIX)
         constructor(name: String, suffix: String) :
             super(Preferences.DATA_DIR, name + PLAYLIST_SUFFIX + suffix)
     }
 
-    private class CommentFile : File {
+    class CommentFile : File {
         constructor(name: String) : super(Preferences.DATA_DIR, name + COMMENT_SUFFIX)
         constructor(name: String, suffix: String) :
             super(Preferences.DATA_DIR, name + COMMENT_SUFFIX + suffix)
     }
 
     init {
-        list = ArrayList()
         val file: File = ListFile(name)
         if (file.exists()) {
             logI("Read playlist $name")
@@ -55,46 +58,6 @@ class Playlist(val name: String) {
             mListChanged = true
             mCommentChanged = true
         }
-        if (comment == null) {
-            comment = ""
-        }
-    }
-
-    /**
-     * Save the current playlist.
-     */
-    fun commit() {
-        logI("Commit playlist $name")
-        if (mListChanged) {
-            writeList(name)
-            mListChanged = false
-        }
-        if (mCommentChanged) {
-            writeComment(name)
-            mCommentChanged = false
-        }
-        var saveModes = false
-        if (isShuffleMode != readShuffleModePref(name)) {
-            saveModes = true
-        }
-        if (isLoopMode != readLoopModePref(name)) {
-            saveModes = true
-        }
-        if (saveModes) {
-            PrefManager.setBooleanPref(optionName(name, SHUFFLE_MODE), isShuffleMode)
-            PrefManager.setBooleanPref(optionName(name, LOOP_MODE), isLoopMode)
-        }
-    }
-
-    /**
-     * Remove an item from the playlist.
-     *
-     * @param index The index of the item to be removed
-     */
-    fun remove(index: Int) {
-        logI("Remove item #" + index + ": " + list[index].name)
-        list.removeAt(index)
-        mListChanged = true
     }
 
     // Helper methods
@@ -150,11 +113,12 @@ class Playlist(val name: String) {
         val file: File = ListFile(name, ".new")
         file.delete()
         try {
-            val out = BufferedWriter(FileWriter(file), 512)
-            for (item in list) {
-                out.write(item.toString())
+            file.bufferedWriter().use { out ->
+                list.forEach {
+                    out.write(it.toString())
+                }
+                out.close()
             }
-            out.close()
             val oldFile: File = ListFile(name)
             oldFile.delete()
             file.renameTo(oldFile)
@@ -168,7 +132,7 @@ class Playlist(val name: String) {
         val file: File = CommentFile(name, ".new")
         file.delete()
         try {
-            writeToFile(file, comment!!)
+            writeToFile(file, comment)
             val oldFile: File = CommentFile(name)
             oldFile.delete()
             file.renameTo(oldFile)
@@ -178,139 +142,57 @@ class Playlist(val name: String) {
     }
 
     private fun readShuffleModePref(name: String): Boolean {
-        return PrefManager.getBooleanPref(optionName(name, SHUFFLE_MODE), DEFAULT_SHUFFLE_MODE)
+        return PrefManager.getBooleanPref(
+            PlaylistUtils.optionName(name, SHUFFLE_MODE),
+            DEFAULT_SHUFFLE_MODE
+        )
     }
 
     private fun readLoopModePref(name: String): Boolean {
-        return PrefManager.getBooleanPref(optionName(name, LOOP_MODE), DEFAULT_LOOP_MODE)
+        return PrefManager.getBooleanPref(
+            PlaylistUtils.optionName(name, LOOP_MODE),
+            DEFAULT_LOOP_MODE
+        )
+    }
+
+    /**
+     * Save the current playlist.
+     */
+    fun commit() {
+        logI("Commit playlist $name")
+        if (mListChanged) {
+            writeList(name)
+            mListChanged = false
+        }
+        if (mCommentChanged) {
+            writeComment(name)
+            mCommentChanged = false
+        }
+        var saveModes = false
+        if (isShuffleMode != readShuffleModePref(name)) {
+            saveModes = true
+        }
+        if (isLoopMode != readLoopModePref(name)) {
+            saveModes = true
+        }
+        if (saveModes) {
+            PrefManager.setBooleanPref(PlaylistUtils.optionName(name, SHUFFLE_MODE), isShuffleMode)
+            PrefManager.setBooleanPref(PlaylistUtils.optionName(name, LOOP_MODE), isLoopMode)
+        }
+    }
+
+    /**
+     * Remove an item from the playlist.
+     *
+     * @param index The index of the item to be removed
+     */
+    fun remove(index: Int) {
+        logI("Remove item #" + index + ": " + list[index].name)
+        list.removeAt(index)
+        mListChanged = true
     }
 
     fun setListChanged(listChanged: Boolean) {
         mListChanged = listChanged
-    }
-
-    companion object {
-        const val COMMENT_SUFFIX = ".comment"
-        const val PLAYLIST_SUFFIX = ".playlist"
-        private const val OPTIONS_PREFIX = "options_"
-        private const val SHUFFLE_MODE = "_shuffleMode"
-        private const val LOOP_MODE = "_loopMode"
-        private const val DEFAULT_SHUFFLE_MODE = true
-        private const val DEFAULT_LOOP_MODE = false
-        // Static utilities
-
-        /**
-         * Rename a playlist.
-         *
-         * @param oldName The current name of the playlist
-         * @param newName The new name of the playlist
-         * @return Whether the rename was successful
-         */
-        fun rename(oldName: String, newName: String): Boolean {
-            val old1: File = ListFile(oldName)
-            val old2: File = CommentFile(oldName)
-            val new1: File = ListFile(newName)
-            val new2: File = CommentFile(newName)
-            var error = false
-            if (!old1.renameTo(new1)) {
-                error = true
-            } else if (!old2.renameTo(new2)) {
-                new1.renameTo(old1)
-                error = true
-            }
-            if (error) {
-                return false
-            }
-
-            PrefManager.run {
-                setBooleanPref(
-                    optionName(newName, LOOP_MODE),
-                    getBooleanPref(optionName(oldName, LOOP_MODE), DEFAULT_LOOP_MODE)
-                )
-                setBooleanPref(
-                    optionName(newName, SHUFFLE_MODE),
-                    getBooleanPref(optionName(oldName, SHUFFLE_MODE), DEFAULT_SHUFFLE_MODE)
-                )
-                removeBooleanPref(optionName(oldName, SHUFFLE_MODE))
-                removeBooleanPref(optionName(oldName, LOOP_MODE))
-            }
-
-            return true
-        }
-
-        /**
-         * Edit a playlist's comment
-         *
-         * @param file The file to delete in order to rename
-         * @param info The updated comment info
-         *
-         * @return Whether the comment rename was successful
-         *
-         */
-        fun editComment(file: File, info: String): Boolean {
-            try {
-                file.delete()
-                file.createNewFile()
-                writeToFile(file, info)
-            } catch (e: IOException) {
-                return false
-            }
-            return true
-        }
-
-        /**
-         * Delete the specified playlist.
-         *
-         * @param name    The playlist name
-         */
-        fun delete(name: String) {
-            ListFile(name).delete()
-            CommentFile(name).delete()
-            PrefManager.removeBooleanPref(optionName(name, SHUFFLE_MODE))
-            PrefManager.removeBooleanPref(optionName(name, LOOP_MODE))
-        }
-
-        /**
-         * Add a list of items to the specified playlist file.
-         *
-         * @param activity The activity we're running
-         * @param name     The playlist name
-         * @param items    The list of playlist items to add
-         */
-        fun addToList(activity: Activity, name: String, items: List<PlaylistItem>) {
-            val lines = mutableListOf<String>()
-            items.forEach { playlistItem ->
-                lines.add(playlistItem.toString())
-            }
-            try {
-                writeToFile(File(Preferences.DATA_DIR, name + PLAYLIST_SUFFIX), lines)
-            } catch (e: IOException) {
-                activity.generalError(activity.getString(R.string.error_write_to_playlist))
-            }
-        }
-
-        /**
-         * Read comment from a playlist file.
-         *
-         * @param activity The activity we're running
-         * @param name     The playlist name
-         * @return The playlist comment
-         */
-        fun readComment(activity: Activity, name: String): String {
-            var comment: String? = null
-            try {
-                comment = readFromFile(CommentFile(name))
-            } catch (e: IOException) {
-                activity.generalError(activity.getString(R.string.error_read_comment))
-            }
-            if (comment == null || comment.trim { it <= ' ' }.isEmpty()) {
-                comment = activity.getString(R.string.no_comment)
-            }
-            return comment
-        }
-
-        private fun optionName(name: String?, option: String): String {
-            return OPTIONS_PREFIX + name + option
-        }
     }
 }

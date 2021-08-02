@@ -44,7 +44,7 @@
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
                 android:singleLine="true"
-                android:text="@{fileName ? playlistItem.filename : playlistItem.name }"
+                android:text="@{fileName ? playlistItem.file.name : playlistItem.name }"
                 android:textSize="19sp"
                 tools:text="Some Playlist Title" />
 

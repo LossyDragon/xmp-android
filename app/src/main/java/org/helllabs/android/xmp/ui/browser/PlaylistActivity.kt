@@ -26,20 +26,20 @@ class PlaylistActivity :
 
     private lateinit var binder: ActivityPlaylistBinding
     private lateinit var mItemTouchHelper: ItemTouchHelper
-    private var mPlaylist: Playlist? = null
+    private lateinit var mPlaylist: Playlist
 
     override var isShuffleMode: Boolean
-        get() = mPlaylist!!.isShuffleMode
+        get() = mPlaylist.isShuffleMode
         set(shuffleMode) {
-            mPlaylist!!.isShuffleMode = shuffleMode
+            mPlaylist.isShuffleMode = shuffleMode
         }
     override var isLoopMode: Boolean
-        get() = mPlaylist!!.isLoopMode
+        get() = mPlaylist.isLoopMode
         set(loopMode) {
-            mPlaylist!!.isLoopMode = loopMode
+            mPlaylist.isLoopMode = loopMode
         }
     override val allFiles: List<String>
-        get() = mPlaylistAdapter.filenameList
+        get() = mPlaylistAdapter.getFilenameList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,6 +55,7 @@ class PlaylistActivity :
             mPlaylist = Playlist(name)
         } catch (e: IOException) {
             logE("Can't read playlist $name")
+            onBackPressed()
         }
 
         mPlaylistAdapter = PlaylistAdapter(LAYOUT_DRAG, PrefManager.useFilename)
@@ -65,7 +66,8 @@ class PlaylistActivity :
         with(binder) {
             appbar.toolbarText.text = getString(R.string.browser_playlist_title)
             currentListName.text = name
-            currentListDescription.text = mPlaylist!!.comment
+            currentListDescription.text =
+                mPlaylist.comment.ifEmpty { getString(R.string.no_comment) }
             plistList.apply {
                 adapter = mPlaylistAdapter
                 setHasFixedSize(true)
@@ -88,7 +90,7 @@ class PlaylistActivity :
 
     public override fun onPause() {
         super.onPause()
-        mPlaylist!!.commit()
+        mPlaylist.commit()
     }
 
     override fun onStartDrag(viewHolder: RecyclerView.ViewHolder) {
@@ -96,11 +98,11 @@ class PlaylistActivity :
     }
 
     override fun onStopDrag(playlist: MutableList<PlaylistItem>) {
-        mPlaylist!!.list.clear()
-        mPlaylist!!.list.addAll(playlist)
-        mPlaylist!!.setListChanged(true)
-        mPlaylist!!.commit()
-        mPlaylistAdapter.submitList(mPlaylist!!.list)
+        mPlaylist.list.clear()
+        mPlaylist.list.addAll(playlist)
+        mPlaylist.setListChanged(true)
+        mPlaylist.commit()
+        mPlaylistAdapter.submitList(mPlaylist.list)
     }
 
     override fun disableSwipe(isDisabled: Boolean) {
@@ -114,15 +116,15 @@ class PlaylistActivity :
             listItemsSingleChoice(R.array.edit_playlist_dialog_array) { _, index, _ ->
                 when (index) {
                     0 -> {
-                        mPlaylist!!.remove(position)
-                        mPlaylist!!.setListChanged(true)
-                        mPlaylist!!.commit()
+                        mPlaylist.remove(position)
+                        mPlaylist.setListChanged(true)
+                        mPlaylist.commit()
                         update()
                     }
                     1 -> addToQueue(mPlaylistAdapter.getFilename(position))
-                    2 -> addToQueue(mPlaylistAdapter.filenameList)
+                    2 -> addToQueue(mPlaylistAdapter.getFilenameList())
                     3 -> playModule(mPlaylistAdapter.getFilename(position))
-                    4 -> playModule(mPlaylistAdapter.filenameList, position)
+                    4 -> playModule(mPlaylistAdapter.getFilenameList(), position)
                 }
             }
             positiveButton(R.string.select)
@@ -130,7 +132,7 @@ class PlaylistActivity :
     }
 
     public override fun update() {
-        mPlaylistAdapter.submitList(mPlaylist!!.list)
+        mPlaylistAdapter.submitList(mPlaylist.list)
         with(binder) {
             if (mPlaylistAdapter.getItems().isEmpty()) {
                 errorLayout.layout.show()

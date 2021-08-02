@@ -50,6 +50,7 @@ class FilelistActivity : BasePlaylistActivity() {
         override fun execute(fileSelection: Int, playlistSelection: Int) {
             PlaylistUtils.filesToPlaylist(
                 this@FilelistActivity,
+                this@FilelistActivity,
                 viewModel.recursiveList(mNavigation.currentDir),
                 PlaylistUtils.getPlaylistName(playlistSelection)
             )
@@ -62,6 +63,7 @@ class FilelistActivity : BasePlaylistActivity() {
     private val addRecursiveToPlaylistChoice: PlaylistChoice = object : PlaylistChoice {
         override fun execute(fileSelection: Int, playlistSelection: Int) {
             PlaylistUtils.filesToPlaylist(
+                this@FilelistActivity,
                 this@FilelistActivity,
                 viewModel.recursiveList(mPlaylistAdapter.getFile(fileSelection)),
                 PlaylistUtils.getPlaylistName(playlistSelection)
@@ -76,6 +78,7 @@ class FilelistActivity : BasePlaylistActivity() {
         override fun execute(fileSelection: Int, playlistSelection: Int) {
             PlaylistUtils.filesToPlaylist(
                 this@FilelistActivity,
+                this@FilelistActivity,
                 mPlaylistAdapter.getFilename(fileSelection),
                 PlaylistUtils.getPlaylistName(playlistSelection)
             )
@@ -89,7 +92,8 @@ class FilelistActivity : BasePlaylistActivity() {
         override fun execute(fileSelection: Int, playlistSelection: Int) {
             PlaylistUtils.filesToPlaylist(
                 this@FilelistActivity,
-                mPlaylistAdapter.filenameList,
+                this@FilelistActivity,
+                mPlaylistAdapter.getFilenameList(),
                 PlaylistUtils.getPlaylistName(playlistSelection)
             )
         }
@@ -135,11 +139,11 @@ class FilelistActivity : BasePlaylistActivity() {
                 modlistListview,
                 { pos ->
                     val item = mPlaylistAdapter.currentList[pos]
-                    if (item.isDirectory) {
+                    if (item.isDirectory()) {
                         FastScrollItemIndicator.Icon(R.drawable.ic_folder)
                     } else {
                         FastScrollItemIndicator.Text(
-                            item?.filename?.substring(0, 1)?.uppercase(Locale.getDefault())
+                            item?.file?.name?.substring(0, 1)?.uppercase(Locale.getDefault())
                                 ?: "..."
                         )
                     }
@@ -232,10 +236,11 @@ class FilelistActivity : BasePlaylistActivity() {
                         0 -> choosePlaylist(position, addFileToPlaylistChoice)
                         1 -> addToQueue(mPlaylistAdapter.getFilename(position))
                         2 -> playModule(mPlaylistAdapter.getFilename(position))
-                        3 -> playModule(mPlaylistAdapter.filenameList, position)
+                        3 -> playModule(mPlaylistAdapter.getFilenameList(), position)
                         4 -> {
                             val deleteName = mPlaylistAdapter.getFilename(position)
                             yesNoDialog(
+                                this@FilelistActivity,
                                 getString(R.string.dialog_this_file_title_confirm),
                                 getString(R.string.dialog_this_file_message, basename(deleteName))
                             ) {
@@ -267,7 +272,7 @@ class FilelistActivity : BasePlaylistActivity() {
                         PrefManager.mediaPath = mNavigation.currentDir!!.path
                         toast(R.string.msg_default_path_set)
                     }
-                    4 -> viewModel.clearCachedEntries(mPlaylistAdapter.filenameList)
+                    4 -> viewModel.clearCachedEntries(mPlaylistAdapter.getFilenameList())
                 }
             }
             positiveButton(R.string.select)
@@ -283,9 +288,12 @@ class FilelistActivity : BasePlaylistActivity() {
             title(R.string.dialog_no_path_title)
             message(text = getString(R.string.dialog_no_path_message, mediaPath))
             positiveButton(R.string.create) {
-                val ret = installAssets(mediaPath, PrefManager.installExamples)
+                val ret = FileUtils.installAssets(context, mediaPath, PrefManager.installExamples)
                 if (ret < 0) {
-                    generalError(getString(R.string.msg_error_create_directory, mediaPath))
+                    dialogMessage(
+                        lifecycleOwner = this@FilelistActivity,
+                        message = getString(R.string.msg_error_create_directory, mediaPath)
+                    )
                 }
                 mNavigation.startNavigation(File(mediaPath))
                 viewModel.updateModList(mNavigation.currentDir)
@@ -339,6 +347,7 @@ class FilelistActivity : BasePlaylistActivity() {
 
         if (deleteName.startsWith(mediaPath) && deleteName != mediaPath) {
             yesNoDialog(
+                this,
                 getString(R.string.dialog_title_delete_dir),
                 getString(R.string.dialog_msg_delete_dir, basename(deleteName))
             ) {

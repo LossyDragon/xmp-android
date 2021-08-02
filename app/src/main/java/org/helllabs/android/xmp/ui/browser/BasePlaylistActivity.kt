@@ -31,9 +31,8 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     private lateinit var mModPlayer: PlayerService
     private var mAddList: MutableList<String>? = null
 
-    private val requestPlay = registerForActivityResult(StartActivityForResult()) {
-        if (it.resultCode != RESULT_OK)
-            update()
+    private val requestUpdate = registerForActivityResult(StartActivityForResult()) {
+        update()
     }
 
     protected lateinit var mPlaylistAdapter: PlaylistAdapter
@@ -99,8 +98,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
                 startActivity(Intent(this, Preferences::class.java))
             }
             R.id.menu_download -> {
-                val intent = Intent(this, Search::class.java)
-                startActivity(intent)
+                startActivity(Intent(this, Search::class.java))
             }
         }
         return super.onOptionsItemSelected(item)
@@ -116,9 +114,9 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         if (testModuleForceIfInvalid(filename)) {
             when (mode) {
                 1 -> {
-                    val count = position - adapter.directoryCount
+                    val count = position - adapter.getDirectoryCount()
                     if (count >= 0) {
-                        playModule(adapter.filenameList, count, isShuffleMode)
+                        playModule(adapter.getFilenameList(), count, isShuffleMode)
                     }
                 }
                 2 -> playModule(filename)
@@ -157,10 +155,12 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
 
     protected fun setupButtons(controls: LayoutListControlsBinding) {
         controls.controlButtonPlay.click {
-            if (allFiles.isEmpty()) {
-                toast(R.string.error_no_files_to_play)
-            } else {
-                playModule(allFiles)
+            with(allFiles) {
+                if (isEmpty()) {
+                    toast(R.string.error_no_files_to_play)
+                } else {
+                    playModule(this)
+                }
             }
         }
         controls.controlButtonLoop.apply {
@@ -207,7 +207,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         }
 
         logI("Start Player activity")
-        requestPlay.launch(intent)
+        requestUpdate.launch(intent)
     }
 
     protected fun addToQueue(filename: String) {

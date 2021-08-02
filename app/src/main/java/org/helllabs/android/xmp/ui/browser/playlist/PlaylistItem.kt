@@ -3,25 +3,19 @@ package org.helllabs.android.xmp.ui.browser.playlist
 import java.io.File
 import java.util.*
 
-class PlaylistItem(
+data class PlaylistItem(
     val type: Int,
     val name: String,
-    val comment: String?
+    val comment: String?,
+    var id: Int = 0,
+    var file: File? = null,
 ) : Comparable<PlaylistItem> {
 
-    // Accessors
-    var id = 0
-    var file: File? = null
+    fun isDirectory() =
+        file?.isDirectory ?: false
 
-    val filename: String
-        get() = file!!.name
-
-    val isDirectory: Boolean
-        get() = file?.isDirectory ?: false
-
-    override fun toString(): String {
-        return String.format("%s:%s:%s\n", file!!.path, comment, name)
-    }
+    override fun toString(): String =
+        String.format("%s:%s:%s\n", file!!.path, comment, name)
 
     // Comparable
     override fun compareTo(other: PlaylistItem): Int {

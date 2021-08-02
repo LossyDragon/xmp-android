@@ -44,29 +44,6 @@ class PlaylistAdapter(
         }
     }
 
-    val filenameList: List<String>
-        get() {
-            val list: MutableList<String> = ArrayList()
-            for (item in currentList) {
-                if (item.type == PlaylistItem.TYPE_FILE) {
-                    list.add(item.file!!.path)
-                }
-            }
-            return list
-        }
-
-    val directoryCount: Int
-        get() {
-            var count = 0
-            for (item in currentList) {
-                if (item.type != PlaylistItem.TYPE_DIRECTORY) {
-                    break
-                }
-                count++
-            }
-            return count
-        }
-
     var dragListener: OnStartDragListener? = null
     var onClick: ((position: Int) -> Unit)? = null
     var onLongClick: ((position: Int) -> Unit)? = null
@@ -117,6 +94,27 @@ class PlaylistAdapter(
         this.useFilename = useFilename
     }
 
+    fun getDirectoryCount(): Int {
+        var count = 0
+        for (item in currentList) {
+            if (item.type != PlaylistItem.TYPE_DIRECTORY) {
+                break
+            }
+            count++
+        }
+        return count
+    }
+
+    fun getFilenameList(): List<String> {
+        val list: MutableList<String> = ArrayList()
+        for (item in currentList) {
+            if (item.type == PlaylistItem.TYPE_FILE) {
+                list.add(item.file!!.path)
+            }
+        }
+        return list
+    }
+
     inner class CardViewHolder(
         val binder: ItemPlaylistCardBinding
     ) : RecyclerView.ViewHolder(binder.root) {
@@ -138,9 +136,9 @@ class PlaylistAdapter(
     ) : RecyclerView.ViewHolder(binder.root), ItemTouchHelperViewHolder {
         fun onBind(item: PlaylistItem) = with(binder) {
             playlistItem = item
-            isDraggable = layoutType == LAYOUT_DRAG
             fileName = useFilename
             if (layoutType == LAYOUT_DRAG) {
+                isDraggable = true
                 handle.let { handle ->
                     handle.touch { _, event ->
                         logD("Touch: ${event.actionMasked}")
