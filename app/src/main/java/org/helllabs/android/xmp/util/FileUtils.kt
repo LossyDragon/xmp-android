@@ -157,4 +157,14 @@ object FileUtils {
     fun basename(pathname: String): String {
         return File(pathname).name.orEmpty()
     }
+
+    fun delete(filename: String): Boolean {
+        val file = File(filename)
+        return file.delete()
+    }
+
+    fun deleteRecursive(filename: String): Boolean {
+        val file = File(filename)
+        return file.deleteRecursively()
+    }
 }

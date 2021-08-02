@@ -37,6 +37,10 @@ object Xmp {
         System.loadLibrary("xmp-jni")
     }
 
+    fun testModule(path: String): Boolean {
+        return testModule(path, ModInfo())
+    }
+
     external fun deinit()
     external fun dropAudio()
     external fun endPlayer(): Int

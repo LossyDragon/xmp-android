@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import java.util.*
 import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.databinding.LayoutListControlsBinding
 import org.helllabs.android.xmp.service.PlayerService
@@ -23,8 +24,6 @@ import org.helllabs.android.xmp.ui.player.PlayerActivity
 import org.helllabs.android.xmp.ui.preferences.PrefManager
 import org.helllabs.android.xmp.ui.preferences.Preferences
 import org.helllabs.android.xmp.util.*
-import org.helllabs.android.xmp.util.InfoCache.testModule
-import org.helllabs.android.xmp.util.InfoCache.testModuleForceIfInvalid
 
 abstract class BasePlaylistActivity : AppCompatActivity() {
 
@@ -111,7 +110,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         /* Test module again if invalid, in case a new file format is added to the
          * player library and the file was previously unrecognized and cached as invalid.
          */
-        if (testModuleForceIfInvalid(filename)) {
+        if (Xmp.testModule(filename)) {
             when (mode) {
                 1 -> {
                     val count = position - adapter.getDirectoryCount()
@@ -211,7 +210,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     }
 
     protected fun addToQueue(filename: String) {
-        if (testModule(filename)) {
+        if (Xmp.testModule(filename)) {
             if (PlayerService.isPlayerAlive.value == true) {
                 mAddList = ArrayList()
                 mAddList!!.add(filename)
@@ -234,7 +233,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         }
 
         list.forEach {
-            if (testModule(it)) {
+            if (Xmp.testModule(it)) {
                 realList.add(it)
             } else {
                 invalid.add(it)

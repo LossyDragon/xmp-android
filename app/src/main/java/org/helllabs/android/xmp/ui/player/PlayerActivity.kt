@@ -9,8 +9,6 @@ import android.os.Bundle
 import android.os.IBinder
 import android.support.v4.media.session.MediaSessionCompat
 import android.view.Display
-import android.view.Menu
-import android.view.MenuItem
 import android.view.WindowManager
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -306,34 +304,6 @@ class PlayerActivity : AppCompatActivity() {
         super.onResume()
         screenOn = true
         showHex = PrefManager.showInfoLineHex
-    }
-
-    // We don't have an action bar, so this is only a phone with a hardware menu button.
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        if (PrefManager.enableDelete) {
-            menuInflater.inflate(R.menu.menu_delete, menu)
-            return true
-        }
-        return super.onCreateOptionsMenu(menu)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == R.id.menu_delete) {
-            yesNoDialog(
-                lifecycleOwner = this,
-                title = getString(R.string.delete),
-                message = getString(R.string.msg_delete_file, modPlayer.getModName())
-            ) {
-                if (modPlayer.deleteFile()) {
-                    toast(R.string.msg_file_deleted)
-                    setResult(RESULT_FIRST_USER)
-                    mediaSession.controller.transportControls.skipToNext()
-                } else {
-                    toast(R.string.msg_cant_delete)
-                }
-            }
-        }
-        return true
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {

@@ -20,8 +20,6 @@ import org.helllabs.android.xmp.ui.browser.playlist.PlaylistUtils
 import org.helllabs.android.xmp.ui.preferences.PrefManager
 import org.helllabs.android.xmp.util.*
 import org.helllabs.android.xmp.util.FileUtils.basename
-import org.helllabs.android.xmp.util.InfoCache.delete
-import org.helllabs.android.xmp.util.InfoCache.deleteRecursive
 
 // TODO: Replace current path with bread crumb trails
 class FilelistActivity : BasePlaylistActivity() {
@@ -244,7 +242,7 @@ class FilelistActivity : BasePlaylistActivity() {
                                 getString(R.string.dialog_this_file_title_confirm),
                                 getString(R.string.dialog_this_file_message, basename(deleteName))
                             ) {
-                                if (delete(deleteName)) {
+                                if (FileUtils.delete(deleteName)) {
                                     viewModel.updateModList(mNavigation.currentDir)
                                     toast(R.string.msg_file_deleted)
                                 } else {
@@ -272,7 +270,6 @@ class FilelistActivity : BasePlaylistActivity() {
                         PrefManager.mediaPath = mNavigation.currentDir!!.path
                         toast(R.string.msg_default_path_set)
                     }
-                    4 -> viewModel.clearCachedEntries(mPlaylistAdapter.getFilenameList())
                 }
             }
             positiveButton(R.string.select)
@@ -351,7 +348,7 @@ class FilelistActivity : BasePlaylistActivity() {
                 getString(R.string.dialog_title_delete_dir),
                 getString(R.string.dialog_msg_delete_dir, basename(deleteName))
             ) {
-                if (deleteRecursive(deleteName)) {
+                if (FileUtils.deleteRecursive(deleteName)) {
                     viewModel.updateModList(mNavigation.currentDir)
                     toast(getString(R.string.msg_dir_deleted))
                 } else {

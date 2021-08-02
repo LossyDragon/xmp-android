@@ -29,8 +29,6 @@ import org.helllabs.android.xmp.service.utils.*
 import org.helllabs.android.xmp.ui.preferences.PrefManager
 import org.helllabs.android.xmp.util.*
 import org.helllabs.android.xmp.util.FileUtils.basename
-import org.helllabs.android.xmp.util.InfoCache.delete
-import org.helllabs.android.xmp.util.InfoCache.testModule
 
 // Binder is leaking via leak canary  ¯\_(ツ)_/¯
 // -- I guess it retains it for a very long time? (SO answers)
@@ -394,12 +392,6 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
         canRelease = true
     }
 
-    // File management
-    fun deleteFile(): Boolean {
-        logI("Delete file $currentFileName")
-        return delete(currentFileName!!)
-    }
-
     // Get the Modules name, or the filename if empty or untitled
     fun getModName(): String {
         var name = Xmp.getModName()
@@ -535,7 +527,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
 
                 // If this file is unrecognized, and we're going backwards, go to previous
                 // If we're at the start of the list, go to the last recognized file
-                if (currentFileName!!.isEmpty() || !testModule(currentFileName!!)) {
+                if (currentFileName!!.isEmpty() || !Xmp.testModule(currentFileName!!)) {
                     logW("$currentFileName: unrecognized format")
                     if (cmd == CMD_PREV) {
                         if (queue!!.index <= 0) {

@@ -11,7 +11,6 @@ import org.helllabs.android.xmp.ui.browser.playlist.PlaylistItem
 import org.helllabs.android.xmp.ui.browser.playlist.PlaylistItem.Companion.TYPE_DIRECTORY
 import org.helllabs.android.xmp.ui.browser.playlist.PlaylistItem.Companion.TYPE_FILE
 import org.helllabs.android.xmp.ui.browser.playlist.PlaylistUtils
-import org.helllabs.android.xmp.util.InfoCache
 import org.helllabs.android.xmp.util.logW
 
 class FilelistViewModel : ViewModel() {
@@ -76,14 +75,6 @@ class FilelistViewModel : ViewModel() {
         }
 
         return list
-    }
-
-    fun clearCachedEntries(list: List<String>) {
-        viewModelScope.launch(Dispatchers.IO) {
-            list.forEach {
-                InfoCache.clearCache(it)
-            }
-        }
     }
 
     sealed class FilelistState {
