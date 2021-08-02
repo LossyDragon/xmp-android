@@ -181,7 +181,7 @@ abstract class Viewer(context: Context, color: Int) :
         // Check if the surface is valid. Stops it from being silly.
         if (surfaceHolder.surface.isValid) {
             try {
-                canvas = if (isAtLeastO) {
+                canvas = if (Api.isAtLeastO) {
                     try {
                         // Try and use hardware-accelerated canvas
                         surfaceHolder.lockHardwareCanvas()

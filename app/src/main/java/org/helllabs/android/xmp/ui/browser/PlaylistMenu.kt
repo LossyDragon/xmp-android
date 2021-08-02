@@ -115,7 +115,7 @@ class PlaylistMenu : AppCompatActivity() {
             )
         }
 
-        if (isAtLeastM) {
+        if (Api.isAtLeastM) {
             val hasPermission =
                 ContextCompat.checkSelfPermission(
                     this,

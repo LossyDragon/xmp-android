@@ -38,14 +38,16 @@ inline fun <reified T : Any> T.logE(message: String) =
 /**
  * API level helpers
  */
-val isAtLeastM: Boolean
-    get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
-val isAtLeastN: Boolean
-    get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
-val isAtLeastO: Boolean
-    get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
-val isAtLeastR: Boolean
-    get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
+object Api {
+    val isAtLeastM: Boolean
+        get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+    val isAtLeastN: Boolean
+        get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
+    val isAtLeastO: Boolean
+        get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+    val isAtLeastR: Boolean
+        get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
+}
 
 /**
  * Resource helpers
@@ -69,7 +71,7 @@ inline fun <reified T : Resources> T.drawable(@DrawableRes res: Int): Drawable? 
     ResourcesCompat.getDrawable(this, res, null)
 
 inline fun <reified T : Resources> T.color(@ColorRes res: Int): Int {
-    return if (isAtLeastM) {
+    return if (Api.isAtLeastM) {
         getColor(res, null)
     } else {
         @Suppress("DEPRECATION")
@@ -84,7 +86,7 @@ fun String?.asHtml(): Spanned {
     if (this.isNullOrEmpty()) {
         return "".toSpanned()
     }
-    return if (isAtLeastN) {
+    return if (Api.isAtLeastN) {
         Html.fromHtml(this, Html.FROM_HTML_MODE_LEGACY)
     } else {
         @Suppress("DEPRECATION")

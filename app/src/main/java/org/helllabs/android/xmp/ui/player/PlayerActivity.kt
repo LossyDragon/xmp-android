@@ -185,7 +185,7 @@ class PlayerActivity : AppCompatActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
         window.statusBarColor = ResourcesCompat.getColor(resources, R.color.primary, null)
 
-        playerDisplay = if (isAtLeastR) {
+        playerDisplay = if (Api.isAtLeastR) {
             display!!
         } else {
             @Suppress("DEPRECATION")

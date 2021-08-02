@@ -19,6 +19,7 @@ object PrefManager {
     // private const val BACK_BUTTON_NAVIGATION = "back_button_navigation"
     // private const val BLUETOOTH_PAUSE = "bluetooth_pause"
     // private const val HEADSET_PAUSE = "headset_pause"
+    // private const val ENABLE_DELETE = "enable_delete"
 
     private const val ALL_SEQUENCES = "all_sequences"
     private const val AMIGA_MIXER = "amiga_mixer"
@@ -26,7 +27,6 @@ object PrefManager {
     private const val BUFFER_MS = "buffer_ms_opensl"
     private const val CHANGELOG_VERSION = "changelog_version"
     private const val DEFAULT_PAN = "default_pan"
-    private const val ENABLE_DELETE = "enable_delete"
     private const val EXAMPLES = "examples"
     private const val INTERPOLATE = "interpolate"
     private const val INTERP_TYPE = "interp_type"
@@ -82,11 +82,6 @@ object PrefManager {
         get() = prefs.getString(MEDIA_PATH, Preferences.DEFAULT_MEDIA_PATH)!!
         set(value) = prefs.edit { putString(MEDIA_PATH, value) }
 
-    // Not used in code anymore
-    // var backButtonNavigation: Boolean
-    //     get() = prefs.getBoolean(BACK_BUTTON_NAVIGATION, true)
-    //     set(value) = prefs.edit { putBoolean(BACK_BUTTON_NAVIGATION, value) }
-
     var installExamples: Boolean
         get() = prefs.getBoolean(EXAMPLES, true)
         set(value) = prefs.edit { putBoolean(EXAMPLES, value) }
@@ -110,10 +105,6 @@ object PrefManager {
     var keepScreenOn: Boolean
         get() = prefs.getBoolean(KEEP_SCREEN_ON, false)
         set(value) = prefs.edit { putBoolean(KEEP_SCREEN_ON, value) }
-
-    var enableDelete: Boolean
-        get() = prefs.getBoolean(ENABLE_DELETE, false)
-        set(value) = prefs.edit { putBoolean(ENABLE_DELETE, value) }
 
     var allSequences: Boolean
         get() = prefs.getBoolean(ALL_SEQUENCES, false)
@@ -158,14 +149,6 @@ object PrefManager {
     var startOnPlayer: Boolean
         get() = prefs.getBoolean(START_ON_PLAYER, true)
         set(value) = prefs.edit { putBoolean(START_ON_PLAYER, value) }
-
-    // var headsetPause: Boolean
-    //     get() = prefs.getBoolean(HEADSET_PAUSE, true)
-    //     set(value) = prefs.edit { putBoolean(HEADSET_PAUSE, value) }
-
-    // var bluetoothPause: Boolean
-    //     get() = prefs.getBoolean(BLUETOOTH_PAUSE, true)
-    //     set(value) = prefs.edit { putBoolean(BLUETOOTH_PAUSE, value) }
 
     var useNewWaveform: Boolean
         get() = prefs.getBoolean(NEW_WAVEFORM, false)

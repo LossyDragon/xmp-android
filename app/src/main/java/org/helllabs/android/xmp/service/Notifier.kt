@@ -18,9 +18,8 @@ import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.service.utils.QueueManager
 import org.helllabs.android.xmp.ui.player.PlayerActivity
 import org.helllabs.android.xmp.ui.preferences.PrefManager
+import org.helllabs.android.xmp.util.Api
 import org.helllabs.android.xmp.util.getIconBitmap
-import org.helllabs.android.xmp.util.isAtLeastM
-import org.helllabs.android.xmp.util.isAtLeastO
 
 // With Android 11 (R), you can swipe the media notification away, and still plays
 // Solved by onTaskRemoved() in service.
@@ -63,7 +62,7 @@ class Notifier(
     )
 
     init {
-        if (isAtLeastO) {
+        if (Api.isAtLeastO) {
             createNotificationChannel(service)
         }
     }
@@ -138,7 +137,7 @@ class Notifier(
             service,
             669,
             intent,
-            if (isAtLeastM) FLAG_IMMUTABLE or FLAG_UPDATE_CURRENT else FLAG_UPDATE_CURRENT
+            if (Api.isAtLeastM) FLAG_IMMUTABLE or FLAG_UPDATE_CURRENT else FLAG_UPDATE_CURRENT
         )
     }
 
@@ -148,7 +147,7 @@ class Notifier(
             service,
             0,
             intent,
-            if (isAtLeastM) FLAG_IMMUTABLE or FLAG_UPDATE_CURRENT else FLAG_UPDATE_CURRENT
+            if (Api.isAtLeastM) FLAG_IMMUTABLE or FLAG_UPDATE_CURRENT else FLAG_UPDATE_CURRENT
         )
     }
 

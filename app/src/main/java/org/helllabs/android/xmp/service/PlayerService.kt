@@ -508,7 +508,7 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
     }
 
     private fun abandonAudioFocus() {
-        if (isAtLeastO) {
+        if (Api.isAtLeastO) {
             AudioManagerCompat.abandonAudioFocusRequest(audioManager!!, audioFocusRequest!!)
         } else {
             @Suppress("DEPRECATION")
