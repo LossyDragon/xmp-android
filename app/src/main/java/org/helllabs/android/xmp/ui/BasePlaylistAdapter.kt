@@ -19,11 +19,11 @@ import org.helllabs.android.xmp.databinding.ItemPlaylistBinding
 import org.helllabs.android.xmp.databinding.ItemPlaylistCardBinding
 import org.helllabs.android.xmp.model.PlaylistItem
 import org.helllabs.android.xmp.model.PlaylistType
-import org.helllabs.android.xmp.util.*
-import org.helllabs.android.xmp.util.PlaylistUtils
 import org.helllabs.android.xmp.ui.util.recyclerview.ItemTouchHelperAdapter
 import org.helllabs.android.xmp.ui.util.recyclerview.ItemTouchHelperViewHolder
 import org.helllabs.android.xmp.ui.util.recyclerview.OnStartDragListener
+import org.helllabs.android.xmp.util.*
+import org.helllabs.android.xmp.util.PlaylistUtils
 
 enum class PlaylistLayoutType(val value: Int) {
     TYPE_LIST(0),

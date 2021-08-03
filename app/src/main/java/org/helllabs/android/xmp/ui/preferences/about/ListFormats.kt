@@ -5,9 +5,7 @@ import android.content.ClipboardManager
 import android.os.Bundle
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
-import com.reddit.indicatorfastscroll.FastScrollItemIndicator
 import dagger.hilt.android.AndroidEntryPoint
-import java.util.*
 import javax.inject.Inject
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp.getFormats
@@ -47,16 +45,6 @@ class ListFormats : AppCompatActivity() {
         with(binder) {
             appbar.toolbarText.text = getString(R.string.pref_list_formats_title)
             formatsList.adapter = formatsAdapter
-            fastscroller.setupWithRecyclerView(
-                binder.formatsList,
-                { pos ->
-                    val item = formatsAdapter.currentList[pos]
-                    FastScrollItemIndicator.Text(
-                        item.substring(0, 1).uppercase(Locale.getDefault())
-                    )
-                }
-            )
-            fastscrollerThumb.setupWithFastScroller(fastscroller)
         }
     }
 

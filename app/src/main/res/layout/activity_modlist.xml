@@ -65,30 +65,15 @@
             android:id="@+id/modlist_listview"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            app:fastScrollEnabled="true"
+            app:fastScrollHorizontalThumbDrawable="@drawable/list_thumb_state"
+            app:fastScrollHorizontalTrackDrawable="@drawable/list_thumb_track_state"
+            app:fastScrollVerticalThumbDrawable="@drawable/list_thumb_state"
+            app:fastScrollVerticalTrackDrawable="@drawable/list_thumb_track_state"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             tools:listitem="@layout/item_playlist" />
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
-
-    <com.reddit.indicatorfastscroll.FastScrollerView
-        android:id="@+id/fastscroller"
-        android:layout_width="32dp"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@id/list_controls"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/status_area" />
-
-    <com.reddit.indicatorfastscroll.FastScrollerThumbView
-        android:id="@+id/fastscroller_thumb"
-        android:layout_width="40dp"
-        android:layout_height="0dp"
-        android:layout_marginEnd="16dp"
-        android:textColor="@color/white"
-        app:fastScrollerIconColor="@color/white"
-        app:fastScrollerThumbColor="@color/accent"
-        app:layout_constraintBottom_toTopOf="@id/list_controls"
-        app:layout_constraintEnd_toStartOf="@id/fastscroller"
-        app:layout_constraintTop_toBottomOf="@id/status_area" />
 
     <ProgressBar
         android:id="@+id/modlist_spinner"

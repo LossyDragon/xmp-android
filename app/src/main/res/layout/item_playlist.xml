@@ -43,20 +43,22 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
+                android:paddingEnd="16dp"
                 android:singleLine="true"
                 android:text="@{fileName ? playlistItem.file.name : playlistItem.name }"
                 android:textSize="19sp"
-                tools:text="Some Playlist Title" />
+                tools:text="Some Very Long Playlist Title that should ellipsize" />
 
             <TextView
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
+                android:boldTextStyle="@{playlistItem.isDirectory}"
                 android:ellipsize="end"
+                android:paddingEnd="16dp"
                 android:singleLine="true"
                 android:text="@{playlistItem.comment ?? @string/directory}"
                 android:textSize="13sp"
-                android:boldTextStyle="@{playlistItem.isDirectory}"
-                tools:text="Some Playlist Info" />
+                tools:text="Some Very Long Playlist Info that should ellipsize" />
 
         </LinearLayout>
 
@@ -65,9 +67,9 @@
             android:layout_width="?listPreferredItemHeight"
             android:layout_height="match_parent"
             android:layout_gravity="center_vertical|end"
+            android:draggability="@{isDraggable}"
             android:scaleType="center"
             android:src="@drawable/ic_handle"
-            android:draggability="@{isDraggable}"
             tools:visibility="visible" />
 
     </LinearLayout>

@@ -7,7 +7,6 @@ import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.list.listItemsSingleChoice
-import com.reddit.indicatorfastscroll.FastScrollItemIndicator
 import java.io.File
 import java.util.*
 import kotlinx.coroutines.flow.collect
@@ -134,21 +133,6 @@ class FilelistActivity : BasePlaylistActivity() {
                     true
                 }
             }
-            fastscroller.setupWithRecyclerView(
-                modlistListview,
-                { pos ->
-                    val item = mPlaylistAdapter.currentList[pos]
-                    if (item.isDirectory()) {
-                        FastScrollItemIndicator.Icon(R.drawable.ic_folder)
-                    } else {
-                        FastScrollItemIndicator.Text(
-                            item?.file?.name?.substring(0, 1)?.uppercase(Locale.getDefault())
-                                ?: "..."
-                        )
-                    }
-                },
-            )
-            fastscrollerThumb.setupWithFastScroller(fastscroller)
         }
 
         // Check if directory exists
