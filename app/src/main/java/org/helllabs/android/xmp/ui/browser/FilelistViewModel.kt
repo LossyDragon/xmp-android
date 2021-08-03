@@ -7,10 +7,9 @@ import java.text.DateFormat
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import org.helllabs.android.xmp.ui.browser.playlist.PlaylistItem
-import org.helllabs.android.xmp.ui.browser.playlist.PlaylistItem.Companion.TYPE_DIRECTORY
-import org.helllabs.android.xmp.ui.browser.playlist.PlaylistItem.Companion.TYPE_FILE
-import org.helllabs.android.xmp.ui.browser.playlist.PlaylistUtils
+import org.helllabs.android.xmp.model.PlaylistItem
+import org.helllabs.android.xmp.model.PlaylistType
+import org.helllabs.android.xmp.util.PlaylistUtils
 import org.helllabs.android.xmp.util.logW
 
 class FilelistViewModel : ViewModel() {
@@ -20,6 +19,10 @@ class FilelistViewModel : ViewModel() {
 
     private val date = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM)
 
+    private fun formatComment(file: File): String {
+        return date.format(file.lastModified()) + String.format(" (%d kB)", file.length() / 1024)
+    }
+
     fun updateModList(dir: File?) {
         _listState.value = FilelistState.Load
         viewModelScope.launch(Dispatchers.IO) {
@@ -27,11 +30,9 @@ class FilelistViewModel : ViewModel() {
             _listState.value = try {
                 dir?.listFiles()?.forEach { file ->
                     val item: PlaylistItem = if (file.isDirectory) {
-                        PlaylistItem(TYPE_DIRECTORY, file.name, null)
+                        PlaylistItem(PlaylistType.TYPE_DIRECTORY, file.name, null)
                     } else {
-                        val comment = date.format(file.lastModified()) +
-                            String.format(" (%d kB)", file.length() / 1024)
-                        PlaylistItem(TYPE_FILE, file.name, comment)
+                        PlaylistItem(PlaylistType.TYPE_FILE, file.name, formatComment(file))
                     }
                     item.file = file
                     list.add(item)
@@ -67,7 +68,6 @@ class FilelistViewModel : ViewModel() {
     }
 
     private fun walkDownPath(file: File): List<String> {
-
         val list = mutableListOf<String>()
         file.walkTopDown().forEach {
             if (it.isFile)

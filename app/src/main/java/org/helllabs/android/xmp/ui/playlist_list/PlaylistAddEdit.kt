@@ -1,4 +1,4 @@
-package org.helllabs.android.xmp.ui.browser
+package org.helllabs.android.xmp.ui.playlist_list
 
 import android.app.Activity
 import android.content.Intent

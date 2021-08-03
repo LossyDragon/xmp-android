@@ -1,18 +1,21 @@
-package org.helllabs.android.xmp.ui.browser.playlist
+package org.helllabs.android.xmp.ui.playlist_detail
 
 import java.io.*
 import java.util.*
-import org.helllabs.android.xmp.ui.browser.playlist.PlaylistUtils.COMMENT_SUFFIX
-import org.helllabs.android.xmp.ui.browser.playlist.PlaylistUtils.DEFAULT_LOOP_MODE
-import org.helllabs.android.xmp.ui.browser.playlist.PlaylistUtils.DEFAULT_SHUFFLE_MODE
-import org.helllabs.android.xmp.ui.browser.playlist.PlaylistUtils.LOOP_MODE
-import org.helllabs.android.xmp.ui.browser.playlist.PlaylistUtils.PLAYLIST_SUFFIX
-import org.helllabs.android.xmp.ui.browser.playlist.PlaylistUtils.SHUFFLE_MODE
+import org.helllabs.android.xmp.model.PlaylistItem
+import org.helllabs.android.xmp.model.PlaylistType
 import org.helllabs.android.xmp.ui.preferences.PrefManager
 import org.helllabs.android.xmp.ui.preferences.Preferences
 import org.helllabs.android.xmp.util.FileUtils.readFromFile
 import org.helllabs.android.xmp.util.FileUtils.removeLineFromFile
 import org.helllabs.android.xmp.util.FileUtils.writeToFile
+import org.helllabs.android.xmp.util.PlaylistUtils
+import org.helllabs.android.xmp.util.PlaylistUtils.COMMENT_SUFFIX
+import org.helllabs.android.xmp.util.PlaylistUtils.DEFAULT_LOOP_MODE
+import org.helllabs.android.xmp.util.PlaylistUtils.DEFAULT_SHUFFLE_MODE
+import org.helllabs.android.xmp.util.PlaylistUtils.LOOP_MODE
+import org.helllabs.android.xmp.util.PlaylistUtils.PLAYLIST_SUFFIX
+import org.helllabs.android.xmp.util.PlaylistUtils.SHUFFLE_MODE
 import org.helllabs.android.xmp.util.logE
 import org.helllabs.android.xmp.util.logI
 
@@ -76,7 +79,7 @@ class Playlist(val name: String) {
                 val title = if (fields.size > 2) fields[2] else ""
 
                 if (File(filename).isFile) {
-                    val item = PlaylistItem(PlaylistItem.TYPE_FILE, title, comment)
+                    val item = PlaylistItem(PlaylistType.TYPE_FILE, title, comment)
                     item.file = File(filename)
                     list.add(item)
                 } else {

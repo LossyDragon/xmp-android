@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.helllabs.android.xmp.util.recyclerview
+package org.helllabs.android.xmp.ui.util.recyclerview
 
 import androidx.recyclerview.widget.ItemTouchHelper
 

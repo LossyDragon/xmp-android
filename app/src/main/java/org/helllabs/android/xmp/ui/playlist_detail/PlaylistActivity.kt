@@ -1,4 +1,4 @@
-package org.helllabs.android.xmp.ui.browser
+package org.helllabs.android.xmp.ui.playlist_detail
 
 import android.annotation.SuppressLint
 import android.os.Bundle
@@ -9,15 +9,15 @@ import com.afollestad.materialdialogs.list.listItemsSingleChoice
 import java.io.IOException
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.databinding.ActivityPlaylistBinding
-import org.helllabs.android.xmp.ui.browser.playlist.Playlist
-import org.helllabs.android.xmp.ui.browser.playlist.PlaylistAdapter
-import org.helllabs.android.xmp.ui.browser.playlist.PlaylistAdapter.Companion.LAYOUT_DRAG
-import org.helllabs.android.xmp.ui.browser.playlist.PlaylistItem
+import org.helllabs.android.xmp.model.PlaylistItem
+import org.helllabs.android.xmp.ui.BasePlaylistActivity
+import org.helllabs.android.xmp.ui.BasePlaylistAdapter
+import org.helllabs.android.xmp.ui.PlaylistLayoutType
 import org.helllabs.android.xmp.ui.preferences.PrefManager
 import org.helllabs.android.xmp.util.hide
 import org.helllabs.android.xmp.util.logE
-import org.helllabs.android.xmp.util.recyclerview.OnStartDragListener
-import org.helllabs.android.xmp.util.recyclerview.SimpleItemTouchHelperCallback
+import org.helllabs.android.xmp.ui.util.recyclerview.OnStartDragListener
+import org.helllabs.android.xmp.ui.util.recyclerview.SimpleItemTouchHelperCallback
 import org.helllabs.android.xmp.util.show
 
 class PlaylistActivity :
@@ -58,7 +58,10 @@ class PlaylistActivity :
             onBackPressed()
         }
 
-        mPlaylistAdapter = PlaylistAdapter(LAYOUT_DRAG, PrefManager.useFilename)
+        mPlaylistAdapter = BasePlaylistAdapter(
+            PlaylistLayoutType.TYPE_DRAG,
+            PrefManager.useFilename
+        )
         mPlaylistAdapter.onClick = { position -> onItemClick(mPlaylistAdapter, position) }
         mPlaylistAdapter.onLongClick = { position -> onItemLongClick(position) }
         mPlaylistAdapter.dragListener = this

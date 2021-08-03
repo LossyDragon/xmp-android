@@ -1,4 +1,4 @@
-package org.helllabs.android.xmp.ui.browser
+package org.helllabs.android.xmp.ui.playlist_list
 
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.annotation.SuppressLint
@@ -19,21 +19,24 @@ import java.io.File
 import java.util.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.databinding.ActivityPlaylistMenuBinding
+import org.helllabs.android.xmp.model.PlaylistItem
+import org.helllabs.android.xmp.model.PlaylistType
 import org.helllabs.android.xmp.service.PlayerService
-import org.helllabs.android.xmp.ui.browser.playlist.PlaylistAdapter
-import org.helllabs.android.xmp.ui.browser.playlist.PlaylistAdapter.Companion.LAYOUT_CARD
-import org.helllabs.android.xmp.ui.browser.playlist.PlaylistItem
-import org.helllabs.android.xmp.ui.browser.playlist.PlaylistUtils
-import org.helllabs.android.xmp.ui.browser.playlist.PlaylistUtils.createEmptyPlaylist
+import org.helllabs.android.xmp.ui.BasePlaylistAdapter
+import org.helllabs.android.xmp.ui.PlaylistLayoutType
+import org.helllabs.android.xmp.ui.browser.FilelistActivity
 import org.helllabs.android.xmp.ui.modarchive.Search
 import org.helllabs.android.xmp.ui.player.PlayerActivity
+import org.helllabs.android.xmp.ui.playlist_detail.PlaylistActivity
 import org.helllabs.android.xmp.ui.preferences.PrefManager
 import org.helllabs.android.xmp.ui.preferences.Preferences
 import org.helllabs.android.xmp.util.*
+import org.helllabs.android.xmp.util.PlaylistUtils
+import org.helllabs.android.xmp.util.PlaylistUtils.createEmptyPlaylist
 
 class PlaylistMenu : AppCompatActivity() {
 
-    private lateinit var playlistAdapter: PlaylistAdapter
+    private lateinit var playlistAdapter: BasePlaylistAdapter
     private lateinit var mediaPath: String
 
     private var resultAdd = registerForActivityResult(StartActivityForResult()) {
@@ -82,7 +85,7 @@ class PlaylistMenu : AppCompatActivity() {
         }
 
         // Playlist adapter
-        playlistAdapter = PlaylistAdapter(LAYOUT_CARD, false)
+        playlistAdapter = BasePlaylistAdapter(PlaylistLayoutType.TYPE_CARD, false)
         playlistAdapter.onClick = { position -> onClick(position) }
         playlistAdapter.onLongClick = { position -> onLongClick(position) }
 
@@ -256,7 +259,7 @@ class PlaylistMenu : AppCompatActivity() {
         val list = mutableListOf<PlaylistItem>()
         mediaPath = PrefManager.mediaPath
         val browserItem = PlaylistItem(
-            PlaylistItem.TYPE_SPECIAL,
+            PlaylistType.TYPE_SPECIAL,
             getString(R.string.playlist_special_title),
             getString(R.string.playlist_special_comment, mediaPath)
         )
@@ -264,7 +267,7 @@ class PlaylistMenu : AppCompatActivity() {
 
         PlaylistUtils.listNoSuffix().forEach { name ->
             val item = PlaylistItem(
-                PlaylistItem.TYPE_PLAYLIST,
+                PlaylistType.TYPE_PLAYLIST,
                 name,
                 PlaylistUtils.readComment(this, this, name)
             )

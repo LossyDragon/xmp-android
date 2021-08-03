@@ -1,4 +1,4 @@
-package org.helllabs.android.xmp.ui.browser.playlist
+package org.helllabs.android.xmp.ui
 
 import android.graphics.Color
 import android.graphics.Typeface
@@ -17,22 +17,27 @@ import java.util.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.databinding.ItemPlaylistBinding
 import org.helllabs.android.xmp.databinding.ItemPlaylistCardBinding
+import org.helllabs.android.xmp.model.PlaylistItem
+import org.helllabs.android.xmp.model.PlaylistType
 import org.helllabs.android.xmp.util.*
-import org.helllabs.android.xmp.util.recyclerview.ItemTouchHelperAdapter
-import org.helllabs.android.xmp.util.recyclerview.ItemTouchHelperViewHolder
-import org.helllabs.android.xmp.util.recyclerview.OnStartDragListener
+import org.helllabs.android.xmp.util.PlaylistUtils
+import org.helllabs.android.xmp.ui.util.recyclerview.ItemTouchHelperAdapter
+import org.helllabs.android.xmp.ui.util.recyclerview.ItemTouchHelperViewHolder
+import org.helllabs.android.xmp.ui.util.recyclerview.OnStartDragListener
 
-class PlaylistAdapter(
-    private var layoutType: Int,
+enum class PlaylistLayoutType(val value: Int) {
+    TYPE_LIST(0),
+    TYPE_CARD(1),
+    TYPE_DRAG(2),
+}
+
+class BasePlaylistAdapter(
+    private var layoutType: PlaylistLayoutType,
     private var useFilename: Boolean,
 ) : ListAdapter<PlaylistItem, RecyclerView.ViewHolder>(DIFF_CALLBACK),
     ItemTouchHelperAdapter {
 
     companion object {
-        const val LAYOUT_LIST = 0
-        const val LAYOUT_CARD = 1
-        const val LAYOUT_DRAG = 2
-
         val DIFF_CALLBACK = object : DiffUtil.ItemCallback<PlaylistItem>() {
             override fun areItemsTheSame(oldItem: PlaylistItem, newItem: PlaylistItem): Boolean {
                 return oldItem.id == newItem.id
@@ -56,15 +61,15 @@ class PlaylistAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
         return when (layoutType) {
-            LAYOUT_CARD -> {
+            PlaylistLayoutType.TYPE_CARD -> {
                 val binder = ItemPlaylistCardBinding.inflate(inflater, parent, false)
                 CardViewHolder(binder)
             }
-            LAYOUT_LIST, LAYOUT_DRAG -> {
+            PlaylistLayoutType.TYPE_LIST,
+            PlaylistLayoutType.TYPE_DRAG -> {
                 val binder = ItemPlaylistBinding.inflate(inflater, parent, false)
                 ListViewHolder(binder)
             }
-            else -> throw IllegalArgumentException("Wrong layout type defined $layoutType")
         }
     }
 
@@ -97,7 +102,7 @@ class PlaylistAdapter(
     fun getDirectoryCount(): Int {
         var count = 0
         for (item in currentList) {
-            if (item.type != PlaylistItem.TYPE_DIRECTORY) {
+            if (item.type != PlaylistType.TYPE_DIRECTORY) {
                 break
             }
             count++
@@ -108,7 +113,7 @@ class PlaylistAdapter(
     fun getFilenameList(): List<String> {
         val list: MutableList<String> = ArrayList()
         for (item in currentList) {
-            if (item.type == PlaylistItem.TYPE_FILE) {
+            if (item.type == PlaylistType.TYPE_FILE) {
                 list.add(item.file!!.path)
             }
         }
@@ -137,7 +142,7 @@ class PlaylistAdapter(
         fun onBind(item: PlaylistItem) = with(binder) {
             playlistItem = item
             fileName = useFilename
-            if (layoutType == LAYOUT_DRAG) {
+            if (layoutType == PlaylistLayoutType.TYPE_DRAG) {
                 isDraggable = true
                 handle.let { handle ->
                     handle.touch { _, event ->
@@ -190,13 +195,12 @@ fun setBoldTextStyle(view: TextView, boolean: Boolean) {
 }
 
 @BindingAdapter("android:srcCompat")
-fun setSrcCompat(view: AppCompatImageView, type: Int) {
+fun setSrcCompat(view: AppCompatImageView, type: PlaylistType) {
     val image = when (type) {
-        PlaylistItem.TYPE_DIRECTORY,
-        PlaylistItem.TYPE_SPECIAL -> R.drawable.ic_folder
-        PlaylistItem.TYPE_PLAYLIST -> R.drawable.ic_list
-        PlaylistItem.TYPE_FILE -> R.drawable.ic_file
-        else -> throw IllegalArgumentException("Image res is wrong type: $type")
+        PlaylistType.TYPE_DIRECTORY,
+        PlaylistType.TYPE_SPECIAL -> R.drawable.ic_folder
+        PlaylistType.TYPE_PLAYLIST -> R.drawable.ic_list
+        PlaylistType.TYPE_FILE -> R.drawable.ic_file
     }
     view.setImageResource(image)
 }

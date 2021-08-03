@@ -1,4 +1,4 @@
-package org.helllabs.android.xmp.ui.browser.playlist
+package org.helllabs.android.xmp.util
 
 import android.app.Activity
 import androidx.lifecycle.LifecycleOwner
@@ -8,11 +8,11 @@ import java.util.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp.testModule
 import org.helllabs.android.xmp.model.ModInfo
+import org.helllabs.android.xmp.model.PlaylistItem
+import org.helllabs.android.xmp.model.PlaylistType
+import org.helllabs.android.xmp.ui.playlist_detail.Playlist
 import org.helllabs.android.xmp.ui.preferences.PrefManager
 import org.helllabs.android.xmp.ui.preferences.Preferences
-import org.helllabs.android.xmp.util.FileUtils
-import org.helllabs.android.xmp.util.dialogMessage
-import org.helllabs.android.xmp.util.toast
 
 object PlaylistUtils {
 
@@ -35,11 +35,11 @@ object PlaylistUtils {
         playlistName: String
     ) {
         val list: MutableList<PlaylistItem> = ArrayList()
-        val modInfo = ModInfo()
         var hasInvalid = false
         for (filename in fileList) {
+            val modInfo = ModInfo()
             if (testModule(filename, modInfo)) {
-                val item = PlaylistItem(PlaylistItem.TYPE_FILE, modInfo.name, modInfo.type)
+                val item = PlaylistItem(PlaylistType.TYPE_FILE, modInfo.name, modInfo.type)
                 item.file = File(filename)
                 list.add(item)
             } else {

@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.helllabs.android.xmp.util.recyclerview
+package org.helllabs.android.xmp.ui.util.recyclerview
 
 import androidx.recyclerview.widget.RecyclerView
-import org.helllabs.android.xmp.ui.browser.playlist.PlaylistItem
+import org.helllabs.android.xmp.model.PlaylistItem
 
 /**
  * Listener for manual initiation of a drag.

@@ -1,4 +1,4 @@
-package org.helllabs.android.xmp.ui.browser
+package org.helllabs.android.xmp.ui
 
 import android.content.ComponentName
 import android.content.Intent
@@ -18,9 +18,9 @@ import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.databinding.LayoutListControlsBinding
 import org.helllabs.android.xmp.service.PlayerService
-import org.helllabs.android.xmp.ui.browser.playlist.PlaylistAdapter
 import org.helllabs.android.xmp.ui.modarchive.Search
 import org.helllabs.android.xmp.ui.player.PlayerActivity
+import org.helllabs.android.xmp.ui.playlist_list.PlaylistMenu
 import org.helllabs.android.xmp.ui.preferences.PrefManager
 import org.helllabs.android.xmp.ui.preferences.Preferences
 import org.helllabs.android.xmp.util.*
@@ -34,7 +34,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         update()
     }
 
-    protected lateinit var mPlaylistAdapter: PlaylistAdapter
+    protected lateinit var mPlaylistAdapter: BasePlaylistAdapter
     protected abstract var isShuffleMode: Boolean
     protected abstract var isLoopMode: Boolean
     protected abstract val allFiles: List<String>
@@ -103,7 +103,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
-    open fun onItemClick(adapter: PlaylistAdapter, position: Int) {
+    open fun onItemClick(adapter: BasePlaylistAdapter, position: Int) {
         val filename = adapter.currentList[position].file!!.path
         val mode = PrefManager.playlistMode.toInt()
 

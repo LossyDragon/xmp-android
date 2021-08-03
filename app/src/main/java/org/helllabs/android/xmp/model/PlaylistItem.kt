@@ -1,10 +1,17 @@
-package org.helllabs.android.xmp.ui.browser.playlist
+package org.helllabs.android.xmp.model
 
 import java.io.File
 import java.util.*
 
+enum class PlaylistType(val value: Int) {
+    TYPE_DIRECTORY(1),
+    TYPE_PLAYLIST(2),
+    TYPE_FILE(3),
+    TYPE_SPECIAL(4),
+}
+
 data class PlaylistItem(
-    val type: Int,
+    val type: PlaylistType,
     val name: String,
     val comment: String?,
     var id: Int = 0,
@@ -27,12 +34,5 @@ data class PlaylistItem(
         } else {
             name.uppercase(locale).compareTo(other.name.uppercase(locale))
         }
-    }
-
-    companion object {
-        const val TYPE_DIRECTORY = 1
-        const val TYPE_PLAYLIST = 2
-        const val TYPE_FILE = 3
-        const val TYPE_SPECIAL = 4
     }
 }

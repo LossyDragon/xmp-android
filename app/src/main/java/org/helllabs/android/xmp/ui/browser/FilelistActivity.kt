@@ -13,13 +13,14 @@ import java.util.*
 import kotlinx.coroutines.flow.collect
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.databinding.ActivityModlistBinding
-import org.helllabs.android.xmp.ui.browser.playlist.PlaylistAdapter
-import org.helllabs.android.xmp.ui.browser.playlist.PlaylistAdapter.Companion.LAYOUT_LIST
-import org.helllabs.android.xmp.ui.browser.playlist.PlaylistItem
-import org.helllabs.android.xmp.ui.browser.playlist.PlaylistUtils
+import org.helllabs.android.xmp.model.PlaylistItem
+import org.helllabs.android.xmp.ui.BasePlaylistActivity
+import org.helllabs.android.xmp.ui.BasePlaylistAdapter
+import org.helllabs.android.xmp.ui.PlaylistLayoutType
 import org.helllabs.android.xmp.ui.preferences.PrefManager
 import org.helllabs.android.xmp.util.*
 import org.helllabs.android.xmp.util.FileUtils.basename
+import org.helllabs.android.xmp.util.PlaylistUtils
 
 // TODO: Replace current path with bread crumb trails
 class FilelistActivity : BasePlaylistActivity() {
@@ -108,7 +109,7 @@ class FilelistActivity : BasePlaylistActivity() {
 
         mNavigation = FilelistNavigation()
 
-        mPlaylistAdapter = PlaylistAdapter(LAYOUT_LIST, false)
+        mPlaylistAdapter = BasePlaylistAdapter(PlaylistLayoutType.TYPE_LIST, false)
         mPlaylistAdapter.onClick = { position -> onClick(position) }
         mPlaylistAdapter.onLongClick = { position -> onLongClick(position) }
 
