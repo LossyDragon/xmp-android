@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collect
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.databinding.ActivityResultListBinding
@@ -22,11 +23,13 @@ import org.helllabs.android.xmp.ui.modarchive.result.SearchListViewModel.SearchR
 import org.helllabs.android.xmp.util.hide
 import org.helllabs.android.xmp.util.show
 
+@AndroidEntryPoint
 class SearchListResult : AppCompatActivity() {
+
+    private val viewModel: SearchListViewModel by viewModels()
 
     private lateinit var binder: ActivityResultListBinding
     private lateinit var searchListAdapter: ModAdapter<Module, ItemSearchListBinding>
-    private val viewModel: SearchListViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
