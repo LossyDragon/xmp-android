@@ -61,6 +61,11 @@
             android:id="@+id/plist_list"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            app:fastScrollEnabled="true"
+            app:fastScrollHorizontalThumbDrawable="@drawable/list_thumb_state"
+            app:fastScrollHorizontalTrackDrawable="@drawable/list_thumb_track_state"
+            app:fastScrollVerticalThumbDrawable="@drawable/list_thumb_state"
+            app:fastScrollVerticalTrackDrawable="@drawable/list_thumb_track_state"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             tools:listitem="@layout/item_playlist" />
 
