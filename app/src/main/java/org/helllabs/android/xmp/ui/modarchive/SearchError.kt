@@ -62,8 +62,8 @@ class SearchError : AppCompatActivity(), Runnable {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             val intent = Intent(this, Search::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
-            overridePendingTransition(0, 0)
             startActivity(intent)
+            overridePendingTransition(0, 0)
             return true
         }
         return super.onKeyDown(keyCode, event)

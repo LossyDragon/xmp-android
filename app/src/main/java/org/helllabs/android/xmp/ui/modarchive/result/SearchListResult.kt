@@ -47,8 +47,8 @@ class SearchListResult : AppCompatActivity() {
         ) { item ->
             val intent = Intent(this, ModuleResult::class.java)
             intent.putExtra(MODULE_ID, item.id)
-            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
             startActivity(intent)
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
         }
 
         binder.resultList.adapter = searchListAdapter
@@ -90,8 +90,8 @@ class SearchListResult : AppCompatActivity() {
             putExtra(ERROR, message)
             flags = Intent.FLAG_ACTIVITY_NO_ANIMATION
         }
-        overridePendingTransition(0, 0)
         startActivity(intent)
+        overridePendingTransition(0, 0)
     }
 
     private fun onSoftError(softError: String) {

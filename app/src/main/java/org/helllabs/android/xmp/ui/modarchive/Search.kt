@@ -86,15 +86,15 @@ class Search : AppCompatActivity(), TextView.OnEditorActionListener {
 
     private fun showHistory() {
         val intent = Intent(this, SearchHistory::class.java)
-        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
         startActivity(intent)
+        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
     }
 
     private fun performRandomSearch() {
         val intent = Intent(this, ModuleResult::class.java)
         intent.putExtra(MODULE_ID, -1)
-        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
         startActivity(intent)
+        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
     }
 
     private fun performSearch() {
@@ -112,7 +112,7 @@ class Search : AppCompatActivity(), TextView.OnEditorActionListener {
             }
         }
 
-        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
         startActivity(intent)
+        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
     }
 }

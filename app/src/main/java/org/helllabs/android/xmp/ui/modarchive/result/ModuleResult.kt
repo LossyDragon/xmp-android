@@ -164,8 +164,8 @@ class ModuleResult : AppCompatActivity() {
             putExtra(ERROR, message)
             flags = Intent.FLAG_ACTIVITY_NO_ANIMATION
         }
-        overridePendingTransition(0, 0)
         startActivity(intent)
+        overridePendingTransition(0, 0)
     }
 
     private fun onSoftError(softError: String) {
