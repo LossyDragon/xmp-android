@@ -62,15 +62,16 @@ class SearchListResult : AppCompatActivity() {
             }
         }
 
-        intent.getStringExtra(SEARCH_TEXT)?.let {
-            binder.appbar.toolbarText.text = getString(R.string.search_title_title)
-            viewModel.getFileOrTitle(it)
-        }
-
-        intent.getIntExtra(ARTIST_ID, -1).let {
-            if (it < 0) return@let
-            binder.appbar.toolbarText.text = getString(R.string.search_artist_modules_title)
-            viewModel.getArtistById(it)
+        with(intent) {
+            getStringExtra(SEARCH_TEXT)?.let {
+                binder.appbar.toolbarText.text = getString(R.string.search_title_title)
+                viewModel.getFileOrTitle(it)
+            }
+            getIntExtra(ARTIST_ID, -1).let {
+                if (it < 0) return@let
+                binder.appbar.toolbarText.text = getString(R.string.search_artist_modules_title)
+                viewModel.getArtistById(it)
+            }
         }
     }
 
@@ -82,9 +83,10 @@ class SearchListResult : AppCompatActivity() {
 
     private fun onError(error: String?) {
         val message = error ?: getString(R.string.search_unknown_error)
-        val intent = Intent(this, SearchError::class.java)
-        intent.putExtra(ERROR, message)
-        intent.flags = Intent.FLAG_ACTIVITY_NO_ANIMATION
+        val intent = Intent(this, SearchError::class.java).apply {
+            putExtra(ERROR, message)
+            flags = Intent.FLAG_ACTIVITY_NO_ANIMATION
+        }
         overridePendingTransition(0, 0)
         startActivity(intent)
     }

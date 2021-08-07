@@ -16,7 +16,6 @@ import org.helllabs.android.xmp.util.show
 class PlaylistAddEdit : AppCompatActivity() {
 
     private lateinit var binder: ActivityAddEditPlaylistBinding
-    private var isEditing: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,12 +38,10 @@ class PlaylistAddEdit : AppCompatActivity() {
             binder.buttonAddEditPlaylist.text = getString(R.string.button_playlist_update)
             binder.buttonDeletePlaylist.show()
             binder.buttonDeletePlaylist.text = getString(R.string.button_playlist_delete, name)
-            isEditing = true
         } else {
             binder.appbar.toolbarText.text = getString(R.string.menu_new_playlist)
             binder.buttonAddEditPlaylist.text = getString(R.string.button_playlist_add)
             binder.buttonDeletePlaylist.hide()
-            isEditing = false
         }
 
         binder.buttonAddEditPlaylist.click { savePlaylist() }
@@ -78,7 +75,7 @@ class PlaylistAddEdit : AppCompatActivity() {
         val playlistData = Intent().apply {
             putExtra(EXTRA_NAME, name)
             putExtra(EXTRA_COMMENT, comment)
-            if (isEditing) {
+            if (intent.hasExtra(EXTRA_ID)) {
                 putExtra(EXTRA_OLD_NAME, intent.getStringExtra(EXTRA_NAME))
                 putExtra(EXTRA_ID, RESULT_EDIT_PLAYLIST)
             } else {
@@ -94,12 +91,11 @@ class PlaylistAddEdit : AppCompatActivity() {
         if (playlist == null)
             return
 
-        val deleteIntent = Intent()
         MaterialDialog(this).show {
             title(R.string.dialog_delete_playlist)
             message(text = getString(R.string.dialog_delete_playlist_message, playlist))
             positiveButton(R.string.menu_delete) {
-                deleteIntent.apply {
+                val deleteIntent = Intent().apply {
                     putExtra(EXTRA_ID, RESULT_DELETE_PLAYLIST)
                     putExtra(EXTRA_NAME, intent.getStringExtra(EXTRA_NAME))
                     putExtra(EXTRA_COMMENT, intent.getStringExtra(EXTRA_COMMENT))
@@ -120,6 +116,5 @@ class PlaylistAddEdit : AppCompatActivity() {
         const val EXTRA_NAME = "org.helllabs.android.xmp.ui.browser.EXTRA_NAME"
         const val EXTRA_OLD_NAME = "org.helllabs.android.xmp.ui.browser.EXTRA_OLD_NAME"
         const val EXTRA_COMMENT = "org.helllabs.android.xmp.ui.browser.EXTRA_COMMENT"
-        const val EXTRA_TYPE = "org.helllabs.android.xmp.ui.browser.EXTRA_TYPE"
     }
 }

@@ -62,12 +62,9 @@ class PreferencesFragment : PreferenceFragmentCompat() {
     }
 
     override fun onCreatePreferences(bundle: Bundle?, rootKey: String?) {
-        logD("onCreatePreferences: ${arguments?.getString("rootKey")} or $rootKey")
-        if (arguments != null) {
-            setPreferencesFromResource(R.xml.preferences, arguments?.getString("rootKey"))
-        } else {
-            setPreferencesFromResource(R.xml.preferences, rootKey)
-        }
+        val key = arguments?.getString("rootKey") ?: rootKey
+        logD("onCreatePreferences: $key")
+        setPreferencesFromResource(R.xml.preferences, key)
     }
 
     override fun onNavigateToScreen(preferenceScreen: PreferenceScreen) {

@@ -57,17 +57,20 @@ class ModuleResult : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayShowHomeEnabled(true)
 
-        binder.appbar.toolbarText.text = getString(R.string.search_module_title)
-
-        binder.moduleButtonPlay.apply {
-            attachTextChangeAnimator()
-            bindProgressButton(this)
-            click { playClick() }
-        }
-
-        binder.moduleButtonRandom.click {
-            viewModel.getRandomModule()
-            binder.appbar.toolbarText.text = getString(R.string.search_random_title)
+        with(binder) {
+            // Toolbar Text
+            appbar.toolbarText.text = getString(R.string.search_module_title)
+            // Play|Download Button
+            moduleButtonPlay.apply {
+                attachTextChangeAnimator()
+                bindProgressButton(this)
+                click { playClick() }
+            }
+            // Random Button
+            moduleButtonRandom.click {
+                viewModel.getRandomModule()
+                binder.appbar.toolbarText.text = getString(R.string.search_random_title)
+            }
         }
 
         lifecycleScope.launchWhenStarted {
@@ -111,6 +114,22 @@ class ModuleResult : AppCompatActivity() {
         viewModel.removeFetch()
     }
 
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_delete, menu)
+        deleteMenu = menu
+
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == R.id.menu_delete) {
+            deleteClick()
+            return true
+        }
+
+        return super.onOptionsItemSelected(item)
+    }
+
     private fun onLoad() {
         binder.resultFrame.hide()
         binder.resultSpinner.show()
@@ -144,9 +163,10 @@ class ModuleResult : AppCompatActivity() {
 
     private fun onError(error: String?) {
         val message = error ?: getString(R.string.search_unknown_error)
-        val intent = Intent(this, SearchError::class.java)
-        intent.putExtra(ERROR, message)
-        intent.flags = Intent.FLAG_ACTIVITY_NO_ANIMATION
+        val intent = Intent(this, SearchError::class.java).apply {
+            putExtra(ERROR, message)
+            flags = Intent.FLAG_ACTIVITY_NO_ANIMATION
+        }
         overridePendingTransition(0, 0)
         startActivity(intent)
     }
@@ -163,20 +183,6 @@ class ModuleResult : AppCompatActivity() {
         binder.resultFrame.show()
         binder.resultSpinner.hide()
         updateView(result)
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.menu_delete, menu)
-        deleteMenu = menu
-
-        return super.onCreateOptionsMenu(menu)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == R.id.menu_delete)
-            deleteClick()
-
-        return super.onOptionsItemSelected(item)
     }
 
     private fun updateView(result: ModuleResult) {

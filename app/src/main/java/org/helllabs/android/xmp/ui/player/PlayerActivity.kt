@@ -32,6 +32,7 @@ import org.helllabs.android.xmp.ui.player.viewer.PatternViewer
 import org.helllabs.android.xmp.ui.player.viewer.Viewer
 import org.helllabs.android.xmp.ui.playlist_list.PlaylistMenu
 import org.helllabs.android.xmp.ui.preferences.PrefManager
+import org.helllabs.android.xmp.ui.util.toast
 import org.helllabs.android.xmp.util.*
 
 @AndroidEntryPoint
@@ -46,7 +47,7 @@ class PlayerActivity : AppCompatActivity() {
     private lateinit var playerDisplay: Display
     private var playerJob: Job? = null
     private val modVars = IntArray(10)
-    private val seqVars = IntArray(16) // this is MAX_SEQUENCES defined in common.h
+    private val seqVars = IntArray(255) // this is MAX_SEQUENCES defined in common.h
     private var currentViewer = 0
     private var fileList: List<String>? = null
     private var flipperPage = 0
@@ -473,8 +474,6 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     private fun showNewMod() {
-        logI("Show new module")
-
         Xmp.getModVars(modVars)
         Xmp.getSeqVars(seqVars)
         playTime = Xmp.time() / 100

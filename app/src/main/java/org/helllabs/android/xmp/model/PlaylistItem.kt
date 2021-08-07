@@ -12,8 +12,8 @@ enum class PlaylistType(val value: Int) {
 
 data class PlaylistItem(
     val type: PlaylistType,
-    val name: String,
-    val comment: String?,
+    var name: String?,
+    var comment: String?,
     var id: Int = 0,
     var file: File? = null,
 ) : Comparable<PlaylistItem> {
@@ -32,7 +32,7 @@ data class PlaylistItem(
         return if (d1 xor d2) {
             if (d1) -1 else 1
         } else {
-            name.uppercase(locale).compareTo(other.name.uppercase(locale))
+            name!!.uppercase(locale).compareTo(other.name!!.uppercase(locale))
         }
     }
 }

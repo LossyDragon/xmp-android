@@ -10,13 +10,14 @@ import javax.inject.Inject
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp.getFormats
 import org.helllabs.android.xmp.databinding.PrefFormatsBinding
-import org.helllabs.android.xmp.util.toast
+import org.helllabs.android.xmp.ui.util.toast
 
 @AndroidEntryPoint
 class ListFormats : AppCompatActivity() {
 
     @Inject
     lateinit var clipboard: ClipboardManager
+
     lateinit var binder: PrefFormatsBinding
 
     private val formats = getFormats()

@@ -11,10 +11,10 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.ui.preferences.PrefManager
+import org.helllabs.android.xmp.ui.util.toast
 import org.helllabs.android.xmp.util.click
 import org.helllabs.android.xmp.util.color
 import org.helllabs.android.xmp.util.logI
-import org.helllabs.android.xmp.util.toast
 
 class PlayerSheet(private val activity: PlayerActivity) {
 

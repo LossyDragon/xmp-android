@@ -1,4 +1,4 @@
-package org.helllabs.android.xmp.util
+package org.helllabs.android.xmp.ui.util
 
 import android.content.Context
 import android.widget.TextView
@@ -50,7 +50,7 @@ fun Context.yesNoDialog(
     }
 }
 
-fun Context.showChangeLog(lifecycleOwner: LifecycleOwner) {
+fun Context.showChangeLog(lifecycleOwner: LifecycleOwner, block: () -> Unit) {
     if (PrefManager.changelogVersion < BuildConfig.VERSION_CODE) {
         MaterialDialog(this).show {
             lifecycleOwner(lifecycleOwner)
@@ -62,7 +62,10 @@ fun Context.showChangeLog(lifecycleOwner: LifecycleOwner) {
             title(text = "Changelog")
             positiveButton(text = "Dismiss") {
                 PrefManager.changelogVersion = BuildConfig.VERSION_CODE
+                block()
             }
         }
+    } else {
+        block()
     }
 }

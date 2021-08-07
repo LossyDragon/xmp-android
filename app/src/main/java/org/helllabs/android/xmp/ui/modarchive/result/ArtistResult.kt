@@ -44,8 +44,9 @@ class ArtistResult : AppCompatActivity() {
             ArtistDiffUtil(),
             R.layout.item_single
         ) { item ->
-            val intent = Intent(this, SearchListResult::class.java)
-            intent.putExtra(ARTIST_ID, item.id)
+            val intent = Intent(this, SearchListResult::class.java).apply {
+                putExtra(ARTIST_ID, item.id)
+            }
             overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
             startActivity(intent)
         }
@@ -80,9 +81,10 @@ class ArtistResult : AppCompatActivity() {
 
     private fun onError(error: String?) {
         val message = error ?: getString(R.string.search_unknown_error)
-        val intent = Intent(this, SearchError::class.java)
-        intent.putExtra(ERROR, message)
-        intent.flags = Intent.FLAG_ACTIVITY_NO_ANIMATION
+        val intent = Intent(this, SearchError::class.java).apply {
+            putExtra(ERROR, message)
+            flags = Intent.FLAG_ACTIVITY_NO_ANIMATION
+        }
         overridePendingTransition(0, 0)
         startActivity(intent)
     }

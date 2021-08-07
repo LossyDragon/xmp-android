@@ -86,7 +86,7 @@ dependencies {
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.0'
     implementation 'androidx.preference:preference-ktx:1.1.1'
-    implementation "androidx.media:media:1.4.0"
+    implementation "androidx.media:media:1.4.1"
     implementation 'com.google.android.material:material:1.4.0'
 
     // AIDL-like replacement.
