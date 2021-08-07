@@ -2,12 +2,13 @@ package org.helllabs.android.xmp.ui.preferences
 
 import android.os.Bundle
 import android.view.MenuItem
-import androidx.preference.*
-import java.io.File
+import androidx.preference.Preference
+import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.PreferenceScreen
+import androidx.preference.SeekBarPreference
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.util.logD
-import org.helllabs.android.xmp.util.toast
 
 class PreferencesFragment : PreferenceFragmentCompat() {
 
@@ -29,17 +30,6 @@ class PreferencesFragment : PreferenceFragmentCompat() {
                 }
             }
         )
-
-        findPreference<Preference>("clear_cache")?.let {
-            it.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-                if (deleteCache(activity?.externalCacheDir!!)) {
-                    activity?.toast(R.string.cache_clear)
-                } else {
-                    activity?.toast(R.string.cache_clear_error)
-                }
-                true
-            }
-        }
 
         // It kinda works.
         findPreference<SeekBarPreference>("buffer_ms_opensl")?.let {
@@ -90,28 +80,5 @@ class PreferencesFragment : PreferenceFragmentCompat() {
         }
 
         return super.onOptionsItemSelected(item)
-    }
-
-    companion object {
-        fun deleteCache(file: File): Boolean = deleteCache(file, true)
-
-        @Suppress("SameParameterValue")
-        private fun deleteCache(file: File, flag: Boolean): Boolean {
-            var booleanFlag = flag
-
-            if (!file.exists()) {
-                return true
-            }
-
-            if (file.isDirectory) {
-                for (cacheFile in file.listFiles()!!) {
-                    booleanFlag = booleanFlag and deleteCache(cacheFile)
-                }
-            }
-
-            booleanFlag = booleanFlag and file.delete()
-
-            return booleanFlag
-        }
     }
 }
