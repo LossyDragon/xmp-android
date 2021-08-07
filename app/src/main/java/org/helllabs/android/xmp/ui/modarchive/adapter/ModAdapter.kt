@@ -22,12 +22,7 @@ class ModAdapter<T : Any, VB : ViewDataBinding>(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ListViewHolder<VB> {
         val inflater = LayoutInflater.from(parent.context)
         return ListViewHolder<VB>(
-            DataBindingUtil.inflate(
-                inflater,
-                layoutId,
-                parent,
-                false
-            )
+            DataBindingUtil.inflate(inflater, layoutId, parent, false)
         ).apply {
             binder.root.click {
                 onClick.invoke(getItem(absoluteAdapterPosition))

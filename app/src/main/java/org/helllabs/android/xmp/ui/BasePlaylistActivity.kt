@@ -94,16 +94,19 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             android.R.id.home -> {
-                val intent = Intent(this, PlaylistMenu::class.java)
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                val intent = Intent(this, PlaylistMenu::class.java).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                }
                 startActivity(intent)
                 return true
             }
             R.id.menu_prefs -> {
                 startActivity(Intent(this, Preferences::class.java))
+                return true
             }
             R.id.menu_download -> {
                 startActivity(Intent(this, Search::class.java))
+                return true
             }
         }
         return super.onOptionsItemSelected(item)

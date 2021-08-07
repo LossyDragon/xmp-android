@@ -103,9 +103,8 @@ class PlaylistActivity :
     }
 
     override fun onResume() {
-        super.onResume()
         mPlaylistAdapter.setUseFilename(PrefManager.useFilename)
-        update()
+        super.onResume() // Call super last to update the list.
     }
 
     override fun onPause() {

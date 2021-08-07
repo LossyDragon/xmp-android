@@ -76,12 +76,12 @@ class Search : AppCompatActivity(), TextView.OnEditorActionListener {
     }
 
     override fun onEditorAction(v: TextView?, actionId: Int, event: KeyEvent?): Boolean {
-        return if (canSearch && actionId == EditorInfo.IME_ACTION_SEARCH) {
+        if (canSearch && actionId == EditorInfo.IME_ACTION_SEARCH) {
             performSearch()
-            true
-        } else {
-            false
+            return true
         }
+
+        return false
     }
 
     private fun showHistory() {
