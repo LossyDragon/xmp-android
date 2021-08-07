@@ -64,9 +64,16 @@ class PreferencesFragment : PreferenceFragmentCompat() {
         }
         parentFragmentManager
             .beginTransaction()
+            .setCustomAnimations(
+                R.anim.slide_in_right,
+                R.anim.slide_out_left,
+                R.anim.slide_in_left_slow,
+                R.anim.slide_out_right_slow
+            )
             .replace(id, applicationPreferencesFragment)
             .addToBackStack(null)
             .commit()
+
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

@@ -186,6 +186,7 @@ class PlaylistMenu : AppCompatActivity() {
             fab.click {
                 val intent = Intent(this@PlaylistMenu, PlaylistAddEdit::class.java)
                 resultAdd.launch(intent)
+                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
             }
         }
     }
@@ -225,11 +226,13 @@ class PlaylistMenu : AppCompatActivity() {
             R.id.menu_prefs -> {
                 val intent = Intent(this, Preferences::class.java)
                 startActivity(intent)
+                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
                 return true
             }
             R.id.menu_download -> {
                 val intent = Intent(this, Search::class.java)
                 startActivity(intent)
+                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
                 return true
             }
         }
@@ -256,6 +259,7 @@ class PlaylistMenu : AppCompatActivity() {
                 }
             }
         startActivity(intent)
+        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
     }
 
     private fun onLongClick(position: Int) {
@@ -269,6 +273,7 @@ class PlaylistMenu : AppCompatActivity() {
                 putExtra(PlaylistAddEdit.EXTRA_COMMENT, playlist.comment)
             }
             resultEdit.launch(intent)
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
         }
     }
 
@@ -285,6 +290,7 @@ class PlaylistMenu : AppCompatActivity() {
             if (PlayerService.isPlayerAlive.value == true) {
                 val playerIntent = Intent(this, PlayerActivity::class.java)
                 startActivity(playerIntent)
+                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
             }
         }
     }

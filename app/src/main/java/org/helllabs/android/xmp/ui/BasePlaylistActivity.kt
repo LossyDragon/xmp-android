@@ -101,11 +101,15 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
                 return true
             }
             R.id.menu_prefs -> {
-                startActivity(Intent(this, Preferences::class.java))
+                val intent = Intent(this, Preferences::class.java)
+                startActivity(intent)
+                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
                 return true
             }
             R.id.menu_download -> {
-                startActivity(Intent(this, Search::class.java))
+                val intent = Intent(this, Search::class.java)
+                startActivity(intent)
+                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
                 return true
             }
         }
