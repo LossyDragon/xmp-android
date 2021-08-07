@@ -13,11 +13,9 @@ import com.github.razir.progressbutton.DrawableButton
 import com.github.razir.progressbutton.attachTextChangeAnimator
 import com.github.razir.progressbutton.bindProgressButton
 import com.github.razir.progressbutton.showProgress
-import com.squareup.moshi.JsonAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
 import java.io.IOException
-import javax.inject.Inject
 import kotlinx.coroutines.flow.collect
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.XmpApplication
@@ -27,17 +25,16 @@ import org.helllabs.android.xmp.model.ModuleResult
 import org.helllabs.android.xmp.ui.modarchive.ModArchiveConstants.ERROR
 import org.helllabs.android.xmp.ui.modarchive.ModArchiveConstants.MODULE_ID
 import org.helllabs.android.xmp.ui.modarchive.SearchError
-import org.helllabs.android.xmp.ui.modarchive.SearchHistory
 import org.helllabs.android.xmp.ui.modarchive.result.ModuleResultViewModel.ModuleState
 import org.helllabs.android.xmp.ui.player.PlayerActivity
 import org.helllabs.android.xmp.ui.preferences.PrefManager
+import org.helllabs.android.xmp.ui.util.dialogMessage
+import org.helllabs.android.xmp.ui.util.toast
+import org.helllabs.android.xmp.ui.util.yesNoDialog
 import org.helllabs.android.xmp.util.*
 
 @AndroidEntryPoint
 class ModuleResult : AppCompatActivity() {
-
-    @Inject
-    lateinit var moshiAdapter: JsonAdapter<List<Module>>
 
     private lateinit var binder: ActivityResultModuleBinding
 
@@ -139,7 +136,7 @@ class ModuleResult : AppCompatActivity() {
 
     private fun onCancelled() {
         toast(R.string.msg_download_cancelled)
-        updateButtons(module)
+        updateButtons()
         binder.moduleButtonRandom.isEnabled = true
     }
 
@@ -150,7 +147,7 @@ class ModuleResult : AppCompatActivity() {
 
     private fun onComplete() {
         logI("Download Complete")
-        updateButtons(module)
+        updateButtons()
         binder.moduleButtonRandom.isEnabled = true
     }
 
@@ -186,71 +183,66 @@ class ModuleResult : AppCompatActivity() {
     }
 
     private fun updateView(result: ModuleResult) {
-        this.module = result.module!!
+        module = result.module!!
 
         logI("Response: title - " + module.getSongTitle())
 
         // Save module result into Search History
-        saveModuleToHistory()
+        viewModel.saveModuleToHistory(module)
 
         binder.resultData.scrollTo(0, 0)
-        updateButtons(module)
+        updateButtons()
 
         val size = module.bytes!! / 1024
         val info = getString(R.string.search_result_by, module.format, module.getArtist(), size)
 
-        binder.moduleTitle.text = module.getSongTitle()
-        binder.moduleFilename.text = module.filename
-        binder.moduleInfo.text = (
-            "<a href=\"" + module.infopage + "\">" + info + "</a>"
-            ).asHtml()
-        binder.moduleInfo.movementMethod = LinkMovementMethod.getInstance()
-        binder.moduleInfo.linksClickable = true
-        binder.moduleLicense.text = (
-            "<a href=\"" + module.license!!.legalurl + "\">" + module.license!!.title + "</a>"
-            ).asHtml()
-        binder.moduleLicense.movementMethod = LinkMovementMethod.getInstance()
-        binder.moduleLicense.linksClickable = true
-        binder.moduleLicenseDescription.text = module.license!!.description
-        binder.moduleInstruments.text = module.parseInstruments()
-
-        // If a module has a comment / message
-        if (!module.comment.isNullOrEmpty()) {
-            binder.moduleCommentTitle.show()
-            binder.moduleCommentText.show()
-            binder.moduleCommentText.text = module.getComment()
-        }
-
-        if (result.hasSponsor()) {
-            val sponsor = result.sponsor!!
-            with(binder.moduleSponsor) {
-                isClickable = true
+        with(binder) {
+            moduleTitle.text = module.getSongTitle()
+            moduleFilename.text = module.filename
+            moduleLicenseDescription.text = module.license!!.description
+            moduleInstruments.text = module.parseInstruments()
+            with(moduleInfo) {
+                text = module.infoPageToHyperlink(info)
                 movementMethod = LinkMovementMethod.getInstance()
-                text = (
-                    "Download mirrors provided by\n<a href=\"" +
-                        sponsor.details!!.link + "\">" +
-                        sponsor.details!!.text + "</a>"
-                    ).asHtml()
-                show()
+                linksClickable = true
+            }
+            with(moduleLicense) {
+                text = module.license!!.toHyperlink()
+                movementMethod = LinkMovementMethod.getInstance()
+                linksClickable = true
+            }
+            if (!module.comment.isNullOrEmpty()) {
+                moduleCommentTitle.show()
+                moduleCommentText.show()
+                moduleCommentText.text = module.getComment()
+            }
+            if (result.hasSponsor()) {
+                with(moduleSponsor) {
+                    isClickable = true
+                    movementMethod = LinkMovementMethod.getInstance()
+                    text = result.sponsor!!.toHyperLink()
+                    show()
+                }
             }
         }
     }
 
     private fun playClick() {
-        if (localFile(module).exists()) {
-            val path = localFile(module).path
+        if (FileUtils.localFile(module).exists()) {
+            val path = FileUtils.localFile(module).path
             val modList = ArrayList<String>()
 
             modList.add(path)
             XmpApplication.fileList = modList
 
             logI("Play $path")
-            val intent = Intent(this, PlayerActivity::class.java)
-            intent.putExtra(PlayerActivity.PARM_START, 0)
+            val intent = Intent(this, PlayerActivity::class.java).apply {
+                putExtra(PlayerActivity.PARM_START, 0)
+            }
             startActivity(intent)
         } else {
             // Does not exist, download module
-            val modDir = getDownloadPath(module)
+            val modDir = FileUtils.getDownloadPath(module)
             val url = module.url
 
             shouldPlay = true
@@ -261,19 +253,19 @@ class ModuleResult : AppCompatActivity() {
                 gravity = DrawableButton.GRAVITY_TEXT_START
             }
 
-            logI("Downloaded $url to $modDir")
-            download(module.filename!!, url!!, modDir)
+            logI("Downloading $url to $modDir")
+            viewModel.downloadModule(module.filename!!, url!!, modDir)
         }
     }
 
     private fun deleteClick() {
-        val file = localFile(module)
+        val file = FileUtils.localFile(module)
         val title = getString(R.string.title_delete_file)
         val message = getString(R.string.msg_delete_file, module.filename)
         yesNoDialog(this, title, message) {
             logD("Delete " + file.path)
             if (file.delete()) {
-                updateButtons(module)
+                updateButtons()
             } else {
                 toast(R.string.error)
             }
@@ -298,32 +290,11 @@ class ModuleResult : AppCompatActivity() {
                     }
                 }
             }
-            updateButtons(module)
+            updateButtons()
         }
     }
 
-    private fun getDownloadPath(module: Module?): String {
-        val sb = StringBuilder()
-        sb.append(PrefManager.mediaPath)
-
-        if (PrefManager.useModArchiveFolder) {
-            sb.append(File.separatorChar)
-            sb.append(getString(R.string.dirname_theModArchive))
-        }
-
-        if (PrefManager.useArtistFolder) {
-            sb.append(File.separatorChar)
-            sb.append(module!!.getArtist().asHtml())
-        }
-
-        return sb.toString()
-    }
-
-    private fun updateButtons(module: Module?) {
-        // Should make sure this never happens
-        if (module == null)
-            return
-
+    private fun updateButtons() {
         // Block download of unsupported formats
         val isUnSupported = listOf(*UNSUPPORTED).contains(module.format)
 
@@ -333,7 +304,7 @@ class ModuleResult : AppCompatActivity() {
         } else {
             binder.moduleButtonPlay.isEnabled = true
 
-            if (localFile(module).exists()) {
+            if (FileUtils.localFile(module).exists()) {
                 // module exists, update button to reflect existence and enable Menu Delete
                 deleteMenu?.findItem(R.id.menu_delete)?.isEnabled = true
                 binder.moduleButtonPlay.text = getString(R.string.play)
@@ -343,56 +314,6 @@ class ModuleResult : AppCompatActivity() {
                 binder.moduleButtonPlay.text = getString(R.string.download)
             }
         }
-    }
-
-    private fun download(mod: String, url: String, path: String) {
-        if (localFile(url, path).exists()) {
-            val title = getString(R.string.msg_file_exists)
-            val message = getString(R.string.msg_file_exists_overwrite)
-            yesNoDialog(this, title, message) {
-                viewModel.downloadModule(mod, url, path)
-            }
-        } else {
-            viewModel.downloadModule(mod, url, path)
-        }
-    }
-
-    private fun localFile(module: Module?): File {
-        val url = module!!.url
-        val moduleFilename = url!!.substring(url.lastIndexOf('#') + 1, url.length)
-        return File(getDownloadPath(module), moduleFilename)
-    }
-
-    private fun localFile(url: String, path: String): File {
-        val filename = url.substring(url.lastIndexOf('#') + 1, url.length)
-        return File(path, filename)
-    }
-
-    private fun saveModuleToHistory() {
-        // Load history list first
-        val searchHistory = getSearchHistory().toMutableList()
-
-        // Check to see if the module has been searched before. Skip if true
-        searchHistory.forEach {
-            if (it.id == module.id)
-                return
-        }
-
-        // Remove the oldest item if history length is reached
-        if (searchHistory.size >= SearchHistory.HISTORY_LENGTH)
-            searchHistory.removeFirst()
-
-        // Add the current module into the history
-        searchHistory.add(module)
-
-        // Convert into JSON and save it
-        PrefManager.searchHistory = moshiAdapter.toJson(searchHistory)
-    }
-
-    private fun getSearchHistory(): List<Module> {
-        return PrefManager.searchHistory?.let {
-            moshiAdapter.fromJson(it)
-        }.orEmpty()
     }
 
     companion object {

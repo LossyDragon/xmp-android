@@ -23,6 +23,7 @@ import org.helllabs.android.xmp.ui.player.PlayerActivity
 import org.helllabs.android.xmp.ui.playlist_list.PlaylistMenu
 import org.helllabs.android.xmp.ui.preferences.PrefManager
 import org.helllabs.android.xmp.ui.preferences.Preferences
+import org.helllabs.android.xmp.ui.util.toast
 import org.helllabs.android.xmp.util.*
 
 abstract class BasePlaylistActivity : AppCompatActivity() {
@@ -39,6 +40,8 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
     protected abstract var isLoopMode: Boolean
     protected abstract val allFiles: List<String>
     protected abstract fun update()
+    protected abstract fun onClick(position: Int)
+    protected abstract fun onLongClick(position: Int)
 
     private val shuffleIcon
         get() = if (isShuffleMode) R.drawable.ic_shuffle_on else R.drawable.ic_shuffle_off
@@ -69,6 +72,9 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayShowHomeEnabled(true)
+
+        mPlaylistAdapter.onClick = { onClick(it) }
+        mPlaylistAdapter.onLongClick = { onLongClick(it) }
     }
 
     public override fun onResume() {

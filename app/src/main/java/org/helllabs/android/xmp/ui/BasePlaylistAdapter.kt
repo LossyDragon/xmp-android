@@ -19,6 +19,7 @@ import org.helllabs.android.xmp.databinding.ItemPlaylistBinding
 import org.helllabs.android.xmp.databinding.ItemPlaylistCardBinding
 import org.helllabs.android.xmp.model.PlaylistItem
 import org.helllabs.android.xmp.model.PlaylistType
+import org.helllabs.android.xmp.ui.preferences.PrefManager
 import org.helllabs.android.xmp.ui.util.recyclerview.ItemTouchHelperAdapter
 import org.helllabs.android.xmp.ui.util.recyclerview.ItemTouchHelperViewHolder
 import org.helllabs.android.xmp.ui.util.recyclerview.OnStartDragListener
@@ -124,7 +125,27 @@ class BasePlaylistAdapter(
         val binder: ItemPlaylistCardBinding
     ) : RecyclerView.ViewHolder(binder.root) {
         fun onBind(item: PlaylistItem) = with(binder) {
+
+            // Inject File Browser info
+            if (item.type == PlaylistType.TYPE_SPECIAL && item.id == 0) {
+                val mediaPath = PrefManager.mediaPath
+                with(root.context) {
+                    item.name = getString(R.string.playlist_special_title)
+                    item.comment = getString(R.string.playlist_special_comment, mediaPath)
+                }
+            }
+
+            // Inject No Comment Info
+            if (item.type == PlaylistType.TYPE_PLAYLIST) {
+                if (item.comment.isNullOrBlank()) {
+                    with(root.context) {
+                        item.comment = getString(R.string.no_comment)
+                    }
+                }
+            }
+
             playlistItem = item
+
             root.click {
                 onClick?.invoke(absoluteAdapterPosition)
             }

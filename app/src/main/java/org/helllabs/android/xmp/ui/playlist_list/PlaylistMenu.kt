@@ -1,26 +1,27 @@
 package org.helllabs.android.xmp.ui.playlist_list
 
+import android.Manifest.permission.READ_EXTERNAL_STORAGE
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.annotation.SuppressLint
 import android.content.*
-import android.content.pm.PackageManager
 import android.os.*
 import android.text.SpannableString
 import android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
 import android.text.style.ForegroundColorSpan
 import android.view.*
+import androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.input.input
-import java.io.File
+import com.afollestad.materialdialogs.lifecycle.lifecycleOwner
 import java.util.*
+import kotlinx.coroutines.flow.collect
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.databinding.ActivityPlaylistMenuBinding
 import org.helllabs.android.xmp.model.PlaylistItem
-import org.helllabs.android.xmp.model.PlaylistType
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.ui.BasePlaylistAdapter
 import org.helllabs.android.xmp.ui.PlaylistLayoutType
@@ -30,27 +31,91 @@ import org.helllabs.android.xmp.ui.player.PlayerActivity
 import org.helllabs.android.xmp.ui.playlist_detail.PlaylistActivity
 import org.helllabs.android.xmp.ui.preferences.PrefManager
 import org.helllabs.android.xmp.ui.preferences.Preferences
+import org.helllabs.android.xmp.ui.util.dialogMessage
+import org.helllabs.android.xmp.ui.util.showChangeLog
+import org.helllabs.android.xmp.ui.util.toast
 import org.helllabs.android.xmp.util.*
-import org.helllabs.android.xmp.util.PlaylistUtils
-import org.helllabs.android.xmp.util.PlaylistUtils.createEmptyPlaylist
 
 class PlaylistMenu : AppCompatActivity() {
 
+    val viewModel: PlaylistMenuViewModel by viewModels()
+
     private lateinit var playlistAdapter: BasePlaylistAdapter
-    private lateinit var mediaPath: String
+
+    private var resultPermissions = registerForActivityResult(RequestMultiplePermissions()) {
+        if (it[WRITE_EXTERNAL_STORAGE] == true && it[READ_EXTERNAL_STORAGE] == true) {
+            logD("Perms Granted: ${it.entries}")
+            showChangeLog(this) {
+                val name = getString(R.string.empty_playlist)
+                val comment = getString(R.string.empty_comment)
+                when (viewModel.setupDataDir(name, comment)) {
+                    0 -> Unit // Success
+                    -1 -> dialogMessage(
+                        lifecycleOwner = this,
+                        message = getString(R.string.error_create_playlist),
+                    )
+                    -2 -> dialogMessage(
+                        lifecycleOwner = this,
+                        title = R.string.error,
+                        message = getString(R.string.error_datadir),
+                        block = { finish() }
+                    )
+                }
+            }
+        } else {
+            logW("Perms Not-Granted: ${it.entries}")
+            dialogMessage(
+                lifecycleOwner = this,
+                message = "Permissions Not Granted...",
+                block = { finish() }
+            )
+        }
+    }
 
     private var resultAdd = registerForActivityResult(StartActivityForResult()) {
-        if (it.resultCode == RESULT_OK)
-            addPlaylist(it.data)
+        if (it.resultCode == RESULT_OK) {
+            if (it.data == null) {
+                toast("Couldn't add playlist")
+                return@registerForActivityResult
+            }
+            val data = it.data!!
+
+            val name = data.getStringExtra(PlaylistAddEdit.EXTRA_NAME)!!
+            val comment = data.getStringExtra(PlaylistAddEdit.EXTRA_COMMENT)!!
+            if (!viewModel.addPlaylist(name, comment)) {
+                dialogMessage(
+                    lifecycleOwner = this,
+                    message = getString(R.string.error_create_playlist),
+                )
+            }
+        }
     }
 
     private var resultEdit = registerForActivityResult(StartActivityForResult()) {
-        if (it.resultCode == RESULT_OK)
-            editPlaylist(it.data)
-    }
+        if (it.resultCode == RESULT_OK) {
+            if (it.data == null) {
+                toast(R.string.msg_edit_playlist_failed)
+                return@registerForActivityResult
+            }
+            val data = it.data!!
 
-    private var resultUpdate = registerForActivityResult(StartActivityForResult()) {
-        updateList()
+            val id = data.getIntExtra(PlaylistAddEdit.EXTRA_ID, -1)
+            val name = data.getStringExtra(PlaylistAddEdit.EXTRA_NAME)!!
+            val comment = data.getStringExtra(PlaylistAddEdit.EXTRA_COMMENT)!!
+            val oldName = data.getStringExtra(PlaylistAddEdit.EXTRA_OLD_NAME)
+
+            when (viewModel.editPlaylist(id, name, comment, oldName)) {
+                0 -> Unit // Success
+                -1 -> dialogMessage(
+                    lifecycleOwner = this,
+                    message = getString(R.string.error_rename_playlist),
+                )
+                -2 -> dialogMessage(
+                    lifecycleOwner = this,
+                    message = getString(R.string.error_edit_comment),
+                )
+            }
+        }
     }
 
     private lateinit var binder: ActivityPlaylistMenuBinding
@@ -70,46 +135,63 @@ class PlaylistMenu : AppCompatActivity() {
         val spannable = SpannableString(getString(R.string.app_name))
         val color = resources.color(R.color.accent)
         spannable.setSpan(ForegroundColorSpan(color), 0, 3, SPAN_EXCLUSIVE_EXCLUSIVE)
-        binder.appbar.toolbarText.apply {
-            text = spannable
-            click { startPlayerActivity() }
+
+        // Playlist adapter
+        playlistAdapter = BasePlaylistAdapter(PlaylistLayoutType.TYPE_CARD, false).apply {
+            onClick = { position -> onClick(position) }
+            onLongClick = { position -> onLongClick(position) }
         }
 
-        // Swipe refresh
-        binder.swipeContainer.apply {
-            setColorSchemeResources(R.color.refresh_color)
-            setOnRefreshListener {
-                updateList()
-                isRefreshing = false
+        lifecycleScope.launchWhenStarted {
+            viewModel.playlistState.collect {
+                when (it) {
+                    PlaylistMenuViewModel.PlaylistMenuState.None -> Unit
+                    PlaylistMenuViewModel.PlaylistMenuState.Load -> onLoad()
+                    is PlaylistMenuViewModel.PlaylistMenuState.Loaded -> onLoaded(it.list)
+                }
             }
         }
 
-        // Playlist adapter
-        playlistAdapter = BasePlaylistAdapter(PlaylistLayoutType.TYPE_CARD, false)
-        playlistAdapter.onClick = { position -> onClick(position) }
-        playlistAdapter.onLongClick = { position -> onLongClick(position) }
-
-        binder.plistMenuList.apply {
-            adapter = playlistAdapter
-            setOnItemTouchListener(
-                onInterceptTouchEvent = { _, e ->
-                    if (e.action == MotionEvent.ACTION_DOWN) {
-                        var enable = false
-                        if (childCount > 0) {
-                            enable = !canScrollVertically(-1)
-                        }
-                        binder.swipeContainer.isEnabled = enable
-                    }
-                    false
+        with(binder) {
+            // AppBar
+            appbar.toolbarText.apply {
+                text = spannable
+                click { startPlayerActivity() }
+            }
+            // Swipe refresh
+            swipeContainer.apply {
+                setColorSchemeResources(R.color.refresh_color)
+                setOnRefreshListener {
+                    viewModel.updateList()
+                    isRefreshing = false
                 }
-            )
+            }
+            // RecyclerView
+            plistMenuList.apply {
+                adapter = playlistAdapter
+                setOnItemTouchListener(
+                    onInterceptTouchEvent = { _, e ->
+                        if (e.action == MotionEvent.ACTION_DOWN) {
+                            var enable = false
+                            if (childCount > 0) {
+                                enable = !canScrollVertically(-1)
+                            }
+                            binder.swipeContainer.isEnabled = enable
+                        }
+                        false
+                    }
+                )
+            }
+            // FAB
+            fab.click {
+                val intent = Intent(this@PlaylistMenu, PlaylistAddEdit::class.java)
+                resultAdd.launch(intent)
+            }
         }
+    }
 
-        // FAB
-        binder.fab.click {
-            resultAdd.launch(Intent(this, PlaylistAddEdit::class.java))
-        }
-
+    public override fun onResume() {
+        super.onResume()
         if (!Preferences.checkStorage()) {
             dialogMessage(
                 lifecycleOwner = this,
@@ -118,55 +200,14 @@ class PlaylistMenu : AppCompatActivity() {
             )
         }
 
-        if (Api.isAtLeastM) {
-            val hasPermission =
-                ContextCompat.checkSelfPermission(
-                    this,
-                    WRITE_EXTERNAL_STORAGE
-                ) == PackageManager.PERMISSION_GRANTED
-            if (hasPermission) {
-                setupDataDir()
-                updateList()
-            } else {
-                ActivityCompat.requestPermissions(
-                    this,
-                    arrayOf(WRITE_EXTERNAL_STORAGE),
-                    REQUEST_WRITE_STORAGE
-                )
-            }
-        } else {
-            setupDataDir()
-        }
-
-        // Show Changelog
-        showChangeLog(this)
+        val permissions = arrayOf(READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE)
+        resultPermissions.launch(permissions)
 
         if (intent.flags and Intent.FLAG_ACTIVITY_NEW_TASK != 0) {
             startPlayerActivity()
         }
     }
 
-    public override fun onResume() {
-        super.onResume()
-        playlistAdapter.submitList(null) // Stop flicker
-        updateList()
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_WRITE_STORAGE) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                setupDataDir()
-                updateList()
-            }
-        }
-    }
-
-    // Menu
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_options, menu)
 
@@ -177,35 +218,44 @@ class PlaylistMenu : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            android.R.id.home -> startPlayerActivity()
+            android.R.id.home -> {
+                startPlayerActivity()
+                return true
+            }
             R.id.menu_prefs -> {
-                resultUpdate.launch(Intent(this, Preferences::class.java))
+                val intent = Intent(this, Preferences::class.java)
+                startActivity(intent)
+                return true
             }
             R.id.menu_download -> {
                 val intent = Intent(this, Search::class.java)
                 startActivity(intent)
+                return true
             }
         }
         return super.onOptionsItemSelected(item)
     }
 
+    // Is this needed anymore? We do terminate the service if swiped away from recents.
     public override fun onNewIntent(intent: Intent) {
-        // If we launch from launcher and we're playing a module, go straight to the player activity
         super.onNewIntent(intent)
+
+        // If we launch from launcher and we're playing a module, go straight to the player activity
         if (intent.flags and Intent.FLAG_ACTIVITY_NEW_TASK != 0) {
             startPlayerActivity()
         }
     }
 
     private fun onClick(position: Int) {
-        val intent: Intent
-        if (position == 0) {
-            intent = Intent(this@PlaylistMenu, FilelistActivity::class.java)
-        } else {
-            intent = Intent(this@PlaylistMenu, PlaylistActivity::class.java)
-            intent.putExtra("name", playlistAdapter.currentList[position].name)
-        }
-        resultUpdate.launch(intent)
+        val intent: Intent =
+            if (position == 0) {
+                Intent(this@PlaylistMenu, FilelistActivity::class.java)
+            } else {
+                Intent(this@PlaylistMenu, PlaylistActivity::class.java).apply {
+                    putExtra("name", playlistAdapter.currentList[position].name)
+                }
+            }
+        startActivity(intent)
     }
 
     private fun onLongClick(position: Int) {
@@ -217,31 +267,17 @@ class PlaylistMenu : AppCompatActivity() {
                 putExtra(PlaylistAddEdit.EXTRA_ID, playlist.id)
                 putExtra(PlaylistAddEdit.EXTRA_NAME, playlist.name)
                 putExtra(PlaylistAddEdit.EXTRA_COMMENT, playlist.comment)
-                putExtra(PlaylistAddEdit.EXTRA_TYPE, playlist.type)
             }
             resultEdit.launch(intent)
         }
     }
 
-    // Create application directory and populate with empty playlist
-    private fun setupDataDir() {
-        if (!Preferences.DATA_DIR.isDirectory) {
-            if (Preferences.DATA_DIR.mkdirs()) {
-                createEmptyPlaylist(
-                    this,
-                    this,
-                    getString(R.string.empty_playlist),
-                    getString(R.string.empty_comment)
-                )
-            } else {
-                dialogMessage(
-                    lifecycleOwner = this,
-                    title = R.string.error,
-                    message = getString(R.string.error_datadir),
-                    block = { finish() }
-                )
-            }
-        }
+    private fun onLoad() {
+    }
+
+    private fun onLoaded(list: List<PlaylistItem>) {
+        logD("Updating List")
+        playlistAdapter.submitList(list)
     }
 
     private fun startPlayerActivity() {
@@ -253,89 +289,11 @@ class PlaylistMenu : AppCompatActivity() {
         }
     }
 
-    private fun updateList() {
-        playlistAdapter.submitList(null) // Stop Flicker
-
-        val list = mutableListOf<PlaylistItem>()
-        mediaPath = PrefManager.mediaPath
-        val browserItem = PlaylistItem(
-            PlaylistType.TYPE_SPECIAL,
-            getString(R.string.playlist_special_title),
-            getString(R.string.playlist_special_comment, mediaPath)
-        )
-        list.add(browserItem)
-
-        PlaylistUtils.listNoSuffix().forEach { name ->
-            val item = PlaylistItem(
-                PlaylistType.TYPE_PLAYLIST,
-                name,
-                PlaylistUtils.readComment(this, this, name)
-            )
-            list.add(item)
-        }
-
-        PlaylistUtils.renumberIds(playlistAdapter.getItems())
-        playlistAdapter.submitList(list)
-    }
-
-    private fun addPlaylist(data: Intent?) {
-        if (data == null) {
-            toast("Couldn't add playlist")
-            return
-        }
-
-        val name = data.getStringExtra(PlaylistAddEdit.EXTRA_NAME)!!
-        val comment = data.getStringExtra(PlaylistAddEdit.EXTRA_COMMENT)!!
-        if (!createEmptyPlaylist(this, this, name, comment)) {
-            dialogMessage(
-                lifecycleOwner = this,
-                message = getString(R.string.error_create_playlist),
-            )
-        }
-
-        updateList()
-    }
-
-    private fun editPlaylist(data: Intent?) {
-
-        if (data == null) {
-            toast(R.string.msg_edit_playlist_failed)
-            return
-        }
-
-        val id = data.getIntExtra(PlaylistAddEdit.EXTRA_ID, -1)
-        val name = data.getStringExtra(PlaylistAddEdit.EXTRA_NAME)!!
-        val comment = data.getStringExtra(PlaylistAddEdit.EXTRA_COMMENT)!!
-        val oldName = data.getStringExtra(PlaylistAddEdit.EXTRA_OLD_NAME)
-
-        when (id) {
-            PlaylistAddEdit.RESULT_DELETE_PLAYLIST -> PlaylistUtils.delete(name)
-            PlaylistAddEdit.RESULT_EDIT_PLAYLIST -> {
-                if (!PlaylistUtils.rename(oldName!!, name)) {
-                    dialogMessage(
-                        lifecycleOwner = this,
-                        message = getString(R.string.error_rename_playlist),
-                    )
-                    return // Don't attempt to edit comment if failed.
-                }
-
-                val file = File(Preferences.DATA_DIR, name + PlaylistUtils.COMMENT_SUFFIX)
-                if (!PlaylistUtils.editComment(file, comment)) {
-                    dialogMessage(
-                        lifecycleOwner = this,
-                        message = getString(R.string.error_edit_comment),
-                    )
-                }
-            }
-            else -> throw IllegalArgumentException("Edit playlist id was not correct: $id")
-        }
-
-        updateList()
-    }
-
     @SuppressLint("CheckResult")
     private fun changeDir() {
+        val mediaPath = PrefManager.mediaPath
         MaterialDialog(this).show {
+            lifecycleOwner(this@PlaylistMenu)
             title(R.string.dialog_change_dir_title)
             message(R.string.dialog_change_dir_msg)
             input(
@@ -343,16 +301,12 @@ class PlaylistMenu : AppCompatActivity() {
                 waitForPositiveButton = true,
                 allowEmpty = false
             ) { _, text ->
-                if (mediaPath != mediaPath) {
+                if (text != mediaPath) {
                     PrefManager.mediaPath = text.toString()
-                    updateList()
+                    viewModel.updateList()
                 }
             }
             negativeButton(R.string.cancel)
         }
-    }
-
-    companion object {
-        private const val REQUEST_WRITE_STORAGE = 112
     }
 }

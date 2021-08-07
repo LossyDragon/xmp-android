@@ -2,6 +2,7 @@ package org.helllabs.android.xmp.ui.modarchive.result
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.squareup.moshi.JsonAdapter
 import com.tonyodev.fetch2.*
 import com.tonyodev.fetch2core.FetchObserver
 import com.tonyodev.fetch2core.Reason
@@ -11,15 +12,19 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import org.helllabs.android.xmp.model.Module
 import org.helllabs.android.xmp.model.ModuleResult
 import org.helllabs.android.xmp.repository.Repository
+import org.helllabs.android.xmp.ui.modarchive.SearchHistory
+import org.helllabs.android.xmp.ui.preferences.PrefManager
 import org.helllabs.android.xmp.util.logE
 
 @HiltViewModel
 class ModuleResultViewModel
 @Inject constructor(
     private val repository: Repository,
-    private val fetchDownloader: Fetch
+    private val fetchDownloader: Fetch,
+    private val moshiAdapter: JsonAdapter<List<Module>>
 ) : ViewModel() {
 
     private val _moduleState = MutableStateFlow<ModuleState>(ModuleState.None)
@@ -57,6 +62,33 @@ class ModuleResultViewModel
 
     fun removeFetch() {
         fetchDownloader.close()
+    }
+
+    private fun getSearchHistory(): List<Module> {
+        return PrefManager.searchHistory?.let {
+            moshiAdapter.fromJson(it)
+        }.orEmpty()
+    }
+
+    fun saveModuleToHistory(module: Module) {
+        // Load history list first
+        val searchHistory = getSearchHistory().toMutableList()
+
+        // Check to see if the module has been searched before. Skip if true
+        searchHistory.forEach {
+            if (it.id == module.id)
+                return
+        }
+
+        // Remove the oldest item if history length is reached
+        if (searchHistory.size >= SearchHistory.HISTORY_LENGTH)
+            searchHistory.removeFirst()
+
+        // Add the current module into the history
+        searchHistory.add(module)
+
+        // Convert into JSON and save it
+        PrefManager.searchHistory = moshiAdapter.toJson(searchHistory)
     }
 
     fun downloadModule(mod: String, url: String, file: String) {

@@ -1,0 +1,100 @@
+package org.helllabs.android.xmp.ui.playlist_list
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import java.io.File
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+import org.helllabs.android.xmp.model.PlaylistItem
+import org.helllabs.android.xmp.model.PlaylistType
+import org.helllabs.android.xmp.ui.preferences.Preferences
+import org.helllabs.android.xmp.util.PlaylistUtils
+
+class PlaylistMenuViewModel : ViewModel() {
+
+    private val _playlistState = MutableStateFlow<PlaylistMenuState>(PlaylistMenuState.None)
+    val playlistState: StateFlow<PlaylistMenuState> = _playlistState
+
+    fun updateList() {
+        _playlistState.value = PlaylistMenuState.Load
+
+        val list = mutableListOf<PlaylistItem>()
+
+        viewModelScope.launch {
+            val browserItem = PlaylistItem(PlaylistType.TYPE_SPECIAL, null, null)
+            list.add(browserItem)
+
+            PlaylistUtils.listNoSuffix().forEach { name ->
+                val comment = PlaylistUtils.readComment(name)
+                val item = PlaylistItem(PlaylistType.TYPE_PLAYLIST, name, comment)
+                list.add(item)
+            }
+            PlaylistUtils.renumberIds(list)
+        }
+
+        _playlistState.value = PlaylistMenuState.Loaded(list)
+    }
+
+    fun addPlaylist(name: String, comment: String): Boolean {
+        val result = PlaylistUtils.createEmptyPlaylist(name, comment)
+        updateList()
+        return result
+    }
+
+    /**
+     * Edit the specified playlist
+     *
+     * @return a value indicating it's success:
+     *           0 success
+     *          -1 failed playlist
+     *          -2 failed comment
+     */
+    fun editPlaylist(id: Int, name: String, comment: String, oldName: String?): Int {
+        when (id) {
+            PlaylistAddEdit.RESULT_DELETE_PLAYLIST -> PlaylistUtils.delete(name)
+            PlaylistAddEdit.RESULT_EDIT_PLAYLIST -> {
+                if (!PlaylistUtils.rename(oldName!!, name)) {
+                    return -1
+                }
+
+                val file = File(Preferences.DATA_DIR, name + PlaylistUtils.COMMENT_SUFFIX)
+                if (!PlaylistUtils.editComment(file, comment)) {
+                    return -2
+                }
+            }
+            else -> throw IllegalArgumentException("Edit playlist id was not correct: $id")
+        }
+
+        updateList()
+        return 0
+    }
+
+    /**
+     * Create application directory and populate with empty playlist
+     *
+     * @return a value indicating it's success:
+     *           0 success
+     *          -1 failed making playlist
+     *          -2 failed making dirs
+     */
+    fun setupDataDir(name: String, comment: String): Int {
+        if (!Preferences.DATA_DIR.isDirectory) {
+            if (Preferences.DATA_DIR.mkdirs()) {
+                if (!PlaylistUtils.createEmptyPlaylist(name, comment))
+                    return -1
+            } else {
+                return -2
+            }
+        }
+
+        updateList()
+        return 0
+    }
+
+    sealed class PlaylistMenuState {
+        object None : PlaylistMenuState()
+        object Load : PlaylistMenuState()
+        class Loaded(val list: List<PlaylistItem>) : PlaylistMenuState()
+    }
+}

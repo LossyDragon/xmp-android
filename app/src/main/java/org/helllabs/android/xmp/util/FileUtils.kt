@@ -4,9 +4,39 @@ import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
 import java.io.*
-import java.lang.Exception
+import org.helllabs.android.xmp.model.Module
+import org.helllabs.android.xmp.ui.modarchive.ModArchiveConstants
+import org.helllabs.android.xmp.ui.preferences.PrefManager
 
 object FileUtils {
+
+    fun localFile(module: Module?): File {
+        val url = module!!.url
+        val moduleFilename = url!!.substring(url.lastIndexOf('#') + 1, url.length)
+        return File(getDownloadPath(module), moduleFilename)
+    }
+
+    fun localFile(url: String, path: String): File {
+        val filename = url.substring(url.lastIndexOf('#') + 1, url.length)
+        return File(path, filename)
+    }
+
+    fun getDownloadPath(module: Module?): String {
+        val sb = StringBuilder()
+        sb.append(PrefManager.mediaPath)
+
+        if (PrefManager.useModArchiveFolder) {
+            sb.append(File.separatorChar)
+            sb.append(ModArchiveConstants.DEFAULT_DOWNLOAD_DIR)
+        }
+
+        if (PrefManager.useArtistFolder) {
+            sb.append(File.separatorChar)
+            sb.append(module!!.getArtist().asHtml())
+        }
+
+        return sb.toString()
+    }
 
     /**
      * Handles installing sample modules from assets into the specified folder

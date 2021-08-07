@@ -19,6 +19,8 @@ class FilelistViewModel : ViewModel() {
 
     private val date = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM)
 
+    var navigation: FilelistNavigation = FilelistNavigation()
+
     private fun formatComment(file: File): String {
         return date.format(file.lastModified()) + String.format(" (%d kB)", file.length() / 1024)
     }
@@ -51,7 +53,9 @@ class FilelistViewModel : ViewModel() {
         }
     }
 
-    fun recursiveList(file: File?): List<String> {
+    fun recursiveList(
+        file: File? = navigation.currentDir // Use current directory unless overloaded.
+    ): List<String> {
         _listState.value = FilelistState.Load
 
         if (file == null) {
@@ -63,7 +67,8 @@ class FilelistViewModel : ViewModel() {
         // TODO this blocks the UI
         return runBlocking {
             _listState.value = FilelistState.AllFiles
-            walkDownPath(file)
+            val list = walkDownPath(file)
+            list.sortedBy { it.lowercase() }
         }
     }
 
@@ -75,6 +80,13 @@ class FilelistViewModel : ViewModel() {
         }
 
         return list
+    }
+
+    fun parentDir(block: (navigation: FilelistNavigation) -> Unit) {
+        if (navigation.parentDir()) {
+            updateModList(navigation.currentDir)
+            block(navigation)
+        }
     }
 
     sealed class FilelistState {

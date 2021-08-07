@@ -99,7 +99,14 @@ data class SearchListResult(
 data class Sponsor(
     @Element
     var details: SponsorDetails? = null
-)
+) {
+    fun toHyperLink(): Spanned {
+        return (
+            "Download mirrors provided by\n" +
+                "<a href=\"" + details!!.link + "\">" + details!!.text + "</a>"
+            ).asHtml()
+    }
+}
 
 @Xml(name = "details")
 data class SponsorDetails(
@@ -209,6 +216,10 @@ data class Module(
 
         return buffer.toString()
     }
+
+    fun infoPageToHyperlink(info: String): Spanned {
+        return ("<a href=\"$infopage\">$info</a>").asHtml()
+    }
 }
 
 @Xml(name = "featured")
@@ -266,7 +277,11 @@ data class License(
 
     @PropertyElement
     var legalurl: String? = null
-)
+) {
+    fun toHyperlink(): Spanned {
+        return ("<a href=\"$legalurl\">$title</a>").asHtml()
+    }
+}
 
 @Xml(name = "artist_info")
 data class ArtistInfo(

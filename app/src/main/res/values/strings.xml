@@ -81,9 +81,6 @@
     <string name="search">Search</string>
     <string name="play">Play</string>
 
-    <!-- Directory -->
-    <string name="dirname_theModArchive">TheModArchive</string>
-
     <!-- Example playlist -->
     <string name="empty_comment">Long press modules to create new playlists or add to existing playlists. Long press playlists for more options.</string>
     <string name="empty_playlist">Empty playlist</string>
@@ -126,8 +123,6 @@
     <string name="pref_buffer_ms_summary">Sound buffer duration</string>
     <string name="pref_buffer_ms_title">Buffer size</string>
     <string name="pref_buffer_ms_dialog">Set the size of sound buffer in milliseconds:</string>
-    <string name="pref_clear_cache_summary">Clear module information cache</string>
-    <string name="pref_clear_cache_title">Clear cache</string>
     <string name="pref_show_toast_title">Display toasts</string>
     <string name="pref_show_toast_summary">Enable interface help messages</string>
     <string name="pref_show_info_line_title">Replay status</string>

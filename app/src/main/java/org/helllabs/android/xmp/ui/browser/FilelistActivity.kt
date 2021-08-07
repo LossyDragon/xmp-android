@@ -10,6 +10,7 @@ import com.afollestad.materialdialogs.list.listItemsSingleChoice
 import java.io.File
 import java.util.*
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.databinding.ActivityModlistBinding
 import org.helllabs.android.xmp.model.PlaylistItem
@@ -17,39 +18,40 @@ import org.helllabs.android.xmp.ui.BasePlaylistActivity
 import org.helllabs.android.xmp.ui.BasePlaylistAdapter
 import org.helllabs.android.xmp.ui.PlaylistLayoutType
 import org.helllabs.android.xmp.ui.preferences.PrefManager
+import org.helllabs.android.xmp.ui.util.dialogMessage
+import org.helllabs.android.xmp.ui.util.toast
+import org.helllabs.android.xmp.ui.util.yesNoDialog
 import org.helllabs.android.xmp.util.*
 import org.helllabs.android.xmp.util.FileUtils.basename
-import org.helllabs.android.xmp.util.PlaylistUtils
+import org.helllabs.android.xmp.util.PlaylistUtils.AddFilesResult
 
 // TODO: Replace current path with bread crumb trails
 class FilelistActivity : BasePlaylistActivity() {
 
-    private lateinit var binder: ActivityModlistBinding
-    private lateinit var mNavigation: FilelistNavigation
     private val viewModel: FilelistViewModel by viewModels()
+
+    private lateinit var binder: ActivityModlistBinding
 
     override var isLoopMode = false
     override var isShuffleMode = false
     override val allFiles: List<String>
-        get() = viewModel.recursiveList(mNavigation.currentDir)
+        get() = viewModel.recursiveList()
 
     // region [REGION] PlaylistChoice
     /**
      * For actions based on playlist selection made using choosePlaylist()
      */
     private interface PlaylistChoice {
-        fun execute(fileSelection: Int, playlistSelection: Int)
+        suspend fun execute(fileSelection: Int, playlistSelection: Int): AddFilesResult
     }
 
     /**
      * Recursively add current directory to playlist
      */
     private val addCurrentRecursiveChoice: PlaylistChoice = object : PlaylistChoice {
-        override fun execute(fileSelection: Int, playlistSelection: Int) {
-            PlaylistUtils.filesToPlaylist(
-                this@FilelistActivity,
-                this@FilelistActivity,
-                viewModel.recursiveList(mNavigation.currentDir),
+        override suspend fun execute(fileSelection: Int, playlistSelection: Int): AddFilesResult {
+            return PlaylistUtils.filesToPlaylist(
+                viewModel.recursiveList(),
                 PlaylistUtils.getPlaylistName(playlistSelection)
             )
         }
@@ -59,10 +61,8 @@ class FilelistActivity : BasePlaylistActivity() {
      * Recursively add directory to playlist
      */
     private val addRecursiveToPlaylistChoice: PlaylistChoice = object : PlaylistChoice {
-        override fun execute(fileSelection: Int, playlistSelection: Int) {
-            PlaylistUtils.filesToPlaylist(
-                this@FilelistActivity,
-                this@FilelistActivity,
+        override suspend fun execute(fileSelection: Int, playlistSelection: Int): AddFilesResult {
+            return PlaylistUtils.filesToPlaylist(
                 viewModel.recursiveList(mPlaylistAdapter.getFile(fileSelection)),
                 PlaylistUtils.getPlaylistName(playlistSelection)
             )
@@ -73,10 +73,8 @@ class FilelistActivity : BasePlaylistActivity() {
      * Add one file to playlist
      */
     private val addFileToPlaylistChoice: PlaylistChoice = object : PlaylistChoice {
-        override fun execute(fileSelection: Int, playlistSelection: Int) {
-            PlaylistUtils.filesToPlaylist(
-                this@FilelistActivity,
-                this@FilelistActivity,
+        override suspend fun execute(fileSelection: Int, playlistSelection: Int): AddFilesResult {
+            return PlaylistUtils.filesToPlaylist(
                 mPlaylistAdapter.getFilename(fileSelection),
                 PlaylistUtils.getPlaylistName(playlistSelection)
             )
@@ -87,10 +85,8 @@ class FilelistActivity : BasePlaylistActivity() {
      * Add file list to playlist
      */
     private val addFileListToPlaylistChoice: PlaylistChoice = object : PlaylistChoice {
-        override fun execute(fileSelection: Int, playlistSelection: Int) {
-            PlaylistUtils.filesToPlaylist(
-                this@FilelistActivity,
-                this@FilelistActivity,
+        override suspend fun execute(fileSelection: Int, playlistSelection: Int): AddFilesResult {
+            return PlaylistUtils.filesToPlaylist(
                 mPlaylistAdapter.getFilenameList(),
                 PlaylistUtils.getPlaylistName(playlistSelection)
             )
@@ -106,15 +102,11 @@ class FilelistActivity : BasePlaylistActivity() {
         setContentView(binder.root)
         setSupportActionBar(binder.appbar.toolbar)
 
-        mNavigation = FilelistNavigation()
-
         mPlaylistAdapter = BasePlaylistAdapter(PlaylistLayoutType.TYPE_LIST, false)
-        mPlaylistAdapter.onClick = { position -> onClick(position) }
-        mPlaylistAdapter.onLongClick = { position -> onLongClick(position) }
 
         with(binder) {
             appbar.toolbarText.text = getString(R.string.browser_filelist_title)
-            upButton.click { parentDir() }
+            upButton.click { onNavBack() }
             modlistListview.apply {
                 adapter = mPlaylistAdapter
                 setHasFixedSize(true)
@@ -138,8 +130,8 @@ class FilelistActivity : BasePlaylistActivity() {
         // Check if directory exists
         val modDir = File(PrefManager.mediaPath)
         if (modDir.exists() && modDir.isDirectory) {
-            mNavigation.startNavigation(modDir)
-            viewModel.updateModList(mNavigation.currentDir)
+            viewModel.navigation.startNavigation(modDir)
+            viewModel.updateModList(viewModel.navigation.currentDir)
         } else {
             pathNotFound(PrefManager.mediaPath)
         }
@@ -177,26 +169,28 @@ class FilelistActivity : BasePlaylistActivity() {
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
-            if (!mNavigation.isAtTopDir) {
-                parentDir()
+            if (!viewModel.navigation.isAtTopDir) {
+                onNavBack()
                 return true
             }
         }
         return super.onKeyDown(keyCode, event)
     }
 
-    private fun onClick(position: Int) {
+    override fun onClick(position: Int) {
         val file = mPlaylistAdapter.getFile(position)
-        if (mNavigation.changeDirectory(file)) {
-            mNavigation.saveListPosition(binder.modlistListview)
-            viewModel.updateModList(mNavigation.currentDir)
+        val navigation = viewModel.navigation
+
+        if (navigation.changeDirectory(file)) {
+            navigation.saveListPosition(binder.modlistListview)
+            viewModel.updateModList(navigation.currentDir)
         } else {
             onItemClick(mPlaylistAdapter, position)
         }
     }
 
     @SuppressLint("CheckResult")
-    private fun onLongClick(position: Int) {
+    override fun onLongClick(position: Int) {
         val item = mPlaylistAdapter.getFile(position)
         if (item.isDirectory) {
             MaterialDialog(this).show {
@@ -228,7 +222,7 @@ class FilelistActivity : BasePlaylistActivity() {
                                 getString(R.string.dialog_this_file_message, basename(deleteName))
                             ) {
                                 if (FileUtils.delete(deleteName)) {
-                                    viewModel.updateModList(mNavigation.currentDir)
+                                    viewModel.updateModList(viewModel.navigation.currentDir)
                                     toast(R.string.msg_file_deleted)
                                 } else {
                                     toast(R.string.msg_cant_delete)
@@ -250,9 +244,9 @@ class FilelistActivity : BasePlaylistActivity() {
                 when (index) {
                     0 -> choosePlaylist(0, addFileListToPlaylistChoice)
                     1 -> choosePlaylist(0, addCurrentRecursiveChoice)
-                    2 -> addToQueue(viewModel.recursiveList(mNavigation.currentDir))
+                    2 -> addToQueue(viewModel.recursiveList())
                     3 -> {
-                        PrefManager.mediaPath = mNavigation.currentDir!!.path
+                        PrefManager.mediaPath = viewModel.navigation.currentDir!!.path
                         toast(R.string.msg_default_path_set)
                     }
                 }
@@ -262,41 +256,15 @@ class FilelistActivity : BasePlaylistActivity() {
     }
 
     override fun update() {
-        viewModel.updateModList(mNavigation.currentDir)
-    }
-
-    private fun pathNotFound(mediaPath: String) {
-        MaterialDialog(this).show {
-            title(R.string.dialog_no_path_title)
-            message(text = getString(R.string.dialog_no_path_message, mediaPath))
-            positiveButton(R.string.create) {
-                val ret = FileUtils.installAssets(context, mediaPath, PrefManager.installExamples)
-                if (ret < 0) {
-                    dialogMessage(
-                        lifecycleOwner = this@FilelistActivity,
-                        message = getString(R.string.msg_error_create_directory, mediaPath)
-                    )
-                }
-                mNavigation.startNavigation(File(mediaPath))
-                viewModel.updateModList(mNavigation.currentDir)
-            }
-            negativeButton(R.string.cancel) {
-                finish()
-            }
-        }
-    }
-
-    private fun parentDir() {
-        if (mNavigation.parentDir()) {
-            viewModel.updateModList(mNavigation.currentDir)
-            mNavigation.restoreListPosition(binder.modlistListview)
-        }
+        viewModel.updateModList(viewModel.navigation.currentDir)
     }
 
     private fun onLoad() {
         mPlaylistAdapter.submitList(null) // Stop flicker
+        binder.errorLayout.layout.hide()
         binder.modlistSpinner.show()
-        binder.currentPath.text = mNavigation.currentDir?.path ?: "..." // Could be non-existent.
+        binder.currentPath.text = viewModel.navigation.currentDir?.path
+            ?: "..." // Could be non-existent.
     }
 
     private fun onEmpty() {
@@ -323,6 +291,33 @@ class FilelistActivity : BasePlaylistActivity() {
         }
     }
 
+    private fun onNavBack() {
+        viewModel.parentDir {
+            it.restoreListPosition(binder.modlistListview)
+        }
+    }
+
+    private fun pathNotFound(mediaPath: String) {
+        MaterialDialog(this).show {
+            title(R.string.dialog_no_path_title)
+            message(text = getString(R.string.dialog_no_path_message, mediaPath))
+            positiveButton(R.string.create) {
+                val ret = FileUtils.installAssets(context, mediaPath, PrefManager.installExamples)
+                if (ret < 0) {
+                    dialogMessage(
+                        lifecycleOwner = this@FilelistActivity,
+                        message = getString(R.string.msg_error_create_directory, mediaPath)
+                    )
+                }
+                viewModel.navigation.startNavigation(File(mediaPath))
+                viewModel.updateModList(viewModel.navigation.currentDir)
+            }
+            negativeButton(R.string.cancel) {
+                finish()
+            }
+        }
+    }
+
     private fun deleteDirectory(position: Int) {
         val deleteName = mPlaylistAdapter.getFilename(position)
         val mediaPath = PrefManager.mediaPath
@@ -334,7 +329,7 @@ class FilelistActivity : BasePlaylistActivity() {
                 getString(R.string.dialog_msg_delete_dir, basename(deleteName))
             ) {
                 if (FileUtils.deleteRecursive(deleteName)) {
-                    viewModel.updateModList(mNavigation.currentDir)
+                    viewModel.updateModList(viewModel.navigation.currentDir)
                     toast(getString(R.string.msg_dir_deleted))
                 } else {
                     toast(getString(R.string.msg_cant_delete_dir))
@@ -347,6 +342,7 @@ class FilelistActivity : BasePlaylistActivity() {
 
     @SuppressLint("CheckResult")
     private fun choosePlaylist(fileSelection: Int, choice: PlaylistChoice) {
+        var result: AddFilesResult = AddFilesResult.RESULT_OK
 
         // Return if no playlists exist
         if (PlaylistUtils.list().isEmpty()) {
@@ -356,13 +352,35 @@ class FilelistActivity : BasePlaylistActivity() {
 
         val playlists = mutableListOf<CharSequence>()
         PlaylistUtils.listNoSuffix().forEach { playlists.add(it) }
+
         MaterialDialog(this).show {
             title(R.string.msg_select_playlist)
             listItemsSingleChoice(items = playlists) { _, index, _ ->
-                choice.execute(fileSelection, index)
+                lifecycleScope.launch {
+                    result = choice.execute(fileSelection, index)
+                }
             }
             positiveButton(R.string.ok)
             negativeButton(R.string.cancel)
+        }
+
+        when (result) {
+            AddFilesResult.RESULT_OK -> Unit
+            AddFilesResult.RESULT_IO_EXCEPTION -> {
+                dialogMessage(
+                    lifecycleOwner = this,
+                    message = getString(R.string.error_write_to_playlist)
+                )
+            }
+            AddFilesResult.RESULT_SINGLE_UNRECOGNIZED -> {
+                dialogMessage(
+                    lifecycleOwner = this,
+                    message = getString(R.string.unrecognized_format)
+                )
+            }
+            AddFilesResult.RESULT_OK_VALID_ONLY -> {
+                toast(R.string.msg_only_valid_files_added)
+            }
         }
     }
 
