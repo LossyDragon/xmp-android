@@ -1,38 +1,37 @@
 package org.helllabs.android.xmp.ui.preferences.about
 
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.ListItem
 import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.view.WindowCompat
-import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.ui.components.AppBar
 import org.helllabs.android.xmp.ui.components.ErrorLayout
-import org.helllabs.android.xmp.ui.components.ItemSingle
 import org.helllabs.android.xmp.ui.components.LazyList
 import org.helllabs.android.xmp.ui.theme.XmpTheme
 import org.helllabs.android.xmp.ui.util.toast
 import org.helllabs.android.xmp.util.logD
 
-@AndroidEntryPoint
 class ListFormats : ComponentActivity() {
-
-    @Inject
-    lateinit var clipboard: ClipboardManager
 
     private val formats = Xmp.getFormats()
 
@@ -47,26 +46,19 @@ class ListFormats : ComponentActivity() {
 
         logD("onCreate")
         setContent {
-            val haptic = LocalHapticFeedback.current
             FormatsLayout(
                 onBack = { onBackPressed() },
                 formatsList = formats.toList(),
-                onLongClick = {
-                    val clip = ClipData.newPlainText("Xmp Clipboard", it)
-                    clipboard.setPrimaryClip(clip)
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    toast(R.string.clipboard_copied)
-                },
             )
         }
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
 @Composable
 private fun FormatsLayout(
     onBack: () -> Unit,
     formatsList: List<String>,
-    onLongClick: (text: String) -> Unit,
 ) {
     XmpTheme {
         Scaffold(
@@ -77,6 +69,10 @@ private fun FormatsLayout(
                 )
             }
         ) {
+            val context = LocalContext.current
+            val haptic = LocalHapticFeedback.current
+            val clip = LocalClipboardManager.current
+
             LazyList(
                 modifier = Modifier.fillMaxSize(),
                 showScrollAt = 15,
@@ -86,9 +82,16 @@ private fun FormatsLayout(
                 },
                 lazyContent = {
                     itemsIndexed(items = formatsList) { _, item ->
-                        ItemSingle(
-                            text = item,
-                            onLongClick = { onLongClick(item) }
+                        ListItem(
+                            modifier = Modifier.combinedClickable(
+                                onClick = {},
+                                onLongClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    context.toast(R.string.clipboard_copied)
+                                    clip.setText(buildAnnotatedString { append(item) })
+                                }
+                            ),
+                            text = { Text(text = item) }
                         )
                     }
                 }
@@ -108,6 +111,5 @@ private fun ListFormatsLayoutPreview() {
     FormatsLayout(
         onBack = {},
         formatsList = list,
-        onLongClick = {},
     )
 }

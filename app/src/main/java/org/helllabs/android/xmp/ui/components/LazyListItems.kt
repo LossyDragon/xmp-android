@@ -1,9 +1,10 @@
 package org.helllabs.android.xmp.ui.components
 
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -91,30 +92,6 @@ fun ItemPlaylistCard(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun ItemSingle(
-    text: String,
-    onClick: (() -> Unit)? = null,
-    onLongClick: (() -> Unit)? = null,
-) {
-    Row(
-        modifier = Modifier
-            .height(48.dp)
-            .fillMaxWidth()
-            .combinedClickable(
-                onClick = { onClick?.invoke() },
-                onLongClick = { onLongClick?.invoke() }
-            ),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            modifier = Modifier.padding(start = 16.dp, end = 16.dp),
-            text = text
-        )
-    }
-}
-
 /************
  * Previews *
  ************/
@@ -132,13 +109,5 @@ private fun ItemPlaylistCardPreview() {
             onClick = {},
             onLongClick = {}
         )
-    }
-}
-
-@Preview(name = "Dark Theme Single", uiMode = UI_MODE_NIGHT_YES)
-@Composable
-private fun ItemSinglePreview() {
-    XmpTheme {
-        ItemSingle("Single Item", {}, {})
     }
 }
