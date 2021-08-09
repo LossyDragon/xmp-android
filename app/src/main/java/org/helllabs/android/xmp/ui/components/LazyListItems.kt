@@ -1,18 +1,14 @@
 package org.helllabs.android.xmp.ui.components
 
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -20,7 +16,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.model.PlaylistItem
 import org.helllabs.android.xmp.model.PlaylistType
@@ -28,6 +23,7 @@ import org.helllabs.android.xmp.ui.preferences.PrefManager
 import org.helllabs.android.xmp.ui.theme.XmpTheme
 import org.helllabs.android.xmp.util.ifNullOrEmpty
 
+@OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun ItemPlaylistCard(
     playlist: PlaylistItem,
@@ -49,46 +45,50 @@ fun ItemPlaylistCard(
         playlist.comment = stringResource(id = R.string.playlist_special_comment, mediaPath)
     }
 
-    CardClickable(
-        shape = MaterialTheme.shapes.large,
-        modifier = Modifier
-            .padding(6.dp)
-            .fillMaxWidth(),
-        elevation = 4.dp,
-        onClick = { onClick() },
-        onLongClick = {
-            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-            onLongClick()
+    if (playlist.type == PlaylistType.TYPE_PLAYLIST) {
+        playlist.comment = playlist.comment.ifNullOrEmpty {
+            stringResource(id = R.string.no_comment)
         }
+    }
+
+    Card(
+        modifier = Modifier
+            .padding(6.dp),
+        shape = MaterialTheme.shapes.large,
+        elevation = 4.dp,
     ) {
-        Row(
-            modifier = Modifier.padding(top = 8.dp, bottom = 8.dp, end = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .align(Alignment.CenterVertically),
-                imageVector = cardIcon,
-                contentDescription = null
-            )
-            Column {
+        ListItem(
+            modifier = Modifier
+                .combinedClickable(
+                    onClick = { onClick() },
+                    onLongClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onLongClick()
+                    },
+                ),
+            text = {
                 Text(
                     text = playlist.name!!,
-                    fontSize = 18.sp,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
+            },
+            secondaryText = {
                 Text(
-                    text = playlist.comment.ifNullOrEmpty {
-                        stringResource(id = R.string.no_comment)
-                    },
-                    fontSize = 14.sp,
+                    modifier = Modifier.padding(bottom = 10.dp),
+                    text = playlist.comment!!,
                     maxLines = 3,
                     overflow = TextOverflow.Ellipsis,
                 )
+            },
+            icon = {
+                Icon(
+                    modifier = Modifier.padding(top = 8.dp, start = 8.dp),
+                    imageVector = cardIcon,
+                    contentDescription = null
+                )
             }
-        }
+        )
     }
 }
 
@@ -96,7 +96,7 @@ fun ItemPlaylistCard(
  * Previews *
  ************/
 
-@Preview(name = "Dark Theme Card", uiMode = UI_MODE_NIGHT_YES)
+@Preview(name = "Dark Theme Card", showBackground = true, uiMode = UI_MODE_NIGHT_YES)
 @Composable
 private fun ItemPlaylistCardPreview() {
     XmpTheme(false) {
