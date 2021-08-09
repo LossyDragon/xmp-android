@@ -105,6 +105,10 @@ private fun AboutText(string: String, textAlign: TextAlign = TextAlign.Center) {
     )
 }
 
+/************
+ * Previews *
+ ************/
+
 @Preview(name = "Dark Theme", uiMode = UI_MODE_NIGHT_YES)
 @Composable
 private fun AboutLayoutPreview() {

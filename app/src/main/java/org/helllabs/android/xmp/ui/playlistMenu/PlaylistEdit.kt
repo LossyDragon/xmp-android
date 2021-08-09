@@ -20,10 +20,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -148,7 +151,6 @@ private fun PlaylistEditContent(
     val addText = if (isEditing) R.string.button_playlist_update else R.string.button_playlist_add
     val checkName: Boolean = name.trim().isBlank()
 
-    // TODO: show keyboard automatically.
     XmpTheme {
         Scaffold(
             topBar = {
@@ -159,6 +161,9 @@ private fun PlaylistEditContent(
             }
         ) {
             val context = LocalContext.current
+            val focusManager = LocalFocusManager.current
+            val focusRequester = FocusRequester()
+            val keyboard = LocalSoftwareKeyboardController.current
 
             Column(
                 modifier = Modifier
@@ -166,14 +171,14 @@ private fun PlaylistEditContent(
                     .padding(16.dp)
                     .navigationBarsWithImePadding()
             ) {
-                val focusManager = LocalFocusManager.current
                 // More error fields to be added:
                 // See: https://stackoverflow.com/q/65642533/13225929
                 // https://issuetracker.google.com/issues/182142737
                 OutlinedTextField(
                     modifier = Modifier
                         .padding(top = 12.dp, bottom = 4.dp)
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .focusRequester(focusRequester),
                     value = name,
                     onValueChange = { name = it },
                     isError = name.isEmpty(),
@@ -260,6 +265,14 @@ private fun PlaylistEditContent(
                         )
                     }
                 }
+            }
+
+            // Request focus and show the keyboard.
+            // Showing the keyboard is very sporadic
+            DisposableEffect(Unit) {
+                focusRequester.requestFocus()
+                keyboard?.show()
+                onDispose { }
             }
         }
     }
