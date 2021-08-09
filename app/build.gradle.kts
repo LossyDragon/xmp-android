@@ -9,10 +9,10 @@ plugins {
     id("org.jlleitschuh.gradle.ktlint")
 }
 
-// https://developer.android.com/ndk/downloads
+// https://developer.android.com/ndk/downloads#stable-downloads
 android {
     compileSdk = 30
-    ndkVersion = "23.0.7123448-beta1"
+    ndkVersion = "22.1.7171670"
 
     defaultConfig {
         applicationId = "org.helllabs.android.xmp"
