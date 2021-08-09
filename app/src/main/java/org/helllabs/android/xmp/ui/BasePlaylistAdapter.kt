@@ -16,10 +16,8 @@ import java.io.File
 import java.util.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.databinding.ItemPlaylistBinding
-import org.helllabs.android.xmp.databinding.ItemPlaylistCardBinding
 import org.helllabs.android.xmp.model.PlaylistItem
 import org.helllabs.android.xmp.model.PlaylistType
-import org.helllabs.android.xmp.ui.preferences.PrefManager
 import org.helllabs.android.xmp.ui.util.recyclerview.ItemTouchHelperAdapter
 import org.helllabs.android.xmp.ui.util.recyclerview.ItemTouchHelperViewHolder
 import org.helllabs.android.xmp.ui.util.recyclerview.OnStartDragListener
@@ -28,7 +26,6 @@ import org.helllabs.android.xmp.util.PlaylistUtils
 
 enum class PlaylistLayoutType(val value: Int) {
     TYPE_LIST(0),
-    TYPE_CARD(1),
     TYPE_DRAG(2),
 }
 
@@ -62,10 +59,6 @@ class BasePlaylistAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
         return when (layoutType) {
-            PlaylistLayoutType.TYPE_CARD -> {
-                val binder = ItemPlaylistCardBinding.inflate(inflater, parent, false)
-                CardViewHolder(binder)
-            }
             PlaylistLayoutType.TYPE_LIST,
             PlaylistLayoutType.TYPE_DRAG -> {
                 val binder = ItemPlaylistBinding.inflate(inflater, parent, false)
@@ -77,7 +70,6 @@ class BasePlaylistAdapter(
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val item = getItem(position)
         when (holder) {
-            is CardViewHolder -> holder.onBind(item)
             is ListViewHolder -> holder.onBind(item)
         }
     }
@@ -119,42 +111,6 @@ class BasePlaylistAdapter(
             }
         }
         return list
-    }
-
-    inner class CardViewHolder(
-        val binder: ItemPlaylistCardBinding
-    ) : RecyclerView.ViewHolder(binder.root) {
-        fun onBind(item: PlaylistItem) = with(binder) {
-
-            // Inject File Browser info
-            if (item.type == PlaylistType.TYPE_SPECIAL && item.id == 0) {
-                val mediaPath = PrefManager.mediaPath
-                with(root.context) {
-                    item.name = getString(R.string.playlist_special_title)
-                    item.comment = getString(R.string.playlist_special_comment, mediaPath)
-                }
-            }
-
-            // Inject No Comment Info
-            if (item.type == PlaylistType.TYPE_PLAYLIST) {
-                if (item.comment.isNullOrBlank()) {
-                    with(root.context) {
-                        item.comment = getString(R.string.no_comment)
-                    }
-                }
-            }
-
-            playlistItem = item
-
-            root.click {
-                onClick?.invoke(absoluteAdapterPosition)
-            }
-            root.longClick {
-                onLongClick?.invoke(absoluteAdapterPosition)
-                true
-            }
-            executePendingBindings()
-        }
     }
 
     inner class ListViewHolder(

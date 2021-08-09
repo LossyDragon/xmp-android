@@ -20,7 +20,7 @@ import org.helllabs.android.xmp.databinding.LayoutListControlsBinding
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.ui.modarchive.Search
 import org.helllabs.android.xmp.ui.player.PlayerActivity
-import org.helllabs.android.xmp.ui.playlist_list.PlaylistMenu
+import org.helllabs.android.xmp.ui.playlistMenu.PlaylistMenu
 import org.helllabs.android.xmp.ui.preferences.PrefManager
 import org.helllabs.android.xmp.ui.preferences.Preferences
 import org.helllabs.android.xmp.ui.util.toast

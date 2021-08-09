@@ -23,15 +23,14 @@ fun Context.dialogMessage(
     lifecycleOwner: LifecycleOwner,
     @StringRes title: Int = R.string.error,
     message: String,
-    block: () -> Unit? = { }
+    @StringRes positiveButtonText: Int = R.string.ok,
+    block: (() -> Unit)? = { }
 ) {
     MaterialDialog(this).show {
         lifecycleOwner(lifecycleOwner)
         title(title)
         message(text = message)
-        positiveButton(R.string.ok) {
-            block.invoke()
-        }
+        positiveButton(positiveButtonText) { block?.invoke() }
     }
 }
 
@@ -39,14 +38,17 @@ fun Context.yesNoDialog(
     lifecycleOwner: LifecycleOwner,
     title: String,
     message: String,
-    block: () -> Unit
+    @StringRes positiveButtonText: Int = R.string.yes,
+    @StringRes negativeButton: Int = R.string.no,
+    onNegativeButton: (() -> Unit)? = null,
+    onPositiveButton: () -> Unit,
 ) {
     MaterialDialog(this).show {
         lifecycleOwner(lifecycleOwner)
         title(text = title)
         message(text = message)
-        positiveButton(R.string.yes) { block() }
-        negativeButton(R.string.no)
+        positiveButton(positiveButtonText) { onPositiveButton() }
+        negativeButton(negativeButton) { onNegativeButton?.invoke() }
     }
 }
 

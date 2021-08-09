@@ -69,7 +69,8 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
         freeCompilerArgs = listOf(
-            "-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi"
+            "-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi",
+            "-Xopt-in=kotlin.RequiresOptIn"
         )
     }
 
@@ -84,6 +85,11 @@ android {
     buildFeatures {
         viewBinding = true
         dataBinding = true
+        compose = true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.0.1"
     }
 }
 
@@ -91,14 +97,28 @@ dependencies {
     implementation(kotlin("stdlib-jdk8", Dependencies.kotlinVersion))
 
     // Android Support Libs
-    implementation(Dependencies.SupportLibs.appCompat)
-    implementation(Dependencies.SupportLibs.cardView)
+    // implementation(Dependencies.SupportLibs.appCompat)
+    // implementation(Dependencies.SupportLibs.cardView)
     implementation(Dependencies.SupportLibs.constraintLayout)
     implementation(Dependencies.SupportLibs.material)
     implementation(Dependencies.SupportLibs.media)
     implementation(Dependencies.SupportLibs.preferenceKtx)
     implementation(Dependencies.SupportLibs.recyclerview)
     implementation(Dependencies.SupportLibs.swipeRefreshLayout)
+
+    implementation(Dependencies.Compose.activity)
+    implementation(Dependencies.Compose.animation)
+    implementation(Dependencies.Compose.foundation)
+    implementation(Dependencies.Compose.iconsCore)
+    implementation(Dependencies.Compose.iconsExtended)
+    implementation(Dependencies.Compose.lifecycle)
+    implementation(Dependencies.Compose.livedata)
+    implementation(Dependencies.Compose.material)
+    implementation(Dependencies.Compose.tooling)
+    implementation(Dependencies.Compose.ui)
+
+    implementation(Dependencies.Accompanist.insets)
+    implementation(Dependencies.Accompanist.controller)
 
     // AIDL-like replacement
     implementation(Dependencies.EventBus.eventBus)

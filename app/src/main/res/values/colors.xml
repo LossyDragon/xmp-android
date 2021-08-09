@@ -19,4 +19,5 @@
     <color name="cardColor">@color/gray</color>
     <color name="colorLightGray">#FFC0C0C0</color>
 
+    <color name="compatColor">@color/section_background_darker</color>
 </resources>

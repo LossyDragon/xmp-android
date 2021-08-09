@@ -128,12 +128,13 @@ class FilelistActivity : BasePlaylistActivity() {
         }
 
         // Check if directory exists
-        val modDir = File(PrefManager.mediaPath)
+        val mediaPath = PrefManager.mediaPath!!
+        val modDir = File(mediaPath)
         if (modDir.exists() && modDir.isDirectory) {
             viewModel.navigation.startNavigation(modDir)
             viewModel.updateModList(viewModel.navigation.currentDir)
         } else {
-            pathNotFound(PrefManager.mediaPath)
+            pathNotFound(mediaPath)
         }
 
         isShuffleMode = PrefManager.getBooleanPref(OPTIONS_SHUFFLE_MODE, DEFAULT_SHUFFLE_MODE)
@@ -320,7 +321,7 @@ class FilelistActivity : BasePlaylistActivity() {
 
     private fun deleteDirectory(position: Int) {
         val deleteName = mPlaylistAdapter.getFilename(position)
-        val mediaPath = PrefManager.mediaPath
+        val mediaPath = PrefManager.mediaPath!!
 
         if (deleteName.startsWith(mediaPath) && deleteName != mediaPath) {
             yesNoDialog(

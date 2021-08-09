@@ -18,6 +18,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.text.toSpanned
 import androidx.recyclerview.widget.RecyclerView
+import java.util.*
 import org.helllabs.android.xmp.R
 
 /**
@@ -93,6 +94,11 @@ fun String?.asHtml(): Spanned {
         Html.fromHtml(this)
     }
 }
+
+fun String.upperCase(): String = this.uppercase(Locale.getDefault())
+
+inline fun String?.ifNullOrEmpty(defaultValue: () -> String) =
+    if (this.isNullOrBlank()) defaultValue() else this
 
 /**
  * View helpers

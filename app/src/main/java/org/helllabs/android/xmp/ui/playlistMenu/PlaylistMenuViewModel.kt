@@ -1,4 +1,4 @@
-package org.helllabs.android.xmp.ui.playlist_list
+package org.helllabs.android.xmp.ui.playlistMenu
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -22,17 +22,16 @@ class PlaylistMenuViewModel : ViewModel() {
         val list = mutableListOf<PlaylistItem>()
 
         viewModelScope.launch {
-            val browserItem = PlaylistItem(PlaylistType.TYPE_SPECIAL, null, null)
-            list.add(browserItem)
-
             PlaylistUtils.listNoSuffix().forEach { name ->
                 val comment = PlaylistUtils.readComment(name)
                 val item = PlaylistItem(PlaylistType.TYPE_PLAYLIST, name, comment)
                 list.add(item)
             }
-            PlaylistUtils.renumberIds(list)
+            list.sort()
         }
 
+        list.add(0, PlaylistItem(PlaylistType.TYPE_SPECIAL, null, null))
+        PlaylistUtils.renumberIds(list)
         _playlistState.value = PlaylistMenuState.Loaded(list)
     }
 
@@ -52,8 +51,8 @@ class PlaylistMenuViewModel : ViewModel() {
      */
     fun editPlaylist(id: Int, name: String, comment: String, oldName: String?): Int {
         when (id) {
-            PlaylistAddEdit.RESULT_DELETE_PLAYLIST -> PlaylistUtils.delete(name)
-            PlaylistAddEdit.RESULT_EDIT_PLAYLIST -> {
+            EditState.RESULT_DELETE_PLAYLIST.value -> PlaylistUtils.delete(name)
+            EditState.RESULT_EDIT_PLAYLIST.value -> {
                 if (!PlaylistUtils.rename(oldName!!, name)) {
                     return -1
                 }

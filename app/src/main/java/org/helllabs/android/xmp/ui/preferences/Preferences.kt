@@ -4,42 +4,56 @@ import android.os.Bundle
 import android.os.Environment
 import android.os.Environment.MEDIA_MOUNTED
 import android.os.Environment.MEDIA_MOUNTED_READ_ONLY
-import android.view.MenuItem
+import android.view.ViewGroup
+import android.widget.FrameLayout
+import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.Scaffold
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.viewinterop.AndroidView
 import java.io.File
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.databinding.PrefLayoutBinding
+import org.helllabs.android.xmp.ui.components.AppBar
+import org.helllabs.android.xmp.ui.theme.XmpTheme
 import org.helllabs.android.xmp.util.logE
 
 class Preferences : AppCompatActivity() {
 
-    private lateinit var binder: PrefLayoutBinding
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        binder = PrefLayoutBinding.inflate(layoutInflater)
-
-        setContentView(binder.root)
-        setSupportActionBar(binder.appbar.toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.setDisplayShowHomeEnabled(true)
-
-        binder.appbar.toolbarText.text = getString(R.string.pref_category_preferences)
-
-        supportFragmentManager
-            .beginTransaction()
-            .replace(R.id.settings_container, PreferencesFragment())
-            .commit()
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == android.R.id.home) {
-            onBackPressed()
-            return true
+        setContent {
+            XmpTheme {
+                Scaffold(
+                    topBar = {
+                        AppBar(
+                            title = stringResource(id = R.string.pref_category_preferences),
+                            navIconClick = { onBackPressed() },
+                        )
+                    }
+                ) {
+                    AndroidView(
+                        modifier = Modifier.fillMaxSize(),
+                        factory = { context ->
+                            FrameLayout(context).apply {
+                                id = R.id.composeFrameLayout
+                                layoutParams = ViewGroup.LayoutParams(
+                                    ViewGroup.LayoutParams.MATCH_PARENT,
+                                    ViewGroup.LayoutParams.MATCH_PARENT
+                                )
+                            }.also {
+                                supportFragmentManager
+                                    .beginTransaction()
+                                    .replace(R.id.composeFrameLayout, PreferencesFragment())
+                                    .commit()
+                            }
+                        },
+                    )
+                }
+            }
         }
-
-        return super.onOptionsItemSelected(item)
     }
 
     companion object {

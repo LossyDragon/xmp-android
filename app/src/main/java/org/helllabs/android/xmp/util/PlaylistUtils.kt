@@ -195,7 +195,6 @@ object PlaylistUtils {
      * @param items    The list of playlist items to add
      * @return True if successful, false if an IOException occurred.
      */
-    // TODO remove lifecycleOwner and activity references.
     private fun addToList(name: String, items: List<PlaylistItem>): Boolean {
         val lines = mutableListOf<String>()
         items.forEach { playlistItem ->

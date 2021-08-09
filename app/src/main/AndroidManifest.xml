@@ -8,9 +8,10 @@
         android:name="android.hardware.bluetooth"
         android:required="false" />
 
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         tools:ignore="ScopedStorage" />
@@ -29,10 +30,10 @@
         tools:replace="supportsRtl">
 
         <activity
-            android:name="org.helllabs.android.xmp.ui.playlist_list.PlaylistMenu"
+            android:name="org.helllabs.android.xmp.ui.playlistMenu.PlaylistMenu"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:exported="true"
-            android:theme="@style/AppTheme">
+            android:theme="@style/ComposeTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -41,9 +42,9 @@
         </activity>
 
         <activity
-            android:name="org.helllabs.android.xmp.ui.playlist_list.PlaylistAddEdit"
-            android:parentActivityName="org.helllabs.android.xmp.ui.playlist_list.PlaylistMenu"
-            android:theme="@style/AppTheme" />
+            android:name="org.helllabs.android.xmp.ui.playlistMenu.PlaylistEdit"
+            android:parentActivityName="org.helllabs.android.xmp.ui.playlistMenu.PlaylistMenu"
+            android:theme="@style/ComposeTheme" />
 
         <activity
             android:name="org.helllabs.android.xmp.ui.player.PlayerActivity"
@@ -202,7 +203,7 @@
         <activity
             android:name="org.helllabs.android.xmp.ui.browser.FilelistActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:parentActivityName="org.helllabs.android.xmp.ui.playlist_list.PlaylistMenu" />
+            android:parentActivityName="org.helllabs.android.xmp.ui.playlistMenu.PlaylistMenu" />
 
         <activity
             android:name="org.helllabs.android.xmp.ui.playlist_detail.PlaylistActivity"
@@ -251,7 +252,7 @@
         <!-- Preferences -->
         <activity
             android:name="org.helllabs.android.xmp.ui.preferences.Preferences"
-            android:theme="@style/AppTheme" />
+            android:theme="@style/CompatComposeTheme" />
 
         <activity
             android:name="org.helllabs.android.xmp.ui.preferences.about.ListFormats"

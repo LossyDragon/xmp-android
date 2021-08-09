@@ -30,7 +30,7 @@ import org.helllabs.android.xmp.ui.player.viewer.ChannelViewer
 import org.helllabs.android.xmp.ui.player.viewer.InstrumentViewer
 import org.helllabs.android.xmp.ui.player.viewer.PatternViewer
 import org.helllabs.android.xmp.ui.player.viewer.Viewer
-import org.helllabs.android.xmp.ui.playlist_list.PlaylistMenu
+import org.helllabs.android.xmp.ui.playlistMenu.PlaylistMenu
 import org.helllabs.android.xmp.ui.preferences.PrefManager
 import org.helllabs.android.xmp.ui.util.toast
 import org.helllabs.android.xmp.util.*

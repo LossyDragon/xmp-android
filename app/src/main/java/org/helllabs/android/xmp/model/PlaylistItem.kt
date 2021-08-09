@@ -27,8 +27,8 @@ data class PlaylistItem(
     // Comparable
     override fun compareTo(other: PlaylistItem): Int {
         val locale = Locale.getDefault()
-        val d1 = file!!.isDirectory
-        val d2 = other.file!!.isDirectory
+        val d1 = file?.isDirectory ?: false
+        val d2 = other.file?.isDirectory ?: false
         return if (d1 xor d2) {
             if (d1) -1 else 1
         } else {

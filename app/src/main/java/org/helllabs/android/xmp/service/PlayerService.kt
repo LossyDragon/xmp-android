@@ -472,11 +472,11 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
                 logI("Key Even Action received, keycode: ${keyEvent.keyCode}")
                 with(mediaSession!!.controller.transportControls) {
                     when (keyEvent.keyCode) {
-                        KeyEvent.KEYCODE_MEDIA_PLAY -> play()
-                        KeyEvent.KEYCODE_MEDIA_PAUSE -> pause()
-                        KeyEvent.KEYCODE_MEDIA_PREVIOUS -> skipToPrevious()
-                        KeyEvent.KEYCODE_MEDIA_NEXT -> skipToNext()
-                        KeyEvent.KEYCODE_MEDIA_STOP -> stop()
+                        KeyEvent.KEYCODE_MEDIA_PLAY -> this.play()
+                        KeyEvent.KEYCODE_MEDIA_PAUSE -> this.pause()
+                        KeyEvent.KEYCODE_MEDIA_PREVIOUS -> this.skipToPrevious()
+                        KeyEvent.KEYCODE_MEDIA_NEXT -> this.skipToNext()
+                        KeyEvent.KEYCODE_MEDIA_STOP -> this.stop()
                         KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> if (isPlayerPaused) play() else pause()
                     }
                     return true

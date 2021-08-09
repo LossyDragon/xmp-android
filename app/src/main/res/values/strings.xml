@@ -67,7 +67,6 @@
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
     <string name="exit">Exit</string>
-    <string name="dismiss">Dismiss</string>
     <string name="error">Error</string>
     <string name="directory">Directory</string>
     <string name="create">Create</string>
@@ -178,7 +177,6 @@
     <string name="error_rename_playlist">Can\'t rename playlist.</string>
     <string name="error_edit_comment">Can\'t edit comment.</string>
     <string name="error_write_to_playlist">Can\'t write to this playlist.</string>
-    <string name="error_read_comment">Can\'t read comment.</string>
     <string name="error_storage">Can\'t access external storage.</string>
     <string name="error_dir_not_under_moddir">Directory not under mod dir</string>
     <string name="error_no_files_to_play">No files to play</string>
@@ -206,7 +204,6 @@
     <string name="msg_queue_empty">Queue list is empty</string>
     <string name="msg_queue_added">Added to queue</string>
     <string name="msg_file_unrecognized">Unrecognized file format</string>
-    <string name="msg_adding_files">Please wait, adding files…</string>
     <string name="msg_new_seq_duration">New sequence duration: %d:%02d</string>
     <string name="msg_error_create_directory">Error creating directory %s</string>
     <string name="msg_default_path_set">Set as default module path</string>
@@ -214,8 +211,6 @@
     <string name="msg_download_cancelled">Download cancelled</string>
     <string name="msg_edit_playlist_failed">Couldn\'t modify playlist</string>
     <string name="msg_error_remove_directory">Error removing directory</string>
-    <string name="msg_file_exists">File exists</string>
-    <string name="msg_file_exists_overwrite">This module already exists. Do you want to overwrite?</string>
     <string name="msg_no_song_info">No song message available.</string>
 
     <!-- Dialogs -->
@@ -316,10 +311,8 @@
 
     <!-- Unsorted/New Strings Below -->
     <string name="browser_filelist_title">File browser</string>
-    <string name="cache_clear">File cache cleared</string>
     <string name="browser_playlist_title">Playlist</string>
     <string name="by_artist">by %s</string>
-    <string name="cache_clear_error">Error clearing cache</string>
     <string name="clipboard_copied">Copied to clipboard</string>
     <string name="history_no_items">No items in history.</string>
     <string name="playlist_special_comment">Files in %s</string>
@@ -331,5 +324,8 @@
     <string name="title_delete_file">Delete File</string>
     <string name="title_edit_playlist">Edit playlist</string>
     <string name="unrecognized_format">Unrecognized file format</string>
+    <string name="msg_service_not_alive">Player Service is not running</string>
+    <string name="playlist_edit_helper_text">Playlist name cannot be empty to save</string>
+    <string name="msg_no_formats">No formats found</string>
 
 </resources>

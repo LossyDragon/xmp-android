@@ -78,8 +78,8 @@ object PrefManager {
         get() = prefs.getString(PLAYLIST_MODE, "1")!!
         set(value) = prefs.edit { putString(PLAYLIST_MODE, value) }
 
-    var mediaPath: String
-        get() = prefs.getString(MEDIA_PATH, Preferences.DEFAULT_MEDIA_PATH)!!
+    var mediaPath: String?
+        get() = prefs.getString(MEDIA_PATH, Preferences.DEFAULT_MEDIA_PATH)
         set(value) = prefs.edit { putString(MEDIA_PATH, value) }
 
     var installExamples: Boolean

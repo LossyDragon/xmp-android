@@ -73,7 +73,6 @@ class PreferencesFragment : PreferenceFragmentCompat() {
             .replace(id, applicationPreferencesFragment)
             .addToBackStack(null)
             .commit()
-
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
