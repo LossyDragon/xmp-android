@@ -16,8 +16,19 @@ import com.google.accompanist.insets.ExperimentalAnimatedInsets
 import com.google.accompanist.insets.ProvideWindowInsets
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
-private val LightThemeColors = lightColors()
-private val DarkThemeColors = darkColors()
+private val LightThemeColors = lightColors(
+    primary = darkPrimary,
+    primaryVariant = darkPrimaryDark,
+    secondary = darkAccent,
+    secondaryVariant = darkAccent,
+)
+
+private val DarkThemeColors = darkColors(
+    primary = darkPrimary,
+    primaryVariant = darkPrimaryDark,
+    secondary = darkAccent,
+    secondaryVariant = darkAccent,
+)
 
 // Accent the "Xmp" part of the text, if we're on the main screen.
 @Composable
