@@ -7,6 +7,7 @@ import android.graphics.drawable.AnimatedVectorDrawable
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.os.IBinder
+import android.os.PowerManager
 import android.support.v4.media.session.MediaSessionCompat
 import android.view.Display
 import android.view.WindowManager
@@ -294,11 +295,18 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     override fun onPause() {
+        super.onPause()
+
+        // Android S lazy fix.
+        val pm = getSystemService(POWER_SERVICE) as PowerManager
+        if (!pm.isInteractive) {
+            screenOn = false
+        }
+
         // Stop screen updates when screen is off
         if (ScreenReceiver.wasScreenOn) {
             screenOn = false
         }
-        super.onPause()
     }
 
     override fun onResume() {
