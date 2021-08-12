@@ -14,6 +14,7 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
@@ -374,25 +375,48 @@ private fun FileListLayout(
     isShuffle: Boolean,
 ) {
     XmpTheme(onlyStyleStatusBar = true) {
+        val scope = rememberCoroutineScope()
         val scaffoldState = rememberScaffoldState()
         val context = LocalContext.current
         Scaffold(
+            modifier = Modifier.navigationBarsPadding(),
+            scaffoldState = scaffoldState,
+            snackbarHost = { scaffoldState.snackbarHostState },
             topBar = {
                 AppBar(
                     title = stringResource(id = R.string.browser_filelist_title),
                     navIconClick = { onBack() },
                 )
             },
-            scaffoldState = scaffoldState,
-            snackbarHost = { scaffoldState.snackbarHostState }
+            bottomBar = {
+                LayoutControls(
+                    modifier = Modifier,
+                    onPlay = {
+                        val items = viewModel.recursiveList(File(viewModel.currentFile.value))
+                        if (items.isNullOrEmpty()) {
+                            scope.launch {
+                                scaffoldState.snackbarHostState.showSnackbar(
+                                    message = context.getString(R.string.error_no_files_to_play),
+                                    actionLabel = context.getString(R.string.ok)
+                                )
+                            }
+                            context.logD("onPlay Empty")
+                        } else {
+                            context.logD("onPlay $items")
+                            onPlay(items)
+                        }
+                    },
+                    onLoop = { onLoop(!isLoop) },
+                    onShuffle = { onShuffle(!isShuffle) },
+                    isLoopEnabled = isLoop,
+                    isShuffleEnabled = isShuffle,
+                )
+            },
         ) {
             ConstraintLayout(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .navigationBarsPadding()
+                modifier = Modifier.fillMaxHeight()
             ) {
-                val (crumb, list, controls, snack) = createRefs()
-                val scope = rememberCoroutineScope()
+                val (crumb, list, snack) = createRefs()
                 var itemList by remember { mutableStateOf(listOf<PlaylistItem>()) }
                 val currentPath = viewModel.currentFile.value
                 val fileListState = viewModel.listState.collectAsState()
@@ -407,13 +431,15 @@ private fun FileListLayout(
                 )
 
                 LazyList(
-                    modifier = Modifier.constrainAs(list) {
-                        height = Dimension.fillToConstraints
-                        start.linkTo(parent.start)
-                        end.linkTo(parent.end)
-                        top.linkTo(crumb.bottom)
-                        bottom.linkTo(controls.top)
-                    },
+                    modifier = Modifier
+                        .padding(it)
+                        .constrainAs(list) {
+                            height = Dimension.fillToConstraints
+                            start.linkTo(parent.start)
+                            end.linkTo(parent.end)
+                            top.linkTo(crumb.bottom)
+                            bottom.linkTo(parent.bottom)
+                        },
                     showScrollAt = 10,
                     shouldPadBottom = false,
                     boxContent = {
@@ -485,41 +511,15 @@ private fun FileListLayout(
                     }
                 )
 
-                LayoutControls(
+                Snackbar(
                     modifier = Modifier
-                        .constrainAs(controls) {
+                        .padding(it)
+                        .constrainAs(snack) {
                             width = Dimension.fillToConstraints
-                            top.linkTo(list.bottom)
-                            bottom.linkTo(parent.bottom)
                             start.linkTo(parent.start)
                             end.linkTo(parent.end)
+                            bottom.linkTo(list.bottom)
                         },
-                    onPlay = {
-                        val items = viewModel.recursiveList(File(viewModel.currentFile.value))
-                        if (items.isNullOrEmpty()) {
-                            scope.launch {
-                                scaffoldState.snackbarHostState.showSnackbar(
-                                    message = context.getString(R.string.error_no_files_to_play),
-                                    actionLabel = context.getString(R.string.ok)
-                                )
-                            }
-                            logD("onPlay Empty")
-                        } else {
-                            logD("onPlay $items")
-                            onPlay(items)
-                        }
-                    },
-                    onLoop = { onLoop(!isLoop) },
-                    onShuffle = { onShuffle(!isShuffle) },
-                    isLoopEnabled = isLoop,
-                    isShuffleEnabled = isShuffle,
-                )
-
-                Snackbar(
-                    modifier = Modifier.constrainAs(snack) {
-                        width = Dimension.fillToConstraints
-                        bottom.linkTo(controls.top)
-                    },
                     snackBarState = scaffoldState.snackbarHostState,
                     onDismiss = {
                         scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
