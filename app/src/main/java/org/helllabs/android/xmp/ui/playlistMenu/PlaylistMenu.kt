@@ -35,8 +35,8 @@ import java.util.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.model.PlaylistItem
 import org.helllabs.android.xmp.service.PlayerService
-import org.helllabs.android.xmp.ui.browser.FilelistActivity
 import org.helllabs.android.xmp.ui.components.*
+import org.helllabs.android.xmp.ui.filelist.FilelistActivity
 import org.helllabs.android.xmp.ui.modarchive.Search
 import org.helllabs.android.xmp.ui.player.PlayerActivity
 import org.helllabs.android.xmp.ui.playlist_detail.PlaylistActivity
@@ -250,25 +250,20 @@ private fun PlaylistMenuContent(
                 ExtendedFab(onClick = { onFabClick() })
             }
         ) {
-            val isLoading = remember { mutableStateOf(false) }
             val list = remember { mutableStateOf(listOf<PlaylistItem>()) }
 
             // State Flow
             when (playlistState) {
                 PlaylistMenuViewModel.PlaylistMenuState.None -> Unit
                 PlaylistMenuViewModel.PlaylistMenuState.Load -> {
-                    context.logD("Loading")
-                    isLoading.value = true
+                    ProgressbarIndicator()
                     list.value = listOf()
                 }
                 is PlaylistMenuViewModel.PlaylistMenuState.Loaded -> {
                     context.logD("Loaded")
-                    isLoading.value = false
                     list.value = playlistState.list
                 }
             }
-
-            ProgressbarIndicator(isLoading = isLoading.value)
 
             LazyColumn(
                 contentPadding = rememberInsetsPaddingValues(

@@ -38,7 +38,7 @@ fun Context.yesNoDialog(
     lifecycleOwner: LifecycleOwner,
     title: String,
     message: String,
-    @StringRes positiveButtonText: Int = R.string.yes,
+    @StringRes positiveButton: Int = R.string.yes,
     @StringRes negativeButton: Int = R.string.no,
     onNegativeButton: (() -> Unit)? = null,
     onPositiveButton: () -> Unit,
@@ -47,7 +47,7 @@ fun Context.yesNoDialog(
         lifecycleOwner(lifecycleOwner)
         title(text = title)
         message(text = message)
-        positiveButton(positiveButtonText) { onPositiveButton() }
+        positiveButton(positiveButton) { onPositiveButton() }
         negativeButton(negativeButton) { onNegativeButton?.invoke() }
     }
 }

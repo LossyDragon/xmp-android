@@ -193,6 +193,10 @@ object FileUtils {
         return file.delete()
     }
 
+    fun delete(file: File): Boolean {
+        return file.delete()
+    }
+
     fun deleteRecursive(filename: String): Boolean {
         val file = File(filename)
         return file.deleteRecursively()

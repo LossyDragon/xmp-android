@@ -43,8 +43,6 @@ class PlaylistActivity :
         set(loopMode) {
             viewModel.playlist.isLoopMode = loopMode
         }
-    override val allFiles: List<String>
-        get() = mPlaylistAdapter.getFilenameList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -94,7 +92,7 @@ class PlaylistActivity :
             }
         }
 
-        val callback: ItemTouchHelper.Callback = SimpleItemTouchHelperCallback(mPlaylistAdapter)
+        val callback: ItemTouchHelper.Callback = SimpleItemTouchHelperCallback(mPlaylistAdapter!!)
         mItemTouchHelper = ItemTouchHelper(callback)
         mItemTouchHelper.attachToRecyclerView(binder.plistList)
 
@@ -103,7 +101,7 @@ class PlaylistActivity :
     }
 
     override fun onResume() {
-        mPlaylistAdapter.setUseFilename(PrefManager.useFilename)
+        mPlaylistAdapter!!.setUseFilename(PrefManager.useFilename)
         super.onResume() // Call super last to update the list.
     }
 
@@ -117,7 +115,7 @@ class PlaylistActivity :
     }
 
     override fun onClick(position: Int) {
-        onItemClick(mPlaylistAdapter, position)
+        onItemClick(mPlaylistAdapter!!, position)
     }
 
     @SuppressLint("CheckResult")
@@ -132,10 +130,10 @@ class PlaylistActivity :
                         viewModel.playlist.commit()
                         update()
                     }
-                    1 -> addToQueue(mPlaylistAdapter.getFilename(position))
-                    2 -> addToQueue(mPlaylistAdapter.getFilenameList())
-                    3 -> playModule(mPlaylistAdapter.getFilename(position))
-                    4 -> playModule(mPlaylistAdapter.getFilenameList(), position)
+                    1 -> addToQueue(mPlaylistAdapter!!.getFilename(position))
+                    2 -> addToQueue(mPlaylistAdapter!!.getFilenameList())
+                    3 -> playModule(mPlaylistAdapter!!.getFilename(position))
+                    4 -> playModule(mPlaylistAdapter!!.getFilenameList(), position)
                 }
             }
             positiveButton(R.string.select)
@@ -164,10 +162,10 @@ class PlaylistActivity :
 
     private fun onLoaded(list: List<PlaylistItem>) {
         logD("Updating List")
-        mPlaylistAdapter.submitList(list)
+        mPlaylistAdapter!!.submitList(list)
         with(binder) {
             spinner.hide()
-            if (mPlaylistAdapter.getItems().isEmpty()) {
+            if (mPlaylistAdapter!!.getItems().isEmpty()) {
                 errorLayout.layout.show()
                 errorLayout.message.text = getString(R.string.msg_empty_playlist)
             } else {

@@ -102,7 +102,7 @@ private fun PlaylistEditScreen(
             lifecycleOwner = lifecycleOwner,
             title = context.getString(R.string.dialog_delete_playlist),
             message = context.getString(R.string.dialog_delete_playlist_message, intentName),
-            positiveButtonText = R.string.menu_delete,
+            positiveButton = R.string.menu_delete,
             negativeButton = R.string.cancel,
             onPositiveButton = {
                 Intent().apply {

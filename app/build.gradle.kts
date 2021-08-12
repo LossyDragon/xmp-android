@@ -108,6 +108,7 @@ dependencies {
 
     implementation(Dependencies.Compose.activity)
     implementation(Dependencies.Compose.animation)
+    implementation(Dependencies.Compose.constraint)
     implementation(Dependencies.Compose.foundation)
     implementation(Dependencies.Compose.iconsCore)
     implementation(Dependencies.Compose.iconsExtended)

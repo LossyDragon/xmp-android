@@ -327,5 +327,6 @@
     <string name="msg_service_not_alive">Player Service is not running</string>
     <string name="playlist_edit_helper_text">Playlist name cannot be empty to save</string>
     <string name="msg_no_formats">No formats found</string>
+    <string name="unplayable_item">Item not playable</string>
 
 </resources>

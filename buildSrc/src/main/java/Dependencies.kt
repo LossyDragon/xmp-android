@@ -10,21 +10,19 @@ object Dependencies {
 
     // https://github.com/google/accompanist/releases
     object Accompanist {
-        private const val version = "0.11.1"
+        private const val version = "0.16.1"
         const val insets = "com.google.accompanist:accompanist-insets:$version"
         const val controller = "com.google.accompanist:accompanist-systemuicontroller:$version"
     }
 
     object SupportLibs {
-        // const val appCompat = "androidx.appcompat:appcompat:1.3.1"
-        // const val cardView = "androidx.cardview:cardview:1.0.0"
+        const val media = "androidx.media:media:1.4.1"
+        const val preferenceKtx = "androidx.preference:preference-ktx:1.1.1"
+        const val recyclerview = "androidx.recyclerview:recyclerview:1.2.1"
         @Deprecated("Moving to compose")
         const val constraintLayout = "androidx.constraintlayout:constraintlayout:2.1.0"
         @Deprecated("Moving to compose")
         const val material = "com.google.android.material:material:1.4.0"
-        const val media = "androidx.media:media:1.4.1"
-        const val preferenceKtx = "androidx.preference:preference-ktx:1.1.1"
-        const val recyclerview = "androidx.recyclerview:recyclerview:1.2.1"
         @Deprecated("Moving to compose")
         const val swipeRefreshLayout = "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
     }
@@ -35,6 +33,7 @@ object Dependencies {
         private const val version = "1.0.1"
         const val activity = "androidx.activity:activity-compose:1.3.1"
         const val animation = "androidx.compose.animation:animation:$version"
+        const val constraint = "androidx.constraintlayout:constraintlayout-compose:1.0.0-beta02"
         const val foundation = "androidx.compose.foundation:foundation:$version"
         const val iconsCore = "androidx.compose.material:material-icons-core:$version"
         const val iconsExtended = "androidx.compose.material:material-icons-extended:$version"
@@ -97,6 +96,7 @@ object Dependencies {
     }
 
     // https://repo1.maven.org/maven2/com/github/razir/progressbutton/progressbutton/
+    @Deprecated("Migrating to Compose")
     object ProgressButton {
         const val progressbutton = "com.github.razir.progressbutton:progressbutton:2.1.0"
     }

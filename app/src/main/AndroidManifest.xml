@@ -201,9 +201,10 @@
         </activity>
 
         <activity
-            android:name="org.helllabs.android.xmp.ui.browser.FilelistActivity"
+            android:name="org.helllabs.android.xmp.ui.filelist.FilelistActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:parentActivityName="org.helllabs.android.xmp.ui.playlistMenu.PlaylistMenu" />
+            android:parentActivityName="org.helllabs.android.xmp.ui.playlistMenu.PlaylistMenu"
+            android:theme="@style/ComposeTheme" />
 
         <activity
             android:name="org.helllabs.android.xmp.ui.playlist_detail.PlaylistActivity"

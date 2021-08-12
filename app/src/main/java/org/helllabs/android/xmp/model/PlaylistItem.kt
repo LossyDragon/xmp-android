@@ -16,6 +16,7 @@ data class PlaylistItem(
     var comment: String?,
     var id: Int = 0,
     var file: File? = null,
+    var isPlayable: Boolean = true, // Used to detect valid files in FileBrowser
 ) : Comparable<PlaylistItem> {
 
     fun isDirectory() =

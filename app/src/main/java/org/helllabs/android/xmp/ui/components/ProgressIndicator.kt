@@ -11,7 +11,7 @@ import org.helllabs.android.xmp.ui.theme.XmpTheme
 
 @Composable
 fun ProgressbarIndicator(
-    isLoading: Boolean
+    isLoading: Boolean = true
 ) {
     if (isLoading) {
         Row(

@@ -80,6 +80,29 @@ object PlaylistUtils {
         return addFiles(fileList, playlistName)
     }
 
+    // Get all the items that are a FILE type.
+    fun getFilePathList(currentList: List<PlaylistItem>): List<String> {
+        val list: MutableList<String> = ArrayList()
+        for (item in currentList) {
+            if (item.type == PlaylistType.TYPE_FILE) {
+                list.add(item.file!!.path)
+            }
+        }
+        return list
+    }
+
+    // Get a count of any Directories in a current list.
+    fun getDirectoryCount(list: List<PlaylistItem>): Int {
+        var count = 0
+        for (item in list) {
+            if (item.type != PlaylistType.TYPE_DIRECTORY) {
+                break
+            }
+            count++
+        }
+        return count
+    }
+
     fun list(): Array<String> {
         return Preferences.DATA_DIR.list { _, name ->
             name.endsWith(PLAYLIST_SUFFIX)

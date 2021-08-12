@@ -6,16 +6,24 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DragHandle
+import androidx.compose.material.icons.filled.FolderOpen
+import androidx.compose.material.icons.filled.InsertDriveFile
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.model.PlaylistItem
 import org.helllabs.android.xmp.model.PlaylistType
@@ -92,6 +100,98 @@ fun ItemPlaylistCard(
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
+@Composable
+fun ItemList(
+    item: PlaylistItem,
+    isDraggable: Boolean = false,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+) {
+    val listIcon = when (item.type) {
+        PlaylistType.TYPE_DIRECTORY -> Icons.Outlined.FolderOpen
+        PlaylistType.TYPE_FILE -> Icons.Default.InsertDriveFile
+        else -> throw IllegalArgumentException("Item should only use Type Directory or File!")
+    }
+
+    ListItem(
+        modifier = Modifier
+            .height(72.dp)
+            .fillMaxWidth()
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
+        icon = {
+            Icon(
+                modifier = Modifier.padding(top = 8.dp, start = 8.dp),
+                imageVector = listIcon,
+                contentDescription = null
+            )
+        },
+        text = {
+            Text(
+                text = item.name!!,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        },
+        secondaryText = {
+            Text(
+                text = when {
+                    item.isDirectory() -> stringResource(id = R.string.directory)
+                    !item.isPlayable -> stringResource(id = R.string.unplayable_item)
+                    else -> item.comment
+                }.orEmpty(),
+                fontStyle = if (item.isDirectory()) FontStyle.Italic else FontStyle.Normal,
+                color =
+                if (!item.isPlayable && !item.isDirectory()) Color.Red
+                else Color.Unspecified,
+                fontSize = 14.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        },
+        trailing = {
+            if (isDraggable) {
+                Icon(
+                    imageVector = Icons.Default.DragHandle,
+                    contentDescription = null
+                )
+            }
+        }
+    )
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun ItemBreadCrumb(
+    crumb: String,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+) {
+    Card(
+        shape = MaterialTheme.shapes.medium,
+        modifier = Modifier
+            .padding(4.dp)
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
+        elevation = 4.dp,
+    ) {
+        Row(
+            modifier = Modifier.padding(4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                modifier = Modifier.size(12.dp),
+                imageVector = Icons.Default.FolderOpen,
+                contentDescription = "Playlist Icon"
+            )
+            Text(
+                modifier = Modifier.padding(start = 2.dp),
+                text = crumb,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
 /************
  * Previews *
  ************/
@@ -106,6 +206,35 @@ private fun ItemPlaylistCardPreview() {
                 name = "Some very long playlist name that should ellipsize at the end",
                 comment = stringResource(id = R.string.app_description)
             ),
+            onClick = {},
+            onLongClick = {}
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun ItemListPreview() {
+    XmpTheme {
+        ItemList(
+            item = PlaylistItem(
+                PlaylistType.TYPE_FILE,
+                "Some Item Some Item Some Item Some Item Some Type",
+                "Some Type Some Type Some Type Some Type Some Type"
+            ),
+            isDraggable = true,
+            onClick = {},
+            onLongClick = {},
+        )
+    }
+}
+
+@Preview(name = "Dark Theme BreadCrumb", showBackground = true, uiMode = UI_MODE_NIGHT_YES)
+@Composable
+private fun ItemBreadCrumbPreview() {
+    XmpTheme(false) {
+        ItemBreadCrumb(
+            crumb = "Some Bread Crumb",
             onClick = {},
             onLongClick = {}
         )

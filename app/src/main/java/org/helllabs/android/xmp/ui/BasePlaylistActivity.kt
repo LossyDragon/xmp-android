@@ -35,13 +35,12 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         update()
     }
 
-    protected lateinit var mPlaylistAdapter: BasePlaylistAdapter
+    protected var mPlaylistAdapter: BasePlaylistAdapter? = null
     protected abstract var isShuffleMode: Boolean
     protected abstract var isLoopMode: Boolean
-    protected abstract val allFiles: List<String>
-    protected abstract fun update()
-    protected abstract fun onClick(position: Int)
-    protected abstract fun onLongClick(position: Int)
+    open fun update() {}
+    open fun onClick(position: Int) {}
+    open fun onLongClick(position: Int) {}
 
     private val shuffleIcon
         get() = if (isShuffleMode) R.drawable.ic_shuffle_on else R.drawable.ic_shuffle_off
@@ -73,8 +72,8 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayShowHomeEnabled(true)
 
-        mPlaylistAdapter.onClick = { onClick(it) }
-        mPlaylistAdapter.onLongClick = { onLongClick(it) }
+        mPlaylistAdapter?.onClick = { onClick(it) }
+        mPlaylistAdapter?.onLongClick = { onLongClick(it) }
     }
 
     public override fun onResume() {
@@ -118,22 +117,37 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
 
     open fun onItemClick(adapter: BasePlaylistAdapter, position: Int) {
         val filename = adapter.currentList[position].file!!.path
-        val mode = PrefManager.playlistMode.toInt()
 
-        /* Test module again if invalid, in case a new file format is added to the
+        onItemClick(
+            position = position,
+            filePath = filename,
+            directoryCount = adapter.getDirectoryCount(),
+            fileList = adapter.getFilenameList(),
+        )
+    }
+
+    open fun onItemClick(
+        position: Int,
+        filePath: String,
+        directoryCount: Int,
+        fileList: List<String>
+    ) {
+        val mode = PrefManager.playlistMode.toInt()
+        /*
+         * Test module again if invalid, in case a new file format is added to the
          * player library and the file was previously unrecognized and cached as invalid.
          */
-        if (Xmp.testModule(filename)) {
+        if (Xmp.testModule(filePath)) {
             when (mode) {
                 1 -> {
-                    val count = position - adapter.getDirectoryCount()
+                    val count = position - directoryCount
                     if (count >= 0) {
-                        playModule(adapter.getFilenameList(), count, isShuffleMode)
+                        playModule(fileList, count, isShuffleMode)
                     }
                 }
-                2 -> playModule(filename)
+                2 -> playModule(filePath)
                 3 -> {
-                    addToQueue(filename)
+                    addToQueue(filePath)
                     toast(R.string.msg_queue_added)
                 }
             }
@@ -167,7 +181,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
 
     protected fun setupButtons(controls: LayoutListControlsBinding) {
         controls.controlButtonPlay.click {
-            with(allFiles) {
+            with(mPlaylistAdapter!!.getFilenameList()) {
                 if (isEmpty()) {
                     toast(R.string.error_no_files_to_play)
                 } else {
@@ -209,7 +223,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         playModule(modList, start, false)
     }
 
-    private fun playModule(modList: List<String>, start: Int, keepFirst: Boolean) {
+    fun playModule(modList: List<String>, start: Int, keepFirst: Boolean) {
         XmpApplication.fileList = modList
         val intent = Intent(this, PlayerActivity::class.java).apply {
             putExtra(PlayerActivity.PARM_SHUFFLE, isShuffleMode)

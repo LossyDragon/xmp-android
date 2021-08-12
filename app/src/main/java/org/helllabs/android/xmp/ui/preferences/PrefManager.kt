@@ -33,20 +33,20 @@ object PrefManager {
     private const val KEEP_SCREEN_ON = "keep_screen_on"
     private const val MEDIA_PATH = "media_path"
     private const val MODARCHIVE_FOLDER = "modarchive_folder"
+    private const val NEW_NOTIFICATION = "pref_use_newer_notification"
+    private const val NEW_WAVEFORM = "use_new_waveform"
+    private const val OPTIONS_LOOP_MODE = "options_loopMode"
+    private const val OPTIONS_SHUFFLE_MODE = "options_shuffleMode"
     private const val PLAYLIST_MODE = "playlist_mode"
     private const val SAMPLING_RATE = "sampling_rate"
+    private const val SEARCH_HISTORY = "search_history"
     private const val SHOW_INFO_LINE = "show_info_line"
+    private const val SHOW_INFO_LINE_HEX = "show_info_line_hex"
     private const val SHOW_TOAST = "show_toast"
     private const val START_ON_PLAYER = "start_on_player"
     private const val STEREO_MIX = "stereo_mix"
     private const val USE_FILENAME = "use_filename"
     private const val VOL_BOOST = "vol_boost"
-    private const val NEW_WAVEFORM = "use_new_waveform"
-
-    // New
-    private const val SEARCH_HISTORY = "search_history"
-    private const val SHOW_INFO_LINE_HEX = "show_info_line_hex"
-    private const val NEW_NOTIFICATION = "pref_use_newer_notification"
 
     private lateinit var prefs: SharedPreferences
 
@@ -69,6 +69,14 @@ object PrefManager {
     fun clearSearchHistory() {
         prefs.edit { remove(SEARCH_HISTORY) }
     }
+
+    var fileListLoop: Boolean
+        get() = prefs.getBoolean(OPTIONS_LOOP_MODE, false)
+        set(value) = prefs.edit { putBoolean(OPTIONS_LOOP_MODE, value) }
+
+    var fileListShuffle: Boolean
+        get() = prefs.getBoolean(OPTIONS_SHUFFLE_MODE, true)
+        set(value) = prefs.edit { putBoolean(OPTIONS_SHUFFLE_MODE, value) }
 
     var showToast: Boolean
         get() = prefs.getBoolean(SHOW_TOAST, true)
