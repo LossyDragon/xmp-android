@@ -213,17 +213,19 @@
         <!-- ModArchive search & download -->
         <activity
             android:name="org.helllabs.android.xmp.ui.modarchive.Search"
-            android:configChanges="keyboardHidden|orientation|screenSize" />
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:theme="@style/ComposeTheme" />
 
         <activity
             android:name="org.helllabs.android.xmp.ui.modarchive.SearchError"
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:theme="@style/AppTheme" />
+            android:theme="@style/ComposeTheme" />
 
         <activity
             android:name="org.helllabs.android.xmp.ui.modarchive.SearchHistory"
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:parentActivityName="org.helllabs.android.xmp.ui.modarchive.Search" />
+            android:parentActivityName="org.helllabs.android.xmp.ui.modarchive.Search"
+            android:theme="@style/ComposeTheme" />
 
         <activity
             android:name="org.helllabs.android.xmp.ui.modarchive.result.SearchListResult"

@@ -1,32 +1,49 @@
 package org.helllabs.android.xmp.ui.modarchive
 
 import android.content.Intent
+import android.content.res.Configuration.UI_MODE_NIGHT_NO
+import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.os.Bundle
-import android.view.KeyEvent
+import androidx.activity.OnBackPressedCallback
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import java.util.*
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.core.view.WindowCompat
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.databinding.ActivitySearchErrorBinding
+import org.helllabs.android.xmp.ui.components.AppBar
 import org.helllabs.android.xmp.ui.modarchive.ModArchiveConstants.ERROR
+import org.helllabs.android.xmp.ui.theme.XmpTheme
+import org.helllabs.android.xmp.ui.theme.topazFontFamily
+import org.helllabs.android.xmp.util.upperCase
 
-class SearchError : AppCompatActivity(), Runnable {
-
-    private lateinit var binder: ActivitySearchErrorBinding
-
-    private var frameBlink: Boolean = false
+class SearchError : AppCompatActivity() {
 
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        binder = ActivitySearchErrorBinding.inflate(layoutInflater)
+        // Set this for all Compose activities.
+        WindowCompat.setDecorFitsSystemWindows(window, false)
 
-        setContentView(binder.root)
-        setSupportActionBar(binder.appbar.toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.setDisplayShowHomeEnabled(true)
-
-        binder.appbar.toolbarText.text = getString(R.string.search_title_error)
-
+        // Extract the error message
         var message: String? = intent.getStringExtra(ERROR)
         if (message == null) {
             message = getString(R.string.search_unknown_error)
@@ -36,50 +53,101 @@ class SearchError : AppCompatActivity(), Runnable {
             if (idx >= 0) {
                 message = message.substring(idx + 11)
             }
-            message = if (message.trim { it <= ' ' }.isEmpty()) {
+            message = if (message.trim().isEmpty()) {
                 getString(R.string.search_unknown_error)
             } else {
-                val err = message.substring(0, 1).uppercase(Locale.US) + message.substring(1)
+                val err = message.substring(0, 1).upperCase() + message.substring(1)
                 getString(R.string.search_known_error, err)
             }
         }
 
-        binder.errorMessage.text = message
-    }
-
-    override fun onResume() {
-        super.onResume()
-        binder.errorMessage.postDelayed(this, BLINK_PERIOD)
-    }
-
-    override fun onPause() {
-        super.onPause()
-        binder.errorMessage.removeCallbacks(this)
-    }
-
-    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
-        // Back key returns to search
-        if (keyCode == KeyEvent.KEYCODE_BACK) {
-            val intent = Intent(this, Search::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
-            startActivity(intent)
-            overridePendingTransition(0, 0)
-            return true
+        setContent {
+            ErrorLayout(
+                message = message,
+            )
         }
-        return super.onKeyDown(keyCode, event)
     }
+}
 
-    // Guru frame blink
-    override fun run() {
-        binder.errorMessage.apply {
-            background.alpha = if (frameBlink) 255 else 0
-            postDelayed(this@SearchError, BLINK_PERIOD)
+@Composable
+private fun ErrorLayout(
+    message: String,
+) {
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val backCallback = remember {
+        object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                val intent = Intent(context, Search::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+                context.startActivity(intent)
+            }
         }
-
-        frameBlink = !frameBlink
     }
 
-    companion object {
-        private const val BLINK_PERIOD = 1337L
+    SideEffect { backCallback.isEnabled = true }
+    DisposableEffect(lifecycleOwner, backDispatcher) {
+        backDispatcher?.addCallback(lifecycleOwner, backCallback)
+        onDispose { backCallback.remove() }
     }
+
+    XmpTheme {
+        Scaffold(
+            topBar = {
+                AppBar(
+                    title = stringResource(id = R.string.search_title_error),
+                    navIconClick = {
+                        backCallback.handleOnBackPressed()
+                    },
+                )
+            }
+        ) {
+            GuruFrame(message)
+        }
+    }
+}
+
+@Composable
+private fun GuruFrame(message: String) {
+    val scope = rememberCoroutineScope()
+    var frameState by remember { mutableStateOf(true) }
+
+    SideEffect {
+        scope.launch {
+            delay(1337L)
+            frameState = !frameState
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(12.dp)
+            .border(5.dp, if (frameState) Color.Red else Color.Transparent),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            modifier = Modifier.padding(12.dp),
+            text = message,
+            letterSpacing = 1.sp,
+            textAlign = TextAlign.Center,
+            fontFamily = topazFontFamily,
+            fontSize = 16.sp,
+            color = Color.Red
+        )
+    }
+}
+
+/************
+ * Previews *
+ ************/
+
+@Preview(name = "Dark Theme", uiMode = UI_MODE_NIGHT_YES)
+@Preview(name = "Light Theme", uiMode = UI_MODE_NIGHT_NO)
+@Composable
+private fun ErrorLayoutPreview() {
+    ErrorLayout(
+        message = "Guru Error\nGuru Error",
+    )
 }

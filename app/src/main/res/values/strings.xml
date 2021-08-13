@@ -328,5 +328,7 @@
     <string name="playlist_edit_helper_text">Playlist name cannot be empty to save</string>
     <string name="msg_no_formats">No formats found</string>
     <string name="unplayable_item">Item not playable</string>
+    <string name="dialog_clear_history_title">Clear search history</string>
+    <string name="dialog_clear_history_msg">Are you want to clear your module search history?</string>
 
 </resources>

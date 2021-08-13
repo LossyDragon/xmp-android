@@ -1,9 +1,8 @@
 package org.helllabs.android.xmp.ui.components
 
-import android.content.res.Configuration.UI_MODE_NIGHT_YES
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DragHandle
@@ -14,6 +13,7 @@ import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -25,8 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.model.PlaylistItem
-import org.helllabs.android.xmp.model.PlaylistType
+import org.helllabs.android.xmp.model.*
 import org.helllabs.android.xmp.ui.preferences.PrefManager
 import org.helllabs.android.xmp.ui.theme.XmpTheme
 import org.helllabs.android.xmp.util.ifNullOrEmpty
@@ -192,11 +191,67 @@ fun ItemBreadCrumb(
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun ItemModule(
+    item: Module,
+    onClick: () -> Unit
+) {
+    ListItem(
+        modifier = Modifier.clickable { onClick() },
+        icon = {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(
+                        Color(0xff404040),
+                        RoundedCornerShape(2.dp)
+                    )
+                    .clip(RoundedCornerShape(2.dp))
+                    .border(2.dp, Color(0xff808080)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    modifier = Modifier,
+                    text = item.format!!,
+                    fontSize = 12.sp,
+                    color = Color.White
+                )
+            }
+        },
+        text = {
+            Text(
+                text = item.getSongTitle().toString(),
+                maxLines = 1,
+                fontSize = 18.sp,
+                overflow = TextOverflow.Ellipsis
+            )
+        },
+        singleLineSecondaryText = true,
+        secondaryText = {
+            Text(
+                text = item.getArtist(),
+                maxLines = 1,
+                fontSize = 14.sp,
+                overflow = TextOverflow.Ellipsis,
+            )
+        },
+        trailing = {
+            Text(
+                text = stringResource(id = R.string.size_kb, item.getBytesFormatted()),
+                maxLines = 1,
+                fontSize = 14.sp,
+                overflow = TextOverflow.Ellipsis,
+            )
+        },
+    )
+}
+
 /************
  * Previews *
  ************/
 
-@Preview(name = "Dark Theme Card", showBackground = true, uiMode = UI_MODE_NIGHT_YES)
+@Preview
 @Composable
 private fun ItemPlaylistCardPreview() {
     XmpTheme(false) {
@@ -229,7 +284,22 @@ private fun ItemListPreview() {
     }
 }
 
-@Preview(name = "Dark Theme BreadCrumb", showBackground = true, uiMode = UI_MODE_NIGHT_YES)
+@Preview
+@Composable
+private fun ItemModulePreview() {
+    XmpTheme {
+        ItemModule(
+            item = Module(
+                format = "XM",
+                songtitle = "Some History Song Title",
+                artistInfo = ArtistInfo(artist = Artist(alias = "Some History Artist Info")),
+                bytes = 6690000
+            )
+        ) {}
+    }
+}
+
+@Preview
 @Composable
 private fun ItemBreadCrumbPreview() {
     XmpTheme(false) {

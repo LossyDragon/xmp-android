@@ -1,25 +1,37 @@
 package org.helllabs.android.xmp.ui.modarchive
 
+import android.app.Activity
 import android.content.Intent
+import android.content.res.Configuration.UI_MODE_NIGHT_NO
+import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuItem
+import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import com.afollestad.materialdialogs.MaterialDialog
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.Scaffold
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ClearAll
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.view.WindowCompat
 import com.squareup.moshi.JsonAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.databinding.ActivityResultListBinding
-import org.helllabs.android.xmp.databinding.ItemSearchListBinding
+import org.helllabs.android.xmp.model.Artist
+import org.helllabs.android.xmp.model.ArtistInfo
 import org.helllabs.android.xmp.model.Module
+import org.helllabs.android.xmp.ui.components.*
 import org.helllabs.android.xmp.ui.modarchive.ModArchiveConstants.MODULE_ID
-import org.helllabs.android.xmp.ui.modarchive.adapter.ModAdapter
-import org.helllabs.android.xmp.ui.modarchive.adapter.SearchDiffUtil
 import org.helllabs.android.xmp.ui.modarchive.result.ModuleResult
 import org.helllabs.android.xmp.ui.preferences.PrefManager
-import org.helllabs.android.xmp.util.hide
-import org.helllabs.android.xmp.util.show
+import org.helllabs.android.xmp.ui.theme.XmpTheme
+import org.helllabs.android.xmp.ui.util.yesNoDialog
 
 @AndroidEntryPoint
 class SearchHistory : AppCompatActivity() {
@@ -27,82 +39,133 @@ class SearchHistory : AppCompatActivity() {
     @Inject
     lateinit var moshiAdapter: JsonAdapter<List<Module>>
 
-    private lateinit var binder: ActivityResultListBinding
-    private lateinit var historyAdapter: ModAdapter<Module, ItemSearchListBinding>
+    private val historyList: List<Module>
+        get() = PrefManager.searchHistory?.let {
+            moshiAdapter.fromJson(it)
+        }.orEmpty()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        binder = ActivityResultListBinding.inflate(layoutInflater)
+        // Set this for all Compose activities.
+        WindowCompat.setDecorFitsSystemWindows(window, false)
 
-        setContentView(binder.root)
-        setSupportActionBar(binder.appbar.toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.setDisplayShowHomeEnabled(true)
-
-        historyAdapter = ModAdapter(
-            SearchDiffUtil(),
-            R.layout.item_search_list
-        ) { item ->
-            val intent = Intent(this, ModuleResult::class.java)
-            intent.putExtra(MODULE_ID, item.id)
-            startActivity(intent)
-        }
-
-        with(binder) {
-            appbar.toolbarText.text = getString(R.string.search_history)
-            resultSpinner.hide()
-            resultList.adapter = historyAdapter
-        }
-
-        refreshList()
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.menu_history, menu)
-        return super.onCreateOptionsMenu(menu)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == R.id.menu_history_delete) {
-            deleteHistory()
-            return true
-        }
-        return super.onOptionsItemSelected(item)
-    }
-
-    private fun refreshList() {
-        historyAdapter.submitList(getHistory().reversed()) // Oldest to bottom
-
-        if (historyAdapter.currentList.isEmpty()) {
-            binder.resultList.hide()
-            binder.errorLayout.layout.show()
-            binder.errorLayout.message.text = getString(R.string.history_no_items)
-        } else {
-            binder.resultList.show()
-            binder.errorLayout.layout.hide()
-        }
-    }
-
-    private fun getHistory(): List<Module> {
-        return PrefManager.searchHistory?.let {
-            moshiAdapter.fromJson(it)
-        }.orEmpty()
-    }
-
-    private fun deleteHistory() {
-        MaterialDialog(this).show {
-            title(text = "Clear search history")
-            message(text = "Are you want to clear your module search history?")
-            positiveButton(R.string.delete) {
-                PrefManager.clearSearchHistory()
-                refreshList()
-            }
-            negativeButton(R.string.cancel)
+        setContent {
+            SearchHistoryScreen(
+                onBack = { onBackPressed() },
+                historyList = historyList
+            )
         }
     }
 
     companion object {
         const val HISTORY_LENGTH = 50
     }
+}
+
+@Composable
+private fun SearchHistoryScreen(
+    onBack: () -> Unit,
+    historyList: List<Module>
+) {
+    val list = remember { mutableStateOf(historyList) } // Only here to force recompositions
+
+    SearchHistoryLayout(
+        onBack = { onBack() },
+        historyList = list.value,
+        onCleared = {
+            PrefManager.clearSearchHistory()
+            list.value = listOf()
+        }
+    )
+}
+
+@Composable
+private fun SearchHistoryLayout(
+    onBack: () -> Unit,
+    historyList: List<Module>,
+    onCleared: () -> Unit,
+) {
+    XmpTheme {
+        val context = LocalContext.current
+        val lifecycleOwner = LocalLifecycleOwner.current
+        val onClear = {
+            context.yesNoDialog(
+                lifecycleOwner = lifecycleOwner,
+                title = context.getString(R.string.dialog_clear_history_title),
+                message = context.getString(R.string.dialog_clear_history_msg),
+                positiveButton = R.string.delete,
+                negativeButton = R.string.cancel,
+                onPositiveButton = { onCleared() }
+            )
+        }
+        Scaffold(
+            topBar = {
+                AppBar(
+                    title = stringResource(id = R.string.search_history),
+                    navIconClick = { onBack() },
+                    menuActions = {
+                        if (historyList.isNotEmpty())
+                            DeleteMenu(
+                                deleteClick = { onClear() },
+                                image = Icons.Default.ClearAll
+                            )
+                    },
+                )
+            }
+        ) {
+            LazyList(
+                modifier = Modifier.fillMaxSize(),
+                showScrollAt = 5,
+                boxContent = {
+                    if (historyList.isEmpty()) {
+                        ErrorLayout(message = stringResource(id = R.string.history_no_items))
+                    }
+                },
+                lazyContent = {
+                    itemsIndexed(items = historyList.reversed()) { _, item ->
+                        ItemModule(
+                            item = item,
+                            onClick = {
+                                val intent = Intent(context, ModuleResult::class.java)
+                                intent.putExtra(MODULE_ID, item.id!!)
+                                context.startActivity(intent)
+                                (context as Activity).overridePendingTransition(
+                                    R.anim.slide_in_right,
+                                    R.anim.slide_out_left
+                                )
+                            }
+                        )
+                    }
+                }
+            )
+        }
+    }
+}
+
+/************
+ * Previews *
+ ************/
+
+@Preview(name = "Dark Theme", uiMode = UI_MODE_NIGHT_YES)
+@Preview(name = "Light Theme", uiMode = UI_MODE_NIGHT_NO)
+@Composable
+private fun SearchHistoryPreviewDark() {
+    val items = mutableListOf<Module>()
+    for (i in 0..5) {
+        items.add(
+            Module(
+                format = "MOD",
+                songtitle = "Some Title $i",
+                artistInfo = ArtistInfo(artist = Artist(alias = "Some Artist $i")),
+                bytes = 669
+            )
+        )
+    }
+
+    SearchHistoryLayout(
+        onBack = {},
+        historyList = items,
+        onCleared = {},
+    )
 }
