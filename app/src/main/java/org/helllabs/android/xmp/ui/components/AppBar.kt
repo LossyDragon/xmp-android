@@ -21,6 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.accompanist.insets.navigationBarsPadding
 import com.google.accompanist.insets.statusBarsPadding
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.ui.theme.XmpTheme
@@ -33,7 +34,7 @@ fun AppBar(
     navIconClick: (() -> Unit)? = null,
     menuActions: @Composable RowScope.() -> Unit = {},
 ) {
-    Column(Modifier.fillMaxWidth()) {
+    Column(Modifier.fillMaxWidth().navigationBarsPadding(bottom = false)) {
         TopAppBar(
             modifier = Modifier.statusBarsPadding(),
             backgroundColor = Color.Transparent,
@@ -62,7 +63,7 @@ fun AppBar(
     menuActions: @Composable RowScope.() -> Unit = {},
     titleClick: (() -> Unit)? = null,
 ) {
-    Column(Modifier.fillMaxWidth()) {
+    Column(Modifier.fillMaxWidth().navigationBarsPadding(bottom = false)) {
         TopAppBar(
             modifier = Modifier.statusBarsPadding(),
             backgroundColor = Color.Transparent,
