@@ -330,5 +330,8 @@
     <string name="unplayable_item">Item not playable</string>
     <string name="dialog_clear_history_title">Clear search history</string>
     <string name="dialog_clear_history_msg">Are you want to clear your module search history?</string>
+    <string name="text_sponsor">Sponsor</string>
+    <string name="msg_file_exists">File Exists</string>
+    <string name="msg_file_exists_overwrite">This module already exists. Do you want to overwrite?</string>
 
 </resources>

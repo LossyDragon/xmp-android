@@ -1,34 +1,47 @@
 package org.helllabs.android.xmp.ui.modarchive.result
 
+import android.app.Activity
 import android.content.Intent
-import android.graphics.Color
+import android.content.res.Configuration.UI_MODE_NIGHT_NO
+import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.os.Bundle
-import android.text.method.LinkMovementMethod
-import android.view.Menu
-import android.view.MenuItem
+import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
-import com.github.razir.progressbutton.DrawableButton
-import com.github.razir.progressbutton.attachTextChangeAnimator
-import com.github.razir.progressbutton.bindProgressButton
-import com.github.razir.progressbutton.showProgress
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.LinearProgressIndicator
+import androidx.compose.material.Scaffold
+import androidx.compose.material.rememberScaffoldState
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.constraintlayout.compose.Dimension
+import androidx.core.view.WindowCompat
+import com.google.accompanist.insets.navigationBarsPadding
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
 import java.io.IOException
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.XmpApplication
-import org.helllabs.android.xmp.databinding.ActivityResultModuleBinding
 import org.helllabs.android.xmp.model.Module
 import org.helllabs.android.xmp.model.ModuleResult
+import org.helllabs.android.xmp.ui.components.*
+import org.helllabs.android.xmp.ui.modarchive.ModArchiveConstants
 import org.helllabs.android.xmp.ui.modarchive.ModArchiveConstants.ERROR
 import org.helllabs.android.xmp.ui.modarchive.ModArchiveConstants.MODULE_ID
 import org.helllabs.android.xmp.ui.modarchive.SearchError
 import org.helllabs.android.xmp.ui.modarchive.result.ModuleResultViewModel.ModuleState
 import org.helllabs.android.xmp.ui.player.PlayerActivity
 import org.helllabs.android.xmp.ui.preferences.PrefManager
-import org.helllabs.android.xmp.ui.util.dialogMessage
+import org.helllabs.android.xmp.ui.theme.XmpTheme
 import org.helllabs.android.xmp.ui.util.toast
 import org.helllabs.android.xmp.ui.util.yesNoDialog
 import org.helllabs.android.xmp.util.*
@@ -36,63 +49,26 @@ import org.helllabs.android.xmp.util.*
 @AndroidEntryPoint
 class ModuleResult : AppCompatActivity() {
 
-    private lateinit var binder: ActivityResultModuleBinding
-
     private val viewModel: ModuleResultViewModel by viewModels()
-
-    lateinit var module: Module
-    private var shouldPlay = false
-    private var deleteMenu: Menu? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        binder = ActivityResultModuleBinding.inflate(layoutInflater)
-
-        setContentView(binder.root)
-        setSupportActionBar(binder.appbar.toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.setDisplayShowHomeEnabled(true)
-
-        with(binder) {
-            // Toolbar Text
-            appbar.toolbarText.text = getString(R.string.search_module_title)
-            // Play|Download Button
-            moduleButtonPlay.apply {
-                attachTextChangeAnimator()
-                bindProgressButton(this)
-                click { playClick() }
-            }
-            // Random Button
-            moduleButtonRandom.click {
-                viewModel.getRandomModule()
-                binder.appbar.toolbarText.text = getString(R.string.search_random_title)
-            }
-        }
-
-        lifecycleScope.launchWhenStarted {
-            viewModel.moduleState.collect { state ->
-                when (state) {
-                    ModuleState.None -> Unit
-                    ModuleState.Load -> onLoad()
-                    ModuleState.Cancelled -> onCancelled()
-                    ModuleState.Queued -> onQueued()
-                    ModuleState.Complete -> onComplete()
-                    is ModuleState.DownloadError -> onDownLoadError(state.downloadError)
-                    is ModuleState.Error -> onError(state.error)
-                    is ModuleState.SoftError -> onSoftError(state.softError)
-                    is ModuleState.SearchResult -> onResult(state.result)
-                }
-            }
-        }
+        // Set this for all Compose activities.
+        WindowCompat.setDecorFitsSystemWindows(window, false)
 
         val id = intent.getIntExtra(MODULE_ID, -1)
+
         logD("request module ID $id")
-        if (id < 0) {
-            viewModel.getRandomModule()
-            binder.appbar.toolbarText.text = getString(R.string.search_random_title)
-        } else {
-            viewModel.getModuleById(id)
+        if (id < 0) viewModel.getRandomModule() else viewModel.getModuleById(id) // Effect?
+
+        logD("onCreate")
+        setContent {
+            ModuleResultScreen(
+                intentId = id,
+                onBack = { onBackPressed() },
+                viewModel = viewModel,
+            )
         }
     }
 
@@ -110,213 +86,299 @@ class ModuleResult : AppCompatActivity() {
         super.onDestroy()
         viewModel.removeFetch()
     }
+}
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.menu_delete, menu)
-        deleteMenu = menu
-
-        return super.onCreateOptionsMenu(menu)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == R.id.menu_delete) {
-            deleteClick()
-            return true
-        }
-
-        return super.onOptionsItemSelected(item)
-    }
-
-    private fun onLoad() {
-        binder.resultFrame.hide()
-        binder.resultSpinner.show()
-        binder.moduleButtonPlay.isEnabled = false
-        binder.moduleButtonPlay.text = getString(R.string.button_loading)
-    }
-
-    private fun onCancelled() {
-        toast(R.string.msg_download_cancelled)
-        updateButtons()
-        binder.moduleButtonRandom.isEnabled = true
-    }
-
-    private fun onQueued() {
-        logI("Download Queued")
-        binder.moduleButtonRandom.isEnabled = false
-    }
-
-    private fun onComplete() {
-        logI("Download Complete")
-        updateButtons()
-        binder.moduleButtonRandom.isEnabled = true
-    }
-
-    private fun onDownLoadError(downloadError: String) {
-        dialogMessage(
-            lifecycleOwner = this,
-            message = downloadError
+@Composable
+private fun ModuleResultScreen(
+    intentId: Int,
+    onBack: () -> Unit,
+    viewModel: ModuleResultViewModel,
+) {
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val viewModelState = viewModel.moduleState.collectAsState()
+    var appTitle by rememberSaveable {
+        mutableStateOf(
+            if (intentId < 0) R.string.search_random_title
+            else R.string.search_module_title
         )
     }
 
-    private fun onError(error: String?) {
-        val message = error ?: getString(R.string.search_unknown_error)
-        val intent = Intent(this, SearchError::class.java).apply {
-            putExtra(ERROR, message)
-            flags = Intent.FLAG_ACTIVITY_NO_ANIMATION
-        }
-        startActivity(intent)
-        overridePendingTransition(0, 0)
-    }
+    ModuleResultLayout(
+        appTitle = appTitle,
+        viewModelState = viewModelState.value,
+        onBack = { onBack() },
+        onDelete = { module ->
+            val file = FileUtils.localFile(module)!!
+            context.yesNoDialog(
+                lifecycleOwner = lifecycleOwner,
+                title = context.getString(R.string.title_delete_file),
+                message = context.getString(R.string.msg_delete_file, module.filename),
+                onPositiveButton = {
+                    context.logD("Delete " + file.path)
+                    if (file.delete()) {
+                        viewModel.touch()
+                    } else {
+                        context.toast(R.string.error)
+                    }
+                    if (PrefManager.useArtistFolder) {
+                        val parent = file.parentFile!!
+                        val contents = parent.listFiles()
+                        if (contents != null && contents.isEmpty()) {
+                            try {
+                                val path = PrefManager.mediaPath!!
+                                val mediaPath = File(path).canonicalPath
+                                val parentPath = parent.canonicalPath
 
-    private fun onSoftError(softError: String) {
-        logW(softError)
-        binder.resultSpinner.hide()
-        binder.resultData.hide()
-        binder.layoutError.layout.show()
-        binder.layoutError.message.text = softError
-    }
-
-    private fun onResult(result: ModuleResult) {
-        binder.resultFrame.show()
-        binder.resultSpinner.hide()
-        updateView(result)
-    }
-
-    private fun updateView(result: ModuleResult) {
-        module = result.module!!
-
-        logI("Response: title - " + module.getSongTitle())
-
-        // Save module result into Search History
-        viewModel.saveModuleToHistory(module)
-
-        binder.resultData.scrollTo(0, 0)
-        updateButtons()
-
-        val size = module.bytes!! / 1024
-        val info = getString(R.string.search_result_by, module.format, module.getArtist(), size)
-
-        with(binder) {
-            moduleTitle.text = module.getSongTitle()
-            moduleFilename.text = module.filename
-            moduleLicenseDescription.text = module.license!!.description
-            moduleInstruments.text = module.parseInstruments()
-            with(moduleInfo) {
-                text = module.infoPageToHyperlink(info)
-                movementMethod = LinkMovementMethod.getInstance()
-                linksClickable = true
-            }
-            with(moduleLicense) {
-                text = module.license!!.toHyperlink()
-                movementMethod = LinkMovementMethod.getInstance()
-                linksClickable = true
-            }
-            if (!module.comment.isNullOrEmpty()) {
-                moduleCommentTitle.show()
-                moduleCommentText.show()
-                moduleCommentText.text = module.getComment()
-            }
-            if (result.hasSponsor()) {
-                with(moduleSponsor) {
-                    isClickable = true
-                    movementMethod = LinkMovementMethod.getInstance()
-                    text = result.sponsor!!.toHyperLink()
-                    show()
-                }
-            }
-        }
-    }
-
-    private fun playClick() {
-        if (FileUtils.localFile(module).exists()) {
-            val path = FileUtils.localFile(module).path
-            val modList = ArrayList<String>()
-
-            modList.add(path)
-            XmpApplication.fileList = modList
-
-            logI("Play $path")
-            val intent = Intent(this, PlayerActivity::class.java).apply {
-                putExtra(PlayerActivity.PARM_START, 0)
-            }
-            startActivity(intent)
-        } else {
-            // Does not exist, download module
-            val modDir = FileUtils.getDownloadPath(module)
-            val url = module.url
-
-            shouldPlay = true
-
-            binder.moduleButtonPlay.showProgress {
-                buttonText = getString(R.string.button_downloading)
-                progressColor = Color.WHITE
-                gravity = DrawableButton.GRAVITY_TEXT_START
-            }
-
-            logI("Downloading $url to $modDir")
-            viewModel.downloadModule(module.filename!!, url!!, modDir)
-        }
-    }
-
-    private fun deleteClick() {
-        val file = FileUtils.localFile(module)
-        val title = getString(R.string.title_delete_file)
-        val message = getString(R.string.msg_delete_file, module.filename)
-        yesNoDialog(this, title, message) {
-            logD("Delete " + file.path)
-            if (file.delete()) {
-                updateButtons()
-            } else {
-                toast(R.string.error)
-            }
-            if (PrefManager.useArtistFolder) {
-                val parent = file.parentFile!!
-                val contents = parent.listFiles()
-                if (contents != null && contents.isEmpty()) {
-                    try {
-                        val path = PrefManager.mediaPath
-                        val mediaPath = File(path).canonicalPath
-                        val parentPath = parent.canonicalPath
-
-                        if (parentPath.startsWith(mediaPath) && parentPath != mediaPath) {
-                            logI("Remove empty directory " + parent.path)
-                            if (!parent.delete()) {
-                                toast(R.string.msg_error_remove_directory)
-                                logE("error removing directory")
+                                if (parentPath.startsWith(mediaPath) && parentPath != mediaPath) {
+                                    context.logI("Remove empty directory " + parent.path)
+                                    if (!parent.delete()) {
+                                        context.toast(R.string.msg_error_remove_directory)
+                                        context.logE("error removing directory")
+                                    }
+                                }
+                            } catch (e: IOException) {
+                                context.logE(e.message.toString())
                             }
                         }
-                    } catch (e: IOException) {
-                        logE(e.message.toString())
                     }
+                    viewModel.touch()
+                }
+            )
+        },
+        onError = {
+            val message = it ?: context.getString(R.string.search_unknown_error)
+            val intent = Intent(context, SearchError::class.java)
+            intent.putExtra(ERROR, message)
+            intent.flags = Intent.FLAG_ACTIVITY_NO_ANIMATION
+            context.startActivity(intent)
+            (context as Activity).overridePendingTransition(
+                R.anim.slide_in_right,
+                R.anim.slide_out_left
+            )
+        },
+        onPlay = { module ->
+            if (FileUtils.localFile(module)?.exists() == true) {
+                val path = FileUtils.localFile(module)!!.path
+                val modList = ArrayList<String>()
+
+                modList.add(path)
+                XmpApplication.fileList = modList
+
+                context.logI("Play $path")
+                val intent = Intent(context, PlayerActivity::class.java)
+                intent.putExtra(PlayerActivity.PARM_START, 0)
+                context.startActivity(intent)
+                (context as Activity).overridePendingTransition(
+                    R.anim.slide_in_right,
+                    R.anim.slide_out_left
+                )
+            } else {
+                // Does not exist, download module
+                val modDir = FileUtils.getDownloadPath(module)
+                val url = module.url
+
+                context.logI("Downloaded $url to $modDir")
+                if (FileUtils.localFile(url!!, modDir).exists()) {
+                    context.yesNoDialog(
+                        lifecycleOwner = lifecycleOwner,
+                        title = context.getString(R.string.msg_file_exists),
+                        message = context.getString(R.string.msg_file_exists_overwrite),
+                        onPositiveButton = {
+                            viewModel.downloadModule(
+                                module.filename!!,
+                                url, modDir
+                            )
+                        }
+                    )
+                } else {
+                    viewModel.downloadModule(module.filename!!, url, modDir)
                 }
             }
-            updateButtons()
-        }
-    }
+        },
+        onRandom = {
+            appTitle = R.string.search_random_title
+            viewModel.getRandomModule()
+        },
+    )
+}
 
-    private fun updateButtons() {
-        // Block download of unsupported formats
-        val isUnSupported = listOf(*UNSUPPORTED).contains(module.format)
+@Composable
+private fun ModuleResultLayout(
+    @StringRes appTitle: Int,
+    viewModelState: ModuleState,
+    onBack: () -> Unit,
+    onDelete: (module: Module) -> Unit,
+    onError: (error: String?) -> Unit,
+    onPlay: (module: Module) -> Unit,
+    onRandom: () -> Unit,
+) {
+    XmpTheme(
+        onlyStyleStatusBar = true,
+    ) {
+        var moduleResult by remember { mutableStateOf<ModuleResult?>(null) }
+        var moduleExists by rememberSaveable { mutableStateOf(false) }
+        val scaffoldState = rememberScaffoldState()
+        Scaffold(
+            topBar = {
+                AppBar(
+                    title = stringResource(id = appTitle),
+                    navIconClick = { onBack() },
+                    menuActions = {
+                        if (moduleExists) DeleteMenu({ onDelete(moduleResult!!.module!!) })
+                    },
+                )
+            },
+            scaffoldState = scaffoldState,
+            snackbarHost = { scaffoldState.snackbarHostState },
+        ) {
+            val scope = rememberCoroutineScope()
+            val context = LocalContext.current
+            var isLoading by rememberSaveable { mutableStateOf(false) }
+            var buttonText by rememberSaveable { mutableStateOf("") }
 
-        if (isUnSupported) {
-            binder.moduleButtonPlay.text = getString(R.string.button_download_unsupported)
-            binder.moduleButtonPlay.isEnabled = false
-        } else {
-            binder.moduleButtonPlay.isEnabled = true
+            context.logD("State: $viewModelState")
+            when (viewModelState) {
+                ModuleState.Cancelled -> {
+                    val msg = stringResource(id = R.string.msg_download_cancelled)
+                    scope.launch {
+                        scaffoldState.snackbarHostState.showSnackbar(
+                            message = msg,
+                            actionLabel = context.getString(R.string.ok)
+                        )
+                    }
+                    isLoading = false
+                }
+                ModuleState.Complete -> {
+                    isLoading = false
+                }
+                ModuleState.Load -> {
+                    buttonText = stringResource(id = R.string.button_loading)
+                    isLoading = true
+                }
+                ModuleState.None -> {
+                }
+                ModuleState.Queued -> {
+                    isLoading = true
+                    buttonText = stringResource(id = R.string.button_downloading)
+                }
+                is ModuleState.DownloadError -> {
+                    scope.launch {
+                        scaffoldState.snackbarHostState.showSnackbar(
+                            message = viewModelState.downloadError,
+                            actionLabel = context.getString(R.string.ok)
+                        )
+                    }
+                    isLoading = false
+                }
+                is ModuleState.Error -> {
+                    onError(viewModelState.error)
+                    isLoading = false
+                }
+                is ModuleState.SearchResult -> {
+                    isLoading = false
+                    moduleResult = viewModelState.result
+                }
+                is ModuleState.SoftError -> {
+                    context.logW(viewModelState.softError)
+                    ErrorLayout(viewModelState.softError)
+                    isLoading = false
+                }
+            }
 
-            if (FileUtils.localFile(module).exists()) {
-                // module exists, update button to reflect existence and enable Menu Delete
-                deleteMenu?.findItem(R.id.menu_delete)?.isEnabled = true
-                binder.moduleButtonPlay.text = getString(R.string.play)
-            } else {
-                // module does not exist, update button to download and disable Menu Delete
-                deleteMenu?.findItem(R.id.menu_delete)?.isEnabled = false
-                binder.moduleButtonPlay.text = getString(R.string.download)
+            ConstraintLayout(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .navigationBarsPadding()
+            ) {
+                val (column, snack, loading, buttons) = createRefs()
+
+                if (isLoading) {
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .constrainAs(loading) {
+                                width = Dimension.fillToConstraints
+                                top.linkTo(parent.top)
+                            }
+                            .fillMaxWidth()
+                    )
+                }
+
+                ModuleLayout(
+                    modifier = Modifier.constrainAs(column) {
+                        height = Dimension.fillToConstraints
+                        width = Dimension.fillToConstraints
+                        top.linkTo(parent.top)
+                        bottom.linkTo(buttons.top)
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                    },
+                    moduleResult = moduleResult,
+                )
+
+                Snackbar(
+                    modifier = Modifier.constrainAs(snack) {
+                        width = Dimension.fillToConstraints
+                        bottom.linkTo(buttons.top)
+                    },
+                    snackBarState = scaffoldState.snackbarHostState,
+                    onDismiss = {
+                        scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
+                    }
+                )
+
+                moduleExists = FileUtils.localFile(moduleResult?.module)?.exists() ?: false
+                val isUnSupported =
+                    listOf(*ModArchiveConstants.UNSUPPORTED).contains(moduleResult?.module?.format)
+                if (!isLoading) {
+                    context.logD("State: isLoading: $isLoading for Buttons")
+                    buttonText =
+                        if (moduleExists)
+                            stringResource(id = R.string.play)
+                        else
+                            stringResource(id = R.string.download)
+                    if (isUnSupported)
+                        buttonText = stringResource(id = R.string.button_download_unsupported)
+                }
+
+                ButtonBar(
+                    modifier = Modifier
+                        .constrainAs(buttons) {
+                            width = Dimension.fillToConstraints
+                            top.linkTo(column.bottom)
+                            bottom.linkTo(parent.bottom)
+                        },
+                    playButtonText = buttonText,
+                    isLoading = isLoading,
+                    isUnsupported = isUnSupported,
+                    onPlay = {
+                        onPlay(moduleResult!!.module!!)
+                    },
+                    onRandom = {
+                        onRandom()
+                    },
+                )
             }
         }
     }
+}
 
-    companion object {
-        private val UNSUPPORTED = arrayOf("AHX", "HVL", "MO3")
-    }
+/************
+ * Previews *
+ ************/
+
+@Preview(name = "Dark Theme", uiMode = UI_MODE_NIGHT_YES)
+@Preview(name = "Light Theme", uiMode = UI_MODE_NIGHT_NO)
+@Composable
+private fun ModuleResultPreview() {
+    val state = ModuleState.SearchResult(fakeModuleResult())
+    ModuleResultLayout(
+        appTitle = R.string.search_module_title,
+        viewModelState = state,
+        onBack = { },
+        onDelete = {},
+        onError = {},
+        onPlay = {},
+        onRandom = {},
+    )
 }

@@ -94,10 +94,4 @@ object Dependencies {
         const val retrofit = "com.squareup.retrofit2:retrofit:2.9.0"
         const val moshi = "com.squareup.moshi:moshi-kotlin:1.12.0"
     }
-
-    // https://repo1.maven.org/maven2/com/github/razir/progressbutton/progressbutton/
-    @Deprecated("Migrating to Compose")
-    object ProgressButton {
-        const val progressbutton = "com.github.razir.progressbutton:progressbutton:2.1.0"
-    }
 }

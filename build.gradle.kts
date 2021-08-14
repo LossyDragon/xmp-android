@@ -1,8 +1,8 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     repositories {
-        jcenter()
         google()
+        mavenCentral()
         maven { url = uri("https://plugins.gradle.org/m2/") } // ktlint-gradle
     }
     dependencies {
@@ -15,8 +15,9 @@ buildscript {
 
 allprojects {
     repositories {
-        jcenter()
         google()
+        mavenCentral()
+        jcenter() // xFetch2
         maven { url = uri("https://jitpack.io") }
     }
 }

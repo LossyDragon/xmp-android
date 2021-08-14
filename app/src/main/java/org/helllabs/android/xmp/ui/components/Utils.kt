@@ -38,3 +38,27 @@ fun annotatedLinkString(
         end = endIndex
     )
 }
+
+fun annotatedLink(
+    string: String,
+    url: String
+): AnnotatedString = buildAnnotatedString {
+
+    val startIndex = string.indexOf(string)
+    val endIndex = startIndex + string.length
+
+    append(string)
+
+    addStyle(
+        style = SpanStyle(color = darkAccent, textDecoration = TextDecoration.Underline),
+        start = startIndex,
+        end = endIndex
+    )
+
+    addStringAnnotation(
+        tag = "URL",
+        annotation = url,
+        start = startIndex,
+        end = endIndex
+    )
+}

@@ -1,109 +1,166 @@
 package org.helllabs.android.xmp.ui.modarchive.result
 
+import android.app.Activity
 import android.content.Intent
+import android.content.res.Configuration.UI_MODE_NIGHT_NO
+import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.os.Bundle
+import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.Scaffold
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.view.WindowCompat
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.collect
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.databinding.ActivityResultListBinding
-import org.helllabs.android.xmp.databinding.ItemSearchListBinding
+import org.helllabs.android.xmp.model.Artist
+import org.helllabs.android.xmp.model.ArtistInfo
 import org.helllabs.android.xmp.model.Module
-import org.helllabs.android.xmp.model.SearchListResult
+import org.helllabs.android.xmp.model.SearchListResult as _SearchListResult
+import org.helllabs.android.xmp.ui.components.*
+import org.helllabs.android.xmp.ui.modarchive.ModArchiveConstants
 import org.helllabs.android.xmp.ui.modarchive.ModArchiveConstants.ARTIST_ID
-import org.helllabs.android.xmp.ui.modarchive.ModArchiveConstants.ERROR
 import org.helllabs.android.xmp.ui.modarchive.ModArchiveConstants.MODULE_ID
 import org.helllabs.android.xmp.ui.modarchive.ModArchiveConstants.SEARCH_TEXT
 import org.helllabs.android.xmp.ui.modarchive.SearchError
-import org.helllabs.android.xmp.ui.modarchive.adapter.ModAdapter
-import org.helllabs.android.xmp.ui.modarchive.adapter.SearchDiffUtil
 import org.helllabs.android.xmp.ui.modarchive.result.SearchListViewModel.SearchResultState
-import org.helllabs.android.xmp.util.hide
-import org.helllabs.android.xmp.util.show
+import org.helllabs.android.xmp.ui.theme.XmpTheme
+import org.helllabs.android.xmp.util.logD
 
 @AndroidEntryPoint
 class SearchListResult : AppCompatActivity() {
 
     private val viewModel: SearchListViewModel by viewModels()
 
-    private lateinit var binder: ActivityResultListBinding
-    private lateinit var searchListAdapter: ModAdapter<Module, ItemSearchListBinding>
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        binder = ActivityResultListBinding.inflate(layoutInflater)
+        // Set this for all Compose activities.
+        WindowCompat.setDecorFitsSystemWindows(window, false)
 
-        setContentView(binder.root)
-        setSupportActionBar(binder.appbar.toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.setDisplayShowHomeEnabled(true)
+        var appTitle = ""
 
-        searchListAdapter = ModAdapter(
-            SearchDiffUtil(),
-            R.layout.item_search_list
-        ) { item ->
-            val intent = Intent(this, ModuleResult::class.java)
-            intent.putExtra(MODULE_ID, item.id)
-            startActivity(intent)
-            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+        intent.getStringExtra(SEARCH_TEXT)?.let {
+            appTitle = getString(R.string.search_title_title)
+            viewModel.getFileOrTitle(it)
         }
 
-        binder.resultList.adapter = searchListAdapter
+        intent.getIntExtra(ARTIST_ID, -1).let {
+            if (it < 0) return@let
+            appTitle = getString(R.string.search_artist_modules_title)
+            viewModel.getArtistById(it)
+        }
 
-        lifecycleScope.launchWhenStarted {
-            viewModel.searchResultState.collect {
-                when (it) {
-                    SearchResultState.None -> Unit
-                    SearchResultState.Load -> onLoad()
-                    is SearchResultState.Error -> onError(it.error)
-                    is SearchResultState.SoftError -> onSoftError(it.softError)
-                    is SearchResultState.SearchResult -> onResult(it.result)
+        logD("onCreate")
+        setContent {
+            val state = viewModel.searchResultState.collectAsState()
+            SearchLayout(
+                appTitle = appTitle,
+                onBack = { onBackPressed() },
+                resultState = state.value,
+            )
+        }
+    }
+}
+
+@Composable
+private fun SearchLayout(
+    appTitle: String,
+    onBack: () -> Unit,
+    resultState: SearchResultState,
+) {
+    XmpTheme {
+        Scaffold(
+            topBar = {
+                AppBar(
+                    title = appTitle,
+                    navIconClick = { onBack() },
+                )
+            }
+        ) {
+            val context = LocalContext.current
+            var result by remember { mutableStateOf(listOf<Module>()) }
+            LazyList(
+                modifier = Modifier.fillMaxSize(),
+                showScrollAt = 5,
+                boxContent = {
+                    when (resultState) {
+                        SearchResultState.None -> Unit
+                        SearchResultState.Load -> {
+                            ProgressbarIndicator()
+                        }
+                        is SearchResultState.Error -> {
+                            val msg = resultState.error
+                                ?: stringResource(id = R.string.search_unknown_error)
+
+                            val intent = Intent(context, SearchError::class.java)
+                            intent.putExtra(ModArchiveConstants.ERROR, msg)
+                            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+                            context.startActivity(intent)
+                            (context as Activity).overridePendingTransition(
+                                R.anim.slide_in_right,
+                                R.anim.slide_out_left
+                            )
+                        }
+                        is SearchResultState.SoftError -> {
+                            ErrorLayout(resultState.softError)
+                        }
+                        is SearchResultState.SearchResult -> {
+                            result = resultState.result.module.orEmpty()
+                        }
+                    }
+                },
+                lazyContent = {
+                    itemsIndexed(items = result) { _, item ->
+                        ItemModule(
+                            item = item,
+                            onClick = {
+                                val intent = Intent(context, ModuleResult::class.java)
+                                intent.putExtra(MODULE_ID, item.id!!)
+                                context.startActivity(intent)
+                                (context as Activity).overridePendingTransition(
+                                    R.anim.slide_in_right,
+                                    R.anim.slide_out_left
+                                )
+                            }
+                        )
+                    }
                 }
-            }
-        }
-
-        with(intent) {
-            getStringExtra(SEARCH_TEXT)?.let {
-                binder.appbar.toolbarText.text = getString(R.string.search_title_title)
-                viewModel.getFileOrTitle(it)
-            }
-            getIntExtra(ARTIST_ID, -1).let {
-                if (it < 0) return@let
-                binder.appbar.toolbarText.text = getString(R.string.search_artist_modules_title)
-                viewModel.getArtistById(it)
-            }
+            )
         }
     }
+}
 
-    private fun onLoad() {
-        binder.resultSpinner.show()
-        binder.resultList.hide()
-        binder.errorLayout.layout.hide()
-    }
+/************
+ * Previews *
+ ************/
 
-    private fun onError(error: String?) {
-        val message = error ?: getString(R.string.search_unknown_error)
-        val intent = Intent(this, SearchError::class.java).apply {
-            putExtra(ERROR, message)
-            flags = Intent.FLAG_ACTIVITY_NO_ANIMATION
-        }
-        startActivity(intent)
-        overridePendingTransition(0, 0)
+@Preview(name = "Dark Theme", uiMode = UI_MODE_NIGHT_YES)
+@Preview(name = "Light Theme", uiMode = UI_MODE_NIGHT_NO)
+@Composable
+private fun SearchLayoutPreview() {
+    val result = mutableListOf<Module>()
+    repeat(8) {
+        result.add(
+            Module(
+                format = "XM",
+                songtitle = "Some Song Title $it",
+                artistInfo = ArtistInfo(artist = Artist(alias = "Some Artist")),
+                bytes = 669669
+            )
+        )
     }
+    val state = SearchResultState.SearchResult(_SearchListResult(module = result))
 
-    private fun onSoftError(softError: String) {
-        binder.resultSpinner.hide()
-        binder.resultList.hide()
-        binder.errorLayout.layout.show()
-        binder.errorLayout.message.text = softError
-    }
-
-    private fun onResult(result: SearchListResult) {
-        binder.resultList.show()
-        binder.resultSpinner.hide()
-        searchListAdapter.submitList(result.module)
-    }
+    SearchLayout(
+        appTitle = stringResource(R.string.search_title_title),
+        onBack = {},
+        resultState = state,
+    )
 }

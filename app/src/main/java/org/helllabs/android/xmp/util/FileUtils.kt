@@ -10,8 +10,11 @@ import org.helllabs.android.xmp.ui.preferences.PrefManager
 
 object FileUtils {
 
-    fun localFile(module: Module?): File {
-        val url = module!!.url
+    fun localFile(module: Module?): File? {
+        if (module == null || module.url.isNullOrBlank())
+            return null
+
+        val url = module.url
         val moduleFilename = url!!.substring(url.lastIndexOf('#') + 1, url.length)
         return File(getDownloadPath(module), moduleFilename)
     }

@@ -19,4 +19,6 @@ object ModArchiveConstants {
     const val MODULE_ID = "module_id"
     const val ARTIST_ID = "artist_id"
     const val ERROR = "error"
+
+    val UNSUPPORTED = arrayOf("AHX", "HVL", "MO3")
 }

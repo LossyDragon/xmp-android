@@ -97,8 +97,6 @@ dependencies {
     implementation(kotlin("stdlib-jdk8", Dependencies.kotlinVersion))
 
     // Android Support Libs
-    // implementation(Dependencies.SupportLibs.appCompat)
-    // implementation(Dependencies.SupportLibs.cardView)
     implementation(Dependencies.SupportLibs.constraintLayout)
     implementation(Dependencies.SupportLibs.material)
     implementation(Dependencies.SupportLibs.media)
@@ -152,7 +150,6 @@ dependencies {
 
     // Other Libs
     implementation(Dependencies.SquareUp.moshi)
-    implementation(Dependencies.ProgressButton.progressbutton)
 
     // LeakCanary
     // debugImplementation("com.squareup.leakcanary:leakcanary-android:2.7")

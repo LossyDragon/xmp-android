@@ -50,6 +50,11 @@ class ModuleResultViewModel
         }
     }
 
+    // Don't Ask....
+    fun touch() {
+        _moduleState.value = ModuleState.None
+    }
+
     fun attachObserver() {
         if (request != null)
             fetchDownloader.attachFetchObserversForDownload(request!!.id, fetchObserver)

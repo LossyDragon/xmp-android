@@ -82,11 +82,6 @@
         <item name="android:textColor">@color/white</item>
     </style>
 
-    <!-- Module Search Result Buttons -->
-    <style name="ModuleResultButton" parent="Widget.MaterialComponents.Button">
-        <item name="backgroundTint">@drawable/button_search_background</item>
-    </style>
-
     <!-- Playlist Buttons -->
     <style name="PlaylistButtons" parent="AppTheme">
         <item name="android:scaleX">1.2</item>

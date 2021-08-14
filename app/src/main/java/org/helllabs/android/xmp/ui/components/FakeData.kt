@@ -1,7 +1,7 @@
 package org.helllabs.android.xmp.ui.components
 
-import org.helllabs.android.xmp.model.PlaylistItem
-import org.helllabs.android.xmp.model.PlaylistType
+import androidx.compose.ui.text.buildAnnotatedString
+import org.helllabs.android.xmp.model.*
 
 fun fakeDataPlaylistMenu(): List<PlaylistItem> {
     val list = mutableListOf<PlaylistItem>()
@@ -18,4 +18,34 @@ fun fakeDataPlaylistMenu(): List<PlaylistItem> {
     }
 
     return list
+}
+
+fun fakeModuleResult(): ModuleResult {
+    val instruments = buildAnnotatedString {
+        repeat(20) {
+            append("Some Instrument $it\n")
+        }
+    }
+    return ModuleResult(
+        sponsor = Sponsor(
+            details = SponsorDetails(
+                link = "",
+                text = "Some Sponsor Text"
+            )
+        ),
+        module = Module(
+            filename = "",
+            bytes = 669669,
+            format = "XM",
+            artistInfo = ArtistInfo(artist = Artist(alias = "Some Artist")),
+            infopage = "",
+            license = License(
+                title = "Some License Title",
+                legalurl = "",
+                description = "Some License Description"
+            ),
+            comment = "Some Comment",
+            instruments = instruments.toString(),
+        )
+    )
 }

@@ -229,7 +229,8 @@
 
         <activity
             android:name="org.helllabs.android.xmp.ui.modarchive.result.SearchListResult"
-            android:configChanges="keyboardHidden|orientation|screenSize">
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:theme="@style/ComposeTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="org.helllabs.android.xmp.ui.modarchive.Search" />
@@ -238,7 +239,8 @@
 
         <activity
             android:name="org.helllabs.android.xmp.ui.modarchive.result.ArtistResult"
-            android:configChanges="keyboardHidden|orientation|screenSize">
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:theme="@style/ComposeTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="org.helllabs.android.xmp.ui.modarchive.Search" />
@@ -246,7 +248,8 @@
 
         <activity
             android:name="org.helllabs.android.xmp.ui.modarchive.result.ModuleResult"
-            android:configChanges="keyboardHidden|orientation|screenSize">
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:theme="@style/ComposeTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="org.helllabs.android.xmp.ui.modarchive.Search" />

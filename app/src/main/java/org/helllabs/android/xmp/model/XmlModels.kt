@@ -99,14 +99,7 @@ data class SearchListResult(
 data class Sponsor(
     @Element
     var details: SponsorDetails? = null
-) {
-    fun toHyperLink(): Spanned {
-        return (
-            "Download mirrors provided by\n" +
-                "<a href=\"" + details!!.link + "\">" + details!!.text + "</a>"
-            ).asHtml()
-    }
-}
+)
 
 @Xml(name = "details")
 data class SponsorDetails(
@@ -194,6 +187,10 @@ data class Module(
     @Element
     var artistInfo: ArtistInfo? = null
 ) {
+
+    @JvmName("getFormatText")
+    fun getFormat(): String = format.orEmpty()
+
     fun getBytesFormatted(): Int =
         bytes?.div(1024) ?: 0
 
@@ -202,9 +199,6 @@ data class Module(
 
     fun getSongTitle(): Spanned =
         if (!songtitle.isNullOrEmpty()) songtitle.asHtml() else "(untitled)".toSpanned()
-
-    @JvmName("getCommentDetails")
-    fun getComment(): Spanned = comment.asHtml()
 
     fun parseInstruments(): String {
         val lines = instruments?.split("\n")?.toTypedArray().orEmpty()
@@ -217,8 +211,18 @@ data class Module(
         return buffer.toString()
     }
 
-    fun infoPageToHyperlink(info: String): Spanned {
-        return ("<a href=\"$infopage\">$info</a>").asHtml()
+    @JvmName("getFilenameText")
+    fun getFilename(): String = filename.orEmpty()
+
+    fun parseComment(): String {
+        val lines = comment?.split("\n")?.toTypedArray().orEmpty()
+        val buffer = StringBuilder()
+
+        lines.forEach {
+            buffer.appendLine(it.asHtml())
+        }
+
+        return buffer.toString()
     }
 }
 
@@ -278,9 +282,9 @@ data class License(
     @PropertyElement
     var legalurl: String? = null
 ) {
-    fun toHyperlink(): Spanned {
-        return ("<a href=\"$legalurl\">$title</a>").asHtml()
-    }
+    fun getLegalUrl(): String = legalurl.orEmpty()
+
+    fun getLegalTitle(): String = title.orEmpty()
 }
 
 @Xml(name = "artist_info")
