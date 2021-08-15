@@ -113,6 +113,9 @@ class PlaylistMenu : ComponentActivity() {
                 block = { finish() }
             )
         }
+
+        // Refresh for any external changes, like setting a new default path.
+        viewModel.updateList()
     }
 }
 
