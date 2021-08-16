@@ -1,43 +1,44 @@
 package org.helllabs.android.xmp.ui.playlistDetail
 
 import android.annotation.SuppressLint
-import android.graphics.Color
-import android.view.LayoutInflater
-import android.view.MotionEvent
-import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
-import android.widget.TextView
-import androidx.appcompat.widget.AppCompatImageView
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.recyclerview.widget.RecyclerView
 import java.util.*
-import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.model.PlaylistItem
+import org.helllabs.android.xmp.ui.components.ItemList
 import org.helllabs.android.xmp.ui.playlistDetail.recyclerview.ItemTouchHelperAdapter
 import org.helllabs.android.xmp.ui.playlistDetail.recyclerview.ItemTouchHelperViewHolder
 import org.helllabs.android.xmp.ui.playlistDetail.recyclerview.OnStartDragListener
+import org.helllabs.android.xmp.ui.theme.XmpTheme
 import org.helllabs.android.xmp.util.*
 
 class PlaylistAdapter(
     var currentList: MutableList<PlaylistItem>,
     private var useFilename: Boolean
 ) :
-    RecyclerView.Adapter<PlaylistAdapter.ListViewHolder>(),
+    RecyclerView.Adapter<PlaylistAdapter.ComposedViewHolder>(),
     ItemTouchHelperAdapter {
 
     var dragListener: OnStartDragListener? = null
     var onClick: ((position: Int) -> Unit)? = null
     var onLongClick: ((position: Int) -> Unit)? = null
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ListViewHolder {
-        val inflater = LayoutInflater.from(parent.context)
-        val view = inflater.inflate(R.layout.item_playlist, parent, false)
-
-        return ListViewHolder(view)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ComposedViewHolder {
+//        val inflater = LayoutInflater.from(parent.context)
+//        val view = inflater.inflate(R.layout.item_playlist, parent, false)
+//
+//        return ListViewHolder(view)
+        return ComposedViewHolder(ComposeView(parent.context))
     }
 
-    override fun onBindViewHolder(holder: ListViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: ComposedViewHolder, position: Int) {
         holder.onBind(currentList[position])
+    }
+
+    override fun onViewRecycled(holder: ComposedViewHolder) {
+        holder.composeView.disposeComposition()
     }
 
     override fun getItemCount(): Int = currentList.size
@@ -71,39 +72,43 @@ class PlaylistAdapter(
         this.useFilename = useFilename
     }
 
-    inner class ListViewHolder(
-        val view: View
-    ) : RecyclerView.ViewHolder(view), ItemTouchHelperViewHolder {
-        val layout: LinearLayout = view.findViewById(R.id.itemLayout)
+    // https://developer.android.com/jetpack/compose/interop/compose-in-existing-ui#compose-recyclerview
+    inner class ComposedViewHolder(
+        val composeView: ComposeView
+    ) : RecyclerView.ViewHolder(composeView), ItemTouchHelperViewHolder {
 
-        fun onBind(item: PlaylistItem) = with(view) {
-            val title = if (useFilename) item.file!!.name else item.name
-            findViewById<TextView>(R.id.itemTitle).text = title
-            findViewById<TextView>(R.id.itemInfo).text = item.comment
-            findViewById<AppCompatImageView>(R.id.handle).let { handle ->
-                handle.touch { _, event ->
-                    logD("Touch: ${event.actionMasked}")
-                    if (event.actionMasked == MotionEvent.ACTION_DOWN) {
-                        dragListener?.onStartDrag(this@ListViewHolder)
-                    }
-                    true // Continue to consume the touch event.
+        init {
+            composeView.setViewCompositionStrategy(
+                ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
+            )
+        }
+
+        fun onBind(item: PlaylistItem) {
+            composeView.setContent {
+                XmpTheme {
+                    ItemList(
+                        item = item,
+                        isDraggable = true,
+                        onDrag = { value ->
+                            if (value) {
+                                dragListener?.onStartDrag(this@ComposedViewHolder)
+                            }
+                        },
+                        onClick = {
+                            onClick?.invoke(bindingAdapterPosition)
+                        },
+                        onLongClick = {
+                            onLongClick?.invoke(bindingAdapterPosition)
+                        }
+                    )
                 }
-            }
-            layout.click {
-                onClick?.invoke(bindingAdapterPosition)
-            }
-            layout.longClick {
-                onLongClick?.invoke(bindingAdapterPosition)
-                true
             }
         }
 
         override fun onItemSelected() {
-            layout.setBackgroundColor(Color.LTGRAY)
         }
 
         override fun onItemClear() {
-            layout.setBackgroundColor(0)
             dragListener?.onStopDrag(currentList.toList())
         }
     }

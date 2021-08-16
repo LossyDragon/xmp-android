@@ -1,5 +1,6 @@
 package org.helllabs.android.xmp.ui.components
 
+import android.view.MotionEvent
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -12,10 +13,13 @@ import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInteropFilter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -29,6 +33,7 @@ import org.helllabs.android.xmp.model.*
 import org.helllabs.android.xmp.ui.preferences.PrefManager
 import org.helllabs.android.xmp.ui.theme.XmpTheme
 import org.helllabs.android.xmp.util.ifNullOrEmpty
+import org.helllabs.android.xmp.util.logD
 
 @OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
 @Composable
@@ -99,14 +104,20 @@ fun ItemPlaylistCard(
     }
 }
 
-@OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
+@OptIn(
+    ExperimentalMaterialApi::class,
+    ExperimentalFoundationApi::class,
+    ExperimentalComposeUiApi::class
+)
 @Composable
 fun ItemList(
     item: PlaylistItem,
     isDraggable: Boolean = false,
+    onDrag: ((value: Boolean) -> Unit)? = null,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
+    val haptic = LocalHapticFeedback.current
     val listIcon = when (item.type) {
         PlaylistType.TYPE_DIRECTORY -> Icons.Outlined.FolderOpen
         PlaylistType.TYPE_FILE -> Icons.Default.InsertDriveFile
@@ -117,7 +128,13 @@ fun ItemList(
         modifier = Modifier
             .height(72.dp)
             .fillMaxWidth()
-            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = {
+                    onLongClick()
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                }
+            ),
         icon = {
             Icon(
                 modifier = Modifier.padding(top = 8.dp, start = 8.dp),
@@ -149,8 +166,21 @@ fun ItemList(
             )
         },
         trailing = {
+            val context = LocalContext.current
             if (isDraggable) {
+                assert(onDrag != null) { "onDrag should not be null while draggable!" }
                 Icon(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .pointerInteropFilter { event ->
+                            context.logD("Event: ${event.action}")
+                            when (event.action) {
+                                MotionEvent.ACTION_DOWN -> {
+                                    onDrag!!.invoke(true)
+                                }
+                            }
+                            true // Continue to consume the touch event.
+                        },
                     imageVector = Icons.Default.DragHandle,
                     contentDescription = null
                 )
@@ -166,11 +196,18 @@ fun ItemBreadCrumb(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
+    val haptic = LocalHapticFeedback.current
     Card(
         shape = MaterialTheme.shapes.medium,
         modifier = Modifier
             .padding(4.dp)
-            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = {
+                    onLongClick()
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                }
+            ),
         elevation = 4.dp,
     ) {
         Row(
@@ -278,6 +315,7 @@ private fun ItemListPreview() {
                 "Some Type Some Type Some Type Some Type Some Type"
             ),
             isDraggable = true,
+            onDrag = { /**/ },
             onClick = {},
             onLongClick = {},
         )

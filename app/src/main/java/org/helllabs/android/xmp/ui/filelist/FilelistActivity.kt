@@ -492,7 +492,6 @@ private fun FileListLayout(
                         itemsIndexed(items = itemList) { index, item ->
                             ItemList(
                                 item = item,
-                                isDraggable = false,
                                 onClick = {
                                     if (item.file!!.isDirectory)
                                         viewModel.getDirectoryList(item.file!!)

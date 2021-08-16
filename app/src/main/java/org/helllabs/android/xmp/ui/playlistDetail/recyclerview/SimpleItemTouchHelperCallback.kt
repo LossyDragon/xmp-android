@@ -35,7 +35,7 @@ class SimpleItemTouchHelperCallback(
 ) : ItemTouchHelper.Callback() {
 
     override fun isLongPressDragEnabled(): Boolean {
-        return true
+        return false // We're explicitly handling this via a drag handle.
     }
 
     override fun isItemViewSwipeEnabled(): Boolean {
@@ -60,7 +60,7 @@ class SimpleItemTouchHelperCallback(
         }
 
         // Notify the adapter of the move
-        return mAdapter.onItemMove(source.absoluteAdapterPosition, target.absoluteAdapterPosition)
+        return mAdapter.onItemMove(source.bindingAdapterPosition, target.absoluteAdapterPosition)
     }
 
     override fun onSwiped(viewHolder: RecyclerView.ViewHolder, i: Int) {
