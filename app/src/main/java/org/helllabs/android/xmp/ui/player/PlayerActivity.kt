@@ -33,8 +33,8 @@ import org.helllabs.android.xmp.ui.player.viewer.PatternViewer
 import org.helllabs.android.xmp.ui.player.viewer.Viewer
 import org.helllabs.android.xmp.ui.playlistMenu.PlaylistMenu
 import org.helllabs.android.xmp.ui.preferences.PrefManager
-import org.helllabs.android.xmp.ui.util.toast
 import org.helllabs.android.xmp.util.*
+import org.helllabs.android.xmp.util.toast
 
 @AndroidEntryPoint
 class PlayerActivity : AppCompatActivity() {

@@ -20,7 +20,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.core.view.WindowCompat
-import androidx.lifecycle.lifecycleScope
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.lifecycle.lifecycleOwner
 import com.afollestad.materialdialogs.list.listItemsSingleChoice
@@ -34,9 +33,6 @@ import org.helllabs.android.xmp.ui.BasePlaylistActivity
 import org.helllabs.android.xmp.ui.components.*
 import org.helllabs.android.xmp.ui.preferences.PrefManager
 import org.helllabs.android.xmp.ui.theme.XmpTheme
-import org.helllabs.android.xmp.ui.util.dialogMessage
-import org.helllabs.android.xmp.ui.util.toast
-import org.helllabs.android.xmp.ui.util.yesNoDialog
 import org.helllabs.android.xmp.util.*
 import org.helllabs.android.xmp.util.FileUtils.basename
 import org.helllabs.android.xmp.util.PlaylistUtils.AddFilesResult
@@ -61,7 +57,7 @@ class FilelistActivity : BasePlaylistActivity() {
      * For actions based on playlist selection made using choosePlaylist()
      */
     private interface PlaylistChoice {
-        suspend fun execute(
+        fun execute(
             fileSelection: Int,
             playlistSelection: Int,
             list: List<PlaylistItem>
@@ -72,7 +68,7 @@ class FilelistActivity : BasePlaylistActivity() {
      * Recursively add current directory to playlist
      */
     private val addCurrentRecursiveChoice: PlaylistChoice = object : PlaylistChoice {
-        override suspend fun execute(
+        override fun execute(
             fileSelection: Int,
             playlistSelection: Int,
             list: List<PlaylistItem>
@@ -88,7 +84,7 @@ class FilelistActivity : BasePlaylistActivity() {
      * Recursively add directory to playlist
      */
     private val addRecursiveToPlaylistChoice: PlaylistChoice = object : PlaylistChoice {
-        override suspend fun execute(
+        override fun execute(
             fileSelection: Int,
             playlistSelection: Int,
             list: List<PlaylistItem>
@@ -104,7 +100,7 @@ class FilelistActivity : BasePlaylistActivity() {
      * Add one file to playlist
      */
     private val addFileToPlaylistChoice: PlaylistChoice = object : PlaylistChoice {
-        override suspend fun execute(
+        override fun execute(
             fileSelection: Int,
             playlistSelection: Int,
             list: List<PlaylistItem>
@@ -120,7 +116,7 @@ class FilelistActivity : BasePlaylistActivity() {
      * Add file list to playlist
      */
     private val addFileListToPlaylistChoice: PlaylistChoice = object : PlaylistChoice {
-        override suspend fun execute(
+        override fun execute(
             fileSelection: Int,
             playlistSelection: Int,
             list: List<PlaylistItem>
@@ -225,9 +221,9 @@ class FilelistActivity : BasePlaylistActivity() {
                     // Add to playlist
                     0 -> choosePlaylist(position, addFileToPlaylistChoice, list)
                     // Add to play queue
-                    1 -> addToQueue(file.path)
+                    1 -> addToQueue(file.path.toList())
                     // Play this file
-                    2 -> playModule(file.path)
+                    2 -> playModule(file.path.toList())
                     // Play all starting here
                     3 -> {
                         val dirCount = PlaylistUtils.getDirectoryCount(list)
@@ -301,9 +297,7 @@ class FilelistActivity : BasePlaylistActivity() {
                 message = getString(R.string.dialog_msg_delete_dir, basename(file.name)),
                 onPositiveButton = {
                     if (FileUtils.deleteRecursive(deletePath)) {
-                        with(viewModel) {
-                            getDirectoryList(File(currentFile.value))
-                        }
+                        viewModel.getDirectoryList(File(viewModel.currentFile.value))
                         toast(getString(R.string.msg_dir_deleted))
                     } else {
                         toast(getString(R.string.msg_cant_delete_dir))
@@ -329,28 +323,29 @@ class FilelistActivity : BasePlaylistActivity() {
 
         val playlists = mutableListOf<CharSequence>()
         PlaylistUtils.listNoSuffix().forEach { playlists.add(it) }
+        playlists.sortBy { it.toString().lowercase() }
         MaterialDialog(this).show {
             lifecycleOwner(this@FilelistActivity)
             title(R.string.msg_select_playlist)
             listItemsSingleChoice(items = playlists) { _, index, _ ->
-                lifecycleScope.launch {
-                    when (choice.execute(fileSelection, index, list)) {
-                        AddFilesResult.RESULT_OK -> Unit
-                        AddFilesResult.RESULT_IO_EXCEPTION -> {
-                            dialogMessage(
-                                lifecycleOwner = this@FilelistActivity,
-                                message = getString(R.string.error_write_to_playlist)
-                            )
-                        }
-                        AddFilesResult.RESULT_SINGLE_UNRECOGNIZED -> {
-                            dialogMessage(
-                                lifecycleOwner = this@FilelistActivity,
-                                message = getString(R.string.unrecognized_format)
-                            )
-                        }
-                        AddFilesResult.RESULT_OK_VALID_ONLY -> {
-                            toast(R.string.msg_only_valid_files_added)
-                        }
+                val result = choice.execute(fileSelection, index, list)
+                logD("Select Playlist result: $result")
+                when (result) {
+                    AddFilesResult.RESULT_OK -> Unit
+                    AddFilesResult.RESULT_IO_EXCEPTION -> {
+                        dialogMessage(
+                            lifecycleOwner = this@FilelistActivity,
+                            message = getString(R.string.error_write_to_playlist)
+                        )
+                    }
+                    AddFilesResult.RESULT_SINGLE_UNRECOGNIZED -> {
+                        dialogMessage(
+                            lifecycleOwner = this@FilelistActivity,
+                            message = getString(R.string.unrecognized_format)
+                        )
+                    }
+                    AddFilesResult.RESULT_OK_VALID_ONLY -> {
+                        toast(R.string.msg_only_valid_files_added)
                     }
                 }
             }
@@ -559,3 +554,24 @@ private fun BreadCrumbLayout(
             listState.animateScrollToItem(crumbs.size)
         }
 }
+
+/************
+ * Previews *
+ ************/
+
+// @Preview(name = "Dark Theme", uiMode = Configuration.UI_MODE_NIGHT_YES)
+// @Composable
+// fun FileListPreview() {
+//    FileListLayout(
+//        viewModel =,
+//        onBack = { },
+//        onClick = { _, _, _ -> },
+//        onLongClick = { _, _, _ -> },
+//        onCrumbLongClick = { _, _ -> },
+//        onPlay = {},
+//        onLoop = {},
+//        onShuffle = {},
+//        isLoop = true,
+//        isShuffle = true,
+//    )
+// }

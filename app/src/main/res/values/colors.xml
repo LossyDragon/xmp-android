@@ -10,13 +10,9 @@
     <color name="primary_dark">#801a305d</color>
     <color name="accent">#3460ba</color>
 
-    <!--    <color name="pressed_color">#606060</color>-->
-    <!--    <color name="drag_handle_color">#202020</color>-->
-    <color name="refresh_color">#229e3c</color>
     <color name="section_background_darker">#FF1B1B1B</color>
 
     <!-- Playlist card's background color -->
-    <color name="cardColor">@color/gray</color>
     <color name="colorLightGray">#FFC0C0C0</color>
 
     <color name="compatColor">@color/section_background_darker</color>

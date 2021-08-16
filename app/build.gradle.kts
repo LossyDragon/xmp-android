@@ -9,10 +9,9 @@ plugins {
     id("org.jlleitschuh.gradle.ktlint")
 }
 
-// https://developer.android.com/ndk/downloads#stable-downloads
 android {
     compileSdk = 30
-    ndkVersion = "22.1.7171670"
+    ndkVersion = Dependencies.ndkVersion
 
     defaultConfig {
         applicationId = "org.helllabs.android.xmp"
@@ -98,11 +97,9 @@ dependencies {
 
     // Android Support Libs
     implementation(Dependencies.SupportLibs.constraintLayout)
-    implementation(Dependencies.SupportLibs.material)
     implementation(Dependencies.SupportLibs.media)
     implementation(Dependencies.SupportLibs.preferenceKtx)
     implementation(Dependencies.SupportLibs.recyclerview)
-    implementation(Dependencies.SupportLibs.swipeRefreshLayout)
 
     implementation(Dependencies.Compose.activity)
     implementation(Dependencies.Compose.animation)

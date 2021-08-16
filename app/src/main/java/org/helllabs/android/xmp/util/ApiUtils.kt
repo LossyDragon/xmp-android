@@ -17,7 +17,6 @@ import androidx.annotation.DrawableRes
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.text.toSpanned
-import androidx.recyclerview.widget.RecyclerView
 import java.util.*
 import org.helllabs.android.xmp.R
 
@@ -97,6 +96,9 @@ fun String?.asHtml(): Spanned {
 
 fun String.upperCase(): String = this.uppercase(Locale.getDefault())
 
+fun String.toList(): List<String> =
+    if (this.isBlank()) emptyList() else listOf(this)
+
 inline fun String?.ifNullOrEmpty(defaultValue: () -> String) =
     if (this.isNullOrBlank()) defaultValue() else this
 
@@ -121,35 +123,6 @@ fun View.longClick(l: (v: View) -> Boolean) {
 
 fun View.touch(l: (view: View, event: MotionEvent) -> Boolean) {
     setOnTouchListener(l)
-}
-
-/**
- * setOnItemTouchListener(
- * onInterceptTouchEvent = { rv, e -> }
- * onTouchEvent = { rv, e -> }
- * onRequestDisallowInterceptTouchEvent = { disallowIntercept -> }
- * )
- */
-fun RecyclerView.setOnItemTouchListener(
-    onInterceptTouchEvent: ((rv: RecyclerView, e: MotionEvent) -> Boolean)? = null,
-    onTouchEvent: ((rv: RecyclerView, e: MotionEvent) -> Unit)? = null,
-    onRequestDisallowInterceptTouchEvent: ((disallowIntercept: Boolean) -> Unit)? = null
-): RecyclerView.OnItemTouchListener {
-    val listener = object : RecyclerView.OnItemTouchListener {
-        override fun onInterceptTouchEvent(rv: RecyclerView, e: MotionEvent): Boolean {
-            return onInterceptTouchEvent?.invoke(rv, e) ?: false
-        }
-
-        override fun onTouchEvent(rv: RecyclerView, e: MotionEvent) {
-            onTouchEvent?.invoke(rv, e)
-        }
-
-        override fun onRequestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
-            onRequestDisallowInterceptTouchEvent?.invoke(disallowIntercept)
-        }
-    }
-    addOnItemTouchListener(listener)
-    return listener
 }
 
 /**

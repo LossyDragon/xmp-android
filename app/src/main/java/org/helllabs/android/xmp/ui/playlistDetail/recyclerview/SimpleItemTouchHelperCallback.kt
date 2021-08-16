@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.helllabs.android.xmp.ui.util.recyclerview
+package org.helllabs.android.xmp.ui.playlistDetail.recyclerview
 
 import android.graphics.Canvas
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import kotlin.math.abs
-import org.helllabs.android.xmp.ui.BasePlaylistAdapter
+import org.helllabs.android.xmp.ui.playlistDetail.PlaylistAdapter
 
 /**
  * An implementation of [ItemTouchHelper.Callback] that enables basic drag & drop and
@@ -31,11 +31,11 @@ import org.helllabs.android.xmp.ui.BasePlaylistAdapter
  * @author Paul Burke (ipaulpro)
  */
 class SimpleItemTouchHelperCallback(
-    private val mAdapter: BasePlaylistAdapter
+    private val mAdapter: PlaylistAdapter
 ) : ItemTouchHelper.Callback() {
 
     override fun isLongPressDragEnabled(): Boolean {
-        return mAdapter.isDragEnabled
+        return true
     }
 
     override fun isItemViewSwipeEnabled(): Boolean {

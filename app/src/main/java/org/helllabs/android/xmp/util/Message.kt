@@ -1,4 +1,4 @@
-package org.helllabs.android.xmp.ui.util
+package org.helllabs.android.xmp.util
 
 import android.content.Context
 import android.widget.TextView

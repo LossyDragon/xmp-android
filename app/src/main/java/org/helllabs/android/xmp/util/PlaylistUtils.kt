@@ -3,13 +3,11 @@ package org.helllabs.android.xmp.util
 import java.io.File
 import java.io.IOException
 import java.util.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import org.helllabs.android.xmp.Xmp.testModule
 import org.helllabs.android.xmp.model.ModInfo
 import org.helllabs.android.xmp.model.PlaylistItem
 import org.helllabs.android.xmp.model.PlaylistType
-import org.helllabs.android.xmp.ui.playlist_detail.Playlist
+import org.helllabs.android.xmp.ui.playlistDetail.Playlist
 import org.helllabs.android.xmp.ui.preferences.PrefManager
 import org.helllabs.android.xmp.ui.preferences.Preferences
 
@@ -35,47 +33,45 @@ object PlaylistUtils {
      * Send files to the specified playlist
      * @return the result of adding files [AddFilesResult]
      */
-    private suspend fun addFiles(fileList: List<String>, playlistName: String): AddFilesResult {
+    private fun addFiles(fileList: List<String>, playlistName: String): AddFilesResult {
         var result: AddFilesResult = AddFilesResult.RESULT_OK
 
         val list: MutableList<PlaylistItem> = ArrayList()
         var hasInvalid = false
 
-        withContext(Dispatchers.IO) {
-            for (filename in fileList) {
-                val modInfo = ModInfo()
-                if (testModule(filename, modInfo)) {
-                    val item = PlaylistItem(PlaylistType.TYPE_FILE, modInfo.name, modInfo.type)
-                    item.file = File(filename)
-                    list.add(item)
-                } else {
-                    hasInvalid = true
-                }
+        for (filename in fileList) {
+            val modInfo = ModInfo()
+            if (testModule(filename, modInfo)) {
+                val item = PlaylistItem(PlaylistType.TYPE_FILE, modInfo.name, modInfo.type)
+                item.file = File(filename)
+                list.add(item)
+            } else {
+                hasInvalid = true
             }
-            if (list.isNotEmpty()) {
-                if (!addToList(playlistName, list)) {
-                    result = AddFilesResult.RESULT_IO_EXCEPTION
-                    return@withContext
-                }
-
-                if (hasInvalid) {
-                    result = if (list.size > 1)
-                        AddFilesResult.RESULT_OK_VALID_ONLY
-                    else
-                        AddFilesResult.RESULT_SINGLE_UNRECOGNIZED
-                }
-            }
-            renumberIds(list)
         }
+        if (list.isNotEmpty()) {
+            if (!addToList(playlistName, list)) {
+                result = AddFilesResult.RESULT_IO_EXCEPTION
+                return result
+            }
+
+            if (hasInvalid) {
+                result = if (list.size > 1)
+                    AddFilesResult.RESULT_OK_VALID_ONLY
+                else
+                    AddFilesResult.RESULT_SINGLE_UNRECOGNIZED
+            }
+        }
+        renumberIds(list)
 
         return result
     }
 
-    suspend fun filesToPlaylist(fileList: List<String>, playlistName: String): AddFilesResult {
+    fun filesToPlaylist(fileList: List<String>, playlistName: String): AddFilesResult {
         return addFiles(fileList, playlistName)
     }
 
-    suspend fun filesToPlaylist(filename: String, playlistName: String): AddFilesResult {
+    fun filesToPlaylist(filename: String, playlistName: String): AddFilesResult {
         val fileList = listOf(filename)
         return addFiles(fileList, playlistName)
     }

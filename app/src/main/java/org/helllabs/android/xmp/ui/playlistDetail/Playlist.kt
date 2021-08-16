@@ -1,4 +1,4 @@
-package org.helllabs.android.xmp.ui.playlist_detail
+package org.helllabs.android.xmp.ui.playlistDetail
 
 import java.io.*
 import java.util.*
@@ -16,6 +16,7 @@ import org.helllabs.android.xmp.util.PlaylistUtils.DEFAULT_SHUFFLE_MODE
 import org.helllabs.android.xmp.util.PlaylistUtils.LOOP_MODE
 import org.helllabs.android.xmp.util.PlaylistUtils.PLAYLIST_SUFFIX
 import org.helllabs.android.xmp.util.PlaylistUtils.SHUFFLE_MODE
+import org.helllabs.android.xmp.util.logD
 import org.helllabs.android.xmp.util.logE
 import org.helllabs.android.xmp.util.logI
 
@@ -64,7 +65,6 @@ class Playlist(val name: String) {
 
     // Helper methods
     private fun readList(name: String): Boolean {
-        list.clear()
         val file: File = ListFile(name)
         var lineNum: Int
         val invalidList: MutableList<Int> = ArrayList()
@@ -157,11 +157,20 @@ class Playlist(val name: String) {
         )
     }
 
+    fun updateList(newList: List<PlaylistItem>) {
+        list.clear()
+        newList.forEach {
+            logD("new: $it")
+            list.add(it)
+        }
+        PlaylistUtils.renumberIds(list)
+    }
+
     /**
      * Save the current playlist.
      */
     fun commit() {
-        logI("Commit playlist $name")
+        logI("Commit playlist: $name")
         if (mListChanged) {
             writeList(name)
             mListChanged = false

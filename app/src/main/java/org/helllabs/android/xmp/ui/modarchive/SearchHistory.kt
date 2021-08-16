@@ -31,7 +31,7 @@ import org.helllabs.android.xmp.ui.modarchive.ModArchiveConstants.MODULE_ID
 import org.helllabs.android.xmp.ui.modarchive.result.ModuleResult
 import org.helllabs.android.xmp.ui.preferences.PrefManager
 import org.helllabs.android.xmp.ui.theme.XmpTheme
-import org.helllabs.android.xmp.ui.util.yesNoDialog
+import org.helllabs.android.xmp.util.yesNoDialog
 
 @AndroidEntryPoint
 class SearchHistory : AppCompatActivity() {

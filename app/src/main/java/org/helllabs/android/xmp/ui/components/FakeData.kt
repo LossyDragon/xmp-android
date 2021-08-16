@@ -3,9 +3,26 @@ package org.helllabs.android.xmp.ui.components
 import androidx.compose.ui.text.buildAnnotatedString
 import org.helllabs.android.xmp.model.*
 
+fun fakeDataPlaylistDetail(): List<PlaylistItem> {
+    val list = mutableListOf<PlaylistItem>()
+    repeat(20) {
+        list.add(
+            PlaylistItem(
+                type = PlaylistType.TYPE_PLAYLIST,
+                name = "Playlist $it",
+                comment = "Comment $it",
+                id = it,
+                file = null,
+            )
+        )
+    }
+
+    return list
+}
+
 fun fakeDataPlaylistMenu(): List<PlaylistItem> {
     val list = mutableListOf<PlaylistItem>()
-    repeat(50) {
+    repeat(20) {
         list.add(
             PlaylistItem(
                 type = PlaylistType.TYPE_PLAYLIST,

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.helllabs.android.xmp.ui.util.recyclerview
+package org.helllabs.android.xmp.ui.playlistDetail.recyclerview
 
 import androidx.recyclerview.widget.RecyclerView
 import org.helllabs.android.xmp.model.PlaylistItem
@@ -33,13 +33,5 @@ interface OnStartDragListener {
      * Called when a view is requesting a stop of a drag.
      *
      */
-    fun onStopDrag(playlist: MutableList<PlaylistItem>)
-
-    /**
-     * Called when a view is moving to disable pull to refresh,
-     *
-     * @param isDisabled true to disable, false to enable
-     *
-     */
-    fun disableSwipe(isDisabled: Boolean)
+    fun onStopDrag(list: List<PlaylistItem>)
 }

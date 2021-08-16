@@ -39,15 +39,15 @@ import org.helllabs.android.xmp.ui.components.*
 import org.helllabs.android.xmp.ui.filelist.FilelistActivity
 import org.helllabs.android.xmp.ui.modarchive.Search
 import org.helllabs.android.xmp.ui.player.PlayerActivity
-import org.helllabs.android.xmp.ui.playlist_detail.PlaylistActivity
+import org.helllabs.android.xmp.ui.playlistDetail.PlaylistActivity
 import org.helllabs.android.xmp.ui.preferences.PrefManager
 import org.helllabs.android.xmp.ui.preferences.Preferences
 import org.helllabs.android.xmp.ui.theme.XmpTheme
 import org.helllabs.android.xmp.ui.theme.themedText
-import org.helllabs.android.xmp.ui.util.dialogMessage
-import org.helllabs.android.xmp.ui.util.showChangeLog
-import org.helllabs.android.xmp.ui.util.toast
 import org.helllabs.android.xmp.util.*
+import org.helllabs.android.xmp.util.dialogMessage
+import org.helllabs.android.xmp.util.showChangeLog
+import org.helllabs.android.xmp.util.toast
 
 class PlaylistMenu : ComponentActivity() {
 

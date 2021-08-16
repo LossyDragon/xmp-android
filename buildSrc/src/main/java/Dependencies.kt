@@ -2,6 +2,9 @@ object Dependencies {
 
     const val kotlinVersion = "1.5.21"
 
+    // https://developer.android.com/ndk/downloads#stable-downloads
+    const val ndkVersion = "22.1.7171670"
+
     // https://github.com/JLLeitschuh/ktlint-gradle/releases
     const val ktlintGradle = "10.1.0"
 
@@ -21,10 +24,6 @@ object Dependencies {
         const val recyclerview = "androidx.recyclerview:recyclerview:1.2.1"
         @Deprecated("Moving to compose")
         const val constraintLayout = "androidx.constraintlayout:constraintlayout:2.1.0"
-        @Deprecated("Moving to compose")
-        const val material = "com.google.android.material:material:1.4.0"
-        @Deprecated("Moving to compose")
-        const val swipeRefreshLayout = "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
     }
 
     // Feature roadmap: https://developer.android.com/jetpack/androidx/compose-roadmap

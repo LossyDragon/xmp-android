@@ -207,8 +207,9 @@
             android:theme="@style/ComposeTheme" />
 
         <activity
-            android:name="org.helllabs.android.xmp.ui.playlist_detail.PlaylistActivity"
-            android:configChanges="keyboardHidden|orientation|screenSize" />
+            android:name="org.helllabs.android.xmp.ui.playlistDetail.PlaylistActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:theme="@style/ComposeTheme" />
 
         <!-- ModArchive search & download -->
         <activity
@@ -235,7 +236,6 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="org.helllabs.android.xmp.ui.modarchive.Search" />
         </activity>
-
 
         <activity
             android:name="org.helllabs.android.xmp.ui.modarchive.result.ArtistResult"
@@ -264,7 +264,7 @@
             android:name="org.helllabs.android.xmp.ui.preferences.about.ListFormats"
             android:exported="false"
             android:parentActivityName="org.helllabs.android.xmp.ui.preferences.Preferences"
-            android:theme="@style/AppTheme">
+            android:theme="@style/ComposeTheme">
             <intent-filter>
                 <action android:name="org.helllabs.android.xmp.LIST_FORMATS" />
 
@@ -276,7 +276,7 @@
             android:name="org.helllabs.android.xmp.ui.preferences.about.About"
             android:exported="false"
             android:parentActivityName="org.helllabs.android.xmp.ui.preferences.Preferences"
-            android:theme="@style/AppTheme">
+            android:theme="@style/ComposeTheme">
             <intent-filter>
                 <action android:name="org.helllabs.android.xmp.ABOUT" />
 
@@ -285,23 +285,6 @@
         </activity>
 
         <service android:name=".service.PlayerService" />
-
-        <!--        <receiver-->
-        <!--            android:name=".service.receiver.MediaButtonsReceiver"-->
-        <!--            android:enabled="true">-->
-        <!--            <intent-filter android:priority="2147483647">-->
-        <!--                <action android:name="android.intent.action.MEDIA_BUTTON" />-->
-        <!--            </intent-filter>-->
-        <!--        </receiver>-->
-
-        <!--        <receiver-->
-        <!--            android:name=".service.receiver.RemoteControlReceiver"-->
-        <!--            android:enabled="true">-->
-        <!--            <intent-filter>-->
-        <!--                <action android:name="android.intent.action.MEDIA_BUTTON" />-->
-        <!--            </intent-filter>-->
-        <!--        </receiver>-->
-        <!--        <receiver android:name=".service.receiver.NotificationActionReceiver" />-->
 
     </application>
 

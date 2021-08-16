@@ -42,9 +42,9 @@ import org.helllabs.android.xmp.ui.modarchive.result.ModuleResultViewModel.Modul
 import org.helllabs.android.xmp.ui.player.PlayerActivity
 import org.helllabs.android.xmp.ui.preferences.PrefManager
 import org.helllabs.android.xmp.ui.theme.XmpTheme
-import org.helllabs.android.xmp.ui.util.toast
-import org.helllabs.android.xmp.ui.util.yesNoDialog
 import org.helllabs.android.xmp.util.*
+import org.helllabs.android.xmp.util.toast
+import org.helllabs.android.xmp.util.yesNoDialog
 
 @AndroidEntryPoint
 class ModuleResult : AppCompatActivity() {

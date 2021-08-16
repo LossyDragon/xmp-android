@@ -15,6 +15,7 @@ import org.helllabs.android.xmp.model.PlaylistItem
 import org.helllabs.android.xmp.model.PlaylistType
 import org.helllabs.android.xmp.ui.preferences.PrefManager
 import org.helllabs.android.xmp.util.PlaylistUtils
+import org.helllabs.android.xmp.util.logD
 import org.helllabs.android.xmp.util.logE
 import org.helllabs.android.xmp.util.logW
 
@@ -92,12 +93,15 @@ class FilelistViewModel : ViewModel() {
             return emptyList()
         }
 
-        return file
+        val list = file
             .walkTopDown()
-            .filter { it.isFile && Xmp.testModule(it.path) } // TODO slow
+            .filter { it.isFile && Xmp.testModule(it.path) } // slow???
             .map { it.path }
             .sortedBy { it.lowercase(Locale.getDefault()) }
             .toList()
+
+        logD("Recursive list: $list")
+        return list
     }
 
     private suspend fun getCommentData(file: File): String? {

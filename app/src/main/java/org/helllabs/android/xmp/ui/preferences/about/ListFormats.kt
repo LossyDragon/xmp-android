@@ -28,8 +28,8 @@ import org.helllabs.android.xmp.ui.components.AppBar
 import org.helllabs.android.xmp.ui.components.ErrorLayout
 import org.helllabs.android.xmp.ui.components.LazyList
 import org.helllabs.android.xmp.ui.theme.XmpTheme
-import org.helllabs.android.xmp.ui.util.toast
 import org.helllabs.android.xmp.util.logD
+import org.helllabs.android.xmp.util.toast
 
 class ListFormats : ComponentActivity() {
 

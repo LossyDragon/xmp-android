@@ -39,9 +39,9 @@ import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.ui.components.AppBar
 import org.helllabs.android.xmp.ui.theme.XmpTheme
 import org.helllabs.android.xmp.ui.theme.darkPrimary
-import org.helllabs.android.xmp.ui.util.toast
-import org.helllabs.android.xmp.ui.util.yesNoDialog
 import org.helllabs.android.xmp.util.logD
+import org.helllabs.android.xmp.util.toast
+import org.helllabs.android.xmp.util.yesNoDialog
 
 const val PLAYLIST_EDIT_ID = "org.helllabs.android.xmp.ui.playlistMenu.PLAYLIST_EDIT_ID"
 const val PLAYLIST_EDIT_NAME = "org.helllabs.android.xmp.ui.playlistMenu.PLAYLIST_EDIT_NAME"

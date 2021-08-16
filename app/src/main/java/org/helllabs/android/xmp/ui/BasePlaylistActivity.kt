@@ -3,49 +3,32 @@ package org.helllabs.android.xmp.ui
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
-import android.os.Bundle
 import android.os.IBinder
-import android.view.Menu
-import android.view.MenuItem
-import android.view.MotionEvent
+import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
-import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.RecyclerView
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import java.util.*
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.XmpApplication
-import org.helllabs.android.xmp.databinding.LayoutListControlsBinding
 import org.helllabs.android.xmp.service.PlayerService
-import org.helllabs.android.xmp.ui.modarchive.Search
 import org.helllabs.android.xmp.ui.player.PlayerActivity
-import org.helllabs.android.xmp.ui.playlistMenu.PlaylistMenu
 import org.helllabs.android.xmp.ui.preferences.PrefManager
-import org.helllabs.android.xmp.ui.preferences.Preferences
-import org.helllabs.android.xmp.ui.util.toast
-import org.helllabs.android.xmp.util.*
+import org.helllabs.android.xmp.util.logD
+import org.helllabs.android.xmp.util.logI
+import org.helllabs.android.xmp.util.logW
+import org.helllabs.android.xmp.util.toList
+import org.helllabs.android.xmp.util.toast
 
-abstract class BasePlaylistActivity : AppCompatActivity() {
+abstract class BasePlaylistActivity : ComponentActivity() {
 
     private lateinit var mModPlayer: PlayerService
     private var mAddList: MutableList<String>? = null
 
-    private val requestUpdate = registerForActivityResult(StartActivityForResult()) {
-        update()
+    protected abstract val isShuffleMode: Boolean
+    protected abstract val isLoopMode: Boolean
+
+    private val resultPlay = registerForActivityResult(StartActivityForResult()) {
+        logD("Activity Result Play Mod")
     }
-
-    protected var mPlaylistAdapter: BasePlaylistAdapter? = null
-    protected abstract var isShuffleMode: Boolean
-    protected abstract var isLoopMode: Boolean
-    open fun update() {}
-    open fun onClick(position: Int) {}
-    open fun onLongClick(position: Int) {}
-
-    private val shuffleIcon
-        get() = if (isShuffleMode) R.drawable.ic_shuffle_on else R.drawable.ic_shuffle_off
-    private val loopIcon
-        get() = if (isLoopMode) R.drawable.ic_repeat_on else R.drawable.ic_repeat_off
 
     // Connection
     private val connection: ServiceConnection = object : ServiceConnection {
@@ -61,93 +44,30 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         }
     }
 
-    public override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-    }
-
-    // Let the menu's inflate after the layout's inflated.
-    override fun onPostCreate(savedInstanceState: Bundle?) {
-        super.onPostCreate(savedInstanceState)
-
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.setDisplayShowHomeEnabled(true)
-
-        mPlaylistAdapter?.onClick = { onClick(it) }
-        mPlaylistAdapter?.onLongClick = { onLongClick(it) }
-    }
-
-    public override fun onResume() {
-        super.onResume()
-        update()
-    }
-
-    // Menu
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.menu_options, menu)
-
-        // Calling super after populating the menu is necessary here to ensure that the
-        // action bar helpers have a chance to handle this event.
-        return super.onCreateOptionsMenu(menu)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            android.R.id.home -> {
-                val intent = Intent(this, PlaylistMenu::class.java).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                }
-                startActivity(intent)
-                return true
-            }
-            R.id.menu_prefs -> {
-                val intent = Intent(this, Preferences::class.java)
-                startActivity(intent)
-                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
-                return true
-            }
-            R.id.menu_download -> {
-                val intent = Intent(this, Search::class.java)
-                startActivity(intent)
-                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
-                return true
-            }
-        }
-        return super.onOptionsItemSelected(item)
-    }
-
-    open fun onItemClick(adapter: BasePlaylistAdapter, position: Int) {
-        val filename = adapter.currentList[position].file!!.path
-
-        onItemClick(
-            position = position,
-            filePath = filename,
-            directoryCount = adapter.getDirectoryCount(),
-            fileList = adapter.getFilenameList(),
-        )
-    }
-
     open fun onItemClick(
         position: Int,
         filePath: String,
         directoryCount: Int,
         fileList: List<String>
     ) {
-        val mode = PrefManager.playlistMode.toInt()
         /*
          * Test module again if invalid, in case a new file format is added to the
          * player library and the file was previously unrecognized and cached as invalid.
          */
         if (Xmp.testModule(filePath)) {
-            when (mode) {
+            when (PrefManager.playlistMode.toInt()) {
+                // Start playing at selection
                 1 -> {
                     val count = position - directoryCount
                     if (count >= 0) {
                         playModule(fileList, count, isShuffleMode)
                     }
                 }
-                2 -> playModule(filePath)
+                // Play selected file
+                2 -> playModule(filePath.toList())
+                // Enqueue selected file
                 3 -> {
-                    addToQueue(filePath)
+                    addToQueue(filePath.toList())
                     toast(R.string.msg_queue_added)
                 }
             }
@@ -156,74 +76,11 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         }
     }
 
-    protected fun setSwipeRefresh(swipe: SwipeRefreshLayout, recyclerView: RecyclerView) {
-        swipe.apply {
-            setOnRefreshListener {
-                update()
-                isRefreshing = false
-            }
-            setColorSchemeResources(R.color.refresh_color)
-        }
-
-        recyclerView.setOnItemTouchListener(
-            onInterceptTouchEvent = { _, e ->
-                if (e.action == MotionEvent.ACTION_DOWN) {
-                    var enable = false
-                    if (recyclerView.childCount > 0) {
-                        enable = !recyclerView.canScrollVertically(-1)
-                    }
-                    swipe.isEnabled = enable
-                }
-                false
-            }
-        )
-    }
-
-    protected fun setupButtons(controls: LayoutListControlsBinding) {
-        controls.controlButtonPlay.click {
-            with(mPlaylistAdapter!!.getFilenameList()) {
-                if (isEmpty()) {
-                    toast(R.string.error_no_files_to_play)
-                } else {
-                    playModule(this)
-                }
-            }
-        }
-        controls.controlButtonLoop.apply {
-            setImageResource(loopIcon)
-            click {
-                isLoopMode = !isLoopMode
-                setImageResource(loopIcon)
-                if (PrefManager.showToast)
-                    toast(if (isLoopMode) R.string.msg_loop_on else R.string.msg_loop_off)
-            }
-        }
-        controls.controlButtonShuffle.apply {
-            setImageResource(shuffleIcon)
-            click {
-                isShuffleMode = !isShuffleMode
-                setImageResource(shuffleIcon)
-                if (PrefManager.showToast)
-                    toast(if (isShuffleMode) R.string.msg_shuffle_on else R.string.msg_shuffle_off)
-            }
-        }
-    }
-
-    // Play this module
-    protected fun playModule(mod: String) {
-        playModule(listOf(mod), 0, false)
-    }
-
-    // Play all modules in list and honor default shuffle mode
-    protected fun playModule(modList: List<String>) {
-        playModule(modList, 0, false)
-    }
-
-    protected fun playModule(modList: List<String>, start: Int) {
-        playModule(modList, start, false)
-    }
-
-    fun playModule(modList: List<String>, start: Int, keepFirst: Boolean) {
+    protected fun playModule(
+        modList: List<String>,
+        start: Int = 0,
+        keepFirst: Boolean = false,
+    ) {
         XmpApplication.fileList = modList
         val intent = Intent(this, PlayerActivity::class.java).apply {
             putExtra(PlayerActivity.PARM_SHUFFLE, isShuffleMode)
@@ -233,20 +90,7 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
         }
 
         logI("Start Player activity")
-        requestUpdate.launch(intent)
-    }
-
-    protected fun addToQueue(filename: String) {
-        if (Xmp.testModule(filename)) {
-            if (PlayerService.isPlayerAlive.value == true) {
-                mAddList = ArrayList()
-                mAddList!!.add(filename)
-                val service = Intent(this, PlayerService::class.java)
-                bindService(service, connection, BIND_AUTO_CREATE)
-            } else {
-                playModule(filename)
-            }
-        }
+        resultPlay.launch(intent)
     }
 
     protected fun addToQueue(list: List<String>) {
@@ -255,7 +99,6 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
 
         if (list.isEmpty()) {
             toast(R.string.msg_queue_empty)
-            logW("Queue list empty")
             return
         }
 
@@ -269,17 +112,19 @@ abstract class BasePlaylistActivity : AppCompatActivity() {
 
         if (invalid.isNotEmpty()) {
             toast(R.string.msg_only_valid_files_sent)
-            logW("addToQueue() invalid items: $invalid")
         }
 
-        if (realList.isNotEmpty()) {
-            if (PlayerService.isPlayerAlive.value == true) {
-                val service = Intent(this, PlayerService::class.java)
-                mAddList = realList
-                bindService(service, connection, BIND_AUTO_CREATE)
-            } else {
-                playModule(realList)
-            }
+        if (realList.isEmpty()) {
+            logW("realist is empty when adding to queue")
+            return
+        }
+
+        if (PlayerService.isPlayerAlive.value == true) {
+            val service = Intent(this, PlayerService::class.java)
+            mAddList = realList
+            bindService(service, connection, BIND_AUTO_CREATE)
+        } else {
+            playModule(realList)
         }
     }
 }
