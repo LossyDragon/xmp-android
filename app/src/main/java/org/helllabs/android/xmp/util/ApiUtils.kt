@@ -4,18 +4,12 @@ import android.content.Context
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.drawable.Drawable
 import android.os.Build
 import android.text.Html
 import android.text.Spanned
 import android.util.Log
-import android.view.MotionEvent
-import android.view.View
-import android.widget.SeekBar
 import androidx.annotation.ColorRes
-import androidx.annotation.DrawableRes
 import androidx.core.content.ContextCompat
-import androidx.core.content.res.ResourcesCompat
 import androidx.core.text.toSpanned
 import java.util.*
 import org.helllabs.android.xmp.R
@@ -67,9 +61,6 @@ fun Context.getIconBitmap(): Bitmap? {
     }
 }
 
-inline fun <reified T : Resources> T.drawable(@DrawableRes res: Int): Drawable? =
-    ResourcesCompat.getDrawable(this, res, null)
-
 inline fun <reified T : Resources> T.color(@ColorRes res: Int): Int {
     return if (Api.isAtLeastM) {
         getColor(res, null)
@@ -101,55 +92,3 @@ fun String.toList(): List<String> =
 
 inline fun String?.ifNullOrEmpty(defaultValue: () -> String) =
     if (this.isNullOrBlank()) defaultValue() else this
-
-/**
- * View helpers
- */
-fun View.hide() {
-    visibility = View.GONE
-}
-
-fun View.show() {
-    visibility = View.VISIBLE
-}
-
-fun View.click(l: (v: View) -> Unit) {
-    setOnClickListener(l)
-}
-
-fun View.longClick(l: (v: View) -> Boolean) {
-    setOnLongClickListener(l)
-}
-
-fun View.touch(l: (view: View, event: MotionEvent) -> Boolean) {
-    setOnTouchListener(l)
-}
-
-/**
- * setOnSeekBarChangeListener(
- * onProgressChanged = { seekbar, progress, fromUser -> }
- * onStartTrackingTouch = { seekbar -> }
- * onStopTrackingTouch = { seekbar -> }
- * )
- */
-fun SeekBar.setOnSeekBarChangeListener(
-    onProgressChanged: ((seekBar: SeekBar?, progress: Int, fromUser: Boolean) -> Unit)? = null,
-    onStartTrackingTouch: ((seekBar: SeekBar?) -> Unit)? = null,
-    onStopTrackingTouch: ((seekBar: SeekBar?) -> Unit)? = null,
-): SeekBar.OnSeekBarChangeListener {
-    val listener = object : SeekBar.OnSeekBarChangeListener {
-        override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-            onProgressChanged?.invoke(seekBar, progress, fromUser)
-        }
-
-        override fun onStartTrackingTouch(seekBar: SeekBar?) {
-            onStartTrackingTouch?.invoke(seekBar)
-        }
-
-        override fun onStopTrackingTouch(seekBar: SeekBar?) {
-            onStopTrackingTouch?.invoke(seekBar)
-        }
-    }
-    setOnSeekBarChangeListener(listener)
-    return listener
-}

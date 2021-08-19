@@ -19,7 +19,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInteropFilter
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -33,7 +32,6 @@ import org.helllabs.android.xmp.model.*
 import org.helllabs.android.xmp.ui.preferences.PrefManager
 import org.helllabs.android.xmp.ui.theme.XmpTheme
 import org.helllabs.android.xmp.util.ifNullOrEmpty
-import org.helllabs.android.xmp.util.logD
 
 @OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
 @Composable
@@ -166,18 +164,16 @@ fun ItemList(
             )
         },
         trailing = {
-            val context = LocalContext.current
+            // TODO: Research way to highlight on drag.
             if (isDraggable) {
                 assert(onDrag != null) { "onDrag should not be null while draggable!" }
                 Icon(
                     modifier = Modifier
                         .size(32.dp)
                         .pointerInteropFilter { event ->
-                            context.logD("Event: ${event.action}")
                             when (event.action) {
-                                MotionEvent.ACTION_DOWN -> {
-                                    onDrag!!.invoke(true)
-                                }
+                                MotionEvent.ACTION_DOWN -> onDrag!!.invoke(true)
+                                else -> onDrag!!.invoke(false)
                             }
                             true // Continue to consume the touch event.
                         },

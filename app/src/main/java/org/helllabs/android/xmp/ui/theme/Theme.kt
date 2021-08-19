@@ -16,14 +16,14 @@ import com.google.accompanist.insets.ExperimentalAnimatedInsets
 import com.google.accompanist.insets.ProvideWindowInsets
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
-private val LightThemeColors = lightColors(
+val LightThemeColors = lightColors(
     primary = darkPrimary,
     primaryVariant = darkPrimaryDark,
     secondary = darkAccent,
     secondaryVariant = darkAccent,
 )
 
-private val DarkThemeColors = darkColors(
+val DarkThemeColors = darkColors(
     primary = darkPrimary,
     primaryVariant = darkPrimaryDark,
     secondary = darkAccent,

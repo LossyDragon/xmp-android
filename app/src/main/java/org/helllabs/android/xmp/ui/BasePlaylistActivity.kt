@@ -5,14 +5,12 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
 import androidx.activity.ComponentActivity
-import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.ui.player.PlayerActivity
 import org.helllabs.android.xmp.ui.preferences.PrefManager
-import org.helllabs.android.xmp.util.logD
 import org.helllabs.android.xmp.util.logI
 import org.helllabs.android.xmp.util.logW
 import org.helllabs.android.xmp.util.toList
@@ -25,10 +23,6 @@ abstract class BasePlaylistActivity : ComponentActivity() {
 
     protected abstract val isShuffleMode: Boolean
     protected abstract val isLoopMode: Boolean
-
-    private val resultPlay = registerForActivityResult(StartActivityForResult()) {
-        logD("Activity Result Play Mod")
-    }
 
     // Connection
     private val connection: ServiceConnection = object : ServiceConnection {
@@ -90,12 +84,12 @@ abstract class BasePlaylistActivity : ComponentActivity() {
         }
 
         logI("Start Player activity")
-        resultPlay.launch(intent)
+        startActivity(intent)
     }
 
     protected fun addToQueue(list: List<String>) {
-        val realList = mutableListOf<String>()
-        val invalid = mutableListOf<String>()
+        val realList: MutableList<String> = mutableListOf()
+        val invalid: MutableList<String> = mutableListOf()
 
         if (list.isEmpty()) {
             toast(R.string.msg_queue_empty)

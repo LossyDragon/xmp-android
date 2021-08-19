@@ -20,6 +20,7 @@ object PrefManager {
     // private const val BLUETOOTH_PAUSE = "bluetooth_pause"
     // private const val HEADSET_PAUSE = "headset_pause"
     // private const val ENABLE_DELETE = "enable_delete"
+    // private const val SHOW_TOAST = "show_toast"
 
     private const val ALL_SEQUENCES = "all_sequences"
     private const val AMIGA_MIXER = "amiga_mixer"
@@ -42,7 +43,6 @@ object PrefManager {
     private const val SEARCH_HISTORY = "search_history"
     private const val SHOW_INFO_LINE = "show_info_line"
     private const val SHOW_INFO_LINE_HEX = "show_info_line_hex"
-    private const val SHOW_TOAST = "show_toast"
     private const val START_ON_PLAYER = "start_on_player"
     private const val STEREO_MIX = "stereo_mix"
     private const val USE_FILENAME = "use_filename"
@@ -77,10 +77,6 @@ object PrefManager {
     var fileListShuffle: Boolean
         get() = prefs.getBoolean(OPTIONS_SHUFFLE_MODE, true)
         set(value) = prefs.edit { putBoolean(OPTIONS_SHUFFLE_MODE, value) }
-
-    var showToast: Boolean
-        get() = prefs.getBoolean(SHOW_TOAST, true)
-        set(value) = prefs.edit { putBoolean(SHOW_TOAST, value) }
 
     var playlistMode: String
         get() = prefs.getString(PLAYLIST_MODE, "1")!!

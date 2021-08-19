@@ -25,7 +25,7 @@
         android:requestLegacyExternalStorage="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="false"
-        android:theme="@style/AppTheme"
+        android:theme="@style/ComposeTheme"
         tools:ignore="AllowBackup"
         tools:replace="supportsRtl">
 
@@ -51,7 +51,7 @@
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:exported="true"
             android:launchMode="singleTop"
-            android:theme="@style/AppTheme">
+            android:theme="@style/ComposeTheme">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 

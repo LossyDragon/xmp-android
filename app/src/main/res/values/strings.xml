@@ -286,10 +286,10 @@
     <string name="search_unknown_error">Software Failure.   Press back to continue.\n\nGuru Meditation #35068035.48454C50</string>
 
     <!-- Player Bottom Sheet Info Bar -->
-    <string name="info_bpm">&#160;BPM:</string>
-    <string name="info_pattern">&#160;Pat:</string>
-    <string name="info_position">&#160;Pos:</string>
-    <string name="info_speed">Speed:</string>
+    <string name="info_speed">Speed:%s</string>
+    <string name="info_bpm">BPM:%s</string>
+    <string name="info_position">Pos:%s</string>
+    <string name="info_pattern">Pat:%s</string>
 
     <!-- Player Bottom Sheet -->
     <string name="sheet_main_song">Main Song</string>
@@ -333,5 +333,6 @@
     <string name="text_sponsor">Sponsor</string>
     <string name="msg_file_exists">File Exists</string>
     <string name="msg_file_exists_overwrite">This module already exists. Do you want to overwrite?</string>
+    <string name="msg_no_subsongs">No Subsongs</string>
 
 </resources>

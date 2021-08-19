@@ -24,7 +24,7 @@
                 android:fontFamily="@font/font_michroma"
                 android:gravity="center"
                 android:includeFontPadding="false"
-                android:paddingStart="2dp"
+                android:paddingStart="0dp"
                 android:paddingEnd="0dp"
                 android:singleLine="true"
                 android:textAppearance="?android:attr/textAppearanceLarge"
@@ -42,7 +42,7 @@
                 android:paddingBottom="2dp"
                 android:singleLine="true"
                 android:textAppearance="?android:attr/textAppearanceMedium"
-                android:textColor="@color/colorLightGray"
+                android:textColor="@color/lightgray"
                 android:textSize="12sp"
                 tools:text="info_type_0" />
 
@@ -77,26 +77,15 @@
                 android:paddingBottom="2dp"
                 android:singleLine="true"
                 android:textAppearance="?android:attr/textAppearanceMedium"
-                android:textColor="@color/colorLightGray"
+                android:textColor="@color/lightgray"
                 android:textSize="12sp" />
 
         </LinearLayout>
     </ViewFlipper>
 
-    <!-- Moved flipper out of Coordinator layout, it gives the bottom sheet a "max height" -->
-    <androidx.coordinatorlayout.widget.CoordinatorLayout
+    <androidx.compose.ui.platform.ComposeView
+        android:id="@+id/composedPlayerLayout"
         android:layout_width="match_parent"
-        android:layout_height="fill_parent"
-        android:orientation="vertical">
+        android:layout_height="fill_parent" />
 
-        <FrameLayout
-            android:id="@+id/viewerLayout"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-
-        <include
-            android:id="@+id/controlsSheet"
-            layout="@layout/layout_player_controls" />
-
-    </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </LinearLayout>

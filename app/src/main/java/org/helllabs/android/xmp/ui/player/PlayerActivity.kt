@@ -2,19 +2,36 @@ package org.helllabs.android.xmp.ui.player
 
 import android.content.*
 import android.content.res.Configuration
-import android.graphics.Color
-import android.graphics.drawable.AnimatedVectorDrawable
-import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.os.IBinder
 import android.os.PowerManager
-import android.support.v4.media.session.MediaSessionCompat
+import android.support.v4.media.session.MediaControllerCompat
 import android.view.Display
+import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.WindowManager
+import android.widget.FrameLayout
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.res.ResourcesCompat
-import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
+import android.widget.ViewFlipper
+import androidx.activity.ComponentActivity
+import androidx.activity.viewModels
+import androidx.annotation.ColorRes
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.BottomSheetScaffold
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Icon
+import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
+import com.afollestad.materialdialogs.MaterialDialog
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlinx.coroutines.*
@@ -24,29 +41,31 @@ import org.greenrobot.eventbus.ThreadMode
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.XmpApplication
-import org.helllabs.android.xmp.databinding.ActivityPlayerBinding
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.service.utils.*
+import org.helllabs.android.xmp.ui.components.DetailsSheet
+import org.helllabs.android.xmp.ui.components.PlayerButtons
+import org.helllabs.android.xmp.ui.components.PlayerInfo
+import org.helllabs.android.xmp.ui.components.PlayerTimeBar
 import org.helllabs.android.xmp.ui.player.viewer.ChannelViewer
 import org.helllabs.android.xmp.ui.player.viewer.InstrumentViewer
 import org.helllabs.android.xmp.ui.player.viewer.PatternViewer
 import org.helllabs.android.xmp.ui.player.viewer.Viewer
 import org.helllabs.android.xmp.ui.playlistMenu.PlaylistMenu
 import org.helllabs.android.xmp.ui.preferences.PrefManager
+import org.helllabs.android.xmp.ui.theme.*
 import org.helllabs.android.xmp.util.*
-import org.helllabs.android.xmp.util.toast
 
 @AndroidEntryPoint
-class PlayerActivity : AppCompatActivity() {
-
-    internal lateinit var binder: ActivityPlayerBinding
-    private lateinit var modPlayer: PlayerService
+class PlayerActivity : ComponentActivity() {
 
     @Inject
     lateinit var eventBus: EventBus
 
+    private lateinit var modPlayer: PlayerService
+    private val viewModel: PlayerActivityViewModel by viewModels()
+
     private lateinit var playerDisplay: Display
-    private var playerJob: Job? = null
     private val modVars = IntArray(10)
     private val seqVars = IntArray(255) // this is MAX_SEQUENCES defined in common.h
     private var currentViewer = 0
@@ -56,10 +75,10 @@ class PlayerActivity : AppCompatActivity() {
     private var isBound = false
     private var keepFirst = false
     private var loopListMode = false
-    private var playTime = 0
+    private var playTime = 0F
+    private var playerJob: Job? = null
     private var screenOn = false
     private var screenReceiver: BroadcastReceiver? = null
-    private var seeking = false
     private var showHex: Boolean = false
     private var shuffleMode = false
     private var skipToPrevious = false
@@ -68,47 +87,44 @@ class PlayerActivity : AppCompatActivity() {
 
     /* Views */
     private lateinit var channelViewer: Viewer
-    private lateinit var instrumentViewer: Viewer
-    private lateinit var patternViewer: Viewer
-    private var sheet: PlayerSheet? = null
-    private lateinit var viewer: Viewer
     private lateinit var infoName: Array<TextView>
     private lateinit var infoType: Array<TextView>
+    private lateinit var instrumentViewer: Viewer
+    private lateinit var patternViewer: Viewer
+    private lateinit var viewer: Viewer
 
     // Update Runnable Loops
-    private var oldSpd = -1
-    private var oldBpm = -1
-    private var oldPos = -1
-    private var oldPat = -1
-    private var oldTime = -1
-    private var oldTotalTime = -1
     private val c = CharArray(2)
     private val s = StringBuilder()
+    private var oldBpm = -1
+    private var oldPat = -1
+    private var oldPos = -1
+    private var oldSpd = -1
+    private var oldTime = -1
+    private var oldTotalTime = -1
 
-    private val isLoopEnabled
-        get() = if (modPlayer.getLoop())
-            R.drawable.ic_repeat_one_on
-        else
-            R.drawable.ic_repeat_one_off
-
-    private val mediaSession: MediaSessionCompat
-        get() = modPlayer.getMediaSession()
+    private val mediaControls: MediaControllerCompat.TransportControls
+        get() = modPlayer.getMediaSession().controller.transportControls
 
     private val connection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
-            logI("Service connected")
+            this@PlayerActivity.logI("Service connected")
             val binder = service as PlayerService.PlayerBinder
             modPlayer = binder.getService()
+
             isBound = true
             flipperPage = 0
+
             if (fileList != null && fileList!!.isNotEmpty()) {
                 // Start new queue
                 playNewMod(fileList!!, start)
                 checkPlayState()
+                this@PlayerActivity.logD("Service connected: new queue")
             } else {
                 // Reconnect to existing service
                 showNewMod()
                 checkPlayState()
+                this@PlayerActivity.logD("Service connected: Reconnect")
             }
         }
 
@@ -177,15 +193,14 @@ class PlayerActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        binder = ActivityPlayerBinding.inflate(layoutInflater)
+        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+        window.statusBarColor = resources.color(R.color.primary)
+        window.navigationBarColor = resources.color(R.color.section_background_darker)
 
-        setContentView(binder.root)
-        logI("Create player interface")
+        logI("onCreate")
+        setContentView(R.layout.activity_player)
 
         onNewIntent(intent)
-
-        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-        window.statusBarColor = ResourcesCompat.getColor(resources, R.color.primary, null)
 
         playerDisplay = if (Api.isAtLeastR) {
             display!!
@@ -195,7 +210,6 @@ class PlayerActivity : AppCompatActivity() {
         }
 
         eventBus.register(this)
-        sheet = PlayerSheet(this)
 
         // INITIALIZE RECEIVER by jwei512
         screenOn = true
@@ -206,61 +220,103 @@ class PlayerActivity : AppCompatActivity() {
         }
         registerReceiver(screenReceiver, filter)
 
+        infoName = arrayOf(findViewById(R.id.info_name_0), findViewById(R.id.info_name_1))
+        infoType = arrayOf(findViewById(R.id.info_type_0), findViewById(R.id.info_type_1))
+
         // Get the background color of the activity.
-        var color: Int = Color.parseColor("#FF000000")
-        val background = window.decorView.background
-        if (background is ColorDrawable) color = background.color
+        val color: Int = resources.color(
+            when (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
+                Configuration.UI_MODE_NIGHT_NO -> R.color.playerScreenBackground
+                Configuration.UI_MODE_NIGHT_YES -> R.color.playerScreenBackgroundDark
+                else -> R.color.playerScreenBackgroundDark // Fallback
+            }
+        )
+
         instrumentViewer = InstrumentViewer(this, color)
         channelViewer = ChannelViewer(this, color)
         patternViewer = PatternViewer(this, color)
         viewer = instrumentViewer
-        binder.viewerLayout.addView(viewer)
-        binder.viewerLayout.click {
-            if (canChangeViewer) {
-                changeViewer()
-            }
-        }
 
-        infoName = arrayOf(binder.infoName0, binder.infoName1)
-        infoType = arrayOf(binder.infoType0, binder.infoType1)
-
-        binder.controlsSheet.apply {
-            buttonPrev.click { onBackButton() }
-            buttonForward.click { onForwardButton() }
-            buttonPlay.click { onPlayButton() }
-            buttonStop.click { onStopButton() }
-            buttonLoop.click { onLoopButton() }
-            seekbar.apply {
-                progress = 0
-                setOnSeekBarChangeListener(
-                    onStartTrackingTouch = { seeking = true },
-                    onStopTrackingTouch = {
-                        if (isBound) {
-                            mediaSession.controller
-                                .transportControls.seekTo((it!!.progress * 100).toLong())
-                            playTime = Xmp.time() / 100
-                        }
-                        seeking = false
+        findViewById<ComposeView>(R.id.composedPlayerLayout).setContent {
+            PlayerLayout(
+                background = color,
+                viewModel = viewModel,
+                viewer = viewer,
+                onFrameClick = {
+                    if (canChangeViewer) {
+                        changeViewer()
                     }
-                )
-            }
-
-            if (!PrefManager.showInfoLine) {
-                timeNow.hide()
-                timeTotal.hide()
-                infoLayout.infoLine.hide()
-            }
+                },
+                onSeek = {
+                    if (isBound) {
+                        val seekTo = (it * 100).toLong()
+                        mediaControls.seekTo(seekTo)
+                        playTime = Xmp.time() / 100F
+                    }
+                },
+                onStop = {
+                    if (isBound) {
+                        logD("Stop button pressed")
+                        mediaControls.stop()
+                    }
+                },
+                onPrev = {
+                    if (isBound) {
+                        logD("Back button pressed")
+                        mediaControls.skipToPrevious()
+                        skipToPrevious = true
+                    }
+                },
+                onPlay = {
+                    if (isBound) {
+                        val isPaused = modPlayer.isPaused()
+                        logD("Play/pause button pressed (paused=$isPaused)")
+                        if (isPaused) {
+                            mediaControls.play()
+                            viewModel.setPlaying(true)
+                        } else {
+                            mediaControls.pause()
+                            viewModel.setPlaying(false)
+                        }
+                    }
+                },
+                onNext = {
+                    if (isBound) {
+                        logD("Next button pressed")
+                        mediaControls.skipToNext()
+                        skipToPrevious = false
+                    }
+                },
+                onRepeat = {
+                    if (isBound) {
+                        logD("Loop button pressed")
+                        val bool = modPlayer.toggleLoop()
+                        viewModel.setRepeat(bool)
+                    }
+                },
+                onAllSeq = {
+                    if (isBound) {
+                        val bool = modPlayer.toggleAllSequences()
+                        viewModel.setAllSequences(bool)
+                    }
+                },
+                onSequence = {
+                    if (isBound) {
+                        modPlayer.setSequence(it)
+                        viewModel.currentSequence(it)
+                    }
+                }
+            )
         }
 
-        if (PrefManager.keepScreenOn) {
-            binder.viewerLayout.keepScreenOn = true
-        }
+        if (PrefManager.keepScreenOn)
+            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         if (PlayerService.isLoaded) {
             canChangeViewer = true
         }
 
-        setResult(RESULT_OK)
+        setResult(RESULT_OK) // TODO: Needed anymore?
     }
 
     override fun onStop() {
@@ -286,7 +342,6 @@ class PlayerActivity : AppCompatActivity() {
         eventBus.unregister(this)
         unregisterReceiver(screenReceiver)
 
-        sheet = null
         isBound = false
 
         // Clear app cache for any files from intents.
@@ -311,12 +366,14 @@ class PlayerActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+
         screenOn = true
         showHex = PrefManager.showInfoLineHex
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
+
         viewer.setRotation(playerDisplay.rotation)
     }
 
@@ -387,66 +444,17 @@ class PlayerActivity : AppCompatActivity() {
         if (isBound) {
             currentViewer++
             currentViewer %= 3
-            binder.viewerLayout.removeAllViews()
-            when (currentViewer) {
-                0 -> viewer = instrumentViewer
-                1 -> viewer = channelViewer
-                2 -> viewer = patternViewer
+            with(findViewById<FrameLayout>(R.id.composeFrameLayout)) {
+                removeAllViews()
+                when (currentViewer) {
+                    0 -> viewer = instrumentViewer
+                    1 -> viewer = channelViewer
+                    2 -> viewer = patternViewer
+                }
+                addView(viewer)
             }
-            binder.viewerLayout.addView(viewer)
             viewer.setup(modVars)
             viewer.setRotation(playerDisplay.rotation)
-        }
-    }
-
-    // Sidebar services
-    fun toggleAllSequences(): Boolean {
-        if (isBound) {
-            return modPlayer.toggleAllSequences()
-        }
-        return false
-    }
-
-    private fun onLoopButton() {
-        if (isBound) {
-            logD("Loop button pressed")
-            modPlayer.toggleLoop()
-            binder.controlsSheet.buttonLoop.setImageResource(isLoopEnabled)
-        }
-    }
-
-    private fun onPlayButton() {
-        if (isBound) {
-            val isPaused = modPlayer.isPaused()
-            logD("Play/pause button pressed (paused=$isPaused)")
-            if (isPaused) {
-                mediaSession.controller.transportControls.play()
-            } else {
-                mediaSession.controller.transportControls.pause()
-            }
-        }
-    }
-
-    private fun onStopButton() {
-        if (isBound) {
-            logD("Stop button pressed")
-            mediaSession.controller.transportControls.stop()
-        }
-    }
-
-    private fun onBackButton() {
-        if (isBound) {
-            logD("Back button pressed")
-            mediaSession.controller.transportControls.skipToPrevious()
-            skipToPrevious = true
-        }
-    }
-
-    private fun onForwardButton() {
-        if (isBound) {
-            logD("Next button pressed")
-            mediaSession.controller.transportControls.skipToNext()
-            skipToPrevious = false
         }
     }
 
@@ -461,30 +469,27 @@ class PlayerActivity : AppCompatActivity() {
         }
     }
 
-    fun playNewSequence(num: Int) {
-        if (isBound) {
-            modPlayer.setSequence(num)
-        }
-    }
-
     private fun showNewSequence() {
         if (isBound) {
             Xmp.getModVars(modVars)
 
             val time = modVars[0]
             totalTime = time / 1000
-            binder.controlsSheet.seekbar.progress = 0
-            binder.controlsSheet.seekbar.max = time / 100
+
+            viewModel.setSeekPos(0F)
+            viewModel.setSeekMax(time / 100F)
+
             toast(getString(R.string.msg_new_seq_duration, time / 60000, time / 1000 % 60))
             val sequence = modVars[7] // Current Sequence
-            sheet?.selectSequence(sequence)
+
+            viewModel.currentSequence(sequence)
         }
     }
 
     private fun showNewMod() {
         Xmp.getModVars(modVars)
         Xmp.getSeqVars(seqVars)
-        playTime = Xmp.time() / 100
+        playTime = Xmp.time() / 100F
 
         val time = modVars[0] // Sequence duration
         // val len = modVars[1] // Module length in patterns
@@ -494,34 +499,36 @@ class PlayerActivity : AppCompatActivity() {
         val smp = modVars[5] // Number of samples
         val numSeq = modVars[6] // Number of valid sequences
 
-        sheet?.let {
-            it.setDetails(pat, ins, smp, chn, modPlayer.getAllSequences())
-            it.clearSequences()
-            for (i in 0 until numSeq) {
-                it.addSequence(i, seqVars[i])
-            }
-            it.selectSequence(0)
-        }
+        viewModel.setDetails(pat, ins, smp, chn)
+        viewModel.setAllSequences(modPlayer.getAllSequences())
 
-        binder.controlsSheet.buttonLoop.setImageResource(isLoopEnabled)
+        val seq = mutableListOf<Int>()
+        for (i in 0 until numSeq) {
+            seq.add(i, seqVars[i])
+        }
+        viewModel.numOfSequences(seq)
+        viewModel.currentSequence(0)
 
         totalTime = time / 1000
-        binder.controlsSheet.seekbar.max = time / 100
-        binder.controlsSheet.seekbar.progress = playTime
-        flipperPage = (flipperPage + 1) % 2
-        infoName[flipperPage].text = modPlayer.getModName()
-        infoType[flipperPage].text = Xmp.getModType()
 
-        if (skipToPrevious) {
-            binder.titleFlipper.setInAnimation(this, R.anim.slide_in_left_slow)
-            binder.titleFlipper.setOutAnimation(this, R.anim.slide_out_right_slow)
-        } else {
-            binder.titleFlipper.setInAnimation(this, R.anim.slide_in_right_slow)
-            binder.titleFlipper.setOutAnimation(this, R.anim.slide_out_left_slow)
+        viewModel.setSeekPos(playTime)
+        viewModel.setSeekMax(time / 100F)
+
+        with(findViewById<ViewFlipper>(R.id.title_flipper)) {
+            flipperPage = (flipperPage + 1) % 2
+            infoName[flipperPage].text = modPlayer.getModName()
+            infoType[flipperPage].text = Xmp.getModType()
+            if (skipToPrevious) {
+                setInAnimation(this@PlayerActivity, R.anim.slide_in_left_slow)
+                setOutAnimation(this@PlayerActivity, R.anim.slide_out_right_slow)
+            } else {
+                setInAnimation(this@PlayerActivity, R.anim.slide_in_right_slow)
+                setOutAnimation(this@PlayerActivity, R.anim.slide_out_left_slow)
+            }
+            skipToPrevious = false
+            showNext()
         }
 
-        skipToPrevious = false
-        binder.titleFlipper.showNext()
         viewer.setup(modVars)
         viewer.setRotation(playerDisplay.rotation)
 
@@ -540,26 +547,7 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     private fun checkPlayState() {
-        if (isBound) {
-            binder.controlsSheet.buttonPlay.apply {
-                if (modPlayer.isPaused()) {
-                    setImageResource(R.drawable.anim_play_pause)
-                } else {
-                    setImageResource(R.drawable.anim_pause_play)
-                }
-            }
-
-            animatePlayButton()
-        }
-    }
-
-    private fun animatePlayButton() {
-        binder.controlsSheet.buttonPlay.drawable.run {
-            when (this) {
-                is AnimatedVectorDrawable -> start()
-                is AnimatedVectorDrawableCompat -> start()
-            }
-        }
+        // If view flipper acts up, we could force update it here.
     }
 
     private fun progressJob(): Job {
@@ -567,21 +555,21 @@ class PlayerActivity : AppCompatActivity() {
             logI("Start progress thread")
             var frameStartTime: Long
             var frameTime: Long
-            playTime = 0
-            do {
+            playTime = 0F
 
+            do {
                 if (stopUpdate) {
                     logI("Stop update")
                     break
                 }
 
-                playTime = Xmp.time() / 100
+                playTime = Xmp.time() / 100F
 
                 if (screenOn && isBound) {
                     if (!modPlayer.isPaused()) {
                         // update seekbar
-                        if (!seeking && playTime >= 0) {
-                            binder.controlsSheet.seekbar.progress = playTime
+                        if (playTime >= 0) {
+                            viewModel.setSeekPos(playTime)
                         }
 
                         // get current frame info
@@ -611,7 +599,7 @@ class PlayerActivity : AppCompatActivity() {
                                     s.append(it)
                                 }
                             }
-                            binder.controlsSheet.infoLayout.infoSpeed.text = s
+                            viewModel.setInfoSpeed(s.toString())
                             oldSpd = info!!.values[5]
                         }
 
@@ -627,7 +615,7 @@ class PlayerActivity : AppCompatActivity() {
                                     s.append(it)
                                 }
                             }
-                            binder.controlsSheet.infoLayout.infoBpm.text = s
+                            viewModel.setInfoBpm(s.toString())
                             oldBpm = info!!.values[6]
                         }
 
@@ -643,7 +631,7 @@ class PlayerActivity : AppCompatActivity() {
                                     s.append(it)
                                 }
                             }
-                            binder.controlsSheet.infoLayout.infoPos.text = s
+                            viewModel.setInfoPos(s.toString())
                             oldPos = info!!.values[0]
                         }
 
@@ -659,7 +647,7 @@ class PlayerActivity : AppCompatActivity() {
                                     s.append(it)
                                 }
                             }
-                            binder.controlsSheet.infoLayout.infoPat.text = s
+                            viewModel.setInfoPat(s.toString())
                             oldPat = info!!.values[1]
                         }
 
@@ -676,7 +664,7 @@ class PlayerActivity : AppCompatActivity() {
                             PlayerUtil.to02d(c, t % 60)
                             s.append(c)
 
-                            binder.controlsSheet.timeNow.text = s
+                            viewModel.setTimeNow(s.toString())
                             oldTime = info!!.time
                         }
 
@@ -689,7 +677,7 @@ class PlayerActivity : AppCompatActivity() {
                             PlayerUtil.to02d(c, totalTime % 60)
                             s.append(c)
 
-                            binder.controlsSheet.timeTotal.text = s
+                            viewModel.setTimeTotal(s.toString())
                             oldTotalTime = totalTime
                         }
                     }
@@ -728,4 +716,183 @@ class PlayerActivity : AppCompatActivity() {
         private var stopUpdate = false
         private var canChangeViewer = false
     }
+}
+
+@OptIn(ExperimentalMaterialApi::class) // BottomSheetScaffold
+@Composable
+private fun PlayerLayout(
+    @ColorRes background: Int,
+    viewModel: PlayerActivityViewModel,
+    viewer: Viewer,
+    onFrameClick: () -> Unit,
+    onSeek: (Float) -> Unit,
+    onStop: () -> Unit,
+    onPrev: () -> Unit,
+    onPlay: () -> Unit,
+    onNext: () -> Unit,
+    onRepeat: () -> Unit,
+    onAllSeq: (Boolean) -> Unit,
+    onSequence: (Int) -> Unit,
+) {
+    BottomSheetScaffold(
+        sheetPeekHeight = 155.dp,
+        sheetBackgroundColor = sectionBackground,
+        sheetShape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
+        sheetContent = {
+            PlayerSheetLayout(
+                viewModel,
+                onSeek = { onSeek(it) },
+                onStop = { onStop() },
+                onPrev = { onPrev() },
+                onPlay = { onPlay() },
+                onNext = { onNext() },
+                onRepeat = { onRepeat() },
+                onAllSeq = { onAllSeq(it) },
+                onSequence = { onSequence(it) },
+            )
+        }
+    ) {
+        // The Box colors underneath the bottom sheet.
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(background))
+        ) {
+            AndroidView(
+                modifier = Modifier.padding(bottom = 155.dp), // Forced padding, kinda bad...
+                factory = { context ->
+                    FrameLayout(context).apply {
+                        id = R.id.composeFrameLayout
+                        layoutParams = FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
+                        addView(viewer)
+                        setOnClickListener { onFrameClick() }
+                    }
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun PlayerSheetLayout(
+    viewModel: PlayerActivityViewModel,
+    onSeek: (Float) -> Unit,
+    onStop: () -> Unit,
+    onPrev: () -> Unit,
+    onPlay: () -> Unit,
+    onNext: () -> Unit,
+    onRepeat: () -> Unit,
+    onAllSeq: (Boolean) -> Unit,
+    onSequence: (Int) -> Unit,
+) {
+    PlayerSheetPeekContent(
+        viewModel = viewModel,
+        onSeek = { onSeek(it) },
+        onStop = { onStop() },
+        onPrev = { onPrev() },
+        onPlay = { onPlay() },
+        onNext = { onNext() },
+        onRepeat = { onRepeat() },
+    )
+    PlayerSheetContent(
+        viewModel = viewModel,
+        onAllSeq = { onAllSeq(it) },
+        onSequence = { onSequence(it) }
+    )
+}
+
+@Composable
+private fun PlayerSheetPeekContent(
+    viewModel: PlayerActivityViewModel,
+    onSeek: (Float) -> Unit,
+    onStop: () -> Unit,
+    onPrev: () -> Unit,
+    onPlay: () -> Unit,
+    onNext: () -> Unit,
+    onRepeat: () -> Unit,
+) {
+    val showInfo by remember { mutableStateOf(PrefManager.showInfoLine) }
+    val spd = viewModel.infoSpeed.observeAsState("00")
+    val bpm = viewModel.infoBpm.observeAsState("00")
+    val pos = viewModel.infoPos.observeAsState("00")
+    val pat = viewModel.infoPat.observeAsState("00")
+    val now = viewModel.timeNow.observeAsState("-:--")
+    val total = viewModel.timeTotal.observeAsState("-:--")
+    val position = viewModel.seekPos.observeAsState(0F)
+    val positionMax = viewModel.seekMax.observeAsState(0F)
+    val isRepeating = viewModel.setRepeat.observeAsState(false)
+    val isPlaying = viewModel.setPlaying.observeAsState(true)
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(155.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Spacer(modifier = Modifier.height(8.dp))
+        Icon(
+            painter = painterResource(id = R.drawable.ic_sheet_handle),
+            tint = lightGray,
+            contentDescription = null
+        )
+        if (showInfo) {
+            Spacer(modifier = Modifier.height(8.dp))
+            PlayerInfo(speed = spd.value, bpm = bpm.value, pos = pos.value, pat = pat.value)
+            Spacer(modifier = Modifier.height(12.dp))
+            PlayerTimeBar(
+                currentTime = now.value,
+                totalTime = total.value,
+                position = position.value,
+                range = positionMax.value,
+                onSeek = { onSeek(it) },
+            )
+        }
+        Spacer(modifier = Modifier.height(18.dp))
+        PlayerButtons(
+            modifier = if (!showInfo) Modifier.fillMaxHeight() else Modifier,
+            onStop = { onStop() },
+            onPrev = { onPrev() },
+            onPlay = { onPlay() },
+            onNext = { onNext() },
+            onRepeat = { onRepeat() },
+            isPlaying = isPlaying.value,
+            isRepeating = isRepeating.value,
+        )
+        Spacer(modifier = Modifier.height(10.dp))
+    }
+}
+
+@Composable
+private fun PlayerSheetContent(
+    viewModel: PlayerActivityViewModel,
+    onAllSeq: (Boolean) -> Unit,
+    onSequence: (Int) -> Unit,
+) {
+    val context = LocalContext.current
+    val info = viewModel.setDetails.observeAsState()
+    val allSeq = viewModel.setAllSequences.observeAsState()
+    val currentSeq = viewModel.currentSequence.observeAsState()
+    val numSeq = viewModel.numOfSequences.observeAsState()
+
+    DetailsSheet(
+        onMessage = {
+            val message = Xmp.getComment()
+            if (message.isNullOrEmpty()) {
+                context.toast(R.string.msg_no_song_info)
+            } else {
+                MaterialDialog(context).show {
+                    title(R.string.dialog_title_song_message)
+                    message(text = message)
+                    positiveButton(R.string.ok)
+                }
+            }
+        },
+        moduleInfo = info.value!!,
+        playAllSeq = allSeq.value!!,
+        onAllSeq = { onAllSeq(it) },
+        sequences = numSeq.value!!,
+        currentSequence = currentSeq.value!!,
+        onSequence = { onSequence(it) },
+    )
 }

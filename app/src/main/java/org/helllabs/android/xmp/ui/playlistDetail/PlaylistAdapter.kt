@@ -26,10 +26,6 @@ class PlaylistAdapter(
     var onLongClick: ((position: Int) -> Unit)? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ComposedViewHolder {
-//        val inflater = LayoutInflater.from(parent.context)
-//        val view = inflater.inflate(R.layout.item_playlist, parent, false)
-//
-//        return ListViewHolder(view)
         return ComposedViewHolder(ComposeView(parent.context))
     }
 
