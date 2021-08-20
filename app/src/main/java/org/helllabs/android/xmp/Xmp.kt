@@ -33,6 +33,9 @@ object Xmp {
     // Limits
     const val MAX_CHANNELS = 64 // Max number of channels in module
 
+    val MAX_SEQUENCES: Int
+        get() = getMaxSequences()
+
     init {
         System.loadLibrary("xmp-jni")
     }
@@ -77,6 +80,7 @@ object Xmp {
     external fun stopModule(): Int
     external fun testModule(name: String, info: ModInfo): Boolean
     external fun time(): Int
+    private external fun getMaxSequences(): Int
 
     external fun getChannelData(
         volumes: IntArray,

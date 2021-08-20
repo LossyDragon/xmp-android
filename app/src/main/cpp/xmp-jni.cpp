@@ -11,6 +11,7 @@
 #include <jni.h>
 #include "xmp.h"
 #include "OpenSL.h"
+#include "common.h"
 
 #define PERIOD_BASE 13696
 #define MAX_BUFFER_SIZE 256
@@ -725,6 +726,11 @@ Java_org_helllabs_android_xmp_Xmp_getVolume(JNIEnv *env, jobject obj) {
 JNIEXPORT jint JNICALL
 Java_org_helllabs_android_xmp_Xmp_setVolume(JNIEnv *env, jobject obj, jint vol) {
     return OpenSL::set_volume(vol);
+}
+
+JNIEXPORT jint JNICALL
+Java_org_helllabs_android_xmp_Xmp_getMaxSequences(JNIEnv *env, jobject obj) {
+    return MAX_SEQUENCES;
 }
 
 }

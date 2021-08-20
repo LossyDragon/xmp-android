@@ -67,7 +67,7 @@ class PlayerActivity : ComponentActivity() {
 
     private lateinit var playerDisplay: Display
     private val modVars = IntArray(10)
-    private val seqVars = IntArray(255) // this is MAX_SEQUENCES defined in common.h
+    private val seqVars = IntArray(Xmp.MAX_SEQUENCES) // this is MAX_SEQUENCES defined in common.h
     private var currentViewer = 0
     private var fileList: List<String>? = null
     private var flipperPage = 0
