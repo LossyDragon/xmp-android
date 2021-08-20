@@ -120,6 +120,7 @@ class PlayerActivity : ComponentActivity() {
                 playNewMod(fileList!!, start)
                 checkPlayState()
                 this@PlayerActivity.logD("Service connected: new queue")
+                fileList = null // Clear the fileList once its contents are transferred.
             } else {
                 // Reconnect to existing service
                 showNewMod()
@@ -416,6 +417,7 @@ class PlayerActivity : ComponentActivity() {
             finish()
             return
         } else {
+            logD("Intent Extras: ${intent.toUri(0)}")
             val extras = intent.extras
             if (extras != null) {
                 fileList = XmpApplication.fileList
