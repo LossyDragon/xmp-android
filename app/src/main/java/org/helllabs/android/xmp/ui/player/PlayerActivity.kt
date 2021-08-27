@@ -70,7 +70,6 @@ class PlayerActivity : ComponentActivity() {
     private val seqVars = IntArray(Xmp.MAX_SEQUENCES) // this is MAX_SEQUENCES defined in common.h
     private var currentViewer = 0
     private var fileList: List<String>? = null
-    private var flipperPage = 0
     private var info: Viewer.Info? = null
     private var isBound = false
     private var keepFirst = false
@@ -113,7 +112,6 @@ class PlayerActivity : ComponentActivity() {
             modPlayer = binder.getService()
 
             isBound = true
-            flipperPage = 0
 
             if (fileList != null && fileList!!.isNotEmpty()) {
                 // Start new queue
@@ -316,8 +314,6 @@ class PlayerActivity : ComponentActivity() {
         if (PlayerService.isLoaded) {
             canChangeViewer = true
         }
-
-        setResult(RESULT_OK) // TODO: Needed anymore?
     }
 
     override fun onStop() {
@@ -517,9 +513,9 @@ class PlayerActivity : ComponentActivity() {
         viewModel.setSeekMax(time / 100F)
 
         with(findViewById<ViewFlipper>(R.id.title_flipper)) {
-            flipperPage = (flipperPage + 1) % 2
-            infoName[flipperPage].text = modPlayer.getModName()
-            infoType[flipperPage].text = Xmp.getModType()
+            viewModel.setFlipperPage((viewModel.flipperPage.value!! + 1) % 2)
+            infoName[viewModel.flipperPage.value!!].text = modPlayer.getModName()
+            infoType[viewModel.flipperPage.value!!].text = Xmp.getModType()
             if (skipToPrevious) {
                 setInAnimation(this@PlayerActivity, R.anim.slide_in_left_slow)
                 setOutAnimation(this@PlayerActivity, R.anim.slide_out_right_slow)

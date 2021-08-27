@@ -6,6 +6,12 @@ import androidx.lifecycle.ViewModel
 
 class PlayerActivityViewModel : ViewModel() {
 
+    private val _flipperPage = MutableLiveData(0)
+    val flipperPage: LiveData<Int> = _flipperPage
+    fun setFlipperPage(value: Int) {
+        _flipperPage.value = value
+    }
+
     private val _infoSpeed = MutableLiveData<String>()
     val infoSpeed: LiveData<String> = _infoSpeed
     fun setInfoSpeed(value: String) {
