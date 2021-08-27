@@ -2,8 +2,8 @@ object Dependencies {
 
     const val kotlinVersion = "1.5.21"
 
-    // https://developer.android.com/ndk/downloads#stable-downloads
-    const val ndkVersion = "22.1.7171670"
+    // https://developer.android.com/ndk/downloads#lts-downloads
+    const val ndkVersion = "23.0.7599858"
 
     // https://github.com/JLLeitschuh/ktlint-gradle/releases
     const val ktlintGradle = "10.1.0"
@@ -13,25 +13,27 @@ object Dependencies {
 
     // https://github.com/google/accompanist/releases
     object Accompanist {
-        private const val version = "0.16.1"
+        private const val version = "0.17.0"
         const val insets = "com.google.accompanist:accompanist-insets:$version"
         const val controller = "com.google.accompanist:accompanist-systemuicontroller:$version"
     }
 
+    // https://mvnrepository.com/artifact/androidx.media/media
+    // https://mvnrepository.com/artifact/androidx.preference/preference-ktx
+    // https://mvnrepository.com/artifact/androidx.recyclerview/recyclerview
     object SupportLibs {
         const val media = "androidx.media:media:1.4.1"
         const val preferenceKtx = "androidx.preference:preference-ktx:1.1.1"
         const val recyclerview = "androidx.recyclerview:recyclerview:1.2.1"
-        @Deprecated("Moving to compose")
-        const val constraintLayout = "androidx.constraintlayout:constraintlayout:2.1.0"
     }
 
     // Feature roadmap: https://developer.android.com/jetpack/androidx/compose-roadmap
     // Versions: https://developer.android.com/jetpack/androidx/releases/compose#versions
     object Compose {
-        private const val version = "1.0.1"
+        private const val version = "1.1.0-alpha01" // "1.0.1"
         const val activity = "androidx.activity:activity-compose:1.3.1"
         const val animation = "androidx.compose.animation:animation:$version"
+        const val graphics = "androidx.compose.animation:animation-graphics:$version"
         const val constraint = "androidx.constraintlayout:constraintlayout-compose:1.0.0-beta02"
         const val foundation = "androidx.compose.foundation:foundation:$version"
         const val iconsCore = "androidx.compose.material:material-icons-core:$version"

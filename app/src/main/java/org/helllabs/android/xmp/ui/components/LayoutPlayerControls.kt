@@ -1,5 +1,7 @@
 package org.helllabs.android.xmp.ui.components
 
+import androidx.compose.animation.graphics.ExperimentalAnimationGraphicsApi
+import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
@@ -116,6 +118,7 @@ fun PlayerTimeBar(
     }
 }
 
+@OptIn(ExperimentalAnimationGraphicsApi::class) // Animated Vector Icon
 @Composable
 fun PlayerButtons(
     modifier: Modifier = Modifier,
@@ -129,7 +132,7 @@ fun PlayerButtons(
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
+        horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(onClick = { onStop() }) {
@@ -148,18 +151,24 @@ fun PlayerButtons(
                 tint = Color.White
             )
         }
-        // TODO: Animate Play Pause
         Surface(
             modifier = Modifier.size(50.dp),
             color = darkAccent,
             shape = CircleShape,
             elevation = 4.dp,
         ) {
-            val paused = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow
-            IconButton(onClick = { onPlay() }) {
+            val animIcon = animatedVectorResource(id = R.drawable.anim_pause_play)
+            var atEnd by remember { mutableStateOf(isPlaying) }
+
+            IconButton(
+                onClick = {
+                    onPlay()
+                    atEnd = !atEnd
+                }
+            ) {
                 Icon(
                     modifier = Modifier.scale(1.2f),
-                    imageVector = paused,
+                    painter = animIcon.painterFor(atEnd = atEnd),
                     contentDescription = stringResource(id = R.string.notif_play),
                     tint = Color.White
                 )

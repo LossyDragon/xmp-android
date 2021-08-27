@@ -96,13 +96,13 @@ dependencies {
     implementation(kotlin("stdlib-jdk8", Dependencies.kotlinVersion))
 
     // Android Support Libs
-    implementation(Dependencies.SupportLibs.constraintLayout)
     implementation(Dependencies.SupportLibs.media)
     implementation(Dependencies.SupportLibs.preferenceKtx)
     implementation(Dependencies.SupportLibs.recyclerview)
 
     implementation(Dependencies.Compose.activity)
     implementation(Dependencies.Compose.animation)
+    implementation(Dependencies.Compose.graphics)
     implementation(Dependencies.Compose.constraint)
     implementation(Dependencies.Compose.foundation)
     implementation(Dependencies.Compose.iconsCore)
