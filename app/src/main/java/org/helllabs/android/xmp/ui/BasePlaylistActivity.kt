@@ -18,7 +18,6 @@ import org.helllabs.android.xmp.util.toast
 
 abstract class BasePlaylistActivity : ComponentActivity() {
 
-    private lateinit var mModPlayer: PlayerService
     private var mAddList: MutableList<String>? = null
 
     protected abstract val isShuffleMode: Boolean
@@ -28,8 +27,9 @@ abstract class BasePlaylistActivity : ComponentActivity() {
     private val connection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             val binder = service as PlayerService.PlayerBinder
-            mModPlayer = binder.getService()
-            mModPlayer.add(mAddList!!.toList())
+
+            val modPlayer = binder.getService()
+            modPlayer.add(mAddList!!.toList())
             unbindService(this)
         }
 
@@ -60,10 +60,7 @@ abstract class BasePlaylistActivity : ComponentActivity() {
                 // Play selected file
                 2 -> playModule(filePath.toList())
                 // Enqueue selected file
-                3 -> {
-                    addToQueue(filePath.toList())
-                    toast(R.string.msg_queue_added)
-                }
+                3 -> addToQueue(filePath.toList())
             }
         } else {
             toast(R.string.msg_file_unrecognized)
@@ -88,7 +85,7 @@ abstract class BasePlaylistActivity : ComponentActivity() {
     }
 
     protected fun addToQueue(list: List<String>) {
-        val realList: MutableList<String> = mutableListOf()
+        val valid: MutableList<String> = mutableListOf()
         val invalid: MutableList<String> = mutableListOf()
 
         if (list.isEmpty()) {
@@ -98,27 +95,30 @@ abstract class BasePlaylistActivity : ComponentActivity() {
 
         list.forEach {
             if (Xmp.testModule(it)) {
-                realList.add(it)
+                valid.add(it)
             } else {
                 invalid.add(it)
             }
         }
 
-        if (invalid.isNotEmpty()) {
-            toast(R.string.msg_only_valid_files_sent)
+        if (valid.isEmpty()) {
+            toast(R.string.msg_no_valid_files_sent)
+            logW("realist is empty when adding to queue")
+            return
         }
 
-        if (realList.isEmpty()) {
-            logW("realist is empty when adding to queue")
+        if (invalid.isNotEmpty()) {
+            toast(R.string.msg_only_valid_files_sent)
+            logW("Invalid list to player: $invalid")
             return
         }
 
         if (PlayerService.isPlayerAlive.value == true) {
             val service = Intent(this, PlayerService::class.java)
-            mAddList = realList
+            mAddList = valid
             bindService(service, connection, BIND_AUTO_CREATE)
         } else {
-            playModule(realList)
+            playModule(valid)
         }
     }
 }
