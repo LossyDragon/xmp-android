@@ -209,7 +209,8 @@ class ChannelViewer(context: Context, background: Int) : Viewer(context, backgro
         val n = findScope(x, y)
         if (n >= 0) {
             try {
-                Xmp.mute(n, if (isMuted[n]) 0 else 1)
+                val mute = if (isMuted[n]) 0 else 1
+                Xmp.mute(n, mute)
                 isMuted[n] = isMuted[n] xor true
             } catch (e: RemoteException) {
                 logE("Can't mute channel $n")

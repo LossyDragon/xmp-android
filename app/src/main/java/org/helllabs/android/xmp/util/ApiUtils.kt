@@ -41,6 +41,8 @@ object Api {
         get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
     val isAtLeastR: Boolean
         get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
+    val isAtLeastS: Boolean
+        get() = Build.VERSION.SDK_INT >= 31
 }
 
 /**

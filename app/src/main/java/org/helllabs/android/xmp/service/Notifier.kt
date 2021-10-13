@@ -68,19 +68,19 @@ class Notifier(
     }
 
     fun notify(title: String, info: String, index: Int, type: Int) {
-
         val indexText = formatIndex(index)
         var notifyTitle: String = title
         var notifyInfo: String = info
 
-        if (title.trim { it <= ' ' }.isEmpty())
+        if (title.trim().isEmpty())
             notifyTitle = service.getString(R.string.notif_unknown)
 
         if (type == TYPE_PAUSE)
             notifyInfo = service.getString(R.string.notif_paused)
 
+        val actions = if (Api.isAtLeastS) intArrayOf(0, 2, 3) else intArrayOf(1, 2, 3)
         val mediaStyle = androidx.media.app.NotificationCompat.MediaStyle()
-            .setShowActionsInCompactView(1, 2, 3)
+            .setShowActionsInCompactView(*actions)
             .setShowCancelButton(true)
 
         // Preference to use the new MediaStyle notification or classic notification
@@ -94,6 +94,7 @@ class Notifier(
             .setContentTitle(notifyTitle)
             .setContentText(notifyInfo)
             .setLargeIcon(service.getIconBitmap())
+            .setOngoing(type == TYPE_TICKER)
 
         // Action Builders
         notification.addAction(prevAction) // 0

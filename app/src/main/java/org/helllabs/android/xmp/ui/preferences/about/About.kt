@@ -80,7 +80,6 @@ private fun AboutLayout(
                     fontFamily = michromaFontFamily,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    // IDK how I found this "Clip to Padding" hack...
                     style = TextStyle(baselineShift = BaselineShift(.3f)),
                 )
                 AboutText(stringResource(id = R.string.about_version, appVersion))

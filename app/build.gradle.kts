@@ -10,7 +10,7 @@ plugins {
 }
 
 android {
-    compileSdk = 30
+    compileSdk = 31
     ndkVersion = Dependencies.ndkVersion
 
     defaultConfig {
@@ -163,14 +163,16 @@ tasks {
 
     val fetchXmp by registering(Exec::class) {
         val args = "rm -rf libxmp && git clone https://github.com/libxmp/libxmp.git && exit"
-        workingDir(File("../app/src/main/cpp"))
+        val file = File("../app/src/main/cpp")
+        workingDir(file)
         commandLine("bash", "-c", args)
     }
 
     val buildXmp by registering(Exec::class) {
         val args = "autoconf && ./configure && make && make check && " +
             "(cd test-dev; autoconf && ./configure && make) && exit"
-        workingDir(File("../app/src/main/cpp/libxmp"))
+        val file = File("../app/src/main/cpp/libxmp")
+        workingDir(file)
         commandLine("bash", "-c", args)
     }
 

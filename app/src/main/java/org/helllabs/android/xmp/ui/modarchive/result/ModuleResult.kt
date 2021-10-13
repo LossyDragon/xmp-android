@@ -241,11 +241,13 @@ private fun ModuleResultLayout(
             when (viewModelState) {
                 ModuleState.Cancelled -> {
                     val msg = stringResource(id = R.string.msg_download_cancelled)
-                    scope.launch {
-                        scaffoldState.snackbarHostState.showSnackbar(
-                            message = msg,
-                            actionLabel = context.getString(R.string.ok)
-                        )
+                    SideEffect {
+                        scope.launch {
+                            scaffoldState.snackbarHostState.showSnackbar(
+                                message = msg,
+                                actionLabel = context.getString(R.string.ok)
+                            )
+                        }
                     }
                     isLoading = false
                 }
@@ -263,11 +265,13 @@ private fun ModuleResultLayout(
                     buttonText = stringResource(id = R.string.button_downloading)
                 }
                 is ModuleState.DownloadError -> {
-                    scope.launch {
-                        scaffoldState.snackbarHostState.showSnackbar(
-                            message = viewModelState.downloadError,
-                            actionLabel = context.getString(R.string.ok)
-                        )
+                    SideEffect {
+                        scope.launch {
+                            scaffoldState.snackbarHostState.showSnackbar(
+                                message = viewModelState.downloadError,
+                                actionLabel = context.getString(R.string.ok)
+                            )
+                        }
                     }
                     isLoading = false
                 }
@@ -333,10 +337,7 @@ private fun ModuleResultLayout(
                 if (!isLoading) {
                     context.logD("State: isLoading: $isLoading for Buttons")
                     buttonText =
-                        if (moduleExists)
-                            stringResource(id = R.string.play)
-                        else
-                            stringResource(id = R.string.download)
+                        stringResource(id = if (moduleExists) R.string.play else R.string.download)
                     if (isUnSupported)
                         buttonText = stringResource(id = R.string.button_download_unsupported)
                 }
