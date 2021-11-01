@@ -30,7 +30,7 @@
         tools:replace="supportsRtl">
 
         <activity
-            android:name="org.helllabs.android.xmp.ui.playlistMenu.PlaylistMenu"
+            android:name="org.helllabs.android.xmp.ui.playlists.PlaylistMenu"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:exported="true"
             android:theme="@style/ComposeTheme">
@@ -42,8 +42,8 @@
         </activity>
 
         <activity
-            android:name="org.helllabs.android.xmp.ui.playlistMenu.PlaylistEdit"
-            android:parentActivityName="org.helllabs.android.xmp.ui.playlistMenu.PlaylistMenu"
+            android:name="org.helllabs.android.xmp.ui.playlists.PlaylistEdit"
+            android:parentActivityName="org.helllabs.android.xmp.ui.playlists.PlaylistMenu"
             android:theme="@style/ComposeTheme" />
 
         <activity
@@ -203,7 +203,7 @@
         <activity
             android:name="org.helllabs.android.xmp.ui.filelist.FilelistActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:parentActivityName="org.helllabs.android.xmp.ui.playlistMenu.PlaylistMenu"
+            android:parentActivityName="org.helllabs.android.xmp.ui.playlists.PlaylistMenu"
             android:theme="@style/ComposeTheme" />
 
         <activity

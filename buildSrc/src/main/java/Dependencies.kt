@@ -9,13 +9,14 @@ object Dependencies {
     const val ktlintGradle = "10.2.0"
 
     // https://github.com/google/dagger/releases
-    const val hiltAndroid = "2.39.1"
+    const val hiltAndroid = "2.40"
 
     // https://github.com/google/accompanist/releases
     object Accompanist {
-        private const val version = "0.19.0"
+        private const val version = "0.21.0-beta"
         const val insets = "com.google.accompanist:accompanist-insets:$version"
         const val controller = "com.google.accompanist:accompanist-systemuicontroller:$version"
+        const val permissions = "com.google.accompanist:accompanist-permissions:$version"
     }
 
     // https://mvnrepository.com/artifact/androidx.media/media
@@ -41,6 +42,7 @@ object Dependencies {
         const val lifecycle = "androidx.lifecycle:lifecycle-viewmodel-compose:1.0.0-alpha07"
         const val livedata = "androidx.compose.runtime:runtime-livedata:$version"
         const val material = "androidx.compose.material:material:$version"
+        const val material3 = "androidx.compose.material3:material3:1.0.0-alpha01"
         const val tooling = "androidx.compose.ui:ui-tooling:$version"
         const val ui = "androidx.compose.ui:ui:$version"
     }

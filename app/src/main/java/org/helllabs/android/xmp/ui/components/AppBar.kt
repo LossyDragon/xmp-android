@@ -1,13 +1,14 @@
 package org.helllabs.android.xmp.ui.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.SmallTopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,12 +30,60 @@ import org.helllabs.android.xmp.ui.theme.michromaFontFamily
 import org.helllabs.android.xmp.ui.theme.themedText
 
 @Composable
+fun XmpAppBar3(
+    modifier: Modifier = Modifier,
+    scrollBehavior: TopAppBarScrollBehavior? = null,
+    onNavIconPressed: (() -> Unit)? = null,
+    title: @Composable () -> Unit,
+    actions: @Composable RowScope.() -> Unit = {}
+) {
+    val backgroundColors = TopAppBarDefaults.centerAlignedTopAppBarColors()
+    val backgroundColor = backgroundColors.containerColor(
+        scrollFraction = scrollBehavior?.scrollFraction ?: 0f
+    ).value
+    val foregroundColors = TopAppBarDefaults.smallTopAppBarColors(
+        containerColor = Color.Transparent,
+        scrolledContainerColor = Color.Transparent
+    )
+
+    Box(modifier = Modifier.background(backgroundColor)) {
+        SmallTopAppBar(
+            modifier = modifier,
+            actions = actions,
+            title = title,
+            scrollBehavior = scrollBehavior,
+            colors = foregroundColors,
+            navigationIcon = {
+                onNavIconPressed?.let {
+                    IconButton(
+                        modifier = Modifier
+                            .size(64.dp)
+                            .clickable(onClick = onNavIconPressed)
+                            .padding(16.dp),
+                        onClick = { onNavIconPressed() }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Go Back"
+                        )
+                    }
+                }
+            }
+        )
+    }
+}
+
+@Composable
 fun AppBar(
     title: String,
     navIconClick: (() -> Unit)? = null,
     menuActions: @Composable RowScope.() -> Unit = {},
 ) {
-    Column(Modifier.fillMaxWidth().navigationBarsPadding(bottom = false)) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .navigationBarsPadding(bottom = false)
+    ) {
         TopAppBar(
             modifier = Modifier.statusBarsPadding(),
             backgroundColor = Color.Transparent,
@@ -63,7 +112,11 @@ fun AppBar(
     menuActions: @Composable RowScope.() -> Unit = {},
     titleClick: (() -> Unit)? = null,
 ) {
-    Column(Modifier.fillMaxWidth().navigationBarsPadding(bottom = false)) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .navigationBarsPadding(bottom = false)
+    ) {
         TopAppBar(
             modifier = Modifier.statusBarsPadding(),
             backgroundColor = Color.Transparent,
@@ -77,19 +130,18 @@ fun AppBar(
 }
 
 @Composable
-private fun AppBarText(
-    appbarTitle: AnnotatedString,
-    titleClick: (() -> Unit)?
+fun AppBarText(
+    title: AnnotatedString,
+    titleClick: (() -> Unit)? = {}
 ) {
     Row {
         Text(
             modifier = Modifier
-                .fillMaxWidth()
                 .clickable(
                     enabled = titleClick != null,
                     onClick = { titleClick?.invoke() }
                 ),
-            text = appbarTitle,
+            text = title,
             textAlign = TextAlign.Start,
             fontFamily = michromaFontFamily,
             fontSize = 18.sp,
@@ -103,6 +155,18 @@ private fun AppBarText(
 /************
  * Previews *
  ************/
+
+@Preview(name = "Material 3 Light/Dark Theme")
+@Composable
+private fun XmpAppBar3Preview() {
+    XmpTheme {
+        XmpAppBar3(
+            title = { AppBarText(themedText(R.string.app_name)) },
+            onNavIconPressed = {},
+            actions = { PlaylistMenuItems({}, {}) }
+        )
+    }
+}
 
 @Preview(name = "Light/Dark Theme")
 @Composable

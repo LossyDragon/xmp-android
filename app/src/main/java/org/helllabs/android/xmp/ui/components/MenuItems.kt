@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -23,12 +24,14 @@ fun PlaylistMenuItems(
     IconButton(onClick = { downloadClick() }) {
         Icon(
             imageVector = Icons.Default.Download,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
             contentDescription = stringResource(id = R.string.download)
         )
     }
     IconButton(onClick = { settingsClick() }) {
         Icon(
             imageVector = Icons.Default.Settings,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
             contentDescription = stringResource(id = R.string.settings)
         )
     }

@@ -11,7 +11,7 @@ import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.InsertDriveFile
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.outlined.FolderOpen
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -61,11 +61,14 @@ fun ItemPlaylistCard(
         }
     }
 
-    Card(
+    // TODO:  Material 3 Elevated
+    androidx.compose.material3.Surface(
         modifier = Modifier
-            .padding(6.dp),
-        shape = MaterialTheme.shapes.large,
-        elevation = 4.dp,
+            .padding(start = 16.dp, end = 16.dp, top = 3.dp, bottom = 3.dp),
+        shape = RoundedCornerShape(8.dp),
+        color = androidx.compose.material3.MaterialTheme.colorScheme.inverseOnSurface,
+        border = null,
+        shadowElevation = 4.dp,
     ) {
         ListItem(
             modifier = Modifier
@@ -77,14 +80,14 @@ fun ItemPlaylistCard(
                     },
                 ),
             text = {
-                Text(
+                androidx.compose.material3.Text(
                     text = playlist.name!!,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
             },
             secondaryText = {
-                Text(
+                androidx.compose.material3.Text(
                     modifier = Modifier.padding(bottom = 10.dp),
                     text = playlist.comment!!,
                     maxLines = 3,
@@ -92,7 +95,7 @@ fun ItemPlaylistCard(
                 )
             },
             icon = {
-                Icon(
+                androidx.compose.material3.Icon(
                     modifier = Modifier.padding(top = 8.dp, start = 8.dp),
                     imageVector = cardIcon,
                     contentDescription = null

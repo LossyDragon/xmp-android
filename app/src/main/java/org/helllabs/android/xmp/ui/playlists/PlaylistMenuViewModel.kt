@@ -1,4 +1,4 @@
-package org.helllabs.android.xmp.ui.playlistMenu
+package org.helllabs.android.xmp.ui.playlists
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

@@ -1,4 +1,4 @@
-package org.helllabs.android.xmp.ui.playlistMenu
+package org.helllabs.android.xmp.ui.playlists
 
 import android.app.Activity
 import android.app.Activity.RESULT_OK

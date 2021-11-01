@@ -110,11 +110,18 @@ dependencies {
     implementation(Dependencies.Compose.lifecycle)
     implementation(Dependencies.Compose.livedata)
     implementation(Dependencies.Compose.material)
+    implementation(Dependencies.Compose.material3)
     implementation(Dependencies.Compose.tooling)
     implementation(Dependencies.Compose.ui)
 
+    // Material You
+    implementation("androidx.compose.ui:ui-util:1.1.0-beta01")
+    implementation("com.google.android.material:material:1.5.0-alpha05")
+    implementation("androidx.compose.material3:material3:1.0.0-alpha01")
+
     implementation(Dependencies.Accompanist.insets)
     implementation(Dependencies.Accompanist.controller)
+    implementation(Dependencies.Accompanist.permissions)
 
     // AIDL-like replacement
     implementation(Dependencies.EventBus.eventBus)
