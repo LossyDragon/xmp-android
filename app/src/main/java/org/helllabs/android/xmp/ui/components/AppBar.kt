@@ -34,7 +34,8 @@ fun XmpAppBar3(
     modifier: Modifier = Modifier,
     scrollBehavior: TopAppBarScrollBehavior? = null,
     onNavIconPressed: (() -> Unit)? = null,
-    title: @Composable () -> Unit,
+    title: @Composable (() -> Unit)? = null,
+    titleText: String? = null,
     actions: @Composable RowScope.() -> Unit = {}
 ) {
     val backgroundColors = TopAppBarDefaults.centerAlignedTopAppBarColors()
@@ -50,7 +51,15 @@ fun XmpAppBar3(
         SmallTopAppBar(
             modifier = modifier,
             actions = actions,
-            title = title,
+            title = {
+                titleText?.let {
+                    AppBarText(buildAnnotatedString { append(titleText) })
+                }
+                title?.let {
+                    title()
+                }
+
+            },
             scrollBehavior = scrollBehavior,
             colors = foregroundColors,
             navigationIcon = {
@@ -135,7 +144,7 @@ fun AppBarText(
     titleClick: (() -> Unit)? = {}
 ) {
     Row {
-        Text(
+        androidx.compose.material3.Text(
             modifier = Modifier
                 .clickable(
                     enabled = titleClick != null,

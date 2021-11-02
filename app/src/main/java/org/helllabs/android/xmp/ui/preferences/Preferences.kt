@@ -1,5 +1,6 @@
 package org.helllabs.android.xmp.ui.preferences
 
+import android.content.res.Configuration
 import android.os.Bundle
 import android.os.Environment
 import android.os.Environment.MEDIA_MOUNTED
@@ -8,49 +9,72 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.Scaffold
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.viewinterop.AndroidView
-import java.io.File
+import com.google.accompanist.insets.ProvideWindowInsets
+import com.google.accompanist.insets.statusBarsPadding
+import com.google.accompanist.insets.systemBarsPadding
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.ui.components.AppBar
-import org.helllabs.android.xmp.ui.theme.XmpTheme
+import org.helllabs.android.xmp.ui.components.XmpAppBar3
+import org.helllabs.android.xmp.ui.theme.XmpTheme3
 import org.helllabs.android.xmp.util.logE
+import java.io.File
 
 class Preferences : AppCompatActivity() {
 
+    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
-            XmpTheme {
-                Scaffold(
-                    topBar = {
-                        AppBar(
-                            title = stringResource(id = R.string.pref_category_preferences),
-                            navIconClick = { onBackPressed() },
+            ProvideWindowInsets(consumeWindowInsets = false) {
+                val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+
+                XmpTheme3 {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .nestedScroll(scrollBehavior.nestedScrollConnection)
+                    ) {
+                        val rotation = LocalConfiguration.current.orientation
+                        val appBarModifier =
+                            if (rotation == Configuration.ORIENTATION_PORTRAIT)
+                                Modifier.statusBarsPadding()
+                            else Modifier.systemBarsPadding()
+
+                        XmpAppBar3(
+                            modifier = appBarModifier,
+                            scrollBehavior = scrollBehavior,
+                            onNavIconPressed = { onBackPressed() },
+                            titleText = stringResource(id = R.string.pref_category_preferences),
+                        )
+
+                        AndroidView(
+                            modifier = Modifier.fillMaxSize(),
+                            factory = { context ->
+                                FrameLayout(context).apply {
+                                    id = R.id.composeFrameLayout
+                                    layoutParams = ViewGroup.LayoutParams(
+                                        ViewGroup.LayoutParams.MATCH_PARENT,
+                                        ViewGroup.LayoutParams.MATCH_PARENT
+                                    )
+                                }.also {
+                                    supportFragmentManager
+                                        .beginTransaction()
+                                        .replace(R.id.composeFrameLayout, PreferencesFragment())
+                                        .commit()
+                                }
+                            },
                         )
                     }
-                ) {
-                    AndroidView(
-                        modifier = Modifier.fillMaxSize(),
-                        factory = { context ->
-                            FrameLayout(context).apply {
-                                id = R.id.composeFrameLayout
-                                layoutParams = ViewGroup.LayoutParams(
-                                    ViewGroup.LayoutParams.MATCH_PARENT,
-                                    ViewGroup.LayoutParams.MATCH_PARENT
-                                )
-                            }.also {
-                                supportFragmentManager
-                                    .beginTransaction()
-                                    .replace(R.id.composeFrameLayout, PreferencesFragment())
-                                    .commit()
-                            }
-                        },
-                    )
                 }
             }
         }

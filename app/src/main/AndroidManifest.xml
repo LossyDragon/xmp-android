@@ -259,7 +259,7 @@
         <!-- Preferences -->
         <activity
             android:name="org.helllabs.android.xmp.ui.preferences.Preferences"
-            android:theme="@style/CompatComposeTheme" />
+            android:theme="@style/ComposeTheme" />
 
         <activity
             android:name="org.helllabs.android.xmp.ui.preferences.about.ListFormats"

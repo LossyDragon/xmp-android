@@ -1,19 +1,26 @@
 package org.helllabs.android.xmp.ui.preferences.about
 
+import android.content.res.Configuration
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.os.Bundle
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Divider
-import androidx.compose.material.Scaffold
-import androidx.compose.material.Text
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -23,17 +30,20 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
+import com.google.accompanist.insets.ProvideWindowInsets
 import com.google.accompanist.insets.navigationBarsPadding
+import com.google.accompanist.insets.statusBarsPadding
+import com.google.accompanist.insets.systemBarsPadding
 import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
-import org.helllabs.android.xmp.ui.components.AppBar
-import org.helllabs.android.xmp.ui.theme.XmpTheme
+import org.helllabs.android.xmp.ui.components.XmpAppBar3
+import org.helllabs.android.xmp.ui.theme.XmpTheme3
 import org.helllabs.android.xmp.ui.theme.michromaFontFamily
 import org.helllabs.android.xmp.ui.theme.themedText
 import org.helllabs.android.xmp.util.logD
 
-class About : AppCompatActivity() {
+class About : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,52 +53,70 @@ class About : AppCompatActivity() {
 
         logD("onCreate")
         setContent {
-            AboutLayout(
-                onBack = { onBackPressed() },
-                appVersion = BuildConfig.VERSION_NAME,
-                xmpVersion = Xmp.getVersion()
-            )
+            ProvideWindowInsets(consumeWindowInsets = false) {
+                AboutLayout(
+                    onBack = { onBackPressed() },
+                    appVersion = BuildConfig.VERSION_NAME,
+                    xmpVersion = Xmp.getVersion()
+                )
+            }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AboutLayout(
     onBack: () -> Unit,
     appVersion: String,
     xmpVersion: String,
 ) {
-    XmpTheme {
-        Scaffold(
-            topBar = {
-                AppBar(
-                    title = stringResource(id = R.string.pref_about_title),
-                    navIconClick = { onBack() },
-                )
-            }
+    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+
+    XmpTheme3 {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
         ) {
-            Column(
-                modifier = Modifier
-                    .verticalScroll(rememberScrollState())
-                    .padding(16.dp)
-                    .navigationBarsPadding()
-            ) {
-                Text(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = themedText(R.string.app_name),
-                    textAlign = TextAlign.Center,
-                    fontFamily = michromaFontFamily,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    style = TextStyle(baselineShift = BaselineShift(.3f)),
-                )
-                AboutText(stringResource(id = R.string.about_version, appVersion))
-                AboutText(stringResource(id = R.string.about_author))
-                AboutText(stringResource(id = R.string.about_xmp, xmpVersion))
-                Divider(modifier = Modifier.padding(top = 8.dp, bottom = 8.dp))
-                AboutText(stringResource(id = R.string.changelog))
-                AboutText(stringResource(id = R.string.changelog_text), TextAlign.Start)
+            val rotation = LocalConfiguration.current.orientation
+            val appBarModifier =
+                if (rotation == Configuration.ORIENTATION_PORTRAIT)
+                    Modifier.statusBarsPadding()
+                else Modifier.systemBarsPadding()
+
+            XmpAppBar3(
+                modifier = appBarModifier,
+                scrollBehavior = scrollBehavior,
+                titleText = stringResource(id = R.string.pref_about_title),
+                onNavIconPressed = { onBack() }
+            )
+
+            Surface {
+                Column(
+                    modifier = Modifier
+                        .verticalScroll(rememberScrollState())
+                        .padding(16.dp)
+                        .navigationBarsPadding()
+                ) {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = themedText(R.string.app_name),
+                        textAlign = TextAlign.Center,
+                        fontFamily = michromaFontFamily,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        style = TextStyle(baselineShift = BaselineShift(.3f)),
+                    )
+                    AboutText(stringResource(id = R.string.about_version, appVersion))
+                    AboutText(stringResource(id = R.string.about_author))
+                    AboutText(stringResource(id = R.string.about_xmp, xmpVersion))
+                    Divider(modifier = Modifier.padding(top = 8.dp, bottom = 8.dp))
+                    AboutText(stringResource(id = R.string.changelog))
+                    AboutText(stringResource(id = R.string.changelog_text), TextAlign.Start)
+                }
             }
+
         }
     }
 }

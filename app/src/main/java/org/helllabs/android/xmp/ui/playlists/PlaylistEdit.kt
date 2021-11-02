@@ -171,10 +171,8 @@ private fun PlaylistEditContent(
             XmpAppBar3(
                 modifier = appBarModifier,
                 scrollBehavior = scrollBehavior,
-                title = {
-                    val title = if (isEditing) R.string.title_edit_playlist else appTitle
-                    Text(stringResource(id = title))
-                },
+                titleText = stringResource(
+                    id = if (isEditing) R.string.title_edit_playlist else appTitle),
                 onNavIconPressed = onBack,
             )
 
