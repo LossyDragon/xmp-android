@@ -55,14 +55,14 @@ fun XmpAppBar3(
             colors = foregroundColors,
             navigationIcon = {
                 onNavIconPressed?.let {
-                    IconButton(
+                    androidx.compose.material3.IconButton(
                         modifier = Modifier
                             .size(64.dp)
                             .clickable(onClick = onNavIconPressed)
                             .padding(16.dp),
                         onClick = { onNavIconPressed() }
                     ) {
-                        Icon(
+                        androidx.compose.material3.Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Go Back"
                         )

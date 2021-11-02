@@ -114,6 +114,8 @@ dependencies {
     implementation(Dependencies.Compose.tooling)
     implementation(Dependencies.Compose.ui)
 
+    implementation("io.github.vanpra.compose-material-dialogs:core:0.6.1")
+
     // Material You
     implementation("androidx.compose.ui:ui-util:1.1.0-beta01")
     implementation("com.google.android.material:material:1.5.0-alpha05")

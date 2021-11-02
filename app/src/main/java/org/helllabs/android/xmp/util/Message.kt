@@ -1,28 +1,24 @@
 package org.helllabs.android.xmp.util
 
 import android.content.Context
-import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.StringRes
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.AlertDialog
-import androidx.compose.material.TextButton
-import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.LifecycleOwner
 import com.afollestad.materialdialogs.MaterialDialog
-import com.afollestad.materialdialogs.customview.customView
-import com.afollestad.materialdialogs.customview.getCustomView
 import com.afollestad.materialdialogs.lifecycle.lifecycleOwner
+import com.vanpra.composematerialdialogs.*
 import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.ui.preferences.PrefManager
@@ -67,83 +63,72 @@ fun Context.yesNoDialog(
 }
 
 @Composable
-fun DialogShowChangelog(
-    onDismiss: () -> Unit
+fun DialogMessage(
+    dialogState: MaterialDialogState,
+    @StringRes title: Int,
+    @StringRes message: Int? = null,
+    messageText: String? = null,
+    @StringRes positiveButtonText: Int,
+    negativeButtonText: String? = null,
+    onPositiveButton: () -> Unit,
+    onNegativeButton: (() -> Unit)? = null,
+    onDismiss: () -> Unit = {},
 ) {
-    if (PrefManager.changelogVersion < BuildConfig.VERSION_CODE) {
-        // TODO show dialog
-    }
-
-    val dismiss = {
-        PrefManager.changelogVersion = BuildConfig.VERSION_CODE
-        onDismiss()
-    }
-
-    Dialog(onDismissRequest = dismiss) {
-        Surface(
-            modifier = Modifier
-                .fillMaxHeight(.90f)
-                .fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            color = Color.LightGray
-        ) {
-            Box(
-                contentAlignment = Alignment.Center
-            ) {
-                androidx.compose.material3.Text(
-                    modifier = Modifier.align(Alignment.TopCenter),
-                    text = "top"
-                )
-                androidx.compose.material3.Text("center")
-                androidx.compose.material3.Text(
-                    modifier = Modifier.align(Alignment.BottomCenter),
-                    text = "bottom"
-                )
+    val buttons: @Composable MaterialDialogButtons.() -> Unit = {
+        positiveButton(res = positiveButtonText) {
+            onPositiveButton()
+        }
+        onNegativeButton?.let {
+            negativeButton(text = negativeButtonText) {
+                onNegativeButton()
             }
         }
     }
 
-//    AlertDialog(
-//        title = {
-//            androidx.compose.material3.Text(text = "Changelog")
-//        },
-//        text = {
-//            val scrollState = rememberScrollState()
-//            val title = stringResource(R.string.changelog_title, BuildConfig.VERSION_NAME)
-//            Column(
-//                modifier = Modifier
-//                    .fillMaxSize(.75f)
-//                    .verticalScroll(scrollState),
-//                horizontalAlignment = Alignment.CenterHorizontally,
-//            ) {
-//                androidx.compose.material3.Text(title)
-//                Spacer(modifier = Modifier.height(8.dp))
-//                androidx.compose.material3.Text(stringResource(id = R.string.changelog_text))
-//            }
-//        },
-//        onDismissRequest = dismiss,
-//        confirmButton = {
-//            TextButton(onClick = dismiss) {
-//                androidx.compose.material3.Text(text = stringResource(id = R.string.ok))
-//            }
-//        }
-//    )
+    MaterialDialog(
+        shape = RoundedCornerShape(8.dp),
+        dialogState = dialogState,
+        onCloseRequest = { onDismiss() },
+        buttons = buttons
+    ) {
+        title(res = title)
+        if (message != null) message(res = message) else message(text = messageText)
+    }
 }
 
-fun Context.showChangeLog(lifecycleOwner: LifecycleOwner, block: () -> Unit) {
+@Composable
+fun DialogShowChangelog(
+    dialogState: MaterialDialogState,
+    block: () -> Unit,
+) {
+
+    val buttons: @Composable MaterialDialogButtons.() -> Unit = {
+        positiveButton(text = "Dismiss") {
+            block()
+        }
+    }
+
+    MaterialDialog(
+        shape = RoundedCornerShape(8.dp),
+        dialogState = dialogState,
+        onCloseRequest = {},
+        buttons = buttons
+    ) {
+        title(res = R.string.changelog)
+        customView {
+            val scrollState = rememberScrollState()
+            val changeLogBanner = stringResource(R.string.changelog_title, BuildConfig.VERSION_NAME)
+            Column(modifier = Modifier.verticalScroll(scrollState)) {
+                Text(changeLogBanner)
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(stringResource(id = R.string.changelog_text))
+            }
+        }
+    }
+
     if (PrefManager.changelogVersion < BuildConfig.VERSION_CODE) {
-        MaterialDialog(this).show {
-            lifecycleOwner(lifecycleOwner)
-            customView(R.layout.layout_changelog)
-            getCustomView().findViewById<TextView>(R.id.changelog_version_title).apply {
-                text = getString(R.string.changelog_title, BuildConfig.VERSION_NAME)
-            }
-            cancelOnTouchOutside(false)
-            title(text = "")
-            positiveButton(text = "Dismiss") {
-                PrefManager.changelogVersion = BuildConfig.VERSION_CODE
-                block()
-            }
+        SideEffect {
+            dialogState.show()
         }
     } else {
         block()

@@ -5,6 +5,7 @@ import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.*
+import android.content.res.Configuration.ORIENTATION_PORTRAIT
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.net.Uri
 import android.os.*
@@ -26,22 +27,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
-import com.afollestad.materialdialogs.MaterialDialog
-import com.afollestad.materialdialogs.input.input
-import com.afollestad.materialdialogs.lifecycle.lifecycleOwner
 import com.google.accompanist.insets.*
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.MultiplePermissionsState
 import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.vanpra.composematerialdialogs.*
+import java.util.*
+import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.model.PlaylistItem
 import org.helllabs.android.xmp.service.PlayerService
@@ -55,7 +56,6 @@ import org.helllabs.android.xmp.ui.preferences.Preferences
 import org.helllabs.android.xmp.ui.theme.XmpTheme3
 import org.helllabs.android.xmp.ui.theme.themedText
 import org.helllabs.android.xmp.util.*
-import java.util.*
 
 class PlaylistMenu : ComponentActivity() {
 
@@ -91,14 +91,6 @@ class PlaylistMenu : ComponentActivity() {
     public override fun onResume() {
         super.onResume()
 
-        if (!Preferences.checkStorage()) {
-            dialogMessage(
-                lifecycleOwner = this,
-                message = getString(R.string.error_storage),
-                block = { finish() }
-            )
-        }
-
         // Refresh for any external changes, like setting a new default path.
         viewModel.updateList()
     }
@@ -113,7 +105,15 @@ private fun PlaylistMenuScreen(
     permissionsState: MultiplePermissionsState,
 ) {
     val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
+
+    val playlistCreateState = rememberMaterialDialogState()
+    DialogMessage(
+        dialogState = playlistCreateState,
+        title = R.string.error,
+        message = R.string.error_create_playlist,
+        positiveButtonText = R.string.ok,
+        onPositiveButton = { }
+    )
 
     val resultAdd = rememberLauncherForActivityResult(StartActivityForResult()) {
         if (it.resultCode == AppCompatActivity.RESULT_OK) {
@@ -126,13 +126,29 @@ private fun PlaylistMenuScreen(
             val name = data.getStringExtra(PLAYLIST_EDIT_NAME)!!
             val comment = data.getStringExtra(PLAYLIST_EDIT_COMMENT)!!
             if (!viewModel.addPlaylist(name, comment)) {
-                context.dialogMessage(
-                    lifecycleOwner = lifecycleOwner,
-                    message = context.getString(R.string.error_create_playlist),
-                )
+                playlistCreateState.show()
             }
         }
     }
+
+    val playlistRenameState = rememberMaterialDialogState()
+    DialogMessage(
+        dialogState = playlistRenameState,
+        title = R.string.error,
+        message = R.string.error_rename_playlist,
+        positiveButtonText = R.string.ok,
+        onPositiveButton = { }
+    )
+
+    val playlistCommentState = rememberMaterialDialogState()
+    DialogMessage(
+        dialogState = playlistCommentState,
+        title = R.string.error,
+        message = R.string.error_edit_comment,
+        positiveButtonText = R.string.ok,
+        onPositiveButton = { }
+    )
+
     val resultEdit = rememberLauncherForActivityResult(StartActivityForResult()) {
         if (it.resultCode == ComponentActivity.RESULT_OK) {
             if (it.data == null) {
@@ -146,99 +162,105 @@ private fun PlaylistMenuScreen(
             val comment = data.getStringExtra(PLAYLIST_EDIT_COMMENT)!!
             val oldName = data.getStringExtra(PLAYLIST_EDIT_OLD_NAME)
 
-            when (viewModel.editPlaylist(id, name, comment, oldName)) {
-                0 -> Unit // Success
-                -1 -> context.dialogMessage(
-                    lifecycleOwner = lifecycleOwner,
-                    message = context.getString(R.string.error_rename_playlist),
-                )
-                -2 -> context.dialogMessage(
-                    lifecycleOwner = lifecycleOwner,
-                    message = context.getString(R.string.error_edit_comment),
-                )
+            val editResult = viewModel.editPlaylist(id, name, comment, oldName)
+            context.logD("Playlist Edit: $editResult")
+            when (editResult) {
+                PlaylistMenuViewModel.EEditPlaylist.SUCCESS -> Unit // Success
+                PlaylistMenuViewModel.EEditPlaylist.FAILED_PLAYLIST -> playlistRenameState.show()
+                PlaylistMenuViewModel.EEditPlaylist.FAILED_COMMENT -> playlistCommentState.show()
             }
         }
     }
-    val changeDir = {
-        val mediaPath = PrefManager.mediaPath
-        MaterialDialog(context).show {
-            lifecycleOwner(lifecycleOwner)
-            title(R.string.dialog_change_dir_title)
-            message(R.string.dialog_change_dir_msg)
-            input(
-                prefill = mediaPath,
-                waitForPositiveButton = true,
-                allowEmpty = false
-            ) { _, text ->
-                if (text != mediaPath) {
-                    PrefManager.mediaPath = text.toString()
-                    viewModel.updateList()
-                }
-            }
-            negativeButton(R.string.cancel)
+
+    val changeDirState = rememberMaterialDialogState()
+    ChangeDirDialog(dialogState = changeDirState, onNewPath = {
+        context.logD("Change Dir to $it")
+        PrefManager.mediaPath = it
+        viewModel.updateList()
+    })
+
+    val playlistErrorState = rememberMaterialDialogState()
+    DialogMessage(
+        dialogState = playlistErrorState,
+        title = R.string.error,
+        message = R.string.error_create_playlist,
+        positiveButtonText = R.string.ok,
+        onPositiveButton = { }
+    )
+
+    val playlistDirsErrorState = rememberMaterialDialogState()
+    DialogMessage(
+        dialogState = playlistDirsErrorState,
+        title = R.string.error,
+        message = R.string.error_datadir,
+        positiveButtonText = R.string.exit,
+        onPositiveButton = {
+            (context as Activity).finish()
         }
-    }
-    val onClick: (item: PlaylistItem, index: Int) -> Unit = { item, index ->
-        val intent: Intent =
-            if (index == 0) {
-                Intent(context, FilelistActivity::class.java)
-            } else {
-                Intent(context, PlaylistActivity::class.java).apply {
-                    putExtra("name", item.name)
-                }
-            }
-        context.launchActivity(intent)
-    }
-    val onLongClick: (item: PlaylistItem, index: Int) -> Unit = { item, index ->
-        if (index == 0) {
-            changeDir()
-        } else {
-            val intent = Intent(context, PlaylistEdit::class.java).apply {
-                putExtra(PLAYLIST_EDIT_ID, item.id)
-                putExtra(PLAYLIST_EDIT_NAME, item.name)
-                putExtra(PLAYLIST_EDIT_COMMENT, item.comment)
-            }
-            resultEdit.launch(intent)
-            (context as Activity).overridePendingTransition(
-                R.anim.slide_in_right,
-                R.anim.slide_out_left
-            )
-        }
-    }
+    )
+
+    val storageCheckState = rememberMaterialDialogState()
+    DialogMessage(
+        dialogState = storageCheckState,
+        title = R.string.error,
+        message = R.string.error_storage,
+        positiveButtonText = R.string.exit,
+        onPositiveButton = { (context as Activity).finish() }
+    )
 
     when {
         permissionsState.allPermissionsGranted -> {
             // All Perms Granted
 
-            //TODO
-            DialogShowChangelog {
-                println("Hello World!")
+            if (!Preferences.checkStorage()) {
+                storageCheckState.show()
             }
 
+            val changeLogState = rememberMaterialDialogState()
+            DialogShowChangelog(changeLogState) {
+                PrefManager.changelogVersion = BuildConfig.VERSION_CODE
 
-//            context.showChangeLog(lifecycleOwner) {
-//                val name = stringResource(R.string.empty_playlist)
-//                val comment = getString(R.string.empty_comment)
-//                when (viewModel.setupDataDir(name, comment)) {
-//                    0 -> Unit // Success
-//                    -1 -> dialogMessage(
-//                        lifecycleOwner = this,
-//                        message = getString(R.string.error_create_playlist),
-//                    )
-//                    -2 -> dialogMessage(
-//                        lifecycleOwner = this,
-//                        title = R.string.error,
-//                        message = getString(R.string.error_datadir),
-//                        positiveButtonText = R.string.exit,
-//                        block = { finish() }
-//                    )
-//                }
-//            }
+                val name = context.getString(R.string.empty_playlist)
+                val comment = context.getString(R.string.empty_comment)
+
+                when (viewModel.setupDataDir(name, comment)) {
+                    PlaylistMenuViewModel.ESetupDataDir.SUCCESS -> Unit
+                    PlaylistMenuViewModel.ESetupDataDir.PLAYLIST_ERROR ->
+                        playlistErrorState.show()
+                    PlaylistMenuViewModel.ESetupDataDir.MKDIRS_ERROR ->
+                        playlistDirsErrorState.show()
+                }
+            }
 
             PlaylistsContent(
                 playlistState = playlistState.value,
-                onClick = { item, index -> onClick(item, index) },
-                onLongClick = { item, index -> onLongClick(item, index) },
+                onClick = { item, index ->
+                    val intent: Intent =
+                        if (index == 0) {
+                            Intent(context, FilelistActivity::class.java)
+                        } else {
+                            Intent(context, PlaylistActivity::class.java).apply {
+                                putExtra("name", item.name)
+                            }
+                        }
+                    context.launchActivity(intent)
+                },
+                onLongClick = { item, index ->
+                    if (index == 0) {
+                        changeDirState.show()
+                    } else {
+                        val intent = Intent(context, PlaylistEdit::class.java).apply {
+                            putExtra(PLAYLIST_EDIT_ID, item.id)
+                            putExtra(PLAYLIST_EDIT_NAME, item.name)
+                            putExtra(PLAYLIST_EDIT_COMMENT, item.comment)
+                        }
+                        resultEdit.launch(intent)
+                        (context as Activity).overridePendingTransition(
+                            R.anim.slide_in_right,
+                            R.anim.slide_out_left
+                        )
+                    }
+                },
                 onFabClicked = {
                     val intent = Intent(context, PlaylistEdit::class.java)
                     resultAdd.launch(intent)
@@ -252,61 +274,25 @@ private fun PlaylistMenuScreen(
         permissionsState.shouldShowRationale ||
             !permissionsState.permissionRequested -> {
             // Need Permissions
-            XmpTheme3 {
-                Surface {
-                    Column(
-                        modifier = Modifier
-                            .padding(start = 16.dp, end = 16.dp)
-                            .fillMaxSize()
-                            .systemBarsPadding(),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        val appName = stringResource(id = R.string.app_name)
-                        Text("The following permissions is needed for\n$appName to run properly: \n")
-                        Text(getPermissionsText(permissionsState.revokedPermissions))
-                        Spacer(modifier = Modifier.height(32.dp))
-                        Button(
-                            onClick = { permissionsState.launchMultiplePermissionRequest() }
-                        ) {
-                            Text(
-                                text = "Request permission",
-                                color = Color.White
-                            )
-                        }
-                    }
-                }
+            val appName = stringResource(id = R.string.app_name)
+            PermissionsScreen(
+                message = "The following permissions is needed for\n$appName to run properly: \n",
+                permissionsList = getPermissionsText(permissionsState.revokedPermissions),
+                buttonText = "Request permission "
+            ) {
+                permissionsState.launchMultiplePermissionRequest()
             }
         }
         else -> {
             // Permissions most-likely permanently denied.
-            XmpTheme3 {
-                Surface {
-                    Column(
-                        modifier = Modifier
-                            .padding(start = 16.dp, end = 16.dp)
-                            .fillMaxSize()
-                            .systemBarsPadding(),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        Text("Permissions were denied.\nPlease manually grant permissions in Settings.\n")
-                        Text(getPermissionsText(permissionsState.revokedPermissions))
-                        Spacer(modifier = Modifier.height(32.dp))
-                        Button(
-                            onClick = {
-                                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                                intent.data = Uri.fromParts("package", context.packageName, null)
-                                context.startActivity(intent)
-                            }
-                        ) {
-                            Text(
-                                text = "Open Settings",
-                                color = Color.White
-                            )
-                        }
-                    }
-                }
+            PermissionsScreen(
+                message = "Permissions denied.\nPlease manually grant permissions in Settings.\n",
+                permissionsList = getPermissionsText(permissionsState.revokedPermissions),
+                buttonText = "Open Settings"
+            ) {
+                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                intent.data = Uri.fromParts("package", context.packageName, null)
+                context.startActivity(intent)
             }
         }
     }
@@ -330,8 +316,13 @@ private fun PlaylistsContent(
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
         ) {
             // Top App Bar
+            val rotation = LocalConfiguration.current.orientation
+            val appBarModifier =
+                if (rotation == ORIENTATION_PORTRAIT) Modifier.statusBarsPadding()
+                else Modifier.systemBarsPadding()
+
             PlaylistMenuAppBar(
-                modifier = Modifier.statusBarsPadding(),
+                modifier = appBarModifier,
                 scrollBehavior = scrollBehavior,
             )
 
@@ -383,7 +374,7 @@ private fun PlaylistsContent(
 
 @Composable
 private fun PlaylistMenuAppBar(
-    modifier: Modifier = Modifier,
+    modifier: Modifier,
     scrollBehavior: TopAppBarScrollBehavior? = null,
 ) {
     val context = LocalContext.current
@@ -412,9 +403,59 @@ private fun PlaylistMenuAppBar(
     )
 }
 
+@Composable
+private fun PermissionsScreen(
+    message: String,
+    permissionsList: AnnotatedString,
+    buttonText: String,
+    onClicked: () -> Unit
+) {
+    XmpTheme3 {
+        Surface {
+            Column(
+                modifier = Modifier
+                    .padding(start = 16.dp, end = 16.dp)
+                    .fillMaxSize()
+                    .systemBarsPadding(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(text = message)
+                Text(text = permissionsList)
+                Spacer(modifier = Modifier.height(32.dp))
+                Button(onClick = onClicked) {
+                    Text(
+                        text = buttonText,
+                        color = Color.White
+                    )
+                }
+            }
+        }
+    }
+}
+
 /****************************
  * Utility related functions
  ****************************/
+@Composable
+private fun ChangeDirDialog(
+    dialogState: MaterialDialogState,
+    onNewPath: (value: String) -> Unit,
+) {
+    val buttons: @Composable MaterialDialogButtons.() -> Unit = {
+        positiveButton(res = R.string.ok)
+        negativeButton(res = R.string.cancel)
+    }
+
+    val currentPath = PrefManager.mediaPath
+    MaterialDialog(dialogState = dialogState, buttons = buttons) {
+        title(res = R.string.dialog_change_dir_title)
+        message(res = R.string.dialog_change_dir_msg)
+        input(label = "New Directory", prefill = currentPath.toString()) { inputString ->
+            onNewPath(inputString)
+        }
+    }
+}
 
 private fun Context.launchActivity(intent: Intent) {
     startActivity(intent)
@@ -438,7 +479,6 @@ private fun startPlayerActivity(context: Context) {
         }
     }
 }
-
 
 @OptIn(ExperimentalPermissionsApi::class)
 private fun getPermissionsText(permissions: List<PermissionState>): AnnotatedString {

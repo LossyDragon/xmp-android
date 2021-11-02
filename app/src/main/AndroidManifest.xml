@@ -44,7 +44,8 @@
         <activity
             android:name="org.helllabs.android.xmp.ui.playlists.PlaylistEdit"
             android:parentActivityName="org.helllabs.android.xmp.ui.playlists.PlaylistMenu"
-            android:theme="@style/ComposeTheme" />
+            android:theme="@style/ComposeTheme"
+            android:windowSoftInputMode="adjustResize" />
 
         <activity
             android:name="org.helllabs.android.xmp.ui.player.PlayerActivity"

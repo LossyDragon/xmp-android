@@ -49,24 +49,24 @@ class PlaylistMenuViewModel : ViewModel() {
      *          -1 failed playlist
      *          -2 failed comment
      */
-    fun editPlaylist(id: Int, name: String, comment: String, oldName: String?): Int {
+    fun editPlaylist(id: Int, name: String, comment: String, oldName: String?): EEditPlaylist {
         when (id) {
             EditState.RESULT_DELETE_PLAYLIST.value -> PlaylistUtils.delete(name)
             EditState.RESULT_EDIT_PLAYLIST.value -> {
                 if (!PlaylistUtils.rename(oldName!!, name)) {
-                    return -1
+                    return EEditPlaylist.FAILED_PLAYLIST
                 }
 
                 val file = File(Preferences.DATA_DIR, name + PlaylistUtils.COMMENT_SUFFIX)
                 if (!PlaylistUtils.editComment(file, comment)) {
-                    return -2
+                    return EEditPlaylist.FAILED_COMMENT
                 }
             }
             else -> throw IllegalArgumentException("Edit playlist id was not correct: $id")
         }
 
         updateList()
-        return 0
+        return EEditPlaylist.SUCCESS
     }
 
     /**
@@ -77,23 +77,30 @@ class PlaylistMenuViewModel : ViewModel() {
      *          -1 failed making playlist
      *          -2 failed making dirs
      */
-    fun setupDataDir(name: String, comment: String): Int {
+    fun setupDataDir(name: String, comment: String): ESetupDataDir {
         if (!Preferences.DATA_DIR.isDirectory) {
             if (Preferences.DATA_DIR.mkdirs()) {
                 if (!PlaylistUtils.createEmptyPlaylist(name, comment))
-                    return -1
+                    return ESetupDataDir.PLAYLIST_ERROR
             } else {
-                return -2
+                return ESetupDataDir.MKDIRS_ERROR
             }
         }
 
-        updateList()
-        return 0
+        return ESetupDataDir.SUCCESS
     }
 
     sealed class PlaylistMenuState {
         object None : PlaylistMenuState()
         object Load : PlaylistMenuState()
         class Loaded(val list: List<PlaylistItem>) : PlaylistMenuState()
+    }
+
+    enum class ESetupDataDir {
+        SUCCESS, PLAYLIST_ERROR, MKDIRS_ERROR
+    }
+
+    enum class EEditPlaylist {
+        SUCCESS, FAILED_PLAYLIST, FAILED_COMMENT
     }
 }
