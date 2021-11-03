@@ -10,6 +10,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ListItem
@@ -20,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import dagger.hilt.android.AndroidEntryPoint
 import org.helllabs.android.xmp.R
@@ -125,7 +127,12 @@ private fun ArtistLayout(
                             )
                         }
                         is ArtistState.SoftError -> {
-                            ErrorLayout(resultState.softError)
+                            ErrorLayout(
+                                modifier = Modifier
+                                    .padding(start = 16.dp, end = 16.dp)
+                                    .fillMaxSize(),
+                                resultState.softError
+                            )
                         }
                         is ArtistState.SearchResult -> {
                             items = resultState.result.items.orEmpty()

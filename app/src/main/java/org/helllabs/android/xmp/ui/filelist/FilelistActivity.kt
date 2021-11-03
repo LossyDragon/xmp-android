@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.core.view.WindowCompat
@@ -445,7 +446,12 @@ private fun FileListLayout(
                                 )
                             }
                             FilelistViewModel.FileListState.NotFound -> {
-                                ErrorLayout("Directory not found")
+                                ErrorLayout(
+                                    modifier = Modifier
+                                        .padding(start = 16.dp, end = 16.dp)
+                                        .fillMaxSize(),
+                                    "Directory not found"
+                                )
                                 context.yesNoDialog(
                                     lifecycleOwner = LocalLifecycleOwner.current,
                                     title = stringResource(id = R.string.dialog_no_path_title),
@@ -479,12 +485,22 @@ private fun FileListLayout(
                                 )
                             }
                             is FilelistViewModel.FileListState.Error -> {
-                                ErrorLayout(state.error)
+                                ErrorLayout(
+                                    modifier = Modifier
+                                        .padding(start = 16.dp, end = 16.dp)
+                                        .fillMaxSize(),
+                                    state.error
+                                )
                             }
                             is FilelistViewModel.FileListState.Loaded -> {
                                 itemList = state.list
                                 if (itemList.isEmpty())
-                                    ErrorLayout(stringResource(id = R.string.msg_empty_directory))
+                                    ErrorLayout(
+                                        modifier = Modifier
+                                            .padding(start = 16.dp, end = 16.dp)
+                                            .fillMaxSize(),
+                                        stringResource(id = R.string.msg_empty_directory)
+                                    )
                             }
                         }
                     },

@@ -9,6 +9,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.Scaffold
 import androidx.compose.runtime.*
@@ -16,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import dagger.hilt.android.AndroidEntryPoint
 import org.helllabs.android.xmp.R
@@ -109,7 +111,12 @@ private fun SearchLayout(
                             )
                         }
                         is SearchResultState.SoftError -> {
-                            ErrorLayout(resultState.softError)
+                            ErrorLayout(
+                                modifier = Modifier
+                                    .padding(start = 16.dp, end = 16.dp)
+                                    .fillMaxSize(),
+                                resultState.softError
+                            )
                         }
                         is SearchResultState.SearchResult -> {
                             result = resultState.result.module.orEmpty()

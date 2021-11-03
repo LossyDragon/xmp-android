@@ -100,11 +100,17 @@ dependencies {
     implementation(Dependencies.SupportLibs.preferenceKtx)
     implementation(Dependencies.SupportLibs.recyclerview)
 
+    implementation(Dependencies.Material.materialComponents)
+
+    implementation(Dependencies.Compose.Accompanist.controller)
+    implementation(Dependencies.Compose.Accompanist.insets)
+    implementation(Dependencies.Compose.Accompanist.permissions)
+    implementation(Dependencies.Compose.Material3.material3)
     implementation(Dependencies.Compose.activity)
     implementation(Dependencies.Compose.animation)
-    implementation(Dependencies.Compose.graphics)
     implementation(Dependencies.Compose.constraint)
     implementation(Dependencies.Compose.foundation)
+    implementation(Dependencies.Compose.graphics)
     implementation(Dependencies.Compose.iconsCore)
     implementation(Dependencies.Compose.iconsExtended)
     implementation(Dependencies.Compose.lifecycle)
@@ -113,17 +119,7 @@ dependencies {
     implementation(Dependencies.Compose.material3)
     implementation(Dependencies.Compose.tooling)
     implementation(Dependencies.Compose.ui)
-
-    implementation("io.github.vanpra.compose-material-dialogs:core:0.6.1")
-
-    // Material You
-    implementation("androidx.compose.ui:ui-util:1.1.0-beta01")
-    implementation("com.google.android.material:material:1.5.0-alpha05")
-    implementation("androidx.compose.material3:material3:1.0.0-alpha01")
-
-    implementation(Dependencies.Accompanist.insets)
-    implementation(Dependencies.Accompanist.controller)
-    implementation(Dependencies.Accompanist.permissions)
+    implementation(Dependencies.Compose.uiUtil)
 
     // AIDL-like replacement
     implementation(Dependencies.EventBus.eventBus)
@@ -144,6 +140,7 @@ dependencies {
     kapt(Dependencies.TikXml.processor) { version { strictly(tikXmlVersion) } }
 
     // Material Dialogs
+    implementation(Dependencies.Compose.Dialogs.core)
     implementation(Dependencies.MaterialDialogs.core)
     implementation(Dependencies.MaterialDialogs.input)
     implementation(Dependencies.MaterialDialogs.lifecycle)

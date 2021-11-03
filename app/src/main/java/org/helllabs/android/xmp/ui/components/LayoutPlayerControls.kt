@@ -268,6 +268,9 @@ fun DetailsSheet(
             boxContent = {
                 if (list.isEmpty()) {
                     ErrorLayout(
+                        modifier = Modifier
+                            .padding(start = 16.dp, end = 16.dp)
+                            .fillMaxSize(),
                         message = stringResource(id = R.string.msg_no_subsongs),
                         color = Color.White
                     )

@@ -8,6 +8,7 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.Scaffold
 import androidx.compose.material.icons.Icons
@@ -18,6 +19,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import com.squareup.moshi.JsonAdapter
 import dagger.hilt.android.AndroidEntryPoint
@@ -119,7 +121,12 @@ private fun SearchHistoryLayout(
                 showScrollAt = 5,
                 boxContent = {
                     if (historyList.isEmpty()) {
-                        ErrorLayout(message = stringResource(id = R.string.history_no_items))
+                        ErrorLayout(
+                            modifier = Modifier
+                                .padding(start = 16.dp, end = 16.dp)
+                                .fillMaxSize(),
+                            message = stringResource(id = R.string.history_no_items)
+                        )
                     }
                 },
                 lazyContent = {

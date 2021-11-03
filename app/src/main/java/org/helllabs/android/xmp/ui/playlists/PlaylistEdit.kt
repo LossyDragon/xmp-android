@@ -172,7 +172,8 @@ private fun PlaylistEditContent(
                 modifier = appBarModifier,
                 scrollBehavior = scrollBehavior,
                 titleText = stringResource(
-                    id = if (isEditing) R.string.title_edit_playlist else appTitle),
+                    id = if (isEditing) R.string.title_edit_playlist else appTitle
+                ),
                 onNavIconPressed = onBack,
             )
 

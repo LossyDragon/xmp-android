@@ -9,6 +9,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ListItem
@@ -28,6 +29,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import com.google.accompanist.insets.ProvideWindowInsets
 import com.google.accompanist.insets.statusBarsPadding
@@ -65,7 +67,6 @@ class ListFormats : ComponentActivity() {
         }
     }
 }
-
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -108,7 +109,12 @@ private fun FormatsLayout(
                     showScrollAt = 15,
                     boxContent = {
                         if (formatsList.isEmpty())
-                            ErrorLayout(message = stringResource(id = R.string.msg_no_formats))
+                            ErrorLayout(
+                                modifier = Modifier
+                                    .padding(start = 16.dp, end = 16.dp)
+                                    .fillMaxSize(),
+                                message = stringResource(id = R.string.msg_no_formats)
+                            )
                     },
                     lazyContent = {
                         itemsIndexed(items = formatsList) { _, item ->

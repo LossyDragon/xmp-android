@@ -22,11 +22,11 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.google.accompanist.insets.ProvideWindowInsets
 import com.google.accompanist.insets.statusBarsPadding
 import com.google.accompanist.insets.systemBarsPadding
+import java.io.File
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.ui.components.XmpAppBar3
 import org.helllabs.android.xmp.ui.theme.XmpTheme3
 import org.helllabs.android.xmp.util.logE
-import java.io.File
 
 class Preferences : AppCompatActivity() {
 

@@ -26,6 +26,7 @@ import com.google.accompanist.insets.navigationBarsPadding
 import com.google.accompanist.insets.statusBarsPadding
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.ui.theme.XmpTheme
+import org.helllabs.android.xmp.ui.theme.XmpTheme3
 import org.helllabs.android.xmp.ui.theme.michromaFontFamily
 import org.helllabs.android.xmp.ui.theme.themedText
 
@@ -58,7 +59,6 @@ fun XmpAppBar3(
                 title?.let {
                     title()
                 }
-
             },
             scrollBehavior = scrollBehavior,
             colors = foregroundColors,
@@ -168,7 +168,7 @@ fun AppBarText(
 @Preview(name = "Material 3 Light/Dark Theme")
 @Composable
 private fun XmpAppBar3Preview() {
-    XmpTheme {
+    XmpTheme3 {
         XmpAppBar3(
             title = { AppBarText(themedText(R.string.app_name)) },
             onNavIconPressed = {},

@@ -11,27 +11,25 @@ object Dependencies {
     // https://github.com/google/dagger/releases
     const val hiltAndroid = "2.40"
 
-    // https://github.com/google/accompanist/releases
-    object Accompanist {
-        private const val version = "0.21.0-beta"
-        const val insets = "com.google.accompanist:accompanist-insets:$version"
-        const val controller = "com.google.accompanist:accompanist-systemuicontroller:$version"
-        const val permissions = "com.google.accompanist:accompanist-permissions:$version"
-    }
-
     // https://mvnrepository.com/artifact/androidx.media/media
     // https://mvnrepository.com/artifact/androidx.preference/preference-ktx
     // https://mvnrepository.com/artifact/androidx.recyclerview/recyclerview
     object SupportLibs {
-        const val media = "androidx.media:media:1.4.2"
+        const val media = "androidx.media:media:1.4.3"
         const val preferenceKtx = "androidx.preference:preference-ktx:1.1.1"
-        const val recyclerview = "androidx.recyclerview:recyclerview:1.2.1"
+        const val recyclerview = "androidx.recyclerview:recyclerview:1.2.0"
+    }
+
+    // https://mvnrepository.com/artifact/com.google.android.material/material
+    object Material {
+        private const val version = "1.5.0-alpha05"
+        const val materialComponents = "com.google.android.material:material:$version"
     }
 
     // Feature roadmap: https://developer.android.com/jetpack/androidx/compose-roadmap
     // Versions: https://developer.android.com/jetpack/androidx/releases/compose#versions
     object Compose {
-        private const val version = "1.1.0-alpha06" // "1.0.2"
+        private const val version = "1.1.0-beta02" // "1.0.2"
         const val activity = "androidx.activity:activity-compose:1.3.1"
         const val animation = "androidx.compose.animation:animation:$version"
         const val graphics = "androidx.compose.animation:animation-graphics:$version"
@@ -45,6 +43,27 @@ object Dependencies {
         const val material3 = "androidx.compose.material3:material3:1.0.0-alpha01"
         const val tooling = "androidx.compose.ui:ui-tooling:$version"
         const val ui = "androidx.compose.ui:ui:$version"
+        const val uiUtil = "androidx.compose.ui:ui-util:$version"
+
+        // https://github.com/google/accompanist/releases
+        object Accompanist {
+            private const val version = "0.21.0-beta"
+            const val insets = "com.google.accompanist:accompanist-insets:$version"
+            const val controller = "com.google.accompanist:accompanist-systemuicontroller:$version"
+            const val permissions = "com.google.accompanist:accompanist-permissions:$version"
+        }
+
+        // https://github.com/vanpra/compose-material-dialogs/releases
+        object Dialogs {
+            private const val version = "0.6.1"
+            const val core = "io.github.vanpra.compose-material-dialogs:core:$version"
+        }
+
+        // https://developer.android.com/jetpack/androidx/releases/compose-material3
+        object Material3 {
+            private const val version = "1.0.0-alpha01"
+            const val material3 = "androidx.compose.material3:material3:$version"
+        }
     }
 
     // https://mvnrepository.com/artifact/androidx.hilt/hilt-lifecycle-viewmodel
@@ -75,6 +94,7 @@ object Dependencies {
     }
 
     // https://github.com/afollestad/material-dialogs/releases
+    @Deprecated("Use Compose Dialogs")
     object MaterialDialogs {
         private const val version = "3.3.0"
         const val core = "com.afollestad.material-dialogs:core:$version"

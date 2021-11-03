@@ -1,20 +1,19 @@
 package org.helllabs.android.xmp.ui.playlistDetail
 
 import android.annotation.SuppressLint
+import android.content.res.Configuration
 import android.content.res.Configuration.UI_MODE_NIGHT_NO
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.os.Bundle
 import android.view.ViewGroup
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.Divider
-import androidx.compose.material.Scaffold
-import androidx.compose.material.Text
-import androidx.compose.material.rememberScaffoldState
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -24,17 +23,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.constraintlayout.compose.Dimension
 import androidx.core.view.WindowCompat
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.list.listItemsSingleChoice
-import com.google.accompanist.insets.navigationBarsPadding
+import com.google.accompanist.insets.*
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import java.io.IOException
-import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.model.PlaylistItem
 import org.helllabs.android.xmp.ui.BasePlaylistActivity
@@ -42,10 +39,12 @@ import org.helllabs.android.xmp.ui.components.*
 import org.helllabs.android.xmp.ui.playlistDetail.recyclerview.OnStartDragListener
 import org.helllabs.android.xmp.ui.playlistDetail.recyclerview.SimpleItemTouchHelperCallback
 import org.helllabs.android.xmp.ui.preferences.PrefManager
-import org.helllabs.android.xmp.ui.theme.XmpTheme
+import org.helllabs.android.xmp.ui.theme.XmpTheme3
+import org.helllabs.android.xmp.ui.theme.sectionBackgroundDark
 import org.helllabs.android.xmp.util.PlaylistUtils
 import org.helllabs.android.xmp.util.logE
 import org.helllabs.android.xmp.util.toList
+import org.helllabs.android.xmp.util.toast
 
 class PlaylistActivity :
     BasePlaylistActivity(),
@@ -93,13 +92,15 @@ class PlaylistActivity :
         mItemTouchHelper = ItemTouchHelper(callback)
 
         setContent {
-            PlaylistActivityScreen(
-                onBack = { onBackPressed() },
-                playlist = mPlaylist,
-                mPlaylistAdapter = mPlaylistAdapter,
-                touchHelper = mItemTouchHelper,
-                onPlay = { playModule(it) },
-            )
+            ProvideWindowInsets(consumeWindowInsets = false) {
+                PlaylistActivityScreen(
+                    onBack = { onBackPressed() },
+                    playlist = mPlaylist,
+                    mPlaylistAdapter = mPlaylistAdapter,
+                    touchHelper = mItemTouchHelper,
+                    onPlay = { playModule(it) },
+                )
+            }
         }
     }
 
@@ -204,6 +205,7 @@ private fun PlaylistActivityScreen(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PlaylistActivityLayout(
     onBack: () -> Unit,
@@ -217,93 +219,56 @@ private fun PlaylistActivityLayout(
     onLoop: (value: Boolean) -> Unit,
     onShuffle: (value: Boolean) -> Unit,
 ) {
-    XmpTheme(onlyStyleStatusBar = true) {
-        val scaffoldState = rememberScaffoldState()
-        Scaffold(
-            topBar = {
-                AppBar(
-                    title = stringResource(id = R.string.browser_playlist_title),
-                    navIconClick = { onBack() },
-                )
-            },
-            scaffoldState = scaffoldState,
-            snackbarHost = { scaffoldState.snackbarHostState },
+    val context = LocalContext.current
+    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+
+    val uiController = rememberSystemUiController()
+    SideEffect {
+        uiController.setNavigationBarColor(color = sectionBackgroundDark)
+    }
+
+    XmpTheme3 {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
         ) {
-            val scope = rememberCoroutineScope()
-            val context = LocalContext.current
-            ConstraintLayout(
+            // Top App Bar
+            val rotation = LocalConfiguration.current.orientation
+            val appBarModifier =
+                if (rotation == Configuration.ORIENTATION_PORTRAIT) Modifier.statusBarsPadding()
+                else Modifier.systemBarsPadding()
+
+            XmpAppBar3(
+                modifier = appBarModifier,
+                titleText = stringResource(id = R.string.browser_playlist_title),
+                scrollBehavior = scrollBehavior,
+                onNavIconPressed = onBack,
+            )
+            ScrollableInfoBar(
+                playlist = name,
+                comment = comment,
+            )
+            Column(
                 modifier = Modifier
-                    .fillMaxHeight()
-                    .navigationBarsPadding()
+                    .fillMaxSize()
             ) {
-                val (infoBar, customView, controls, snack) = createRefs()
-
-                Column(
-                    modifier = Modifier
-                        .constrainAs(infoBar) {
-                            width = Dimension.fillToConstraints
-                            top.linkTo(parent.top, 6.dp)
-                        }
-
+                BoxWithConstraints(
+                    modifier = Modifier.weight(.5f)
                 ) {
-                    Text(
-                        modifier = Modifier.padding(bottom = 3.dp, start = 6.dp, end = 6.dp),
-                        text = name,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Text(
-                        modifier = Modifier.padding(bottom = 6.dp, start = 6.dp, end = 6.dp),
-                        text = if (comment.isNullOrEmpty()) stringResource(id = R.string.no_comment)
-                        else comment,
-                        fontSize = 14.sp,
-                        fontStyle = FontStyle.Italic,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Divider()
-                }
-
-                if (currentList.isEmpty()) {
-                    ErrorLayout(stringResource(id = R.string.empty_playlist))
-                }
-
-                recyclerView(
-                    modifier = Modifier.constrainAs(customView) {
-                        height = Dimension.fillToConstraints
-                        start.linkTo(parent.start)
-                        end.linkTo(parent.end)
-                        top.linkTo(infoBar.bottom)
-                        bottom.linkTo(controls.top)
+                    recyclerView(modifier = Modifier)
+                    if (currentList.isEmpty()) {
+                        ErrorLayout(
+                            modifier = Modifier,
+                            message = stringResource(id = R.string.empty_playlist)
+                        )
                     }
-                )
-                Snackbar(
-                    modifier = Modifier.constrainAs(snack) {
-                        width = Dimension.fillToConstraints
-                        bottom.linkTo(controls.top)
-                    },
-                    snackBarState = scaffoldState.snackbarHostState,
-                    onDismiss = {
-                        scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
-                    }
-                )
+                }
                 LayoutControls(
-                    modifier = Modifier
-                        .constrainAs(controls) {
-                            width = Dimension.fillToConstraints
-                            top.linkTo(customView.bottom)
-                            bottom.linkTo(parent.bottom)
-                        },
+                    modifier = Modifier.fillMaxWidth(),
                     onPlay = {
                         if (currentList.isEmpty()) {
-                            scope.launch {
-                                scaffoldState.snackbarHostState.showSnackbar(
-                                    message = context.getString(R.string.error_no_files_to_play),
-                                    actionLabel = context.getString(R.string.ok)
-                                )
-                            }
+                            context.toast(R.string.error_no_files_to_play)
                             return@LayoutControls
                         }
                         onPlay()
@@ -315,6 +280,44 @@ private fun PlaylistActivityLayout(
                 )
             }
         }
+    }
+}
+
+@Composable
+fun ScrollableInfoBar(
+    playlist: String,
+    comment: String?,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(start = 16.dp, end = 16.dp)
+                .height(56.dp)
+        ) {
+            Spacer(modifier = Modifier.height(0.dp))
+            Text(
+                text = playlist,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = if (comment.isNullOrEmpty()) stringResource(id = R.string.no_comment)
+                else comment,
+                fontSize = 14.sp,
+                fontStyle = FontStyle.Italic,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+        }
+        Divider(color = MaterialTheme.colorScheme.inverseSurface)
     }
 }
 

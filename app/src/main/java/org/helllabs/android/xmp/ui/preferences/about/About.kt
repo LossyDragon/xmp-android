@@ -112,11 +112,20 @@ private fun AboutLayout(
                     AboutText(stringResource(id = R.string.about_author))
                     AboutText(stringResource(id = R.string.about_xmp, xmpVersion))
                     Divider(modifier = Modifier.padding(top = 8.dp, bottom = 8.dp))
-                    AboutText(stringResource(id = R.string.changelog))
+                    Text(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 4.dp, bottom = 4.dp),
+                        text = stringResource(id = R.string.changelog),
+                        fontFamily = michromaFontFamily,
+                        textAlign = TextAlign.Center,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        style = TextStyle(baselineShift = BaselineShift(.3f)),
+                    )
                     AboutText(stringResource(id = R.string.changelog_text), TextAlign.Start)
                 }
             }
-
         }
     }
 }
