@@ -40,13 +40,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import com.google.accompanist.insets.*
+import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.ui.components.XmpAppBar3
 import org.helllabs.android.xmp.ui.theme.XmpTheme3
 import org.helllabs.android.xmp.ui.theme.darkAccent
+import org.helllabs.android.xmp.util.DialogMessage
 import org.helllabs.android.xmp.util.logD
 import org.helllabs.android.xmp.util.toast
-import org.helllabs.android.xmp.util.yesNoDialog
 
 const val PLAYLIST_EDIT_ID = "org.helllabs.android.xmp.ui.playlistMenu.PLAYLIST_EDIT_ID"
 const val PLAYLIST_EDIT_NAME = "org.helllabs.android.xmp.ui.playlistMenu.PLAYLIST_EDIT_NAME"
@@ -85,56 +86,30 @@ private fun PlaylistEditScreen(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
     val isEditing = intent?.hasExtra(PLAYLIST_EDIT_ID) ?: false
     val intentName = intent?.getStringExtra(PLAYLIST_EDIT_NAME).orEmpty()
     val intentComment = intent?.getStringExtra(PLAYLIST_EDIT_COMMENT).orEmpty()
-    val onEdit: (name: String, comment: String) -> Unit = { name, comment ->
-        val playlistData = Intent().apply {
-            putExtra(PLAYLIST_EDIT_NAME, name)
-            putExtra(PLAYLIST_EDIT_COMMENT, comment)
-            if (isEditing) {
-                putExtra(PLAYLIST_EDIT_OLD_NAME, intentName)
-                putExtra(PLAYLIST_EDIT_ID, EditState.RESULT_EDIT_PLAYLIST.value)
-            } else {
-                putExtra(PLAYLIST_EDIT_ID, EditState.RESULT_NEW_PLAYLIST.value)
-            }
-        }
-
-        (context as Activity).setResult(RESULT_OK, playlistData)
-        context.finish()
-    }
-    val onDelete = {
-        context.yesNoDialog(
-            lifecycleOwner = lifecycleOwner,
-            title = context.getString(R.string.dialog_delete_playlist),
-            message = context.getString(R.string.dialog_delete_playlist_message, intentName),
-            positiveButton = R.string.menu_delete,
-            negativeButton = R.string.cancel,
-            onPositiveButton = {
-                Intent().apply {
-                    putExtra(PLAYLIST_EDIT_ID, EditState.RESULT_DELETE_PLAYLIST.value)
-                    putExtra(PLAYLIST_EDIT_NAME, intentName)
-                    putExtra(PLAYLIST_EDIT_COMMENT, intentComment)
-                }.also { intent ->
-                    (context as Activity).setResult(RESULT_OK, intent)
-                    context.finish()
-                    context.overridePendingTransition(
-                        R.anim.slide_in_right,
-                        R.anim.slide_out_left
-                    )
-                }
-            }
-        )
-    }
 
     PlaylistEditContent(
         intentName = intentName,
         intentComment = intentComment,
         isEditing = isEditing,
         onBack = { onBack() },
-        onEdit = { name, comment -> onEdit(name, comment) },
-        onDelete = { onDelete() },
+        onEdit = { name, comment ->
+            val playlistData = Intent().apply {
+                putExtra(PLAYLIST_EDIT_NAME, name)
+                putExtra(PLAYLIST_EDIT_COMMENT, comment)
+                if (isEditing) {
+                    putExtra(PLAYLIST_EDIT_OLD_NAME, intentName)
+                    putExtra(PLAYLIST_EDIT_ID, EditState.RESULT_EDIT_PLAYLIST.value)
+                } else {
+                    putExtra(PLAYLIST_EDIT_ID, EditState.RESULT_NEW_PLAYLIST.value)
+                }
+            }
+
+            (context as Activity).setResult(RESULT_OK, playlistData)
+            context.finish()
+        },
     )
 }
 
@@ -151,10 +126,34 @@ private fun PlaylistEditContent(
     isEditing: Boolean,
     onBack: () -> Unit,
     onEdit: (name: String, comment: String) -> Unit,
-    onDelete: () -> Unit,
 ) {
+    val context = LocalContext.current
     val scrollState = rememberScrollState()
     val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+
+    val deleteState = rememberMaterialDialogState()
+    DialogMessage(
+        dialogState = deleteState,
+        title = R.string.dialog_delete_playlist,
+        messageText = stringResource(id = R.string.dialog_delete_playlist_message, intentName),
+        positiveButtonText = R.string.menu_delete,
+        negativeButtonText = R.string.cancel,
+        onPositiveButton = {
+            Intent().apply {
+                putExtra(PLAYLIST_EDIT_ID, EditState.RESULT_DELETE_PLAYLIST.value)
+                putExtra(PLAYLIST_EDIT_NAME, intentName)
+                putExtra(PLAYLIST_EDIT_COMMENT, intentComment)
+            }.also { intent ->
+                (context as Activity).setResult(RESULT_OK, intent)
+                context.finish()
+                context.overridePendingTransition(
+                    R.anim.slide_in_right,
+                    R.anim.slide_out_left
+                )
+            }
+        },
+        onDismiss = { deleteState.hide() }
+    )
 
     XmpTheme3 {
         Column(
@@ -272,7 +271,7 @@ private fun PlaylistEditContent(
                     Spacer(modifier = Modifier.height(24.dp))
                     Button(
                         modifier = Modifier
-                            .fillMaxWidth(.65f),
+                            .fillMaxWidth(.85f),
                         colors = ButtonDefaults.buttonColors(containerColor = darkAccent),
                         onClick = {
                             // Check if name is empty.
@@ -294,9 +293,9 @@ private fun PlaylistEditContent(
                     if (isEditing) {
                         Button(
                             modifier = Modifier
-                                .fillMaxWidth(.65f),
+                                .fillMaxWidth(.85f),
                             colors = ButtonDefaults.buttonColors(containerColor = darkAccent),
-                            onClick = { onDelete() },
+                            onClick = { deleteState.show() },
                         ) {
                             Text(
                                 text = stringResource(
@@ -336,6 +335,5 @@ private fun PlaylistEditPreview() {
         isEditing = true,
         onBack = { },
         onEdit = { _, _ -> },
-        onDelete = {}
     )
 }

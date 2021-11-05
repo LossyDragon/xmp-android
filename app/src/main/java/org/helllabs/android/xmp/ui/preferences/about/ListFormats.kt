@@ -32,6 +32,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import com.google.accompanist.insets.ProvideWindowInsets
+import com.google.accompanist.insets.navigationBarsPadding
 import com.google.accompanist.insets.statusBarsPadding
 import com.google.accompanist.insets.systemBarsPadding
 import org.helllabs.android.xmp.R
@@ -106,7 +107,7 @@ private fun FormatsLayout(
             Surface {
                 LazyList(
                     modifier = Modifier.fillMaxSize(),
-                    showScrollAt = 15,
+                    scrollModifier = Modifier.navigationBarsPadding(),
                     boxContent = {
                         if (formatsList.isEmpty())
                             ErrorLayout(

@@ -1,4 +1,4 @@
-package org.helllabs.android.xmp.ui.modarchive
+package org.helllabs.android.xmp.ui.search
 
 import org.helllabs.android.xmp.BuildConfig
 

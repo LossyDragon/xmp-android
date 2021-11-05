@@ -4,13 +4,18 @@ import android.view.MotionEvent
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.ListItem
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.InsertDriveFile
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.outlined.FolderOpen
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -61,12 +66,12 @@ fun ItemPlaylistCard(
         }
     }
 
-    // TODO:  Material 3 Elevated
-    androidx.compose.material3.Surface(
+    // TODO:  Material 3 Elevated Card
+    Surface(
         modifier = Modifier
             .padding(start = 16.dp, end = 16.dp, top = 3.dp, bottom = 3.dp),
         shape = RoundedCornerShape(8.dp),
-        color = androidx.compose.material3.MaterialTheme.colorScheme.inverseOnSurface,
+        color = MaterialTheme.colorScheme.inverseOnSurface,
         border = null,
         shadowElevation = 4.dp,
     ) {
@@ -80,14 +85,14 @@ fun ItemPlaylistCard(
                     },
                 ),
             text = {
-                androidx.compose.material3.Text(
+                Text(
                     text = playlist.name!!,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
             },
             secondaryText = {
-                androidx.compose.material3.Text(
+                Text(
                     modifier = Modifier.padding(bottom = 10.dp),
                     text = playlist.comment!!,
                     maxLines = 3,
@@ -95,7 +100,7 @@ fun ItemPlaylistCard(
                 )
             },
             icon = {
-                androidx.compose.material3.Icon(
+                Icon(
                     modifier = Modifier.padding(top = 8.dp, start = 8.dp),
                     imageVector = cardIcon,
                     contentDescription = null
@@ -188,7 +193,7 @@ fun ItemList(
     )
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun ItemBreadCrumb(
     crumb: String,
@@ -196,8 +201,9 @@ fun ItemBreadCrumb(
     onLongClick: () -> Unit,
 ) {
     val haptic = LocalHapticFeedback.current
-    Card(
-        shape = MaterialTheme.shapes.medium,
+
+    // TODO:  Material 3 Elevated Card
+    Surface(
         modifier = Modifier
             .padding(4.dp)
             .combinedClickable(
@@ -207,14 +213,17 @@ fun ItemBreadCrumb(
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 }
             ),
-        elevation = 4.dp,
+        shape = RoundedCornerShape(8.dp),
+        color = MaterialTheme.colorScheme.inverseOnSurface,
+        border = null,
+        shadowElevation = 4.dp,
     ) {
         Row(
-            modifier = Modifier.padding(4.dp),
+            modifier = Modifier.padding(6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                modifier = Modifier.size(12.dp),
+                modifier = Modifier.size(16.dp),
                 imageVector = Icons.Default.FolderOpen,
                 contentDescription = "Playlist Icon"
             )

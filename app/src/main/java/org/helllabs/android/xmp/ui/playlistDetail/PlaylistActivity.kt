@@ -205,6 +205,8 @@ private fun PlaylistActivityScreen(
     )
 }
 
+// TODO: Composed List ordering is coming soon.
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PlaylistActivityLayout(
@@ -252,11 +254,13 @@ private fun PlaylistActivityLayout(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .navigationBarsPadding()
             ) {
-                BoxWithConstraints(
+                Box(
                     modifier = Modifier.weight(.5f)
                 ) {
                     recyclerView(modifier = Modifier)
+
                     if (currentList.isEmpty()) {
                         ErrorLayout(
                             modifier = Modifier,
@@ -283,50 +287,49 @@ private fun PlaylistActivityLayout(
     }
 }
 
+// TODO would like to hide/collapse this on scroll.
 @Composable
 fun ScrollableInfoBar(
     playlist: String,
     comment: String?,
 ) {
+    Divider(color = MaterialTheme.colorScheme.inverseSurface)
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .height(56.dp),
+        verticalArrangement = Arrangement.Center
     ) {
-        Column(
-            modifier = Modifier
-                .padding(start = 16.dp, end = 16.dp)
-                .height(56.dp)
-        ) {
-            Spacer(modifier = Modifier.height(0.dp))
-            Text(
-                text = playlist,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                color = MaterialTheme.colorScheme.onBackground,
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = if (comment.isNullOrEmpty()) stringResource(id = R.string.no_comment)
-                else comment,
-                fontSize = 14.sp,
-                fontStyle = FontStyle.Italic,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                color = MaterialTheme.colorScheme.onBackground,
-            )
-        }
-        Divider(color = MaterialTheme.colorScheme.inverseSurface)
+        Text(
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp),
+            text = playlist,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp),
+            text = if (comment.isNullOrEmpty()) stringResource(id = R.string.no_comment)
+            else comment,
+            fontSize = 14.sp,
+            fontStyle = FontStyle.Italic,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
     }
+    Divider(color = MaterialTheme.colorScheme.inverseSurface)
 }
 
 /************
  * Previews *
  ************/
 
-@Preview(name = "Dark Theme", uiMode = UI_MODE_NIGHT_YES)
-@Preview(name = "Light Theme", uiMode = UI_MODE_NIGHT_NO)
+@Preview(name = "Dark Theme", uiMode = UI_MODE_NIGHT_YES, showBackground = true)
+@Preview(name = "Light Theme", uiMode = UI_MODE_NIGHT_NO, showBackground = true)
 @Composable
 private fun PlaylistActivityPreview() {
     PlaylistActivityLayout(

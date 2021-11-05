@@ -1,6 +1,7 @@
-package org.helllabs.android.xmp.ui.modarchive
+package org.helllabs.android.xmp.ui.search
 
 import android.content.Intent
+import android.content.res.Configuration
 import android.content.res.Configuration.UI_MODE_NIGHT_NO
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.os.Bundle
@@ -9,15 +10,17 @@ import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.Scaffold
-import androidx.compose.material.Text
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
@@ -26,12 +29,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
+import com.google.accompanist.insets.ProvideWindowInsets
+import com.google.accompanist.insets.statusBarsPadding
+import com.google.accompanist.insets.systemBarsPadding
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.ui.components.AppBar
-import org.helllabs.android.xmp.ui.modarchive.ModArchiveConstants.ERROR
-import org.helllabs.android.xmp.ui.theme.XmpTheme
+import org.helllabs.android.xmp.ui.components.XmpAppBar3
+import org.helllabs.android.xmp.ui.search.ModArchiveConstants.ERROR
+import org.helllabs.android.xmp.ui.theme.XmpTheme3
 import org.helllabs.android.xmp.ui.theme.topazFontFamily
 import org.helllabs.android.xmp.util.upperCase
 
@@ -62,19 +68,21 @@ class SearchError : AppCompatActivity() {
         }
 
         setContent {
-            ErrorLayout(
-                message = message,
-            )
+            ProvideWindowInsets(consumeWindowInsets = false) {
+                ErrorLayout(message = message)
+            }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ErrorLayout(
     message: String,
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
     val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     val backCallback = remember {
         object : OnBackPressedCallback(true) {
@@ -92,18 +100,31 @@ private fun ErrorLayout(
         onDispose { backCallback.remove() }
     }
 
-    XmpTheme {
-        Scaffold(
-            topBar = {
-                AppBar(
-                    title = stringResource(id = R.string.search_title_error),
-                    navIconClick = {
-                        backCallback.handleOnBackPressed()
-                    },
-                )
-            }
+    XmpTheme3 {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
         ) {
-            GuruFrame(message)
+            // Top App Bar
+            val rotation = LocalConfiguration.current.orientation
+            val appBarModifier =
+                if (rotation == Configuration.ORIENTATION_PORTRAIT) Modifier.statusBarsPadding()
+                else Modifier.systemBarsPadding()
+
+            XmpAppBar3(
+                modifier = appBarModifier,
+                scrollBehavior = scrollBehavior,
+                onNavIconPressed = {
+                    backCallback.handleOnBackPressed()
+                },
+                titleText = stringResource(id = R.string.search_title_error)
+            )
+
+            // Content
+            Surface {
+                GuruFrame(message)
+            }
         }
     }
 }
@@ -143,8 +164,8 @@ private fun GuruFrame(message: String) {
  * Previews *
  ************/
 
-@Preview(name = "Dark Theme", uiMode = UI_MODE_NIGHT_YES)
-@Preview(name = "Light Theme", uiMode = UI_MODE_NIGHT_NO)
+@Preview(name = "Dark Theme", uiMode = UI_MODE_NIGHT_YES, showBackground = true)
+@Preview(name = "Light Theme", uiMode = UI_MODE_NIGHT_NO, showBackground = true)
 @Composable
 private fun ErrorLayoutPreview() {
     ErrorLayout(

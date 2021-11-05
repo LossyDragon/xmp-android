@@ -69,27 +69,25 @@ fun DialogMessage(
     @StringRes message: Int? = null,
     messageText: String? = null,
     @StringRes positiveButtonText: Int,
-    negativeButtonText: String? = null,
+    @StringRes negativeButtonText: Int? = null,
     onPositiveButton: () -> Unit,
     onNegativeButton: (() -> Unit)? = null,
     onDismiss: () -> Unit = {},
 ) {
-    val buttons: @Composable MaterialDialogButtons.() -> Unit = {
-        positiveButton(res = positiveButtonText) {
-            onPositiveButton()
-        }
-        onNegativeButton?.let {
-            negativeButton(text = negativeButtonText) {
-                onNegativeButton()
-            }
-        }
-    }
-
     MaterialDialog(
         shape = RoundedCornerShape(8.dp),
         dialogState = dialogState,
         onCloseRequest = { onDismiss() },
-        buttons = buttons
+        buttons = {
+            positiveButton(res = positiveButtonText) {
+                onPositiveButton()
+            }
+            onNegativeButton?.let {
+                negativeButton(res = negativeButtonText) {
+                    onNegativeButton()
+                }
+            }
+        }
     ) {
         title(res = title)
         if (message != null) message(res = message) else message(text = messageText)
@@ -101,18 +99,15 @@ fun DialogShowChangelog(
     dialogState: MaterialDialogState,
     block: () -> Unit,
 ) {
-
-    val buttons: @Composable MaterialDialogButtons.() -> Unit = {
-        positiveButton(text = "Dismiss") {
-            block()
-        }
-    }
-
     MaterialDialog(
         shape = RoundedCornerShape(8.dp),
         dialogState = dialogState,
         onCloseRequest = {},
-        buttons = buttons
+        buttons = {
+            positiveButton(text = "Dismiss") {
+                block()
+            }
+        }
     ) {
         title(res = R.string.changelog)
         customView {

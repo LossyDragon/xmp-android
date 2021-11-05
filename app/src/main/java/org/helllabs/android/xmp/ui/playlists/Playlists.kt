@@ -47,12 +47,12 @@ import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.model.PlaylistItem
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.ui.components.*
-import org.helllabs.android.xmp.ui.filelist.FilelistActivity
-import org.helllabs.android.xmp.ui.modarchive.Search
+import org.helllabs.android.xmp.ui.explorer.FileExplorerActivity
 import org.helllabs.android.xmp.ui.player.PlayerActivity
 import org.helllabs.android.xmp.ui.playlistDetail.PlaylistActivity
 import org.helllabs.android.xmp.ui.preferences.PrefManager
 import org.helllabs.android.xmp.ui.preferences.Preferences
+import org.helllabs.android.xmp.ui.search.Search
 import org.helllabs.android.xmp.ui.theme.XmpTheme3
 import org.helllabs.android.xmp.ui.theme.themedText
 import org.helllabs.android.xmp.util.*
@@ -112,7 +112,8 @@ private fun PlaylistMenuScreen(
         title = R.string.error,
         message = R.string.error_create_playlist,
         positiveButtonText = R.string.ok,
-        onPositiveButton = { }
+        onPositiveButton = { },
+        onDismiss = { playlistCreateState.hide() }
     )
 
     val resultAdd = rememberLauncherForActivityResult(StartActivityForResult()) {
@@ -137,7 +138,8 @@ private fun PlaylistMenuScreen(
         title = R.string.error,
         message = R.string.error_rename_playlist,
         positiveButtonText = R.string.ok,
-        onPositiveButton = { }
+        onPositiveButton = { },
+        onDismiss = { playlistRenameState.hide() }
     )
 
     val playlistCommentState = rememberMaterialDialogState()
@@ -146,7 +148,8 @@ private fun PlaylistMenuScreen(
         title = R.string.error,
         message = R.string.error_edit_comment,
         positiveButtonText = R.string.ok,
-        onPositiveButton = { }
+        onPositiveButton = { },
+        onDismiss = { playlistCommentState.hide() }
     )
 
     val resultEdit = rememberLauncherForActivityResult(StartActivityForResult()) {
@@ -185,7 +188,8 @@ private fun PlaylistMenuScreen(
         title = R.string.error,
         message = R.string.error_create_playlist,
         positiveButtonText = R.string.ok,
-        onPositiveButton = { }
+        onPositiveButton = { },
+        onDismiss = { playlistErrorState.hide() }
     )
 
     val playlistDirsErrorState = rememberMaterialDialogState()
@@ -237,7 +241,7 @@ private fun PlaylistMenuScreen(
                 onClick = { item, index ->
                     val intent: Intent =
                         if (index == 0) {
-                            Intent(context, FilelistActivity::class.java)
+                            Intent(context, FileExplorerActivity::class.java)
                         } else {
                             Intent(context, PlaylistActivity::class.java).apply {
                                 putExtra("name", item.name)
@@ -333,7 +337,6 @@ private fun PlaylistsContent(
                 Surface {
                     // State Flow
                     when (playlistState) {
-                        PlaylistMenuViewModel.PlaylistMenuState.None -> Unit
                         PlaylistMenuViewModel.PlaylistMenuState.Load -> {
                             ProgressbarIndicator()
                             list.value = listOf()
@@ -341,6 +344,7 @@ private fun PlaylistsContent(
                         is PlaylistMenuViewModel.PlaylistMenuState.Loaded -> {
                             list.value = playlistState.list
                         }
+                        else -> Unit
                     }
 
                     LazyColumn(

@@ -1,12 +1,13 @@
 package org.helllabs.android.xmp.util
 
 import android.content.Context
+import android.content.res.AssetManager
 import android.net.Uri
 import android.provider.OpenableColumns
 import java.io.*
 import org.helllabs.android.xmp.model.Module
-import org.helllabs.android.xmp.ui.modarchive.ModArchiveConstants
 import org.helllabs.android.xmp.ui.preferences.PrefManager
+import org.helllabs.android.xmp.ui.search.ModArchiveConstants
 
 object FileUtils {
 
@@ -46,7 +47,7 @@ object FileUtils {
      * @param path the directory to install the sample(s).
      * @param shouldInstall return false if we shouldn't install the sample.
      */
-    fun installAssets(context: Context, path: String, shouldInstall: Boolean): Int {
+    fun installAssets(assetManager: AssetManager, path: String, shouldInstall: Boolean): Int {
         val filePath = File(path)
 
         // Ignore installing examples if preference is false
@@ -66,8 +67,7 @@ object FileUtils {
             return -1
         }
 
-        val am = context.assets
-        val assets: Array<String>? = am.list("mod")
+        val assets: Array<String>? = assetManager.list("mod")
 
         // Asset folder is empty.
         if (assets.isNullOrEmpty()) {
@@ -75,7 +75,7 @@ object FileUtils {
         }
 
         assets.forEach { item ->
-            am.open("mod/$item").use { stream ->
+            assetManager.open("mod/$item").use { stream ->
                 File("$path/$item").outputStream().use {
                     stream.copyTo(it)
                 }
@@ -196,8 +196,8 @@ object FileUtils {
         return file.delete()
     }
 
-    fun delete(file: File): Boolean {
-        return file.delete()
+    fun delete(file: File?): Boolean {
+        return file?.delete() ?: false
     }
 
     fun deleteRecursive(filename: String): Boolean {

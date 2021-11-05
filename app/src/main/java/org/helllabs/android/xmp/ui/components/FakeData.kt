@@ -3,6 +3,34 @@ package org.helllabs.android.xmp.ui.components
 import androidx.compose.ui.text.buildAnnotatedString
 import org.helllabs.android.xmp.model.*
 
+fun fakeBreadCrumbData(): List<BreadCrumb> {
+    val list = mutableListOf<BreadCrumb>()
+    repeat(20) {
+        list.add(
+            BreadCrumb("Path $it", "")
+        )
+    }
+
+    return list
+}
+
+fun fakeExplorerData(): List<PlaylistItem> {
+    val list = mutableListOf<PlaylistItem>()
+    repeat(20) {
+        list.add(
+            PlaylistItem(
+                type = if (it % 2 == 0) PlaylistType.TYPE_FILE else PlaylistType.TYPE_DIRECTORY,
+                name = "Item $it",
+                comment = "Comment $it",
+                id = it,
+                file = null,
+            )
+        )
+    }
+
+    return list
+}
+
 fun fakeDataPlaylistDetail(): List<PlaylistItem> {
     val list = mutableListOf<PlaylistItem>()
     repeat(20) {

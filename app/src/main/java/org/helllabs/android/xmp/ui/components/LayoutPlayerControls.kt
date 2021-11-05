@@ -261,8 +261,6 @@ fun DetailsSheet(
         }
         LazyList(
             modifier = Modifier.fillMaxSize(),
-            fabModifier = Modifier.size(64.dp),
-            showScrollAt = 0,
             shouldPadBottom = false,
             additionalBottomPad = 0.dp,
             boxContent = {
@@ -283,7 +281,6 @@ fun DetailsSheet(
                     index = index,
                     selectedOption = currentSequence,
                     onSelected = { onSequence(it) },
-                    overrideTheme = true
                 )
             }
         }

@@ -1,4 +1,4 @@
-package org.helllabs.android.xmp.ui.modarchive.result
+package org.helllabs.android.xmp.ui.search.result
 
 import android.app.Activity
 import android.content.Intent
@@ -37,13 +37,13 @@ import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.model.Module
 import org.helllabs.android.xmp.model.ModuleResult
 import org.helllabs.android.xmp.ui.components.*
-import org.helllabs.android.xmp.ui.modarchive.ModArchiveConstants
-import org.helllabs.android.xmp.ui.modarchive.ModArchiveConstants.ERROR
-import org.helllabs.android.xmp.ui.modarchive.ModArchiveConstants.MODULE_ID
-import org.helllabs.android.xmp.ui.modarchive.SearchError
-import org.helllabs.android.xmp.ui.modarchive.result.ModuleResultViewModel.ModuleState
 import org.helllabs.android.xmp.ui.player.PlayerActivity
 import org.helllabs.android.xmp.ui.preferences.PrefManager
+import org.helllabs.android.xmp.ui.search.ModArchiveConstants
+import org.helllabs.android.xmp.ui.search.ModArchiveConstants.ERROR
+import org.helllabs.android.xmp.ui.search.ModArchiveConstants.MODULE_ID
+import org.helllabs.android.xmp.ui.search.SearchError
+import org.helllabs.android.xmp.ui.search.result.ModuleResultViewModel.ModuleState
 import org.helllabs.android.xmp.ui.theme.XmpTheme
 import org.helllabs.android.xmp.util.*
 import org.helllabs.android.xmp.util.toast
@@ -203,6 +203,9 @@ private fun ModuleResultScreen(
             appTitle = R.string.search_random_title
             viewModel.getRandomModule()
         },
+        onUpdate = {
+            viewModel.saveModuleToHistory(it)
+        }
     )
 }
 
@@ -215,6 +218,7 @@ private fun ModuleResultLayout(
     onError: (error: String?) -> Unit,
     onPlay: (module: Module) -> Unit,
     onRandom: () -> Unit,
+    onUpdate: (module: Module) -> Unit,
 ) {
     XmpTheme(
         onlyStyleStatusBar = true,
@@ -285,6 +289,7 @@ private fun ModuleResultLayout(
                 is ModuleState.SearchResult -> {
                     isLoading = false
                     moduleResult = viewModelState.result
+                    onUpdate(moduleResult!!.module!!)
                 }
                 is ModuleState.SoftError -> {
                     context.logW(viewModelState.softError)
@@ -389,5 +394,6 @@ private fun ModuleResultPreview() {
         onError = {},
         onPlay = {},
         onRandom = {},
+        onUpdate = {},
     )
 }

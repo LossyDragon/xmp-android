@@ -1,4 +1,4 @@
-package org.helllabs.android.xmp.ui.modarchive.result
+package org.helllabs.android.xmp.ui.search.result
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,11 +12,11 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import org.helllabs.android.xmp.api.Repository
 import org.helllabs.android.xmp.model.Module
 import org.helllabs.android.xmp.model.ModuleResult
-import org.helllabs.android.xmp.repository.Repository
-import org.helllabs.android.xmp.ui.modarchive.SearchHistory
 import org.helllabs.android.xmp.ui.preferences.PrefManager
+import org.helllabs.android.xmp.ui.search.SearchHistory
 import org.helllabs.android.xmp.util.logE
 
 @HiltViewModel

@@ -1,30 +1,28 @@
 package org.helllabs.android.xmp.ui.components
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.insets.LocalWindowInsets
 import com.google.accompanist.insets.rememberInsetsPaddingValues
 import kotlinx.coroutines.launch
 
+private val ScrollThreshold = 56.dp
+
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun LazyList(
     modifier: Modifier,
-    fabModifier: Modifier = Modifier,
-    showScrollAt: Int,
+    scrollModifier: Modifier = Modifier,
     shouldPadBottom: Boolean = true,
     additionalBottomPad: Dp = 80.dp,
     boxContent: @Composable BoxScope.() -> Unit,
@@ -32,7 +30,6 @@ fun LazyList(
 ) {
     Box(modifier = modifier) {
         val listState = rememberLazyListState()
-        val showScrollButton = listState.firstVisibleItemIndex > showScrollAt
         val scope = rememberCoroutineScope()
 
         LazyColumn(
@@ -50,18 +47,25 @@ fun LazyList(
 
         boxContent()
 
-        // Show smooth scroll up button
-        AnimatedVisibility(
-            visible = showScrollButton,
-            enter = fadeIn(),
-            exit = fadeOut(),
-            modifier = Modifier.align(Alignment.BottomEnd),
-        ) {
-            ScrollFab(
-                modifier = fabModifier,
-                onClick = { scope.launch { listState.animateScrollToItem(0) } },
-                shouldPadBottom = shouldPadBottom
-            )
+        val scrollThreshold = with(LocalDensity.current) {
+            ScrollThreshold.toPx()
         }
+
+        val scrollButtonEnabled by remember {
+            derivedStateOf {
+                listState.firstVisibleItemIndex != 0 ||
+                    listState.firstVisibleItemScrollOffset > scrollThreshold
+            }
+        }
+
+        ScrollBackUp(
+            modifier = scrollModifier.align(Alignment.BottomCenter),
+            enabled = scrollButtonEnabled,
+            onClicked = {
+                scope.launch {
+                    listState.animateScrollToItem(0)
+                }
+            },
+        )
     }
 }

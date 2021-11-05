@@ -1,4 +1,4 @@
-package org.helllabs.android.xmp.ui.modarchive.result
+package org.helllabs.android.xmp.ui.search.result
 
 import android.app.Activity
 import android.content.Intent
@@ -26,12 +26,12 @@ import org.helllabs.android.xmp.model.ArtistInfo
 import org.helllabs.android.xmp.model.Module
 import org.helllabs.android.xmp.model.SearchListResult as _SearchListResult
 import org.helllabs.android.xmp.ui.components.*
-import org.helllabs.android.xmp.ui.modarchive.ModArchiveConstants
-import org.helllabs.android.xmp.ui.modarchive.ModArchiveConstants.ARTIST_ID
-import org.helllabs.android.xmp.ui.modarchive.ModArchiveConstants.MODULE_ID
-import org.helllabs.android.xmp.ui.modarchive.ModArchiveConstants.SEARCH_TEXT
-import org.helllabs.android.xmp.ui.modarchive.SearchError
-import org.helllabs.android.xmp.ui.modarchive.result.SearchListViewModel.SearchResultState
+import org.helllabs.android.xmp.ui.search.ModArchiveConstants
+import org.helllabs.android.xmp.ui.search.ModArchiveConstants.ARTIST_ID
+import org.helllabs.android.xmp.ui.search.ModArchiveConstants.MODULE_ID
+import org.helllabs.android.xmp.ui.search.ModArchiveConstants.SEARCH_TEXT
+import org.helllabs.android.xmp.ui.search.SearchError
+import org.helllabs.android.xmp.ui.search.result.SearchListViewModel.SearchResultState
 import org.helllabs.android.xmp.ui.theme.XmpTheme
 import org.helllabs.android.xmp.util.logD
 
@@ -90,7 +90,6 @@ private fun SearchLayout(
             var result by remember { mutableStateOf(listOf<Module>()) }
             LazyList(
                 modifier = Modifier.fillMaxSize(),
-                showScrollAt = 5,
                 boxContent = {
                     when (resultState) {
                         SearchResultState.None -> Unit

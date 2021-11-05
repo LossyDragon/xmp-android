@@ -1,4 +1,4 @@
-package org.helllabs.android.xmp.ui.modarchive.result
+package org.helllabs.android.xmp.ui.search.result
 
 import android.app.Activity
 import android.content.Intent
@@ -31,11 +31,11 @@ import org.helllabs.android.xmp.ui.components.AppBar
 import org.helllabs.android.xmp.ui.components.ErrorLayout
 import org.helllabs.android.xmp.ui.components.LazyList
 import org.helllabs.android.xmp.ui.components.ProgressbarIndicator
-import org.helllabs.android.xmp.ui.modarchive.ModArchiveConstants.ARTIST_ID
-import org.helllabs.android.xmp.ui.modarchive.ModArchiveConstants.ERROR
-import org.helllabs.android.xmp.ui.modarchive.ModArchiveConstants.SEARCH_TEXT
-import org.helllabs.android.xmp.ui.modarchive.SearchError
-import org.helllabs.android.xmp.ui.modarchive.result.ArtistResultViewModel.ArtistState
+import org.helllabs.android.xmp.ui.search.ModArchiveConstants.ARTIST_ID
+import org.helllabs.android.xmp.ui.search.ModArchiveConstants.ERROR
+import org.helllabs.android.xmp.ui.search.ModArchiveConstants.SEARCH_TEXT
+import org.helllabs.android.xmp.ui.search.SearchError
+import org.helllabs.android.xmp.ui.search.result.ArtistResultViewModel.ArtistState
 import org.helllabs.android.xmp.ui.theme.XmpTheme
 import org.helllabs.android.xmp.util.logD
 
@@ -113,7 +113,6 @@ private fun ArtistLayout(
             var items by remember { mutableStateOf(listOf<Item>()) }
             LazyList(
                 modifier = Modifier.fillMaxSize(),
-                showScrollAt = 5,
                 boxContent = {
                     when (resultState) {
                         ArtistState.None -> Unit

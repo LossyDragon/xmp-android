@@ -4,7 +4,6 @@ import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,14 +29,12 @@ fun ErrorLayout(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            modifier = Modifier.fillMaxWidth(),
             fontSize = 32.sp,
             textAlign = TextAlign.Center,
             text = stringResource(id = R.string.frowny_face),
             color = color,
         )
         Text(
-            modifier = Modifier.fillMaxWidth(),
             fontSize = 18.sp,
             textAlign = TextAlign.Center,
             text = message!!,

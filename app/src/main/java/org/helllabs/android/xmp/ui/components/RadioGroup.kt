@@ -3,20 +3,20 @@ package org.helllabs.android.xmp.ui.components
 import android.content.res.Configuration.UI_MODE_NIGHT_NO
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.MaterialTheme
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.RadioButton
 import androidx.compose.material.RadioButtonDefaults
-import androidx.compose.material.Text
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import org.helllabs.android.xmp.ui.theme.XmpTheme
-import org.helllabs.android.xmp.ui.theme.darkAccent
-import org.helllabs.android.xmp.ui.theme.lightGray
+import org.helllabs.android.xmp.ui.theme.XmpTheme3
 
 @Composable
 fun RadioGroup(
@@ -24,7 +24,6 @@ fun RadioGroup(
     radioList: List<String>,
     selectedOption: Int,
     onSelected: (Int) -> Unit,
-    overrideTheme: Boolean = false,
 ) {
     Column(
         modifier = modifier,
@@ -35,7 +34,6 @@ fun RadioGroup(
                 item = item,
                 selectedOption = selectedOption,
                 onSelected = { onSelected(it) },
-                overrideTheme
             )
         }
     }
@@ -47,7 +45,6 @@ fun RadioButtonItem(
     item: String,
     selectedOption: Int,
     onSelected: (Int) -> Unit,
-    overrideTheme: Boolean = false,
 ) {
     Row(
         modifier = Modifier
@@ -60,12 +57,11 @@ fun RadioButtonItem(
             selected = index == selectedOption,
             onClick = { onSelected(index) },
             colors = RadioButtonDefaults.colors(
-                selectedColor = darkAccent,
-                unselectedColor = if (overrideTheme) lightGray
-                else MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                selectedColor = MaterialTheme.colorScheme.secondary,
+                unselectedColor = MaterialTheme.colorScheme.inverseSurface
             )
         )
-        Text(text = item, color = if (overrideTheme) lightGray else Color.Unspecified)
+        Text(text = item, color = MaterialTheme.colorScheme.inverseSurface)
     }
 }
 
@@ -73,12 +69,12 @@ fun RadioButtonItem(
  * Previews *
  ************/
 
-@Preview(name = "Light Theme", uiMode = UI_MODE_NIGHT_NO)
-@Preview(name = "Dark Theme", uiMode = UI_MODE_NIGHT_YES)
+@Preview(name = "Light Theme", uiMode = UI_MODE_NIGHT_NO, showBackground = true)
+@Preview(name = "Dark Theme", uiMode = UI_MODE_NIGHT_YES, showBackground = true)
 @Composable
 private fun RadioGroupPreview() {
     val list = listOf("Item 1", "Item 2", "Item 3")
-    XmpTheme {
+    XmpTheme3 {
         RadioGroup(radioList = list, selectedOption = 0, onSelected = {})
     }
 }

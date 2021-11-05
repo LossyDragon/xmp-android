@@ -2,6 +2,7 @@ package org.helllabs.android.xmp.ui.playlistDetail
 
 import android.annotation.SuppressLint
 import android.view.ViewGroup
+import androidx.compose.material3.Surface
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.recyclerview.widget.RecyclerView
@@ -11,7 +12,6 @@ import org.helllabs.android.xmp.ui.components.ItemList
 import org.helllabs.android.xmp.ui.playlistDetail.recyclerview.ItemTouchHelperAdapter
 import org.helllabs.android.xmp.ui.playlistDetail.recyclerview.ItemTouchHelperViewHolder
 import org.helllabs.android.xmp.ui.playlistDetail.recyclerview.OnStartDragListener
-import org.helllabs.android.xmp.ui.theme.XmpTheme
 import org.helllabs.android.xmp.util.*
 
 class PlaylistAdapter(
@@ -81,7 +81,7 @@ class PlaylistAdapter(
 
         fun onBind(item: PlaylistItem) {
             composeView.setContent {
-                XmpTheme {
+                Surface {
                     ItemList(
                         item = item,
                         isDraggable = true,

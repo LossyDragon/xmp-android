@@ -19,7 +19,7 @@ import okhttp3.OkHttpClient
 import org.helllabs.android.xmp.api.ApiHelper
 import org.helllabs.android.xmp.api.ApiHelperImpl
 import org.helllabs.android.xmp.api.ApiService
-import org.helllabs.android.xmp.ui.modarchive.ModArchiveConstants
+import org.helllabs.android.xmp.ui.search.ModArchiveConstants
 import retrofit2.Retrofit
 
 @Module

@@ -335,5 +335,6 @@
     <string name="msg_file_exists_overwrite">This module already exists. Do you want to overwrite?</string>
     <string name="msg_no_subsongs">No Subsongs</string>
     <string name="msg_no_valid_files_sent">no files sent to player</string>
+    <string name="scrollUp">Scroll Back Up</string>
 
 </resources>
