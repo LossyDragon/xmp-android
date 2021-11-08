@@ -1,6 +1,8 @@
 package org.helllabs.android.xmp.util
 
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -48,6 +50,14 @@ object Api {
 /**
  * Resource helpers
  */
+fun Context.launchActivity(intent: Intent) {
+    startActivity(intent)
+    (this as Activity).overridePendingTransition(
+        R.anim.slide_in_right,
+        R.anim.slide_out_left
+    )
+}
+
 fun Context.getIconBitmap(): Bitmap? {
     // Emu kept crashing with some reference to this
     // AppCompatResources.getDrawable(this, R.drawable.ic_xmp_vector)?.toBitmap()

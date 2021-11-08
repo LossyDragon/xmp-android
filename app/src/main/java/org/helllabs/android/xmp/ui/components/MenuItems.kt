@@ -14,7 +14,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.ui.theme.XmpTheme
+import org.helllabs.android.xmp.ui.theme.XmpTheme3
 
 @Composable
 fun PlaylistMenuItems(
@@ -58,10 +58,10 @@ fun DeleteMenu(
 @Preview(name = "Dark Theme", uiMode = UI_MODE_NIGHT_YES)
 @Composable
 private fun MenuAppBarPlaylistPreview() {
-    XmpTheme {
-        AppBar(
-            title = stringResource(id = R.string.app_name),
-            menuActions = { PlaylistMenuItems({}, {}) }
+    XmpTheme3 {
+        XmpAppBar3(
+            titleText = stringResource(id = R.string.app_name),
+            actions = { PlaylistMenuItems({}, {}) }
         )
     }
 }
@@ -70,10 +70,10 @@ private fun MenuAppBarPlaylistPreview() {
 @Preview(name = "Dark Theme", uiMode = UI_MODE_NIGHT_YES)
 @Composable
 private fun MenuAppBarDeletePreview() {
-    XmpTheme {
-        AppBar(
-            title = stringResource(id = R.string.app_name),
-            menuActions = { DeleteMenu({}) }
+    XmpTheme3 {
+        XmpAppBar3(
+            titleText = stringResource(id = R.string.app_name),
+            actions = { DeleteMenu({}) }
         )
     }
 }

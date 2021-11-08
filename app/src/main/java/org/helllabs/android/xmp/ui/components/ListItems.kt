@@ -35,7 +35,7 @@ import androidx.compose.ui.unit.sp
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.model.*
 import org.helllabs.android.xmp.ui.preferences.PrefManager
-import org.helllabs.android.xmp.ui.theme.XmpTheme
+import org.helllabs.android.xmp.ui.theme.XmpTheme3
 import org.helllabs.android.xmp.util.ifNullOrEmpty
 
 @OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
@@ -299,7 +299,7 @@ fun ItemModule(
 @Preview
 @Composable
 private fun ItemPlaylistCardPreview() {
-    XmpTheme(false) {
+    XmpTheme3 {
         ItemPlaylistCard(
             playlist = PlaylistItem(
                 type = PlaylistType.TYPE_PLAYLIST,
@@ -315,7 +315,7 @@ private fun ItemPlaylistCardPreview() {
 @Preview
 @Composable
 private fun ItemListPreview() {
-    XmpTheme {
+    XmpTheme3 {
         ItemList(
             item = PlaylistItem(
                 PlaylistType.TYPE_FILE,
@@ -333,22 +333,23 @@ private fun ItemListPreview() {
 @Preview
 @Composable
 private fun ItemModulePreview() {
-    XmpTheme {
+    XmpTheme3 {
         ItemModule(
             item = Module(
                 format = "XM",
                 songtitle = "Some History Song Title",
                 artistInfo = ArtistInfo(artist = Artist(alias = "Some History Artist Info")),
                 bytes = 6690000
-            )
-        ) {}
+            ),
+            onClick = {}
+        )
     }
 }
 
 @Preview
 @Composable
 private fun ItemBreadCrumbPreview() {
-    XmpTheme(false) {
+    XmpTheme3 {
         ItemBreadCrumb(
             crumb = "Some Bread Crumb",
             onClick = {},

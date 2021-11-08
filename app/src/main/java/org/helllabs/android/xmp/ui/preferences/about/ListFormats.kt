@@ -7,14 +7,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ListItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Surface
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -32,7 +31,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import com.google.accompanist.insets.ProvideWindowInsets
-import com.google.accompanist.insets.navigationBarsPadding
 import com.google.accompanist.insets.statusBarsPadding
 import com.google.accompanist.insets.systemBarsPadding
 import org.helllabs.android.xmp.R
@@ -59,7 +57,7 @@ class ListFormats : ComponentActivity() {
 
         logD("onCreate")
         setContent {
-            ProvideWindowInsets(consumeWindowInsets = false) {
+            ProvideWindowInsets {
                 FormatsLayout(
                     onBack = { onBackPressed() },
                     formatsList = formats.toList(),
@@ -82,58 +80,55 @@ private fun FormatsLayout(
     val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
 
     XmpTheme3 {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
+        Scaffold(
+            topBar = {
+                val rotation = LocalConfiguration.current.orientation
+                val appBarModifier =
+                    if (rotation == Configuration.ORIENTATION_PORTRAIT)
+                        Modifier.statusBarsPadding()
+                    else Modifier.systemBarsPadding()
+
+                XmpAppBar3(
+                    modifier = appBarModifier,
+                    scrollBehavior = scrollBehavior,
+                    titleText = stringResource(id = R.string.pref_list_formats_title),
+                    onNavIconPressed = { onBack() }
+                )
+            }
         ) {
-            val rotation = LocalConfiguration.current.orientation
-            val appBarModifier =
-                if (rotation == Configuration.ORIENTATION_PORTRAIT)
-                    Modifier.statusBarsPadding()
-                else Modifier.systemBarsPadding()
-
-            XmpAppBar3(
-                modifier = appBarModifier,
-                scrollBehavior = scrollBehavior,
-                titleText = stringResource(id = R.string.pref_list_formats_title),
-                onNavIconPressed = { onBack() }
-            )
-
             val context = LocalContext.current
             val haptic = LocalHapticFeedback.current
             val clip = LocalClipboardManager.current
 
-            Surface {
-                LazyList(
-                    modifier = Modifier.fillMaxSize(),
-                    scrollModifier = Modifier.navigationBarsPadding(),
-                    boxContent = {
-                        if (formatsList.isEmpty())
-                            ErrorLayout(
-                                modifier = Modifier
-                                    .padding(start = 16.dp, end = 16.dp)
-                                    .fillMaxSize(),
-                                message = stringResource(id = R.string.msg_no_formats)
-                            )
-                    },
-                    lazyContent = {
-                        itemsIndexed(items = formatsList) { _, item ->
-                            ListItem(
-                                modifier = Modifier.combinedClickable(
-                                    onClick = {},
-                                    onLongClick = {
-                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        context.toast(R.string.clipboard_copied)
-                                        clip.setText(buildAnnotatedString { append(item) })
-                                    }
-                                ),
-                                text = { Text(text = item) }
-                            )
-                        }
+            LazyList(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .nestedScroll(scrollBehavior.nestedScrollConnection),
+                boxContent = {
+                    if (formatsList.isEmpty())
+                        ErrorLayout(
+                            modifier = Modifier
+                                .padding(start = 16.dp, end = 16.dp)
+                                .fillMaxSize(),
+                            message = stringResource(id = R.string.msg_no_formats)
+                        )
+                },
+                lazyContent = {
+                    itemsIndexed(items = formatsList) { _, item ->
+                        ListItem(
+                            modifier = Modifier.combinedClickable(
+                                onClick = {},
+                                onLongClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    context.toast(R.string.clipboard_copied)
+                                    clip.setText(buildAnnotatedString { append(item) })
+                                }
+                            ),
+                            text = { Text(text = item) }
+                        )
                     }
-                )
-            }
+                }
+            )
         }
     }
 }

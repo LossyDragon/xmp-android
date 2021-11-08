@@ -11,15 +11,11 @@ import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -68,7 +64,7 @@ class SearchError : AppCompatActivity() {
         }
 
         setContent {
-            ProvideWindowInsets(consumeWindowInsets = false) {
+            ProvideWindowInsets {
                 ErrorLayout(message = message)
             }
         }
@@ -82,7 +78,7 @@ private fun ErrorLayout(
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+
     val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     val backCallback = remember {
         object : OnBackPressedCallback(true) {
@@ -101,30 +97,24 @@ private fun ErrorLayout(
     }
 
     XmpTheme3 {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-        ) {
-            // Top App Bar
-            val rotation = LocalConfiguration.current.orientation
-            val appBarModifier =
-                if (rotation == Configuration.ORIENTATION_PORTRAIT) Modifier.statusBarsPadding()
-                else Modifier.systemBarsPadding()
+        Scaffold(
+            topBar = {
+                // Top App Bar
+                val rotation = LocalConfiguration.current.orientation
+                val appBarModifier =
+                    if (rotation == Configuration.ORIENTATION_PORTRAIT) Modifier.statusBarsPadding()
+                    else Modifier.systemBarsPadding()
 
-            XmpAppBar3(
-                modifier = appBarModifier,
-                scrollBehavior = scrollBehavior,
-                onNavIconPressed = {
-                    backCallback.handleOnBackPressed()
-                },
-                titleText = stringResource(id = R.string.search_title_error)
-            )
-
-            // Content
-            Surface {
-                GuruFrame(message)
+                XmpAppBar3(
+                    modifier = appBarModifier,
+                    onNavIconPressed = {
+                        backCallback.handleOnBackPressed()
+                    },
+                    titleText = stringResource(id = R.string.search_title_error)
+                )
             }
+        ) {
+            GuruFrame(message)
         }
     }
 }

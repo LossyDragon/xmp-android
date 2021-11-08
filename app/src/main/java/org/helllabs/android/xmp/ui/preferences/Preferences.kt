@@ -9,9 +9,9 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -35,30 +35,30 @@ class Preferences : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            ProvideWindowInsets(consumeWindowInsets = false) {
+            ProvideWindowInsets {
                 val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
 
                 XmpTheme3 {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .nestedScroll(scrollBehavior.nestedScrollConnection)
+                    Scaffold(
+                        topBar = {
+                            val rotation = LocalConfiguration.current.orientation
+                            val appBarModifier =
+                                if (rotation == Configuration.ORIENTATION_PORTRAIT)
+                                    Modifier.statusBarsPadding()
+                                else Modifier.systemBarsPadding()
+
+                            XmpAppBar3(
+                                modifier = appBarModifier,
+                                scrollBehavior = scrollBehavior,
+                                onNavIconPressed = { onBackPressed() },
+                                titleText = stringResource(id = R.string.pref_category_preferences),
+                            )
+                        }
                     ) {
-                        val rotation = LocalConfiguration.current.orientation
-                        val appBarModifier =
-                            if (rotation == Configuration.ORIENTATION_PORTRAIT)
-                                Modifier.statusBarsPadding()
-                            else Modifier.systemBarsPadding()
-
-                        XmpAppBar3(
-                            modifier = appBarModifier,
-                            scrollBehavior = scrollBehavior,
-                            onNavIconPressed = { onBackPressed() },
-                            titleText = stringResource(id = R.string.pref_category_preferences),
-                        )
-
                         AndroidView(
-                            modifier = Modifier.fillMaxSize(),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .nestedScroll(scrollBehavior.nestedScrollConnection),
                             factory = { context ->
                                 FrameLayout(context).apply {
                                     id = R.id.composeFrameLayout
@@ -72,7 +72,7 @@ class Preferences : AppCompatActivity() {
                                         .replace(R.id.composeFrameLayout, PreferencesFragment())
                                         .commit()
                                 }
-                            },
+                            }
                         )
                     }
                 }

@@ -19,7 +19,7 @@ import org.helllabs.android.xmp.util.logD
 import org.helllabs.android.xmp.util.logE
 import org.helllabs.android.xmp.util.logW
 
-class FileExplorerViewModel : ViewModel() {
+class ExplorerViewModel : ViewModel() {
 
     private val _listState = MutableStateFlow<FileListState>(FileListState.None)
     val listState: StateFlow<FileListState> = _listState

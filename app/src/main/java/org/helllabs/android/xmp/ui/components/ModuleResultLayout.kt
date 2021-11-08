@@ -1,13 +1,16 @@
 package org.helllabs.android.xmp.ui.components
 
+import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Button
-import androidx.compose.material.Text
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -31,30 +34,37 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.model.*
-import org.helllabs.android.xmp.ui.theme.XmpTheme
+import org.helllabs.android.xmp.ui.theme.XmpTheme3
+import org.helllabs.android.xmp.ui.theme.darkAccent
+import org.helllabs.android.xmp.ui.theme.darkGray
 import org.helllabs.android.xmp.ui.theme.sectionBackground
 import org.helllabs.android.xmp.util.upperCase
 
 @Composable
 fun ButtonBar(
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
     playButtonText: String,
     isLoading: Boolean,
-    isUnsupported: Boolean,
+    isSupported: Boolean,
     onPlay: () -> Unit,
     onRandom: () -> Unit,
 ) {
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
+            .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
             .background(sectionBackground)
-            .padding(12.dp)
+            .padding(12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Button(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(.85f),
+            enabled = !isLoading && isSupported,
+            colors = ButtonDefaults.buttonColors(
+                disabledContainerColor = darkGray,
+                containerColor = darkAccent
+            ),
             onClick = { onPlay() },
-            enabled = !isLoading && !isUnsupported,
         ) {
             Text(
                 color = Color.White,
@@ -63,9 +73,13 @@ fun ButtonBar(
         }
         Spacer(modifier = Modifier.height(12.dp))
         Button(
-            modifier = Modifier.fillMaxWidth(),
-            onClick = { onRandom() },
+            modifier = Modifier.fillMaxWidth(.85f),
             enabled = !isLoading,
+            colors = ButtonDefaults.buttonColors(
+                disabledContainerColor = darkGray,
+                containerColor = darkAccent
+            ),
+            onClick = { onRandom() },
         ) {
             Text(
                 color = Color.White,
@@ -77,7 +91,7 @@ fun ButtonBar(
 
 @Composable
 fun ModuleLayout(
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
     moduleResult: ModuleResult?,
 ) {
     if (moduleResult == null)
@@ -218,25 +232,27 @@ private fun MonoSpaceText(text: String) {
  * Previews *
  ************/
 
-@Preview
+@Preview(uiMode = UI_MODE_NIGHT_YES, showBackground = true)
 @Composable
 private fun ModuleLayoutPreview() {
-    XmpTheme {
-        ModuleLayout(modifier = Modifier, moduleResult = fakeModuleResult())
+    XmpTheme3 {
+        Surface {
+            ModuleLayout(modifier = Modifier, moduleResult = fakeModuleResult())
+        }
     }
 }
 
 @Preview
 @Composable
 private fun ButtonBarPreview() {
-    XmpTheme {
+    XmpTheme3 {
         ButtonBar(
             modifier = Modifier,
             playButtonText = "Play",
             onPlay = {},
             onRandom = {},
             isLoading = false,
-            isUnsupported = false,
+            isSupported = true,
         )
     }
 }

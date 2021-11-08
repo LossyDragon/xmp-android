@@ -2,6 +2,7 @@ package org.helllabs.android.xmp.ui.search.result
 
 import android.app.Activity
 import android.content.Intent
+import android.content.res.Configuration
 import android.content.res.Configuration.UI_MODE_NIGHT_NO
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.os.Bundle
@@ -9,29 +10,27 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.LinearProgressIndicator
-import androidx.compose.material.Scaffold
-import androidx.compose.material.rememberScaffoldState
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.constraintlayout.compose.Dimension
 import androidx.core.view.WindowCompat
-import com.google.accompanist.insets.navigationBarsPadding
+import com.google.accompanist.insets.*
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
 import java.io.IOException
-import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.model.Module
@@ -39,12 +38,13 @@ import org.helllabs.android.xmp.model.ModuleResult
 import org.helllabs.android.xmp.ui.components.*
 import org.helllabs.android.xmp.ui.player.PlayerActivity
 import org.helllabs.android.xmp.ui.preferences.PrefManager
-import org.helllabs.android.xmp.ui.search.ModArchiveConstants
 import org.helllabs.android.xmp.ui.search.ModArchiveConstants.ERROR
 import org.helllabs.android.xmp.ui.search.ModArchiveConstants.MODULE_ID
+import org.helllabs.android.xmp.ui.search.ModArchiveConstants.isSupported
 import org.helllabs.android.xmp.ui.search.SearchError
 import org.helllabs.android.xmp.ui.search.result.ModuleResultViewModel.ModuleState
-import org.helllabs.android.xmp.ui.theme.XmpTheme
+import org.helllabs.android.xmp.ui.theme.XmpTheme3
+import org.helllabs.android.xmp.ui.theme.sectionBackgroundDark
 import org.helllabs.android.xmp.util.*
 import org.helllabs.android.xmp.util.toast
 import org.helllabs.android.xmp.util.yesNoDialog
@@ -67,11 +67,18 @@ class ModuleResult : AppCompatActivity() {
 
         logD("onCreate")
         setContent {
-            ModuleResultScreen(
-                intentId = id,
-                onBack = { onBackPressed() },
-                viewModel = viewModel,
-            )
+            val uiController = rememberSystemUiController()
+            SideEffect {
+                uiController.setNavigationBarColor(color = sectionBackgroundDark)
+            }
+
+            ProvideWindowInsets {
+                ModuleResultScreen(
+                    intentId = id,
+                    onBack = { onBackPressed() },
+                    viewModel = viewModel,
+                )
+            }
         }
     }
 
@@ -209,6 +216,7 @@ private fun ModuleResultScreen(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ModuleResultLayout(
     @StringRes appTitle: Int,
@@ -220,42 +228,55 @@ private fun ModuleResultLayout(
     onRandom: () -> Unit,
     onUpdate: (module: Module) -> Unit,
 ) {
-    XmpTheme(
-        onlyStyleStatusBar = true,
-    ) {
+    XmpTheme3 {
+        val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+
         var moduleResult by remember { mutableStateOf<ModuleResult?>(null) }
         var moduleExists by rememberSaveable { mutableStateOf(false) }
         val scaffoldState = rememberScaffoldState()
+
+        var isLoading by rememberSaveable { mutableStateOf(false) }
+        var isSupported by rememberSaveable { mutableStateOf(false) }
+        var buttonText by rememberSaveable { mutableStateOf("Loading...") }
+
         Scaffold(
             topBar = {
-                AppBar(
-                    title = stringResource(id = appTitle),
-                    navIconClick = { onBack() },
-                    menuActions = {
-                        if (moduleExists) DeleteMenu({ onDelete(moduleResult!!.module!!) })
-                    },
+                // Top App Bar
+                val rotation = LocalConfiguration.current.orientation
+                val appBarModifier =
+                    if (rotation == Configuration.ORIENTATION_PORTRAIT) Modifier.statusBarsPadding()
+                    else Modifier.systemBarsPadding()
+
+                XmpAppBar3(
+                    modifier = appBarModifier,
+                    scrollBehavior = scrollBehavior,
+                    onNavIconPressed = onBack,
+                    titleText = stringResource(id = appTitle),
+                    actions = {
+                        if (moduleExists)
+                            DeleteMenu({ onDelete(moduleResult!!.module!!) })
+                    }
+                )
+            },
+            bottomBar = {
+                ButtonBar(
+                    modifier = Modifier.navigationBarsPadding(),
+                    playButtonText = buttonText,
+                    isLoading = isLoading,
+                    isSupported = isSupported,
+                    onPlay = { onPlay(moduleResult!!.module!!) },
+                    onRandom = { onRandom() },
                 )
             },
             scaffoldState = scaffoldState,
-            snackbarHost = { scaffoldState.snackbarHostState },
-        ) {
-            val scope = rememberCoroutineScope()
+        ) { contentPadding ->
             val context = LocalContext.current
-            var isLoading by rememberSaveable { mutableStateOf(false) }
-            var buttonText by rememberSaveable { mutableStateOf("") }
+            val scrollState = rememberScrollState()
 
             context.logD("State: $viewModelState")
             when (viewModelState) {
                 ModuleState.Cancelled -> {
-                    val msg = stringResource(id = R.string.msg_download_cancelled)
-                    SideEffect {
-                        scope.launch {
-                            scaffoldState.snackbarHostState.showSnackbar(
-                                message = msg,
-                                actionLabel = context.getString(R.string.ok)
-                            )
-                        }
-                    }
+                    ShowToast(res = R.string.msg_download_cancelled)
                     isLoading = false
                 }
                 ModuleState.Complete -> {
@@ -272,14 +293,7 @@ private fun ModuleResultLayout(
                     buttonText = stringResource(id = R.string.button_downloading)
                 }
                 is ModuleState.DownloadError -> {
-                    SideEffect {
-                        scope.launch {
-                            scaffoldState.snackbarHostState.showSnackbar(
-                                message = viewModelState.downloadError,
-                                actionLabel = context.getString(R.string.ok)
-                            )
-                        }
-                    }
+                    ShowToast(text = viewModelState.downloadError)
                     isLoading = false
                 }
                 is ModuleState.Error -> {
@@ -303,75 +317,39 @@ private fun ModuleResultLayout(
                 }
             }
 
-            ConstraintLayout(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .navigationBarsPadding()
-            ) {
-                val (column, snack, loading, buttons) = createRefs()
-
-                if (isLoading) {
-                    LinearProgressIndicator(
-                        modifier = Modifier
-                            .constrainAs(loading) {
-                                width = Dimension.fillToConstraints
-                                top.linkTo(parent.top)
-                            }
-                            .fillMaxWidth()
-                    )
-                }
-
-                ModuleLayout(
-                    modifier = Modifier.constrainAs(column) {
-                        height = Dimension.fillToConstraints
-                        width = Dimension.fillToConstraints
-                        top.linkTo(parent.top)
-                        bottom.linkTo(buttons.top)
-                        start.linkTo(parent.start)
-                        end.linkTo(parent.end)
-                    },
-                    moduleResult = moduleResult,
-                )
-
-                Snackbar(
-                    modifier = Modifier.constrainAs(snack) {
-                        width = Dimension.fillToConstraints
-                        bottom.linkTo(buttons.top)
-                    },
-                    snackBarState = scaffoldState.snackbarHostState,
-                    onDismiss = {
-                        scaffoldState.snackbarHostState.currentSnackbarData?.dismiss()
-                    }
-                )
-
+            if (!isLoading) {
+                context.logD("State: isLoading: $isLoading for Buttons")
                 moduleExists = FileUtils.localFile(moduleResult?.module)?.exists() ?: false
-                val isUnSupported =
-                    listOf(*ModArchiveConstants.UNSUPPORTED).contains(moduleResult?.module?.format)
-                if (!isLoading) {
-                    context.logD("State: isLoading: $isLoading for Buttons")
-                    buttonText =
-                        stringResource(id = if (moduleExists) R.string.play else R.string.download)
-                    if (isUnSupported)
-                        buttonText = stringResource(id = R.string.button_download_unsupported)
+                isSupported = moduleResult?.module?.isSupported() ?: true
+                buttonText = when {
+                    !isSupported -> stringResource(id = R.string.button_download_unsupported)
+                    moduleExists -> stringResource(id = R.string.play)
+                    else -> stringResource(id = R.string.download)
                 }
+            }
 
-                ButtonBar(
+            Column(
+                modifier = Modifier
+                    .padding(contentPadding)
+                    .fillMaxSize()
+                    .nestedScroll(scrollBehavior.nestedScrollConnection)
+                    .verticalScroll(scrollState),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Box(
                     modifier = Modifier
-                        .constrainAs(buttons) {
-                            width = Dimension.fillToConstraints
-                            top.linkTo(column.bottom)
-                            bottom.linkTo(parent.bottom)
-                        },
-                    playButtonText = buttonText,
-                    isLoading = isLoading,
-                    isUnsupported = isUnSupported,
-                    onPlay = {
-                        onPlay(moduleResult!!.module!!)
-                    },
-                    onRandom = {
-                        onRandom()
-                    },
-                )
+                        .fillMaxSize()
+                        .weight(.5f)
+                ) {
+                    ProgressbarIndicator(isLoading)
+
+                    if (!isLoading) {
+                        ModuleLayout(
+                            modifier = Modifier.padding(start = 16.dp, end = 16.dp),
+                            moduleResult = moduleResult,
+                        )
+                    }
+                }
             }
         }
     }
@@ -389,7 +367,7 @@ private fun ModuleResultPreview() {
     ModuleResultLayout(
         appTitle = R.string.search_module_title,
         viewModelState = state,
-        onBack = { },
+        onBack = {},
         onDelete = {},
         onError = {},
         onPlay = {},

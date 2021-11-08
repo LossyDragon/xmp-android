@@ -7,22 +7,4 @@
         <item name="md_color_widget">@color/accent</item>
     </style>
 
-    <style name="CompatComposeTheme" parent="@style/Theme.AppCompat.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/primary</item>
-        <item name="colorPrimaryDark">@color/primary_dark</item>
-        <item name="colorAccent">@color/accent</item>
-
-        <!-- Compat colors for item_playlist -->
-        <item name="android:textColor">@color/compatColor</item>
-        <item name="tint">@color/compatColor</item>
-
-        <!-- Material Dialogs -->
-        <item name="md_corner_radius">8dp</item>
-        <item name="md_color_button_text">@color/dialogButtons</item>
-
-        <!-- Status & Navigation -->
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">@android:color/transparent</item>
-    </style>
-
 </resources>

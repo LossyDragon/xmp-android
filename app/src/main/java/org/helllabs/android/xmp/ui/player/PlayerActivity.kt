@@ -10,28 +10,28 @@ import android.view.Display
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.WindowManager
 import android.widget.FrameLayout
-import android.widget.TextView
-import android.widget.ViewFlipper
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.annotation.ColorRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.BottomSheetScaffold
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.Icon
+import androidx.compose.material.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.afollestad.materialdialogs.MaterialDialog
+import com.google.accompanist.insets.ProvideWindowInsets
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlinx.coroutines.*
@@ -41,12 +41,10 @@ import org.greenrobot.eventbus.ThreadMode
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.XmpApplication
+import org.helllabs.android.xmp.model.ModInfo
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.service.utils.*
-import org.helllabs.android.xmp.ui.components.DetailsSheet
-import org.helllabs.android.xmp.ui.components.PlayerButtons
-import org.helllabs.android.xmp.ui.components.PlayerInfo
-import org.helllabs.android.xmp.ui.components.PlayerTimeBar
+import org.helllabs.android.xmp.ui.components.*
 import org.helllabs.android.xmp.ui.player.viewer.ChannelViewer
 import org.helllabs.android.xmp.ui.player.viewer.InstrumentViewer
 import org.helllabs.android.xmp.ui.player.viewer.PatternViewer
@@ -68,7 +66,6 @@ class PlayerActivity : ComponentActivity() {
     private lateinit var playerDisplay: Display
     private val modVars = IntArray(10)
     private val seqVars = IntArray(Xmp.MAX_SEQUENCES) // this is MAX_SEQUENCES defined in common.h
-    private var currentViewer = 0
     private var fileList: List<String>? = null
     private var info: Viewer.Info? = null
     private var isBound = false
@@ -86,8 +83,6 @@ class PlayerActivity : ComponentActivity() {
 
     /* Views */
     private lateinit var channelViewer: Viewer
-    private lateinit var infoName: Array<TextView>
-    private lateinit var infoType: Array<TextView>
     private lateinit var instrumentViewer: Viewer
     private lateinit var patternViewer: Viewer
     private lateinit var viewer: Viewer
@@ -192,13 +187,6 @@ class PlayerActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-        window.statusBarColor = resources.color(R.color.primary)
-        window.navigationBarColor = resources.color(R.color.section_background_darker)
-
-        logI("onCreate")
-        setContentView(R.layout.activity_player)
-
         onNewIntent(intent)
 
         playerDisplay = if (Api.isAtLeastR) {
@@ -219,93 +207,131 @@ class PlayerActivity : ComponentActivity() {
         }
         registerReceiver(screenReceiver, filter)
 
-        infoName = arrayOf(findViewById(R.id.info_name_0), findViewById(R.id.info_name_1))
-        infoType = arrayOf(findViewById(R.id.info_type_0), findViewById(R.id.info_type_1))
-
-        // Get the background color of the activity.
-        val color: Int = resources.color(
+        // Taken from Material 3's Palette.kt colors.
+        val light = Color(red = 255, green = 251, blue = 254)
+        val dark = Color(red = 28, green = 27, blue = 31)
+        val color: Int =
             when (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
-                Configuration.UI_MODE_NIGHT_NO -> R.color.playerScreenBackground
-                Configuration.UI_MODE_NIGHT_YES -> R.color.playerScreenBackgroundDark
-                else -> R.color.playerScreenBackgroundDark // Fallback
-            }
-        )
+                Configuration.UI_MODE_NIGHT_NO -> light
+                Configuration.UI_MODE_NIGHT_YES -> dark
+                else -> dark
+            }.toArgb()
 
         instrumentViewer = InstrumentViewer(this, color)
         channelViewer = ChannelViewer(this, color)
         patternViewer = PatternViewer(this, color)
         viewer = instrumentViewer
 
-        findViewById<ComposeView>(R.id.composedPlayerLayout).setContent {
-            PlayerLayout(
-                background = color,
-                viewModel = viewModel,
-                viewer = viewer,
-                onFrameClick = {
-                    if (canChangeViewer) {
-                        changeViewer()
-                    }
-                },
-                onSeek = {
-                    if (isBound) {
-                        val seekTo = (it * 100).toLong()
-                        mediaControls.seekTo(seekTo)
-                        playTime = Xmp.time() / 100F
-                    }
-                },
-                onStop = {
-                    if (isBound) {
-                        logD("Stop button pressed")
-                        mediaControls.stop()
-                    }
-                },
-                onPrev = {
-                    if (isBound) {
-                        logD("Back button pressed")
-                        mediaControls.skipToPrevious()
-                        skipToPrevious = true
-                    }
-                },
-                onPlay = {
-                    if (isBound) {
-                        val isPaused = modPlayer.isPaused()
-                        logD("Play/pause button pressed (paused=$isPaused)")
-                        if (isPaused) {
-                            mediaControls.play()
-                            viewModel.setPlaying(true)
-                        } else {
-                            mediaControls.pause()
-                            viewModel.setPlaying(false)
+        setContent {
+            var currentViewer by remember { mutableStateOf(0) }
+
+            ProvideWindowInsets {
+                // Change System Bar colors.
+                val uiController = rememberSystemUiController()
+                SideEffect {
+                    uiController.setNavigationBarColor(color = sectionBackgroundDark)
+                    uiController.setStatusBarColor(color = darkPrimary)
+                }
+
+                val androidView: @Composable (padding: PaddingValues) -> Unit = {
+                    AndroidView(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(
+                                start = 16.dp,
+                                end = 16.dp,
+                                bottom = it.calculateBottomPadding()
+                            ),
+                        factory = { context ->
+                            FrameLayout(context).apply {
+                                layoutParams = FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
+                                addView(viewer)
+                                setOnClickListener {
+                                    if (canChangeViewer) {
+                                        currentViewer++
+                                        currentViewer %= 3
+
+                                        removeAllViews()
+                                        when (currentViewer) {
+                                            0 -> viewer = instrumentViewer
+                                            1 -> viewer = channelViewer
+                                            2 -> viewer = patternViewer
+                                        }
+                                        addView(viewer)
+
+                                        viewer.setup(modVars)
+                                        viewer.setRotation(playerDisplay.rotation)
+                                    }
+                                }
+                            }
+                        },
+                    )
+                }
+
+                PlayerLayout3(
+                    viewModel = viewModel,
+                    androidView = androidView,
+                    onSeek = {
+                        if (isBound) {
+                            val seekTo = (it * 100).toLong()
+                            mediaControls.seekTo(seekTo)
+                            playTime = Xmp.time() / 100F
+                        }
+                    },
+                    onStop = {
+                        if (isBound) {
+                            logD("Stop button pressed")
+                            mediaControls.stop()
+                        }
+                    },
+                    onPrev = {
+                        if (isBound) {
+                            logD("Back button pressed")
+                            mediaControls.skipToPrevious()
+                            skipToPrevious = true
+                        }
+                    },
+                    onPlay = {
+                        if (isBound) {
+                            val isPaused = modPlayer.isPaused()
+                            logD("Play/pause button pressed (paused=$isPaused)")
+                            if (isPaused) {
+                                mediaControls.play()
+                                viewModel.setPlaying(true)
+                            } else {
+                                mediaControls.pause()
+                                viewModel.setPlaying(false)
+                            }
+                        }
+                    },
+                    onNext = {
+                        if (isBound) {
+                            logD("Next button pressed")
+                            mediaControls.skipToNext()
+                            skipToPrevious = false
+                        }
+                    },
+                    onRepeat = {
+                        if (isBound) {
+                            logD("Loop button pressed")
+                            val bool = modPlayer.toggleLoop()
+                            viewModel.setRepeat(bool)
+                        }
+                    },
+                    onAllSeq = {
+                        if (isBound) {
+                            val bool = modPlayer.toggleAllSequences()
+                            viewModel.setAllSequences(bool)
+                        }
+                    },
+                    onSequence = {
+                        if (isBound) {
+                            modPlayer.setSequence(it)
+                            viewModel.currentSequence(it)
                         }
                     }
-                },
-                onNext = {
-                    if (isBound) {
-                        logD("Next button pressed")
-                        mediaControls.skipToNext()
-                        skipToPrevious = false
-                    }
-                },
-                onRepeat = {
-                    if (isBound) {
-                        logD("Loop button pressed")
-                        val bool = modPlayer.toggleLoop()
-                        viewModel.setRepeat(bool)
-                    }
-                },
-                onAllSeq = {
-                    if (isBound) {
-                        val bool = modPlayer.toggleAllSequences()
-                        viewModel.setAllSequences(bool)
-                    }
-                },
-                onSequence = {
-                    if (isBound) {
-                        modPlayer.setSequence(it)
-                        viewModel.currentSequence(it)
-                    }
-                }
-            )
+                )
+            }
         }
 
         if (PrefManager.keepScreenOn)
@@ -438,24 +464,6 @@ class PlayerActivity : ComponentActivity() {
         }
     }
 
-    private fun changeViewer() {
-        if (isBound) {
-            currentViewer++
-            currentViewer %= 3
-            with(findViewById<FrameLayout>(R.id.composeFrameLayout)) {
-                removeAllViews()
-                when (currentViewer) {
-                    0 -> viewer = instrumentViewer
-                    1 -> viewer = channelViewer
-                    2 -> viewer = patternViewer
-                }
-                addView(viewer)
-            }
-            viewer.setup(modVars)
-            viewer.setRotation(playerDisplay.rotation)
-        }
-    }
-
     private fun saveAllSeqPreference() {
         // Write our all sequences button status to shared prefs
         if (isBound) {
@@ -512,20 +520,10 @@ class PlayerActivity : ComponentActivity() {
         viewModel.setSeekPos(playTime)
         viewModel.setSeekMax(time / 100F)
 
-        with(findViewById<ViewFlipper>(R.id.title_flipper)) {
-            viewModel.setFlipperPage((viewModel.flipperPage.value!! + 1) % 2)
-            infoName[viewModel.flipperPage.value!!].text = modPlayer.getModName()
-            infoType[viewModel.flipperPage.value!!].text = Xmp.getModType()
-            if (skipToPrevious) {
-                setInAnimation(this@PlayerActivity, R.anim.slide_in_left_slow)
-                setOutAnimation(this@PlayerActivity, R.anim.slide_out_right_slow)
-            } else {
-                setInAnimation(this@PlayerActivity, R.anim.slide_in_right_slow)
-                setOutAnimation(this@PlayerActivity, R.anim.slide_out_left_slow)
-            }
-            skipToPrevious = false
-            showNext()
-        }
+        val modInfo = ModInfo(modPlayer.getModName(), Xmp.getModType())
+        viewModel.setCurrentlyPlaying(modInfo)
+        viewModel.setFlipperCount(!skipToPrevious)
+        skipToPrevious = false
 
         viewer.setup(modVars)
         viewer.setRotation(playerDisplay.rotation)
@@ -718,11 +716,9 @@ class PlayerActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterialApi::class) // BottomSheetScaffold
 @Composable
-private fun PlayerLayout(
-    @ColorRes background: Int,
+private fun PlayerLayout3(
     viewModel: PlayerActivityViewModel,
-    viewer: Viewer,
-    onFrameClick: () -> Unit,
+    androidView: @Composable (padding: PaddingValues) -> Unit,
     onSeek: (Float) -> Unit,
     onStop: () -> Unit,
     onPrev: () -> Unit,
@@ -732,71 +728,52 @@ private fun PlayerLayout(
     onAllSeq: (Boolean) -> Unit,
     onSequence: (Int) -> Unit,
 ) {
-    BottomSheetScaffold(
-        sheetPeekHeight = 155.dp,
-        sheetBackgroundColor = sectionBackground,
-        sheetShape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
-        sheetContent = {
-            PlayerSheetLayout(
-                viewModel,
-                onSeek = { onSeek(it) },
-                onStop = { onStop() },
-                onPrev = { onPrev() },
-                onPlay = { onPlay() },
-                onNext = { onNext() },
-                onRepeat = { onRepeat() },
-                onAllSeq = { onAllSeq(it) },
-                onSequence = { onSequence(it) },
-            )
-        }
-    ) {
-        // The Box colors underneath the bottom sheet.
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(background))
+    val scaffoldState = rememberBottomSheetScaffoldState(
+        bottomSheetState = rememberBottomSheetState(BottomSheetValue.Collapsed)
+    )
+
+    // 16 for waterfall displays
+    val radius = (16 * scaffoldState.currentFraction).dp
+
+    XmpTheme3 {
+        BottomSheetScaffold(
+            modifier = Modifier.fillMaxSize(),
+            scaffoldState = scaffoldState,
+            topBar = {
+                val mod = viewModel.currentlyPlaying.observeAsState(ModInfo("", ""))
+                val count = viewModel.flipperCount.observeAsState(0)
+                ViewFlipper(
+                    modifier = Modifier.background(darkPrimary),
+                    count = count.value,
+                    modTitle = mod.value.name!!,
+                    format = mod.value.type!!,
+                )
+            },
+            backgroundColor = MaterialTheme.colorScheme.background,
+            sheetBackgroundColor = sectionBackground,
+            sheetGesturesEnabled = true, // TODO re-add sheet lock?
+            sheetPeekHeight = 155.dp, // TODO fix?
+            sheetShape = RoundedCornerShape(topStart = radius, topEnd = radius),
+            sheetContent = {
+                PlayerSheetPeekContent(
+                    viewModel = viewModel,
+                    onSeek = { onSeek(it) },
+                    onStop = { onStop() },
+                    onPrev = { onPrev() },
+                    onPlay = { onPlay() },
+                    onNext = { onNext() },
+                    onRepeat = { onRepeat() },
+                )
+                PlayerSheetContent(
+                    viewModel = viewModel,
+                    onAllSeq = { onAllSeq(it) },
+                    onSequence = { onSequence(it) }
+                )
+            },
         ) {
-            AndroidView(
-                modifier = Modifier.padding(bottom = 155.dp), // Forced padding, kinda bad...
-                factory = { context ->
-                    FrameLayout(context).apply {
-                        id = R.id.composeFrameLayout
-                        layoutParams = FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
-                        addView(viewer)
-                        setOnClickListener { onFrameClick() }
-                    }
-                }
-            )
+            androidView(it)
         }
     }
-}
-
-@Composable
-private fun PlayerSheetLayout(
-    viewModel: PlayerActivityViewModel,
-    onSeek: (Float) -> Unit,
-    onStop: () -> Unit,
-    onPrev: () -> Unit,
-    onPlay: () -> Unit,
-    onNext: () -> Unit,
-    onRepeat: () -> Unit,
-    onAllSeq: (Boolean) -> Unit,
-    onSequence: (Int) -> Unit,
-) {
-    PlayerSheetPeekContent(
-        viewModel = viewModel,
-        onSeek = { onSeek(it) },
-        onStop = { onStop() },
-        onPrev = { onPrev() },
-        onPlay = { onPlay() },
-        onNext = { onNext() },
-        onRepeat = { onRepeat() },
-    )
-    PlayerSheetContent(
-        viewModel = viewModel,
-        onAllSeq = { onAllSeq(it) },
-        onSequence = { onSequence(it) }
-    )
 }
 
 @Composable
@@ -829,11 +806,14 @@ private fun PlayerSheetPeekContent(
         verticalArrangement = Arrangement.Center
     ) {
         Spacer(modifier = Modifier.height(8.dp))
+
+        // TODO can't I just draw this via compose?
         Icon(
             painter = painterResource(id = R.drawable.ic_sheet_handle),
             tint = lightGray,
             contentDescription = null
         )
+
         if (showInfo) {
             Spacer(modifier = Modifier.height(8.dp))
             PlayerInfo(speed = spd.value, bpm = bpm.value, pos = pos.value, pat = pat.value)

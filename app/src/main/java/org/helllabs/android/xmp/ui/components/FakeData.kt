@@ -65,6 +65,31 @@ fun fakeDataPlaylistMenu(): List<PlaylistItem> {
     return list
 }
 
+fun fakeDataArtistResult(): List<Item> {
+    val result = mutableListOf<Item>()
+    repeat(8) {
+        result.add(Item(alias = "Item $it"))
+    }
+
+    return result
+}
+
+fun fakeDataSearchListResult(): List<Module> {
+    val result = mutableListOf<Module>()
+    repeat(8) {
+        result.add(
+            Module(
+                format = "XM",
+                songtitle = "Some Song Title $it",
+                artistInfo = ArtistInfo(artist = Artist(alias = "Some Artist")),
+                bytes = 669669
+            )
+        )
+    }
+
+    return result
+}
+
 fun fakeModuleResult(): ModuleResult {
     val instruments = buildAnnotatedString {
         repeat(20) {

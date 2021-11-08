@@ -13,6 +13,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.insets.LocalWindowInsets
+import com.google.accompanist.insets.navigationBarsPadding
 import com.google.accompanist.insets.rememberInsetsPaddingValues
 import kotlinx.coroutines.launch
 
@@ -22,7 +23,7 @@ private val ScrollThreshold = 56.dp
 @Composable
 fun LazyList(
     modifier: Modifier,
-    scrollModifier: Modifier = Modifier,
+    scrollModifier: Modifier = Modifier.navigationBarsPadding(),
     shouldPadBottom: Boolean = true,
     additionalBottomPad: Dp = 80.dp,
     boxContent: @Composable BoxScope.() -> Unit,
@@ -59,7 +60,8 @@ fun LazyList(
         }
 
         ScrollBackUp(
-            modifier = scrollModifier.align(Alignment.BottomCenter),
+            modifier = scrollModifier
+                .align(Alignment.BottomCenter),
             enabled = scrollButtonEnabled,
             onClicked = {
                 scope.launch {

@@ -5,19 +5,14 @@ import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Divider
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalConfiguration
@@ -53,7 +48,7 @@ class About : ComponentActivity() {
 
         logD("onCreate")
         setContent {
-            ProvideWindowInsets(consumeWindowInsets = false) {
+            ProvideWindowInsets {
                 AboutLayout(
                     onBack = { onBackPressed() },
                     appVersion = BuildConfig.VERSION_NAME,
@@ -74,57 +69,61 @@ private fun AboutLayout(
     val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
 
     XmpTheme3 {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
+        Scaffold(
+            topBar = {
+                val rotation = LocalConfiguration.current.orientation
+                val appBarModifier =
+                    if (rotation == Configuration.ORIENTATION_PORTRAIT)
+                        Modifier.statusBarsPadding()
+                    else Modifier.systemBarsPadding()
+
+                XmpAppBar3(
+                    modifier = appBarModifier,
+                    scrollBehavior = scrollBehavior,
+                    titleText = stringResource(id = R.string.pref_about_title),
+                    onNavIconPressed = { onBack() }
+                )
+            }
         ) {
-            val rotation = LocalConfiguration.current.orientation
-            val appBarModifier =
-                if (rotation == Configuration.ORIENTATION_PORTRAIT)
-                    Modifier.statusBarsPadding()
-                else Modifier.systemBarsPadding()
-
-            XmpAppBar3(
-                modifier = appBarModifier,
-                scrollBehavior = scrollBehavior,
-                titleText = stringResource(id = R.string.pref_about_title),
-                onNavIconPressed = { onBack() }
-            )
-
-            Surface {
-                Column(
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(start = 16.dp, end = 16.dp)
+                    .navigationBarsPadding()
+                    .nestedScroll(scrollBehavior.nestedScrollConnection)
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = themedText(R.string.app_name),
+                    textAlign = TextAlign.Center,
+                    fontFamily = michromaFontFamily,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    style = TextStyle(baselineShift = BaselineShift(.3f)),
+                )
+                AboutText(stringResource(id = R.string.about_version, appVersion))
+                AboutText(stringResource(id = R.string.about_author))
+                AboutText(stringResource(id = R.string.about_xmp, xmpVersion))
+                Spacer(modifier = Modifier.height(8.dp))
+                Divider(
+                    modifier = Modifier.fillMaxWidth(.85f),
+                    color = MaterialTheme.colorScheme.inverseSurface
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
                     modifier = Modifier
-                        .verticalScroll(rememberScrollState())
-                        .padding(16.dp)
-                        .navigationBarsPadding()
-                ) {
-                    Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = themedText(R.string.app_name),
-                        textAlign = TextAlign.Center,
-                        fontFamily = michromaFontFamily,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        style = TextStyle(baselineShift = BaselineShift(.3f)),
-                    )
-                    AboutText(stringResource(id = R.string.about_version, appVersion))
-                    AboutText(stringResource(id = R.string.about_author))
-                    AboutText(stringResource(id = R.string.about_xmp, xmpVersion))
-                    Divider(modifier = Modifier.padding(top = 8.dp, bottom = 8.dp))
-                    Text(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 4.dp, bottom = 4.dp),
-                        text = stringResource(id = R.string.changelog),
-                        fontFamily = michromaFontFamily,
-                        textAlign = TextAlign.Center,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        style = TextStyle(baselineShift = BaselineShift(.3f)),
-                    )
-                    AboutText(stringResource(id = R.string.changelog_text), TextAlign.Start)
-                }
+                        .fillMaxWidth()
+                        .padding(top = 4.dp, bottom = 4.dp),
+                    text = stringResource(id = R.string.changelog),
+                    fontFamily = michromaFontFamily,
+                    textAlign = TextAlign.Center,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    style = TextStyle(baselineShift = BaselineShift(.3f)),
+                )
+                AboutText(stringResource(id = R.string.changelog_text), TextAlign.Start)
             }
         }
     }

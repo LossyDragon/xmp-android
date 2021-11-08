@@ -169,7 +169,7 @@ class Notifier(
 
     companion object {
         const val CHANNEL_ID = BuildConfig.APPLICATION_ID
-        const val NOTIFY_ID = R.layout.activity_player
+        const val NOTIFY_ID = 669
 
         const val TYPE_TICKER = 1
         const val TYPE_PAUSE = 2

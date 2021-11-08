@@ -70,7 +70,7 @@ class PlaylistEdit : AppCompatActivity() {
 
         logD("onCreate")
         setContent {
-            ProvideWindowInsets(consumeWindowInsets = false) {
+            ProvideWindowInsets {
                 PlaylistEditScreen(
                     intent = intent,
                     onBack = { onBackPressed() },
@@ -128,8 +128,6 @@ private fun PlaylistEditContent(
     onEdit: (name: String, comment: String) -> Unit,
 ) {
     val context = LocalContext.current
-    val scrollState = rememberScrollState()
-    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
 
     val deleteState = rememberMaterialDialogState()
     DialogMessage(
@@ -156,166 +154,164 @@ private fun PlaylistEditContent(
     )
 
     XmpTheme3 {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
+        val scrollState = rememberScrollState()
+        val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+
+        Scaffold(
+            topBar = {
+                // Top App Bar
+                val rotation = LocalConfiguration.current.orientation
+                val appBarModifier =
+                    if (rotation == Configuration.ORIENTATION_PORTRAIT) Modifier.statusBarsPadding()
+                    else Modifier.systemBarsPadding()
+
+                val title = if (isEditing) R.string.title_edit_playlist else appTitle
+                XmpAppBar3(
+                    modifier = appBarModifier,
+                    scrollBehavior = scrollBehavior,
+                    titleText = stringResource(id = title),
+                    onNavIconPressed = onBack,
+                )
+            }
         ) {
-            // Top App Bar
-            val rotation = LocalConfiguration.current.orientation
-            val appBarModifier =
-                if (rotation == Configuration.ORIENTATION_PORTRAIT) Modifier.statusBarsPadding()
-                else Modifier.systemBarsPadding()
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(start = 16.dp, end = 16.dp)
+                    .navigationBarsWithImePadding()
+                    .nestedScroll(scrollBehavior.nestedScrollConnection)
+                    .verticalScroll(scrollState),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                var name by rememberSaveable { mutableStateOf(intentName) }
+                var comment by rememberSaveable { mutableStateOf(intentComment) }
+                val focusManager = LocalFocusManager.current
+                val focusRequester = FocusRequester()
+                val keyboard = LocalSoftwareKeyboardController.current
 
-            XmpAppBar3(
-                modifier = appBarModifier,
-                scrollBehavior = scrollBehavior,
-                titleText = stringResource(
-                    id = if (isEditing) R.string.title_edit_playlist else appTitle
-                ),
-                onNavIconPressed = onBack,
-            )
+                val checkName: Boolean = name.trim().isBlank()
+                val addText =
+                    if (isEditing) R.string.button_playlist_update
+                    else R.string.button_playlist_add
 
-            // Content
-            Surface {
-                Column(
+                OutlinedTextField(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(start = 16.dp, end = 16.dp)
-                        .navigationBarsWithImePadding()
-                        .verticalScroll(scrollState),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    var name by rememberSaveable { mutableStateOf(intentName) }
-                    var comment by rememberSaveable { mutableStateOf(intentComment) }
-                    val focusManager = LocalFocusManager.current
-                    val focusRequester = FocusRequester()
-                    val keyboard = LocalSoftwareKeyboardController.current
-                    val context = LocalContext.current
-
-                    val checkName: Boolean = name.trim().isBlank()
-                    val addText =
-                        if (isEditing) R.string.button_playlist_update
-                        else R.string.button_playlist_add
-
-                    OutlinedTextField(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .focusRequester(focusRequester),
-                        value = name,
-                        onValueChange = { name = it },
-                        isError = name.isEmpty(),
-                        colors = TextFieldDefaults.outlinedTextFieldColors(
-                            textColor = MaterialTheme.colorScheme.onBackground,
-                            cursorColor = MaterialTheme.colorScheme.primary,
-                            focusedBorderColor = MaterialTheme.colorScheme.secondary,
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onNext = {
-                                focusManager.moveFocus(FocusDirection.Down)
-                            }
-                        ),
-                        keyboardOptions = KeyboardOptions.Default.copy(
-                            imeAction = ImeAction.Next,
-                            keyboardType = KeyboardType.Text
-                        ),
-                        maxLines = 1,
-                        label = { Text(stringResource(id = R.string.hint_playlist_name)) },
-                    )
-                    val helperText = stringResource(id = R.string.playlist_edit_helper_text)
-                    Row {
-                        AnimatedVisibility(
-                            visible = name.isEmpty(),
-                            enter = fadeIn(initialAlpha = 0.4f),
-                            exit = fadeOut(animationSpec = tween(durationMillis = 250))
-                        ) {
-                            Text(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(start = 15.dp),
-                                text = helperText,
-                                fontSize = 10.sp
-                            )
+                        .fillMaxWidth()
+                        .focusRequester(focusRequester),
+                    value = name,
+                    onValueChange = { name = it },
+                    isError = name.isEmpty(),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        textColor = MaterialTheme.colorScheme.onBackground,
+                        cursorColor = MaterialTheme.colorScheme.primary,
+                        focusedBorderColor = MaterialTheme.colorScheme.secondary,
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onNext = {
+                            focusManager.moveFocus(FocusDirection.Down)
                         }
-                        Spacer(modifier = Modifier.height(24.dp))
+                    ),
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        imeAction = ImeAction.Next,
+                        keyboardType = KeyboardType.Text
+                    ),
+                    maxLines = 1,
+                    label = { Text(stringResource(id = R.string.hint_playlist_name)) },
+                )
+                val helperText = stringResource(id = R.string.playlist_edit_helper_text)
+                Row {
+                    AnimatedVisibility(
+                        visible = name.isEmpty(),
+                        enter = fadeIn(initialAlpha = 0.4f),
+                        exit = fadeOut(animationSpec = tween(durationMillis = 250))
+                    ) {
+                        Text(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 16.dp),
+                            text = helperText,
+                            fontSize = 10.sp
+                        )
                     }
-                    OutlinedTextField(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        value = comment,
-                        onValueChange = { comment = it },
-                        colors = TextFieldDefaults.outlinedTextFieldColors(
-                            textColor = MaterialTheme.colorScheme.onBackground,
-                            cursorColor = MaterialTheme.colorScheme.primary,
-                            focusedBorderColor = MaterialTheme.colorScheme.secondary,
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onDone = {
-                                // Check if name is empty.
-                                if (checkName) {
-                                    context.toast(R.string.error_playlist_name)
-                                    focusManager.moveFocus(FocusDirection.Up)
-                                    return@KeyboardActions
-                                }
-                                focusManager.clearFocus()
-                                onEdit(name, comment)
-                            }
-                        ),
-                        keyboardOptions = KeyboardOptions.Default.copy(
-                            imeAction = ImeAction.Done,
-                            keyboardType = KeyboardType.Text
-                        ),
-                        maxLines = 3,
-                        label = { Text(stringResource(id = R.string.hint_playlist_comment)) },
-                    )
                     Spacer(modifier = Modifier.height(24.dp))
+                }
+
+                OutlinedTextField(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    value = comment,
+                    onValueChange = { comment = it },
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        textColor = MaterialTheme.colorScheme.onBackground,
+                        cursorColor = MaterialTheme.colorScheme.primary,
+                        focusedBorderColor = MaterialTheme.colorScheme.secondary,
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            // Check if name is empty.
+                            if (checkName) {
+                                context.toast(R.string.error_playlist_name)
+                                focusManager.moveFocus(FocusDirection.Up)
+                                return@KeyboardActions
+                            }
+                            focusManager.clearFocus()
+                            onEdit(name, comment)
+                        }
+                    ),
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        imeAction = ImeAction.Done,
+                        keyboardType = KeyboardType.Text
+                    ),
+                    maxLines = 3,
+                    label = { Text(stringResource(id = R.string.hint_playlist_comment)) },
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                Button(
+                    modifier = Modifier
+                        .fillMaxWidth(.85f),
+                    colors = ButtonDefaults.buttonColors(containerColor = darkAccent),
+                    onClick = {
+                        // Check if name is empty.
+                        if (checkName) {
+                            context.toast(R.string.error_playlist_name)
+                            return@Button
+                        }
+                        focusManager.clearFocus()
+                        onEdit(name, comment)
+                    },
+                    enabled = name.isNotBlank(),
+                ) {
+                    Text(
+                        text = stringResource(id = addText),
+                        color = Color.White,
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                if (isEditing) {
                     Button(
                         modifier = Modifier
                             .fillMaxWidth(.85f),
                         colors = ButtonDefaults.buttonColors(containerColor = darkAccent),
-                        onClick = {
-                            // Check if name is empty.
-                            if (checkName) {
-                                context.toast(R.string.error_playlist_name)
-                                return@Button
-                            }
-                            focusManager.clearFocus()
-                            onEdit(name, comment)
-                        },
-                        enabled = name.isNotBlank(),
+                        onClick = { deleteState.show() },
                     ) {
                         Text(
-                            text = stringResource(id = addText),
+                            text = stringResource(
+                                id = R.string.button_playlist_delete, intentName
+                            ),
                             color = Color.White,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                     Spacer(modifier = Modifier.height(8.dp))
-                    if (isEditing) {
-                        Button(
-                            modifier = Modifier
-                                .fillMaxWidth(.85f),
-                            colors = ButtonDefaults.buttonColors(containerColor = darkAccent),
-                            onClick = { deleteState.show() },
-                        ) {
-                            Text(
-                                text = stringResource(
-                                    id = R.string.button_playlist_delete, intentName
-                                ),
-                                color = Color.White,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
+                }
 
-                    // Request focus and show the keyboard.
-                    // Showing the keyboard is very sporadic
-                    DisposableEffect(Unit) {
-                        focusRequester.requestFocus()
-                        keyboard?.show()
-                        onDispose { }
-                    }
+                // Request focus and show the keyboard.
+                // Showing the keyboard is very sporadic
+                DisposableEffect(Unit) {
+                    focusRequester.requestFocus()
+                    keyboard?.show()
+                    onDispose { }
                 }
             }
         }

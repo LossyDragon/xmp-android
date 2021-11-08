@@ -1,13 +1,8 @@
 <resources>
-    <!--    <color name="black">#FF000000</color>-->
-    <!--    <color name="darkgray">#FF102030</color>-->
-    <!--    <color name="gray">#FF282828</color>-->
     <color name="lightgray">#FFc0c0c0</color>
     <color name="white">#FFF0F0F0</color>
 
-    <!--    <color name="section_background">#FF202020</color>-->
     <color name="primary">#1a305d</color>
-    <color name="primary_dark">#801a305d</color>
     <color name="accent">#3460ba</color>
 
     <color name="section_background_darker">#FF1B1B1B</color>
@@ -15,7 +10,6 @@
     <!-- Playlist card's background color -->
     <color name="colorLightGray">#FFC0C0C0</color>
 
-    <color name="compatColor">@color/section_background_darker</color>
     <color name="playerScreenBackgroundDark">#121212</color>
     <color name="playerScreenBackground">#FFFFFF</color>
 

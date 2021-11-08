@@ -1,6 +1,7 @@
 package org.helllabs.android.xmp.ui.search
 
 import org.helllabs.android.xmp.BuildConfig
+import org.helllabs.android.xmp.model.Module
 
 object ModArchiveConstants {
     const val apiKey: String = BuildConfig.API_KEY
@@ -20,5 +21,6 @@ object ModArchiveConstants {
     const val ARTIST_ID = "artist_id"
     const val ERROR = "error"
 
-    val UNSUPPORTED = arrayOf("AHX", "HVL", "MO3")
+    private val UNSUPPORTED = listOf("AHX", "HVL", "MO3")
+    fun Module.isSupported(): Boolean = !UNSUPPORTED.contains(this.format)
 }

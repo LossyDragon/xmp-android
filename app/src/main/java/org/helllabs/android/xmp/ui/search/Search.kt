@@ -72,7 +72,7 @@ class Search : ComponentActivity() {
 
         logD("onCreate")
         setContent {
-            ProvideWindowInsets(consumeWindowInsets = false) {
+            ProvideWindowInsets {
                 SearchLayout(
                     onBack = { onBackPressed() }
                 )
@@ -90,46 +90,43 @@ private fun SearchLayout(
     val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
 
     XmpTheme3 {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
+        Scaffold(
+            topBar = {
+                // Top App Bar
+                val rotation = LocalConfiguration.current.orientation
+                val appBarModifier =
+                    if (rotation == Configuration.ORIENTATION_PORTRAIT) Modifier.statusBarsPadding()
+                    else Modifier.systemBarsPadding()
+
+                XmpAppBar3(
+                    modifier = appBarModifier,
+                    scrollBehavior = scrollBehavior,
+                    onNavIconPressed = onBack,
+                    titleText = stringResource(id = R.string.search_title)
+                )
+            }
         ) {
-            // Top App Bar
-            val rotation = LocalConfiguration.current.orientation
-            val appBarModifier =
-                if (rotation == Configuration.ORIENTATION_PORTRAIT) Modifier.statusBarsPadding()
-                else Modifier.systemBarsPadding()
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(start = 16.dp, end = 16.dp)
+                    .navigationBarsWithImePadding()
+                    .nestedScroll(scrollBehavior.nestedScrollConnection)
+                    .verticalScroll(scrollState),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                val search = remember { mutableStateOf(TextFieldValue("")) }
+                val selection = remember { mutableStateOf(0) }
+                val isSearchValid = search.value.text.length >= 3
 
-            XmpAppBar3(
-                modifier = appBarModifier,
-                scrollBehavior = scrollBehavior,
-                onNavIconPressed = onBack,
-                titleText = stringResource(id = R.string.search_title)
-            )
-            // Content
-            Surface {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(start = 16.dp, end = 16.dp)
-                        .navigationBarsWithImePadding()
-                        .verticalScroll(scrollState),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    val search = remember { mutableStateOf(TextFieldValue("")) }
-                    val selection = remember { mutableStateOf(0) }
-                    val isSearchValid = search.value.text.length >= 3
-
-                    SearchBox(search, isSearchValid, onBack)
-                    Spacer(modifier = Modifier.height(16.dp))
-                    SearchRadioSelection(selection)
-                    Spacer(modifier = Modifier.height(16.dp))
-                    SearchButtons(search, isSearchValid, selection)
-                    Spacer(modifier = Modifier.height(16.dp))
-                    SearchProvidedBy()
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
+                SearchBox(search, isSearchValid, onBack)
+                Spacer(modifier = Modifier.height(16.dp))
+                SearchRadioSelection(selection)
+                Spacer(modifier = Modifier.height(16.dp))
+                SearchButtons(search, isSearchValid, selection)
+                Spacer(modifier = Modifier.height(16.dp))
+                SearchProvidedBy()
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }

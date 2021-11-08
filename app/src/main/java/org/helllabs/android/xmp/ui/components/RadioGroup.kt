@@ -8,12 +8,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.RadioButton
+import androidx.compose.material.RadioButtonColors
 import androidx.compose.material.RadioButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.helllabs.android.xmp.ui.theme.XmpTheme3
@@ -33,14 +35,18 @@ fun RadioGroup(
                 index = index,
                 item = item,
                 selectedOption = selectedOption,
-                onSelected = { onSelected(it) },
-            )
+            ) { onSelected(it) }
         }
     }
 }
 
 @Composable
 fun RadioButtonItem(
+    radioColor: RadioButtonColors = RadioButtonDefaults.colors(
+        selectedColor = MaterialTheme.colorScheme.secondary,
+        unselectedColor = MaterialTheme.colorScheme.inverseSurface
+    ),
+    textColor: Color = MaterialTheme.colorScheme.inverseSurface,
     index: Int,
     item: String,
     selectedOption: Int,
@@ -56,12 +62,9 @@ fun RadioButtonItem(
             modifier = Modifier.padding(6.dp),
             selected = index == selectedOption,
             onClick = { onSelected(index) },
-            colors = RadioButtonDefaults.colors(
-                selectedColor = MaterialTheme.colorScheme.secondary,
-                unselectedColor = MaterialTheme.colorScheme.inverseSurface
-            )
+            colors = radioColor,
         )
-        Text(text = item, color = MaterialTheme.colorScheme.inverseSurface)
+        Text(text = item, color = textColor)
     }
 }
 

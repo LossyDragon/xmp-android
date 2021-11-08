@@ -7,11 +7,15 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,6 +32,8 @@ import kotlin.random.Random
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.ui.theme.*
 
+private val waterfallPadding = PaddingValues(start = 16.dp, end = 16.dp)
+
 @Composable
 fun PlayerInfo(
     speed: String,
@@ -36,7 +42,10 @@ fun PlayerInfo(
     pat: String,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(waterfallPadding)
+            .height(20.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -71,7 +80,9 @@ fun PlayerTimeBar(
     val isDragged by interactionSource.collectIsDraggedAsState()
 
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(waterfallPadding),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -131,7 +142,10 @@ fun PlayerButtons(
     isRepeating: Boolean
 ) {
     Row(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(waterfallPadding)
+            .height(50.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -155,7 +169,7 @@ fun PlayerButtons(
             modifier = Modifier.size(50.dp),
             color = darkAccent,
             shape = CircleShape,
-            elevation = 4.dp,
+            shadowElevation = 4.dp,
         ) {
             val animIcon = animatedVectorResource(id = R.drawable.anim_pause_play)
             var atEnd by remember { mutableStateOf(isPlaying) }
@@ -208,15 +222,15 @@ fun DetailsSheet(
         modifier = Modifier
             .fillMaxWidth()
             .background(gray)
-            .padding(4.dp)
+            .padding(waterfallPadding)
     ) {
+        Spacer(modifier = Modifier.height(8.dp))
         ModuleSection(
             text = stringResource(id = R.string.sheet_details)
         ) {
             IconButton(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(end = 4.dp)
                     .wrapContentWidth(Alignment.End),
                 onClick = { onMessage() }
             ) {
@@ -239,7 +253,6 @@ fun DetailsSheet(
             Switch(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(end = 4.dp)
                     .wrapContentWidth(Alignment.End),
                 checked = playAllSeq,
                 onCheckedChange = {
@@ -259,29 +272,24 @@ fun DetailsSheet(
 
             String.format("%2d:%02d (%s)", item / 60000, item / 1000 % 60, text)
         }
-        LazyList(
-            modifier = Modifier.fillMaxSize(),
-            shouldPadBottom = false,
-            additionalBottomPad = 0.dp,
-            boxContent = {
-                if (list.isEmpty()) {
-                    ErrorLayout(
-                        modifier = Modifier
-                            .padding(start = 16.dp, end = 16.dp)
-                            .fillMaxSize(),
-                        message = stringResource(id = R.string.msg_no_subsongs),
-                        color = Color.White
+
+        Box(
+            modifier = Modifier
+        ) {
+            Column {
+                list.forEachIndexed { index, seq ->
+                    RadioButtonItem(
+                        radioColor = RadioButtonDefaults.colors(
+                            selectedColor = MaterialTheme.colorScheme.secondary,
+                            unselectedColor = Color.White
+                        ),
+                        textColor = Color.White,
+                        item = seq,
+                        index = index,
+                        selectedOption = currentSequence,
+                        onSelected = { onSequence(it) },
                     )
                 }
-            }
-        ) {
-            itemsIndexed(items = list) { index, _ ->
-                RadioButtonItem(
-                    item = list[index],
-                    index = index,
-                    selectedOption = currentSequence,
-                    onSelected = { onSequence(it) },
-                )
             }
         }
     }
@@ -340,7 +348,7 @@ private fun ModuleInsDetails(
         Text(
             modifier = Modifier
                 .weight(1f)
-                .padding(start = 4.dp)
+                .padding(start = 6.dp)
                 .wrapContentWidth(Alignment.Start),
             text = string,
             fontSize = 14.sp,
@@ -349,7 +357,7 @@ private fun ModuleInsDetails(
         Text(
             modifier = Modifier
                 .weight(1f)
-                .padding(end = 4.dp)
+                .padding(end = 6.dp)
                 .wrapContentWidth(Alignment.End),
             text = number.toString(),
             fontSize = 14.sp,
@@ -365,7 +373,7 @@ private fun ModuleInsDetails(
 @Preview
 @Composable
 private fun PlayerInfoPreview() {
-    XmpTheme {
+    XmpTheme3 {
         PlayerInfo(
             speed = "000",
             bpm = "000",
@@ -378,7 +386,7 @@ private fun PlayerInfoPreview() {
 @Preview
 @Composable
 private fun PlayerTimeBarPreview() {
-    XmpTheme {
+    XmpTheme3 {
         PlayerTimeBar(
             currentTime = "00:00",
             totalTime = "00:00",
@@ -392,7 +400,7 @@ private fun PlayerTimeBarPreview() {
 @Preview
 @Composable
 private fun PlayerButtonsPreview() {
-    XmpTheme {
+    XmpTheme3 {
         PlayerButtons(
             onStop = {},
             onPrev = {},
@@ -410,7 +418,7 @@ private fun PlayerButtonsPreview() {
 private fun DetailsSheetPreview() {
     val moduleDetails = List(50) { Random.nextInt(1, 1000) }
     val sequences = List(50) { Random.nextInt(1000, 100000) }
-    XmpTheme {
+    XmpTheme3 {
         DetailsSheet(
             onMessage = {},
             moduleInfo = moduleDetails,

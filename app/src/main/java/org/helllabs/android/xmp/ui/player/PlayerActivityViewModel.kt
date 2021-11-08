@@ -3,13 +3,24 @@ package org.helllabs.android.xmp.ui.player
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import org.helllabs.android.xmp.model.ModInfo
 
 class PlayerActivityViewModel : ViewModel() {
 
-    private val _flipperPage = MutableLiveData(0)
-    val flipperPage: LiveData<Int> = _flipperPage
-    fun setFlipperPage(value: Int) {
-        _flipperPage.value = value
+    private var _flipperCount = MutableLiveData<Int>()
+    var flipperCount: LiveData<Int> = _flipperCount
+    fun setFlipperCount(isForward: Boolean) {
+        var count: Int = _flipperCount.value ?: 0
+
+        if (isForward) count += 1 else count -= 1
+
+        _flipperCount.value = count
+    }
+
+    private val _currentlyPlaying = MutableLiveData<ModInfo>()
+    val currentlyPlaying: LiveData<ModInfo> = _currentlyPlaying
+    fun setCurrentlyPlaying(modInfo: ModInfo) {
+        _currentlyPlaying.value = modInfo
     }
 
     private val _infoSpeed = MutableLiveData<String>()

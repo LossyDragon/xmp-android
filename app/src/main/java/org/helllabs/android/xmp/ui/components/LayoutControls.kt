@@ -22,9 +22,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.ui.theme.XmpTheme
+import org.helllabs.android.xmp.ui.theme.XmpTheme3
 import org.helllabs.android.xmp.ui.theme.green
 import org.helllabs.android.xmp.ui.theme.sectionBackground
+
+val layoutControlsHeight = 64.dp
 
 @Composable
 fun LayoutControls(
@@ -36,12 +38,11 @@ fun LayoutControls(
     isShuffleEnabled: Boolean
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .height(64.dp)
-            .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
-            .background(sectionBackground)
-            .then(modifier),
+            .height(layoutControlsHeight)
+            .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+            .background(sectionBackground),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -79,7 +80,7 @@ fun LayoutControls(
 @Preview
 @Composable
 private fun LayoutControlsPreview() {
-    XmpTheme {
+    XmpTheme3 {
         LayoutControls(
             onPlay = {},
             onLoop = {},

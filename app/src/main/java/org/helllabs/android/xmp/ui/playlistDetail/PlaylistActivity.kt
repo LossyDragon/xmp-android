@@ -92,7 +92,12 @@ class PlaylistActivity :
         mItemTouchHelper = ItemTouchHelper(callback)
 
         setContent {
-            ProvideWindowInsets(consumeWindowInsets = false) {
+            ProvideWindowInsets {
+                val uiController = rememberSystemUiController()
+                SideEffect {
+                    uiController.setNavigationBarColor(color = sectionBackgroundDark)
+                }
+
                 PlaylistActivityScreen(
                     onBack = { onBackPressed() },
                     playlist = mPlaylist,
@@ -224,52 +229,31 @@ private fun PlaylistActivityLayout(
     val context = LocalContext.current
     val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
 
-    val uiController = rememberSystemUiController()
-    SideEffect {
-        uiController.setNavigationBarColor(color = sectionBackgroundDark)
-    }
-
     XmpTheme3 {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-        ) {
-            // Top App Bar
-            val rotation = LocalConfiguration.current.orientation
-            val appBarModifier =
-                if (rotation == Configuration.ORIENTATION_PORTRAIT) Modifier.statusBarsPadding()
-                else Modifier.systemBarsPadding()
+        Scaffold(
+            topBar = {
+                // Top App Bar
+                val rotation = LocalConfiguration.current.orientation
+                val appBarModifier =
+                    if (rotation == Configuration.ORIENTATION_PORTRAIT) Modifier.statusBarsPadding()
+                    else Modifier.systemBarsPadding()
 
-            XmpAppBar3(
-                modifier = appBarModifier,
-                titleText = stringResource(id = R.string.browser_playlist_title),
-                scrollBehavior = scrollBehavior,
-                onNavIconPressed = onBack,
-            )
-            ScrollableInfoBar(
-                playlist = name,
-                comment = comment,
-            )
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .navigationBarsPadding()
-            ) {
-                Box(
-                    modifier = Modifier.weight(.5f)
-                ) {
-                    recyclerView(modifier = Modifier)
-
-                    if (currentList.isEmpty()) {
-                        ErrorLayout(
-                            modifier = Modifier,
-                            message = stringResource(id = R.string.empty_playlist)
-                        )
-                    }
+                Column {
+                    XmpAppBar3(
+                        modifier = appBarModifier,
+                        titleText = stringResource(id = R.string.browser_playlist_title),
+                        scrollBehavior = scrollBehavior,
+                        onNavIconPressed = onBack,
+                    )
+                    ScrollableInfoBar(
+                        playlist = name,
+                        comment = comment,
+                    )
                 }
+            },
+            bottomBar = {
                 LayoutControls(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.navigationBarsPadding(),
                     onPlay = {
                         if (currentList.isEmpty()) {
                             context.toast(R.string.error_no_files_to_play)
@@ -283,6 +267,21 @@ private fun PlaylistActivityLayout(
                     isShuffleEnabled = isShuffle,
                 )
             }
+        ) { contentPadding ->
+            Box {
+                recyclerView(
+                    modifier = Modifier
+                        .padding(contentPadding)
+                        .nestedScroll(scrollBehavior.nestedScrollConnection)
+                )
+
+                if (currentList.isEmpty()) {
+                    ErrorLayout(
+                        modifier = Modifier.padding(contentPadding),
+                        message = stringResource(id = R.string.empty_playlist)
+                    )
+                }
+            }
         }
     }
 }
@@ -293,7 +292,6 @@ fun ScrollableInfoBar(
     playlist: String,
     comment: String?,
 ) {
-    Divider(color = MaterialTheme.colorScheme.inverseSurface)
     Column(
         modifier = Modifier
             .fillMaxWidth()

@@ -47,7 +47,7 @@ import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.model.PlaylistItem
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.ui.components.*
-import org.helllabs.android.xmp.ui.explorer.FileExplorerActivity
+import org.helllabs.android.xmp.ui.explorer.ExplorerActivity
 import org.helllabs.android.xmp.ui.player.PlayerActivity
 import org.helllabs.android.xmp.ui.playlistDetail.PlaylistActivity
 import org.helllabs.android.xmp.ui.preferences.PrefManager
@@ -78,7 +78,7 @@ class PlaylistMenu : ComponentActivity() {
                 )
             )
 
-            ProvideWindowInsets(consumeWindowInsets = false) {
+            ProvideWindowInsets {
                 PlaylistMenuScreen(
                     viewModel = viewModel,
                     playlistState = playlistState,
@@ -165,9 +165,7 @@ private fun PlaylistMenuScreen(
             val comment = data.getStringExtra(PLAYLIST_EDIT_COMMENT)!!
             val oldName = data.getStringExtra(PLAYLIST_EDIT_OLD_NAME)
 
-            val editResult = viewModel.editPlaylist(id, name, comment, oldName)
-            context.logD("Playlist Edit: $editResult")
-            when (editResult) {
+            when (viewModel.editPlaylist(id, name, comment, oldName)) {
                 PlaylistMenuViewModel.EEditPlaylist.SUCCESS -> Unit // Success
                 PlaylistMenuViewModel.EEditPlaylist.FAILED_PLAYLIST -> playlistRenameState.show()
                 PlaylistMenuViewModel.EEditPlaylist.FAILED_COMMENT -> playlistCommentState.show()
@@ -241,7 +239,7 @@ private fun PlaylistMenuScreen(
                 onClick = { item, index ->
                     val intent: Intent =
                         if (index == 0) {
-                            Intent(context, FileExplorerActivity::class.java)
+                            Intent(context, ExplorerActivity::class.java)
                         } else {
                             Intent(context, PlaylistActivity::class.java).apply {
                                 putExtra("name", item.name)
@@ -314,63 +312,58 @@ private fun PlaylistsContent(
     val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
 
     XmpTheme3 {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-        ) {
-            // Top App Bar
-            val rotation = LocalConfiguration.current.orientation
-            val appBarModifier =
-                if (rotation == ORIENTATION_PORTRAIT) Modifier.statusBarsPadding()
-                else Modifier.systemBarsPadding()
+        Scaffold(
+            topBar = {
+                // Top App Bar
+                val rotation = LocalConfiguration.current.orientation
+                val appBarModifier =
+                    if (rotation == ORIENTATION_PORTRAIT) Modifier.statusBarsPadding()
+                    else Modifier.systemBarsPadding()
 
-            PlaylistMenuAppBar(
-                modifier = appBarModifier,
-                scrollBehavior = scrollBehavior,
-            )
-
-            // Content
-            BoxWithConstraints(modifier = Modifier.weight(1f)) {
-                val list = remember { mutableStateOf(listOf<PlaylistItem>()) }
-
-                Surface {
-                    // State Flow
-                    when (playlistState) {
-                        PlaylistMenuViewModel.PlaylistMenuState.Load -> {
-                            ProgressbarIndicator()
-                            list.value = listOf()
-                        }
-                        is PlaylistMenuViewModel.PlaylistMenuState.Loaded -> {
-                            list.value = playlistState.list
-                        }
-                        else -> Unit
-                    }
-
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        state = scrollState,
-                        contentPadding = rememberInsetsPaddingValues(
-                            insets = LocalWindowInsets.current.navigationBars,
-                            additionalTop = 10.dp,
-                            additionalBottom = 80.dp
-                        )
-                    ) {
-                        itemsIndexed(list.value) { index, item ->
-                            ItemPlaylistCard(
-                                playlist = item,
-                                onClick = { onClick(item, index) },
-                                onLongClick = { onLongClick(item, index) }
-                            )
-                        }
-                    }
-                }
-
+                PlaylistMenuAppBar(
+                    modifier = appBarModifier,
+                    scrollBehavior = scrollBehavior,
+                )
+            },
+            floatingActionButton = {
                 PlaylistsFab(
-                    modifier = Modifier.align(Alignment.BottomEnd),
                     extended = scrollState.firstVisibleItemIndex == 0,
                     onFabClicked = onFabClicked
                 )
+            },
+        ) {
+            val list = remember { mutableStateOf(listOf<PlaylistItem>()) }
+
+            // State Flow
+            when (playlistState) {
+                PlaylistMenuViewModel.PlaylistMenuState.Load -> {
+                    ProgressbarIndicator()
+                    list.value = listOf()
+                }
+                is PlaylistMenuViewModel.PlaylistMenuState.Loaded -> {
+                    list.value = playlistState.list
+                }
+                else -> Unit
+            }
+
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .nestedScroll(scrollBehavior.nestedScrollConnection),
+                state = scrollState,
+                contentPadding = rememberInsetsPaddingValues(
+                    insets = LocalWindowInsets.current.navigationBars,
+                    additionalTop = 10.dp,
+                    additionalBottom = 80.dp
+                )
+            ) {
+                itemsIndexed(list.value) { index, item ->
+                    ItemPlaylistCard(
+                        playlist = item,
+                        onClick = { onClick(item, index) },
+                        onLongClick = { onLongClick(item, index) }
+                    )
+                }
             }
         }
     }
@@ -389,7 +382,7 @@ private fun PlaylistMenuAppBar(
         title = {
             AppBarText(
                 title = themedText(R.string.app_name),
-                titleClick = { startPlayerActivity(context) }
+                titleClick = { context.startPlayerActivity() }
             )
         },
         actions = {
@@ -461,25 +454,13 @@ private fun ChangeDirDialog(
     }
 }
 
-private fun Context.launchActivity(intent: Intent) {
-    startActivity(intent)
-    (this as Activity).overridePendingTransition(
-        R.anim.slide_in_right,
-        R.anim.slide_out_left
-    )
-}
-
-private fun startPlayerActivity(context: Context) {
+private fun Context.startPlayerActivity() {
     if (PrefManager.startOnPlayer) {
         if (PlayerService.isPlayerAlive.value == true) {
-            val playerIntent = Intent(context, PlayerActivity::class.java)
-            context.startActivity(playerIntent)
-            (context as Activity).overridePendingTransition(
-                R.anim.slide_in_right,
-                R.anim.slide_out_left
-            )
+            val playerIntent = Intent(this, PlayerActivity::class.java)
+            launchActivity(playerIntent)
         } else {
-            context.toast(R.string.msg_service_not_alive)
+            toast(R.string.msg_service_not_alive)
         }
     }
 }
