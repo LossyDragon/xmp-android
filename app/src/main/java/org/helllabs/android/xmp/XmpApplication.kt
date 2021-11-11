@@ -7,10 +7,9 @@ import org.helllabs.android.xmp.ui.preferences.PrefManager
 // Someday: JSON playlists
 // Someday: Migrate from OpenSLES to oboe.
 // Someday: OpenGL ES instead of Canvas
-// Someday: MediaBrowserServiceCompat (Android Auto).
+// Someday: AndroidX Media3
 // Someday: Favorites system (after MediaBrowserServiceCompat)
 // Someday: Simple Player Activity (non Viewers)
-// Someday: Jetpack Compose -> [Studying]
 
 @HiltAndroidApp
 class XmpApplication : Application() {
