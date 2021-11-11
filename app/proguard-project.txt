@@ -19,11 +19,11 @@
 #   public *;
 #}
 
--keep public class org.helllabs.android.xmp.Xmp {
-    public *;
-}
+# Keep all data classes within this package.
+-keep class org.helllabs.android.xmp.model.** { *; }
 
--keep public class org.helllabs.android.xmp.model.ModInfo {
+# Keep our JNI interface
+-keep public class org.helllabs.android.xmp.Xmp {
     public *;
 }
 
@@ -31,7 +31,7 @@
 
 # Keep source file and line number information in crash reports
 -renamesourcefileattribute MyApplication
--keepattributes SourceFile,LineNumberTable
+-keepattributes *Annotation*,SourceFile,LineNumberTable
 
 # Tickaroo XML
 -keep class com.tickaroo.tikxml.* { *; }
