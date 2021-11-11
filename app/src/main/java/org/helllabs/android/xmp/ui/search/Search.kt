@@ -218,9 +218,9 @@ private fun SearchButtons(
             onClick = {
                 val intent: Intent = when (selection.value) {
                     0 -> Intent(context, SearchListResult::class.java)
-                        .putExtra(SEARCH_TEXT, search.value.text.trim { it <= ' ' })
+                        .putExtra(SEARCH_TEXT, search.value.text.trim())
                     1 -> Intent(context, ArtistResult::class.java)
-                        .putExtra(SEARCH_TEXT, search.value.text.trim { it <= ' ' })
+                        .putExtra(SEARCH_TEXT, search.value.text.trim())
                     else -> throw RuntimeException("Search Selection was ${selection.value}")
                 }
                 onButtonClicked(context, intent)
@@ -329,9 +329,8 @@ private fun SearchProvidedBy() {
             onClick = {
                 linkString
                     .getStringAnnotations("URL", it, it)
-                    .firstOrNull()?.let { stringAnnotation ->
-                        uriHandler.openUri(stringAnnotation.item)
-                    }
+                    .firstOrNull()
+                    ?.let { stringAnnotation -> uriHandler.openUri(stringAnnotation.item) }
             }
         )
     }

@@ -174,6 +174,7 @@ tasks {
         commandLine("bash", "-c", args)
     }
 
+    // sudo apt install build-essential autoconf -y
     val buildXmp by registering(Exec::class) {
         val args = "autoconf && ./configure && make && make check && " +
             "(cd test-dev; autoconf && ./configure && make) && exit"

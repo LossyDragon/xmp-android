@@ -137,18 +137,15 @@ private fun PlaylistEditContent(
         positiveButtonText = R.string.menu_delete,
         negativeButtonText = R.string.cancel,
         onPositiveButton = {
-            Intent().apply {
+            val intent = Intent().apply {
                 putExtra(PLAYLIST_EDIT_ID, EditState.RESULT_DELETE_PLAYLIST.value)
                 putExtra(PLAYLIST_EDIT_NAME, intentName)
                 putExtra(PLAYLIST_EDIT_COMMENT, intentComment)
-            }.also { intent ->
-                (context as Activity).setResult(RESULT_OK, intent)
-                context.finish()
-                context.overridePendingTransition(
-                    R.anim.slide_in_right,
-                    R.anim.slide_out_left
-                )
             }
+
+            (context as Activity).setResult(RESULT_OK, intent)
+            context.finish()
+            context.overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
         },
         onDismiss = { deleteState.hide() }
     )
@@ -266,44 +263,30 @@ private fun PlaylistEditContent(
                     label = { Text(stringResource(id = R.string.hint_playlist_comment)) },
                 )
                 Spacer(modifier = Modifier.height(24.dp))
-                Button(
-                    modifier = Modifier
-                        .fillMaxWidth(.85f),
-                    colors = ButtonDefaults.buttonColors(containerColor = darkAccent),
-                    onClick = {
+
+                PlaylistButton(
+                    buttonText = stringResource(id = addText),
+                    buttonEnabled = name.isNotBlank(),
+                    buttonClicked = {
                         // Check if name is empty.
                         if (checkName) {
                             context.toast(R.string.error_playlist_name)
-                            return@Button
+                            return@PlaylistButton
                         }
                         focusManager.clearFocus()
                         onEdit(name, comment)
-                    },
-                    enabled = name.isNotBlank(),
-                ) {
-                    Text(
-                        text = stringResource(id = addText),
-                        color = Color.White,
-                    )
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                if (isEditing) {
-                    Button(
-                        modifier = Modifier
-                            .fillMaxWidth(.85f),
-                        colors = ButtonDefaults.buttonColors(containerColor = darkAccent),
-                        onClick = { deleteState.show() },
-                    ) {
-                        Text(
-                            text = stringResource(
-                                id = R.string.button_playlist_delete, intentName
-                            ),
-                            color = Color.White,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
                     }
-                    Spacer(modifier = Modifier.height(8.dp))
+                )
+
+                if (isEditing) {
+                    PlaylistButton(
+                        buttonText = stringResource(
+                            id = R.string.button_playlist_delete,
+                            intentName
+                        ),
+                        buttonEnabled = true,
+                        buttonClicked = { deleteState.show() }
+                    )
                 }
 
                 // Request focus and show the keyboard.
@@ -316,6 +299,29 @@ private fun PlaylistEditContent(
             }
         }
     }
+}
+
+@Composable
+private fun PlaylistButton(
+    buttonText: String,
+    buttonEnabled: Boolean,
+    buttonClicked: () -> Unit,
+) {
+    Button(
+        modifier = Modifier
+            .fillMaxWidth(.85f),
+        colors = ButtonDefaults.buttonColors(containerColor = darkAccent),
+        onClick = buttonClicked,
+        enabled = buttonEnabled,
+    ) {
+        Text(
+            text = buttonText,
+            color = Color.White,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+    Spacer(modifier = Modifier.height(8.dp))
 }
 
 /************

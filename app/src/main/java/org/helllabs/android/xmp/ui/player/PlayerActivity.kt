@@ -520,7 +520,10 @@ class PlayerActivity : ComponentActivity() {
         viewModel.setSeekPos(playTime)
         viewModel.setSeekMax(time / 100F)
 
-        val modInfo = ModInfo(modPlayer.getModName(), Xmp.getModType())
+        val modInfo = ModInfo().apply {
+            name = modPlayer.getModName()
+            type = Xmp.getModType()
+        }
         viewModel.setCurrentlyPlaying(modInfo)
         viewModel.setFlipperCount(!skipToPrevious)
         skipToPrevious = false
@@ -740,13 +743,18 @@ private fun PlayerLayout3(
             modifier = Modifier.fillMaxSize(),
             scaffoldState = scaffoldState,
             topBar = {
-                val mod = viewModel.currentlyPlaying.observeAsState(ModInfo("", ""))
+                val mod = viewModel.currentlyPlaying.observeAsState(
+                    ModInfo().apply {
+                        name = ""
+                        type = ""
+                    }
+                )
                 val count = viewModel.flipperCount.observeAsState(0)
                 ViewFlipper(
                     modifier = Modifier.background(darkPrimary),
                     count = count.value,
-                    modTitle = mod.value.name!!,
-                    format = mod.value.type!!,
+                    modTitle = mod.value.name,
+                    format = mod.value.type,
                 )
             },
             backgroundColor = MaterialTheme.colorScheme.background,

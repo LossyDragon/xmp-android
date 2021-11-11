@@ -4,23 +4,16 @@ import android.annotation.SuppressLint
 import androidx.annotation.StringRes
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.darkColors
-import androidx.compose.material.lightColors
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
-import com.google.accompanist.insets.ExperimentalAnimatedInsets
-import com.google.accompanist.insets.ProvideWindowInsets
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
 val XmpLightThemeColors = lightColorScheme(
     primary = darkPrimary,
@@ -30,20 +23,6 @@ val XmpLightThemeColors = lightColorScheme(
 val XmpDarkThemeColors = darkColorScheme(
     primary = darkPrimary,
     secondary = darkAccent,
-)
-
-val LightThemeColors = lightColors(
-    primary = darkPrimary,
-    primaryVariant = darkPrimaryDark,
-    secondary = darkAccent,
-    secondaryVariant = darkAccent,
-)
-
-val DarkThemeColors = darkColors(
-    primary = darkPrimary,
-    primaryVariant = darkPrimaryDark,
-    secondary = darkAccent,
-    secondaryVariant = darkAccent,
 )
 
 // Accent the "Xmp" part of the text, if we're on the main screen.

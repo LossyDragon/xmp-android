@@ -72,10 +72,7 @@ class PlaylistMenu : ComponentActivity() {
         setContent {
             val playlistState = viewModel.playlistState.collectAsState()
             val permissions = rememberMultiplePermissionsState(
-                permissions = listOf(
-                    READ_EXTERNAL_STORAGE,
-                    WRITE_EXTERNAL_STORAGE
-                )
+                permissions = listOf(READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE)
             )
 
             ProvideWindowInsets {

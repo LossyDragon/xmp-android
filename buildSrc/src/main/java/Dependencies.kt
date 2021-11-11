@@ -3,7 +3,7 @@ object Dependencies {
     const val kotlinVersion = "1.5.21"
 
     // https://developer.android.com/ndk/downloads#lts-downloads
-    const val ndkVersion = "23.0.7599858"
+    const val ndkVersion = "23.1.7779620"
 
     // https://github.com/JLLeitschuh/ktlint-gradle/releases
     const val ktlintGradle = "10.2.0"
@@ -29,7 +29,7 @@ object Dependencies {
     // Feature roadmap: https://developer.android.com/jetpack/androidx/compose-roadmap
     // Versions: https://developer.android.com/jetpack/androidx/releases/compose#versions
     object Compose {
-        private const val version = "1.1.0-beta02" // "1.0.2"
+        private const val version = "1.1.0-beta02"
         const val activity = "androidx.activity:activity-compose:1.3.1"
         const val animation = "androidx.compose.animation:animation:$version"
         const val graphics = "androidx.compose.animation:animation-graphics:$version"
@@ -47,7 +47,7 @@ object Dependencies {
 
         // https://github.com/google/accompanist/releases
         object Accompanist {
-            private const val version = "0.21.0-beta"
+            private const val version = "0.21.2-beta"
             const val insets = "com.google.accompanist:accompanist-insets:$version"
             const val controller = "com.google.accompanist:accompanist-systemuicontroller:$version"
             const val permissions = "com.google.accompanist:accompanist-permissions:$version"
