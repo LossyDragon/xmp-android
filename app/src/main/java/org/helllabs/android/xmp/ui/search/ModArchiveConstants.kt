@@ -7,6 +7,7 @@ object ModArchiveConstants {
     const val apiKey: String = BuildConfig.API_KEY
 
     const val DEFAULT_DOWNLOAD_DIR = "TheModArchive"
+    const val HISTORY_LENGTH = 50
 
     const val BASE_URL: String = "https://api.modarchive.org"
     const val BY_ARTIST: String = "search_artist"

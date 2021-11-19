@@ -57,6 +57,7 @@ fun ButtonBar(
             .padding(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        // TODO Material 3 Alpha 01 has enable bug. Issue: 205335456
         Button(
             modifier = Modifier.fillMaxWidth(.85f),
             enabled = !isLoading && isSupported,

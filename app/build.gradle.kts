@@ -82,13 +82,11 @@ android {
 
     // View binding
     buildFeatures {
-        viewBinding = true
-        dataBinding = true
         compose = true
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.0.1"
+        kotlinCompilerExtensionVersion = Dependencies.Compose.version
     }
 }
 
@@ -127,7 +125,8 @@ dependencies {
     // Dep Injection
     implementation(Dependencies.Hilt.android)
     implementation(Dependencies.Hilt.viewModel)
-    kapt(Dependencies.Hilt.compiler)
+    kapt(Dependencies.Hilt.kaptCompiler)
+    kapt(Dependencies.Hilt.kaptAndroidCompiler)
 
     // Coroutines
     implementation(Dependencies.Coroutines.android)

@@ -1,6 +1,6 @@
 object Dependencies {
 
-    const val kotlinVersion = "1.5.21"
+    const val kotlinVersion = "1.5.31"
 
     // https://developer.android.com/ndk/downloads#lts-downloads
     const val ndkVersion = "23.1.7779620"
@@ -9,7 +9,7 @@ object Dependencies {
     const val ktlintGradle = "10.2.0"
 
     // https://github.com/google/dagger/releases
-    const val hiltAndroid = "2.40"
+    const val hiltAndroid = "2.40.1"
 
     // https://mvnrepository.com/artifact/androidx.media/media
     // https://mvnrepository.com/artifact/androidx.preference/preference-ktx
@@ -22,14 +22,14 @@ object Dependencies {
 
     // https://mvnrepository.com/artifact/com.google.android.material/material
     object Material {
-        private const val version = "1.5.0-alpha05"
+        private const val version = "1.5.0-beta01"
         const val materialComponents = "com.google.android.material:material:$version"
     }
 
     // Feature roadmap: https://developer.android.com/jetpack/androidx/compose-roadmap
     // Versions: https://developer.android.com/jetpack/androidx/releases/compose#versions
     object Compose {
-        private const val version = "1.1.0-beta02"
+        const val version = "1.1.0-beta03"
         const val activity = "androidx.activity:activity-compose:1.3.1"
         const val animation = "androidx.compose.animation:animation:$version"
         const val graphics = "androidx.compose.animation:animation-graphics:$version"
@@ -69,7 +69,8 @@ object Dependencies {
     // https://mvnrepository.com/artifact/androidx.hilt/hilt-lifecycle-viewmodel
     object Hilt {
         const val android = "com.google.dagger:hilt-android:$hiltAndroid"
-        const val compiler = "com.google.dagger:hilt-compiler:$hiltAndroid"
+        const val kaptAndroidCompiler = "com.google.dagger:hilt-android-compiler:$hiltAndroid"
+        const val kaptCompiler = "androidx.hilt:hilt-compiler:1.0.0"
         const val viewModel = "androidx.hilt:hilt-lifecycle-viewmodel:1.0.0-alpha03"
     }
 

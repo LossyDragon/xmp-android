@@ -109,7 +109,7 @@ private fun SearchLayout(
                 val selection = remember { mutableStateOf(0) }
                 val isSearchValid = search.value.text.length >= 3
 
-                SearchBox(search, isSearchValid, onBack)
+                SearchBox(search, isSearchValid, onBack) // TODO onBack should be onSearch!
                 Spacer(modifier = Modifier.height(16.dp))
                 SearchRadioSelection(selection)
                 Spacer(modifier = Modifier.height(16.dp))
