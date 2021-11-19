@@ -1,7 +1,6 @@
 package org.helllabs.android.xmp.ui.search.result
 
 import android.content.Intent
-import android.content.res.Configuration
 import android.content.res.Configuration.UI_MODE_NIGHT_NO
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.os.Bundle
@@ -10,7 +9,6 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ListItem
@@ -21,15 +19,11 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import com.google.accompanist.insets.ProvideWindowInsets
-import com.google.accompanist.insets.statusBarsPadding
-import com.google.accompanist.insets.systemBarsPadding
 import dagger.hilt.android.AndroidEntryPoint
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.model.ArtistResult as _ArtistResult
@@ -106,14 +100,7 @@ private fun ArtistLayout(
     XmpTheme3 {
         Scaffold(
             topBar = {
-                // Top App Bar
-                val rotation = LocalConfiguration.current.orientation
-                val appBarModifier =
-                    if (rotation == Configuration.ORIENTATION_PORTRAIT) Modifier.statusBarsPadding()
-                    else Modifier.systemBarsPadding()
-
                 XmpAppBar3(
-                    modifier = appBarModifier,
                     scrollBehavior = scrollBehavior,
                     onNavIconPressed = onBack,
                     titleText = stringResource(id = R.string.search_artist_title)
@@ -139,12 +126,7 @@ private fun ArtistLayout(
                             onHardError(error)
                         }
                         is ArtistState.SoftError -> {
-                            ErrorLayout(
-                                modifier = Modifier
-                                    .padding(start = 16.dp, end = 16.dp)
-                                    .fillMaxSize(),
-                                resultState.softError
-                            )
+                            ErrorLayout(message = resultState.softError)
                         }
                         is ArtistState.SearchResult -> {
                             items = resultState.result.items.orEmpty()

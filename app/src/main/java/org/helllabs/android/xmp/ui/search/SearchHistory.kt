@@ -1,14 +1,12 @@
 package org.helllabs.android.xmp.ui.search
 
 import android.content.Intent
-import android.content.res.Configuration
 import android.content.res.Configuration.UI_MODE_NIGHT_NO
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ClearAll
@@ -20,15 +18,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import com.google.accompanist.insets.ProvideWindowInsets
-import com.google.accompanist.insets.statusBarsPadding
-import com.google.accompanist.insets.systemBarsPadding
 import com.squareup.moshi.JsonAdapter
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import dagger.hilt.android.AndroidEntryPoint
@@ -68,10 +62,6 @@ class SearchHistory : AppCompatActivity() {
                 )
             }
         }
-    }
-
-    companion object {
-        const val HISTORY_LENGTH = 50
     }
 }
 
@@ -115,14 +105,7 @@ private fun SearchHistoryLayout(
     XmpTheme3 {
         Scaffold(
             topBar = {
-                // Top App Bar
-                val rotation = LocalConfiguration.current.orientation
-                val appBarModifier =
-                    if (rotation == Configuration.ORIENTATION_PORTRAIT) Modifier.statusBarsPadding()
-                    else Modifier.systemBarsPadding()
-
                 XmpAppBar3(
-                    modifier = appBarModifier,
                     scrollBehavior = scrollBehavior,
                     onNavIconPressed = onBack,
                     titleText = stringResource(id = R.string.search_history),
@@ -140,16 +123,12 @@ private fun SearchHistoryLayout(
             val context = LocalContext.current
 
             LazyList(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
                     .nestedScroll(scrollBehavior.nestedScrollConnection),
                 boxContent = {
                     if (historyList.isEmpty()) {
-                        ErrorLayout(
-                            modifier = Modifier
-                                .padding(start = 16.dp, end = 16.dp)
-                                .fillMaxSize(),
-                            message = stringResource(id = R.string.history_no_items)
-                        )
+                        ErrorLayout(message = stringResource(id = R.string.history_no_items))
                     }
                 },
                 lazyContent = {

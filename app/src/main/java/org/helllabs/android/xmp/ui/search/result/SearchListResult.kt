@@ -1,7 +1,6 @@
 package org.helllabs.android.xmp.ui.search.result
 
 import android.content.Intent
-import android.content.res.Configuration
 import android.content.res.Configuration.UI_MODE_NIGHT_NO
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.os.Bundle
@@ -9,7 +8,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
@@ -17,15 +15,11 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import com.google.accompanist.insets.ProvideWindowInsets
-import com.google.accompanist.insets.statusBarsPadding
-import com.google.accompanist.insets.systemBarsPadding
 import dagger.hilt.android.AndroidEntryPoint
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.model.Module
@@ -92,14 +86,7 @@ private fun SearchLayout(
     XmpTheme3 {
         Scaffold(
             topBar = {
-                // Top App Bar
-                val rotation = LocalConfiguration.current.orientation
-                val appBarModifier =
-                    if (rotation == Configuration.ORIENTATION_PORTRAIT) Modifier.statusBarsPadding()
-                    else Modifier.systemBarsPadding()
-
                 XmpAppBar3(
-                    modifier = appBarModifier,
                     scrollBehavior = scrollBehavior,
                     titleText = appTitle,
                     onNavIconPressed = onBack,
@@ -129,12 +116,7 @@ private fun SearchLayout(
                             context.launchActivity(intent)
                         }
                         is SearchResultState.SoftError -> {
-                            ErrorLayout(
-                                modifier = Modifier
-                                    .padding(start = 16.dp, end = 16.dp)
-                                    .fillMaxSize(),
-                                resultState.softError
-                            )
+                            ErrorLayout(message = resultState.softError)
                         }
                         is SearchResultState.SearchResult -> {
                             result = resultState.result.module.orEmpty()

@@ -1,6 +1,5 @@
 package org.helllabs.android.xmp.ui.preferences.about
 
-import android.content.res.Configuration
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -8,7 +7,6 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ListItem
@@ -22,17 +20,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import com.google.accompanist.insets.ProvideWindowInsets
-import com.google.accompanist.insets.statusBarsPadding
-import com.google.accompanist.insets.systemBarsPadding
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.ui.components.ErrorLayout
@@ -82,14 +76,7 @@ private fun FormatsLayout(
     XmpTheme3 {
         Scaffold(
             topBar = {
-                val rotation = LocalConfiguration.current.orientation
-                val appBarModifier =
-                    if (rotation == Configuration.ORIENTATION_PORTRAIT)
-                        Modifier.statusBarsPadding()
-                    else Modifier.systemBarsPadding()
-
                 XmpAppBar3(
-                    modifier = appBarModifier,
                     scrollBehavior = scrollBehavior,
                     titleText = stringResource(id = R.string.pref_list_formats_title),
                     onNavIconPressed = { onBack() }
@@ -106,12 +93,7 @@ private fun FormatsLayout(
                     .nestedScroll(scrollBehavior.nestedScrollConnection),
                 boxContent = {
                     if (formatsList.isEmpty())
-                        ErrorLayout(
-                            modifier = Modifier
-                                .padding(start = 16.dp, end = 16.dp)
-                                .fillMaxSize(),
-                            message = stringResource(id = R.string.msg_no_formats)
-                        )
+                        ErrorLayout(message = stringResource(id = R.string.msg_no_formats))
                 },
                 lazyContent = {
                     itemsIndexed(items = formatsList) { _, item ->

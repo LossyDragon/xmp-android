@@ -156,15 +156,8 @@ private fun PlaylistEditContent(
 
         Scaffold(
             topBar = {
-                // Top App Bar
-                val rotation = LocalConfiguration.current.orientation
-                val appBarModifier =
-                    if (rotation == Configuration.ORIENTATION_PORTRAIT) Modifier.statusBarsPadding()
-                    else Modifier.systemBarsPadding()
-
                 val title = if (isEditing) R.string.title_edit_playlist else appTitle
                 XmpAppBar3(
-                    modifier = appBarModifier,
                     scrollBehavior = scrollBehavior,
                     titleText = stringResource(id = title),
                     onNavIconPressed = onBack,

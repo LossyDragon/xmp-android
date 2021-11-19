@@ -1,7 +1,6 @@
 package org.helllabs.android.xmp.ui.playlistDetail
 
 import android.annotation.SuppressLint
-import android.content.res.Configuration
 import android.content.res.Configuration.UI_MODE_NIGHT_NO
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.os.Bundle
@@ -13,7 +12,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -232,15 +230,8 @@ private fun PlaylistActivityLayout(
     XmpTheme3 {
         Scaffold(
             topBar = {
-                // Top App Bar
-                val rotation = LocalConfiguration.current.orientation
-                val appBarModifier =
-                    if (rotation == Configuration.ORIENTATION_PORTRAIT) Modifier.statusBarsPadding()
-                    else Modifier.systemBarsPadding()
-
                 Column {
                     XmpAppBar3(
-                        modifier = appBarModifier,
                         titleText = stringResource(id = R.string.browser_playlist_title),
                         scrollBehavior = scrollBehavior,
                         onNavIconPressed = onBack,

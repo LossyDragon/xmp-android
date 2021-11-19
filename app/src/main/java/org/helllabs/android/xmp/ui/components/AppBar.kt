@@ -1,5 +1,6 @@
 package org.helllabs.android.xmp.ui.components
 
+import android.content.res.Configuration
 import android.content.res.Configuration.UI_MODE_NIGHT_NO
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import androidx.compose.foundation.background
@@ -7,12 +8,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.SmallTopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -22,6 +22,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.accompanist.insets.statusBarsPadding
+import com.google.accompanist.insets.systemBarsPadding
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.ui.theme.XmpTheme3
 import org.helllabs.android.xmp.ui.theme.michromaFontFamily
@@ -45,9 +47,14 @@ fun XmpAppBar3(
         scrolledContainerColor = Color.Transparent
     )
 
+    // Top App Bar
+    val isPortrait = LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT
+    val appBarModifier =
+        if (isPortrait) modifier.statusBarsPadding() else modifier.systemBarsPadding()
+
     Box(modifier = Modifier.background(backgroundColor)) {
         SmallTopAppBar(
-            modifier = modifier,
+            modifier = appBarModifier,
             actions = actions,
             title = {
                 titleText?.let {
@@ -61,14 +68,14 @@ fun XmpAppBar3(
             colors = foregroundColors,
             navigationIcon = {
                 onNavIconPressed?.let {
-                    androidx.compose.material3.IconButton(
+                    IconButton(
                         modifier = Modifier
                             .size(64.dp)
                             .clickable(onClick = onNavIconPressed)
                             .padding(16.dp),
                         onClick = { onNavIconPressed() }
                     ) {
-                        androidx.compose.material3.Icon(
+                        Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Go Back"
                         )
@@ -85,7 +92,7 @@ fun AppBarText(
     titleClick: (() -> Unit)? = {}
 ) {
     Row {
-        androidx.compose.material3.Text(
+        Text(
             modifier = Modifier
                 .clickable(
                     enabled = titleClick != null,

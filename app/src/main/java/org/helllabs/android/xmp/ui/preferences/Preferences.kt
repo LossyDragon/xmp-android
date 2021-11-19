@@ -1,6 +1,5 @@
 package org.helllabs.android.xmp.ui.preferences
 
-import android.content.res.Configuration
 import android.os.Bundle
 import android.os.Environment
 import android.os.Environment.MEDIA_MOUNTED
@@ -16,12 +15,9 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.viewinterop.AndroidView
 import com.google.accompanist.insets.ProvideWindowInsets
-import com.google.accompanist.insets.statusBarsPadding
-import com.google.accompanist.insets.systemBarsPadding
 import java.io.File
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.ui.components.XmpAppBar3
@@ -41,14 +37,7 @@ class Preferences : AppCompatActivity() {
                 XmpTheme3 {
                     Scaffold(
                         topBar = {
-                            val rotation = LocalConfiguration.current.orientation
-                            val appBarModifier =
-                                if (rotation == Configuration.ORIENTATION_PORTRAIT)
-                                    Modifier.statusBarsPadding()
-                                else Modifier.systemBarsPadding()
-
                             XmpAppBar3(
-                                modifier = appBarModifier,
                                 scrollBehavior = scrollBehavior,
                                 onNavIconPressed = { onBackPressed() },
                                 titleText = stringResource(id = R.string.pref_category_preferences),

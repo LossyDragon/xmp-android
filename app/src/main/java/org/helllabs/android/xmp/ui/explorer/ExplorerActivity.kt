@@ -1,7 +1,6 @@
 package org.helllabs.android.xmp.ui.explorer
 
 import android.annotation.SuppressLint
-import android.content.res.Configuration
 import android.os.Bundle
 import android.view.*
 import androidx.activity.compose.setContent
@@ -19,7 +18,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
@@ -392,15 +390,8 @@ private fun FileListLayout(
         Scaffold(
             scaffoldState = scaffoldState,
             topBar = {
-                // Top App Bar
-                val rotation = LocalConfiguration.current.orientation
-                val appBarModifier =
-                    if (rotation == Configuration.ORIENTATION_PORTRAIT) Modifier.statusBarsPadding()
-                    else Modifier.systemBarsPadding()
-
                 Column {
                     XmpAppBar3(
-                        modifier = appBarModifier,
                         scrollBehavior = scrollBehavior,
                         onNavIconPressed = onBack,
                         titleText = stringResource(id = R.string.browser_filelist_title)
@@ -421,9 +412,7 @@ private fun FileListLayout(
                         val items = viewModel.recursiveList(File(viewModel.currentFile.value))
                         if (items.isNullOrEmpty()) {
                             context.toast(R.string.error_no_files_to_play)
-                            context.logD("onPlay Empty")
                         } else {
-                            context.logD("onPlay $items")
                             onPlay(items)
                         }
                     },
@@ -450,12 +439,7 @@ private fun FileListLayout(
                             )
                         }
                         ExplorerViewModel.FileListState.NotFound -> {
-                            ErrorLayout(
-                                modifier = Modifier
-                                    .padding(start = 16.dp, end = 16.dp)
-                                    .fillMaxSize(),
-                                "Directory not found"
-                            )
+                            ErrorLayout(message = "Directory not found")
                             context.yesNoDialog(
                                 lifecycleOwner = LocalLifecycleOwner.current,
                                 title = stringResource(id = R.string.dialog_no_path_title),
@@ -481,21 +465,13 @@ private fun FileListLayout(
                             )
                         }
                         is ExplorerViewModel.FileListState.Error -> {
-                            ErrorLayout(
-                                modifier = Modifier
-                                    .padding(start = 16.dp, end = 16.dp)
-                                    .fillMaxSize(),
-                                state.error
-                            )
+                            ErrorLayout(message = state.error)
                         }
                         is ExplorerViewModel.FileListState.Loaded -> {
                             itemList = state.list
                             if (itemList.isEmpty())
                                 ErrorLayout(
-                                    modifier = Modifier
-                                        .padding(start = 16.dp, end = 16.dp)
-                                        .fillMaxSize(),
-                                    stringResource(id = R.string.msg_empty_directory)
+                                    message = stringResource(id = R.string.msg_empty_directory)
                                 )
                         }
                     }

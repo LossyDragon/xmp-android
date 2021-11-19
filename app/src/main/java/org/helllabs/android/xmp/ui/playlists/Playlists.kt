@@ -5,7 +5,6 @@ import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.*
-import android.content.res.Configuration.ORIENTATION_PORTRAIT
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.net.Uri
 import android.os.*
@@ -27,7 +26,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
@@ -311,14 +309,7 @@ private fun PlaylistsContent(
     XmpTheme3 {
         Scaffold(
             topBar = {
-                // Top App Bar
-                val rotation = LocalConfiguration.current.orientation
-                val appBarModifier =
-                    if (rotation == ORIENTATION_PORTRAIT) Modifier.statusBarsPadding()
-                    else Modifier.systemBarsPadding()
-
                 PlaylistMenuAppBar(
-                    modifier = appBarModifier,
                     scrollBehavior = scrollBehavior,
                 )
             },
@@ -368,13 +359,11 @@ private fun PlaylistsContent(
 
 @Composable
 private fun PlaylistMenuAppBar(
-    modifier: Modifier,
     scrollBehavior: TopAppBarScrollBehavior? = null,
 ) {
     val context = LocalContext.current
 
     XmpAppBar3(
-        modifier = modifier,
         scrollBehavior = scrollBehavior,
         title = {
             AppBarText(
