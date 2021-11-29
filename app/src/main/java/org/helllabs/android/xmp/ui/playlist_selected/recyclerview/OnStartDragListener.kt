@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.helllabs.android.xmp.ui.playlistDetail.recyclerview
+package org.helllabs.android.xmp.ui.playlist_selected.recyclerview
 
 import androidx.recyclerview.widget.RecyclerView
 import org.helllabs.android.xmp.model.PlaylistItem

@@ -1,74 +1,106 @@
 package org.helllabs.android.xmp.ui.explorer
 
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import java.io.File
 import java.util.*
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.model.BreadCrumb
 import org.helllabs.android.xmp.model.ModInfo
 import org.helllabs.android.xmp.model.PlaylistItem
 import org.helllabs.android.xmp.model.PlaylistType
-import org.helllabs.android.xmp.ui.preferences.PrefManager
 import org.helllabs.android.xmp.util.PlaylistUtils
-import org.helllabs.android.xmp.util.logD
+import org.helllabs.android.xmp.util.PrefManager
 import org.helllabs.android.xmp.util.logE
-import org.helllabs.android.xmp.util.logW
+
+sealed class ExplorerEvent {
+    data class DirectoryList(val file: File) : ExplorerEvent()
+}
+
+sealed class ExplorerUiState {
+    object FileNotFound : ExplorerUiState()
+    data class Error(val error: String?) : ExplorerUiState()
+    data class Loading(val isLoading: Boolean) : ExplorerUiState()
+}
+
+data class ExplorerState(
+    val list: List<PlaylistItem> = listOf(),
+    val currentFile: String = "",
+)
+
+data class ExplorerCrumbState(
+    val crumbList: List<BreadCrumb> = listOf()
+)
 
 class ExplorerViewModel : ViewModel() {
 
-    private val _listState = MutableStateFlow<FileListState>(FileListState.None)
-    val listState: StateFlow<FileListState> = _listState
+    private val _uiState = MutableSharedFlow<ExplorerUiState>()
+    val uiState: SharedFlow<ExplorerUiState> = _uiState.asSharedFlow()
 
-    val currentFile = mutableStateOf("")
-    val crumbState = mutableStateOf<List<BreadCrumb>>(listOf())
+    private val _state = mutableStateOf(ExplorerState())
+    val state: State<ExplorerState> = _state
 
-    init {
-        getDirectoryList(File(PrefManager.mediaPath!!))
-    }
+    private val _crumbState = mutableStateOf(ExplorerCrumbState())
+    val crumbState: State<ExplorerCrumbState> = _crumbState
 
-    fun getDirectoryList(file: File) {
-        _listState.value = FileListState.Load
-
-        currentFile.value = file.path
-        getCrumbTrails(file)
-
-        if (!file.exists()) {
-            _listState.value = FileListState.NotFound
-            logW("File ${file.name} was not found.")
-            return
+    var isLoopMode: Boolean
+        get() = PrefManager.fileListLoop
+        set(value) {
+            PrefManager.fileListLoop = value
+        }
+    var isShuffleMode: Boolean
+        get() = PrefManager.fileListShuffle
+        set(value) {
+            PrefManager.fileListShuffle = value
         }
 
+    fun onEvent(event: ExplorerEvent) {
+        when (event) {
+            is ExplorerEvent.DirectoryList -> getDirectoryList(event.file)
+        }
+    }
+
+    private fun getDirectoryList(file: File) {
         viewModelScope.launch(Dispatchers.IO) {
-            val fileList = mutableListOf<PlaylistItem>()
-            _listState.value = try {
-                file.listFiles()
-                    ?.filter { !it.isHidden }
-                    ?.forEach { file ->
-                        fileList.add(
-                            PlaylistItem(
-                                type =
-                                if (file.isDirectory) PlaylistType.TYPE_DIRECTORY
-                                else PlaylistType.TYPE_FILE,
-                                name = file.name,
-                                comment = getCommentData(file),
-                                file = file
-                            ).also { item ->
-                                item.isPlayable = !item.isDirectory() && item.comment != null // :)
-                            }
-                        )
+            _uiState.emit(ExplorerUiState.Loading(isLoading = true))
+
+            getCrumbTrails(file)
+
+            if (!file.exists()) {
+                _uiState.emit(ExplorerUiState.FileNotFound)
+                _uiState.emit(ExplorerUiState.Loading(isLoading = false))
+                return@launch
+            }
+
+            try {
+                val files = file.listFiles().orEmpty()
+
+                val fileList = files.map { file ->
+                    PlaylistItem(
+                        type = getFileType(file),
+                        name = file.name,
+                        comment = getCommentData(file).orEmpty(),
+                        file = file
+                    ).also { item ->
+                        item.isPlayable = !item.isDirectory() && item.comment.isNotEmpty() // :)
                     }
+                }.toMutableList()
 
                 fileList.sort()
                 PlaylistUtils.renumberIds(fileList)
-                FileListState.Loaded(fileList)
+
+                _state.value = ExplorerState(list = fileList, currentFile = file.path)
             } catch (e: Exception) {
-                logE("Error: ${e.localizedMessage}")
-                FileListState.Error(e.localizedMessage)
+                logE(e.localizedMessage ?: "An error as occurred")
+                _uiState.emit(ExplorerUiState.Error(e.localizedMessage))
+            } finally {
+                _uiState.emit(ExplorerUiState.Loading(isLoading = false))
             }
         }
     }
@@ -76,6 +108,7 @@ class ExplorerViewModel : ViewModel() {
     private fun getCrumbTrails(file: File) {
         val crumbList = mutableListOf<BreadCrumb>()
         var currentDir: File? = file
+
         do {
             currentDir?.let {
                 crumbList.add(BreadCrumb(name = it.name, path = it.path))
@@ -84,43 +117,20 @@ class ExplorerViewModel : ViewModel() {
         } while (currentDir?.parentFile != null)
 
         // We'll reverse it here instead of the composable, it animates better.
-        crumbState.value = crumbList.reversed()
+        _crumbState.value = crumbState.value.copy(crumbList = crumbList.reversed())
     }
 
-    fun recursiveList(file: File?): List<String> {
-        if (file == null) {
-            logW("file was null")
-            return emptyList()
-        }
-
-        val list = file
-            .walkTopDown()
-            .filter { it.isFile && Xmp.testModule(it.path) } // slow???
-            .map { it.path }
-            .sortedBy { it.lowercase(Locale.getDefault()) }
-            .toList()
-
-        logD("Recursive list: $list")
-        return list
+    private fun getFileType(file: File): PlaylistType {
+        return if (file.isDirectory) PlaylistType.TYPE_DIRECTORY else PlaylistType.TYPE_FILE
     }
 
-    private suspend fun getCommentData(file: File): String? {
+    private fun getCommentData(file: File): String? {
         var commentData: String? = null
         if (!file.isDirectory) {
-            withContext(Dispatchers.IO) {
-                val modInfo = ModInfo()
-                if (Xmp.testModule(file.path, modInfo))
-                    commentData = modInfo.type
-            }
+            val modInfo = ModInfo()
+            if (Xmp.testModule(file.path, modInfo))
+                commentData = modInfo.type
         }
         return commentData
-    }
-
-    sealed class FileListState {
-        object None : FileListState()
-        object Load : FileListState()
-        object NotFound : FileListState()
-        class Error(val error: String?) : FileListState()
-        class Loaded(val list: List<PlaylistItem>) : FileListState()
     }
 }

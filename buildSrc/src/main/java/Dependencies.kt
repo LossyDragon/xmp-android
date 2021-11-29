@@ -9,7 +9,7 @@ object Dependencies {
     const val ktlintGradle = "10.2.0"
 
     // https://github.com/google/dagger/releases
-    const val hiltAndroid = "2.40.1"
+    const val hiltAndroid = "2.40.2"
 
     // https://mvnrepository.com/artifact/androidx.media/media
     // https://mvnrepository.com/artifact/androidx.preference/preference-ktx
@@ -32,22 +32,23 @@ object Dependencies {
         const val version = "1.1.0-beta03"
         const val activity = "androidx.activity:activity-compose:1.3.1"
         const val animation = "androidx.compose.animation:animation:$version"
-        const val graphics = "androidx.compose.animation:animation-graphics:$version"
         const val constraint = "androidx.constraintlayout:constraintlayout-compose:1.0.0-beta02"
         const val foundation = "androidx.compose.foundation:foundation:$version"
+        const val graphics = "androidx.compose.animation:animation-graphics:$version"
         const val iconsCore = "androidx.compose.material:material-icons-core:$version"
         const val iconsExtended = "androidx.compose.material:material-icons-extended:$version"
         const val lifecycle = "androidx.lifecycle:lifecycle-viewmodel-compose:1.0.0-alpha07"
         const val livedata = "androidx.compose.runtime:runtime-livedata:$version"
         const val material = "androidx.compose.material:material:$version"
         const val material3 = "androidx.compose.material3:material3:1.0.0-alpha01"
+        const val navigation = "androidx.navigation:navigation-compose:2.4.0-beta02"
         const val tooling = "androidx.compose.ui:ui-tooling:$version"
         const val ui = "androidx.compose.ui:ui:$version"
         const val uiUtil = "androidx.compose.ui:ui-util:$version"
 
         // https://github.com/google/accompanist/releases
         object Accompanist {
-            private const val version = "0.21.2-beta"
+            private const val version = "0.21.3-beta"
             const val insets = "com.google.accompanist:accompanist-insets:$version"
             const val controller = "com.google.accompanist:accompanist-systemuicontroller:$version"
             const val permissions = "com.google.accompanist:accompanist-permissions:$version"
@@ -71,7 +72,7 @@ object Dependencies {
         const val android = "com.google.dagger:hilt-android:$hiltAndroid"
         const val kaptAndroidCompiler = "com.google.dagger:hilt-android-compiler:$hiltAndroid"
         const val kaptCompiler = "androidx.hilt:hilt-compiler:1.0.0"
-        const val viewModel = "androidx.hilt:hilt-lifecycle-viewmodel:1.0.0-alpha03"
+        const val composeNav = "androidx.hilt:hilt-navigation-compose:1.0.0-beta01"
     }
 
     // https://github.com/Kotlin/kotlinx.coroutines/releases
@@ -92,15 +93,6 @@ object Dependencies {
         const val annotation = "com.tickaroo.tikxml:annotation"
         const val converter = "com.tickaroo.tikxml:retrofit-converter"
         const val processor = "com.tickaroo.tikxml:processor"
-    }
-
-    // https://github.com/afollestad/material-dialogs/releases
-    @Deprecated("Use Compose Dialogs")
-    object MaterialDialogs {
-        private const val version = "3.3.0"
-        const val core = "com.afollestad.material-dialogs:core:$version"
-        const val input = "com.afollestad.material-dialogs:input:$version"
-        const val lifecycle = "com.afollestad.material-dialogs:lifecycle:$version"
     }
 
     // https://github.com/tonyofrancis/Fetch/releases

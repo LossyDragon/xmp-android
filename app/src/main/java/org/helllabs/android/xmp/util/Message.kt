@@ -13,69 +13,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.LifecycleOwner
-import com.afollestad.materialdialogs.MaterialDialog
-import com.afollestad.materialdialogs.lifecycle.lifecycleOwner
 import com.vanpra.composematerialdialogs.*
-import java.lang.IllegalArgumentException
 import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.ui.preferences.PrefManager
-
-@Composable
-fun ShowToast(
-    text: String? = null,
-    @StringRes res: Int? = null,
-) {
-    val context = LocalContext.current.applicationContext
-
-    val msg = text ?: res?.let { stringResource(id = it) }
-        ?: throw IllegalArgumentException("Must provide a message")
-
-    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-}
 
 inline fun <reified T : Context> T.toast(message: String) =
     Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show()
 
 inline fun <reified T : Context> T.toast(@StringRes resId: Int) =
     Toast.makeText(applicationContext, this.getString(resId), Toast.LENGTH_SHORT).show()
-
-fun Context.dialogMessage(
-    lifecycleOwner: LifecycleOwner,
-    @StringRes title: Int = R.string.error,
-    message: String,
-    @StringRes positiveButtonText: Int = R.string.ok,
-    block: (() -> Unit)? = { }
-) {
-    MaterialDialog(this).show {
-        lifecycleOwner(lifecycleOwner)
-        title(title)
-        message(text = message)
-        positiveButton(positiveButtonText) { block?.invoke() }
-    }
-}
-
-fun Context.yesNoDialog(
-    lifecycleOwner: LifecycleOwner,
-    title: String,
-    message: String,
-    @StringRes positiveButton: Int = R.string.yes,
-    @StringRes negativeButton: Int = R.string.no,
-    onNegativeButton: (() -> Unit)? = null,
-    onPositiveButton: () -> Unit,
-) {
-    MaterialDialog(this).show {
-        lifecycleOwner(lifecycleOwner)
-        title(text = title)
-        message(text = message)
-        positiveButton(positiveButton) { onPositiveButton() }
-        negativeButton(negativeButton) { onNegativeButton?.invoke() }
-    }
-}
 
 @Composable
 fun DialogMessage(

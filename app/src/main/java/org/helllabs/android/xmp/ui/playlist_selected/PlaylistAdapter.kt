@@ -1,4 +1,4 @@
-package org.helllabs.android.xmp.ui.playlistDetail
+package org.helllabs.android.xmp.ui.playlist_selected
 
 import android.annotation.SuppressLint
 import android.view.ViewGroup
@@ -9,16 +9,15 @@ import androidx.recyclerview.widget.RecyclerView
 import java.util.*
 import org.helllabs.android.xmp.model.PlaylistItem
 import org.helllabs.android.xmp.ui.components.ItemList
-import org.helllabs.android.xmp.ui.playlistDetail.recyclerview.ItemTouchHelperAdapter
-import org.helllabs.android.xmp.ui.playlistDetail.recyclerview.ItemTouchHelperViewHolder
-import org.helllabs.android.xmp.ui.playlistDetail.recyclerview.OnStartDragListener
+import org.helllabs.android.xmp.ui.playlist_selected.recyclerview.ItemTouchHelperAdapter
+import org.helllabs.android.xmp.ui.playlist_selected.recyclerview.ItemTouchHelperViewHolder
+import org.helllabs.android.xmp.ui.playlist_selected.recyclerview.OnStartDragListener
 import org.helllabs.android.xmp.util.*
 
 class PlaylistAdapter(
     var currentList: MutableList<PlaylistItem>,
     private var useFilename: Boolean
-) :
-    RecyclerView.Adapter<PlaylistAdapter.ComposedViewHolder>(),
+) : RecyclerView.Adapter<PlaylistAdapter.ComposedViewHolder>(),
     ItemTouchHelperAdapter {
 
     var dragListener: OnStartDragListener? = null

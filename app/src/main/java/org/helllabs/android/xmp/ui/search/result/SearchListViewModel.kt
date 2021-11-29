@@ -1,14 +1,30 @@
 package org.helllabs.android.xmp.ui.search.result
 
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.api.Repository
 import org.helllabs.android.xmp.model.SearchListResult
+
+data class SearchListState(
+    var result: SearchListResult? = null,
+    val softError: String? = null,
+)
+
+sealed class SearchListEvent {
+    data class FileOrTitle(val query: String) : SearchListEvent()
+    data class ArtistById(val id: Int) : SearchListEvent()
+}
+
+sealed class SearchListUiState {
+    data class Error(val error: String?) : SearchListUiState()
+    data class Loading(val isLoading: Boolean) : SearchListUiState()
+}
 
 @HiltViewModel
 class SearchListViewModel
@@ -16,44 +32,52 @@ class SearchListViewModel
     private val repository: Repository
 ) : ViewModel() {
 
-    private val _searchResultState = MutableStateFlow<SearchResultState>(SearchResultState.None)
-    val searchResultState: StateFlow<SearchResultState> = _searchResultState
+    private val _uiState = MutableSharedFlow<SearchListUiState>()
+    val uiState: SharedFlow<SearchListUiState> = _uiState.asSharedFlow()
 
-    fun getFileOrTitle(query: String) =
-        viewModelScope.launch {
-            _searchResultState.value = SearchResultState.Load
-            _searchResultState.value = try {
-                val result = repository.getFileNameOrTitle(query)
-                if (!result.error.isNullOrBlank()) {
-                    SearchResultState.SoftError(result.error!!)
-                } else {
-                    SearchResultState.SearchResult(result)
-                }
-            } catch (e: Exception) {
-                SearchResultState.Error(e.localizedMessage)
-            }
+    private val _state = mutableStateOf(SearchListState())
+    val state: State<SearchListState> = _state
+
+    fun onEvent(event: SearchListEvent) {
+        when (event) {
+            is SearchListEvent.ArtistById -> getArtistById(event.id)
+            is SearchListEvent.FileOrTitle -> getFileOrTitle(event.query)
         }
-
-    fun getArtistById(id: Int) =
-        viewModelScope.launch {
-            _searchResultState.value = SearchResultState.Load
-            _searchResultState.value = try {
-                val result = repository.getArtistById(id)
-                if (!result.error.isNullOrBlank()) {
-                    SearchResultState.SoftError(result.error!!)
-                } else {
-                    SearchResultState.SearchResult(result)
-                }
-            } catch (e: Exception) {
-                SearchResultState.Error(e.localizedMessage)
-            }
-        }
-
-    sealed class SearchResultState {
-        object None : SearchResultState()
-        object Load : SearchResultState()
-        class Error(val error: String?) : SearchResultState()
-        class SoftError(var softError: String) : SearchResultState()
-        class SearchResult(var result: SearchListResult) : SearchResultState()
     }
+
+    private fun getFileOrTitle(query: String) =
+        viewModelScope.launch {
+            _uiState.emit(SearchListUiState.Loading(isLoading = true))
+
+            try {
+                val result = repository.getFileNameOrTitle(query)
+                _state.value = if (!result.error.isNullOrBlank()) {
+                    SearchListState(softError = result.error)
+                } else {
+                    SearchListState(result = result)
+                }
+
+                _uiState.emit(SearchListUiState.Loading(isLoading = false))
+            } catch (e: Exception) {
+                _uiState.emit(SearchListUiState.Error(e.localizedMessage))
+            }
+        }
+
+    private fun getArtistById(id: Int) =
+        viewModelScope.launch {
+            _uiState.emit(SearchListUiState.Loading(isLoading = true))
+
+            try {
+                val result = repository.getArtistById(id)
+                _state.value = if (!result.error.isNullOrBlank()) {
+                    SearchListState(softError = result.error)
+                } else {
+                    SearchListState(result = result)
+                }
+
+                _uiState.emit(SearchListUiState.Loading(isLoading = false))
+            } catch (e: Exception) {
+                _uiState.emit(SearchListUiState.Error(e.localizedMessage))
+            }
+        }
 }

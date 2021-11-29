@@ -61,6 +61,7 @@ class ListFormats : ComponentActivity() {
     }
 }
 
+// TODO: Get dynamic day-night theme
 @OptIn(
     ExperimentalMaterial3Api::class,
     ExperimentalMaterialApi::class,
@@ -79,7 +80,7 @@ private fun FormatsLayout(
                 XmpAppBar3(
                     scrollBehavior = scrollBehavior,
                     titleText = stringResource(id = R.string.pref_list_formats_title),
-                    onNavIconPressed = { onBack() }
+                    onNavIconPressed = onBack
                 )
             }
         ) {

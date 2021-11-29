@@ -29,9 +29,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import com.afollestad.materialdialogs.MaterialDialog
 import com.google.accompanist.insets.ProvideWindowInsets
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlinx.coroutines.*
@@ -44,15 +44,15 @@ import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.model.ModInfo
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.service.utils.*
+import org.helllabs.android.xmp.ui.MainActivity
 import org.helllabs.android.xmp.ui.components.*
 import org.helllabs.android.xmp.ui.player.viewer.ChannelViewer
 import org.helllabs.android.xmp.ui.player.viewer.InstrumentViewer
 import org.helllabs.android.xmp.ui.player.viewer.PatternViewer
 import org.helllabs.android.xmp.ui.player.viewer.Viewer
-import org.helllabs.android.xmp.ui.playlists.PlaylistMenu
-import org.helllabs.android.xmp.ui.preferences.PrefManager
 import org.helllabs.android.xmp.ui.theme.*
 import org.helllabs.android.xmp.util.*
+import org.helllabs.android.xmp.util.PrefManager
 
 @AndroidEntryPoint
 class PlayerActivity : ComponentActivity() {
@@ -237,9 +237,7 @@ class PlayerActivity : ComponentActivity() {
                     AndroidView(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(
-                                start = 16.dp,
-                                end = 16.dp,
+                            .waterfallPadding(
                                 bottom = it.calculateBottomPadding()
                             ),
                         factory = { context ->
@@ -433,7 +431,7 @@ class PlayerActivity : ComponentActivity() {
             // Oops. We don't want to start service if launched from history and service is not running
             // so run the browser instead.
             logI("Start file browser")
-            val browserIntent = Intent(this, PlaylistMenu::class.java)
+            val browserIntent = Intent(this, MainActivity::class.java)
             browserIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
             startActivity(browserIntent)
             finish()
@@ -861,17 +859,22 @@ private fun PlayerSheetContent(
     val currentSeq = viewModel.currentSequence.observeAsState()
     val numSeq = viewModel.numOfSequences.observeAsState()
 
+    val songMessageState = rememberMaterialDialogState()
+    DialogMessage(
+        dialogState = songMessageState,
+        title = R.string.dialog_title_song_message,
+        messageText = Xmp.getComment(),
+        positiveButtonText = R.string.ok,
+        onPositiveButton = { },
+        onDismiss = { songMessageState.hide() }
+    )
+
     DetailsSheet(
         onMessage = {
-            val message = Xmp.getComment()
-            if (message.isNullOrEmpty()) {
+            if (Xmp.getComment().isNullOrEmpty()) {
                 context.toast(R.string.msg_no_song_info)
             } else {
-                MaterialDialog(context).show {
-                    title(R.string.dialog_title_song_message)
-                    message(text = message)
-                    positiveButton(R.string.ok)
-                }
+                songMessageState.show()
             }
         },
         moduleInfo = info.value!!,

@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.helllabs.android.xmp.ui.playlistDetail.recyclerview
+package org.helllabs.android.xmp.ui.playlist_selected.recyclerview
 
 import android.graphics.Canvas
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import kotlin.math.abs
-import org.helllabs.android.xmp.ui.playlistDetail.PlaylistAdapter
+import org.helllabs.android.xmp.ui.playlist_selected.PlaylistAdapter
 
 /**
  * An implementation of [ItemTouchHelper.Callback] that enables basic drag & drop and

@@ -26,9 +26,9 @@ import org.helllabs.android.xmp.service.Notifier.Companion.TYPE_TICKER
 import org.helllabs.android.xmp.service.receiver.ControllerReceiver
 import org.helllabs.android.xmp.service.receiver.NoisyReceiver
 import org.helllabs.android.xmp.service.utils.*
-import org.helllabs.android.xmp.ui.preferences.PrefManager
 import org.helllabs.android.xmp.util.*
 import org.helllabs.android.xmp.util.FileUtils.basename
+import org.helllabs.android.xmp.util.PrefManager
 
 // Binder is leaking via leak canary  ¯\_(ツ)_/¯
 // -- I guess it retains it for a very long time? (SO answers)
@@ -359,6 +359,9 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
     }
 
     fun add(fileList: List<String>) {
+        if (fileList.isEmpty())
+            return
+
         queue!!.add(fileList)
         updateNotification()
     }

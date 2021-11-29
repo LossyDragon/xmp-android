@@ -5,8 +5,9 @@ import android.content.res.AssetManager
 import android.net.Uri
 import android.provider.OpenableColumns
 import java.io.*
+import java.util.*
+import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.model.Module
-import org.helllabs.android.xmp.ui.preferences.PrefManager
 import org.helllabs.android.xmp.ui.search.ModArchiveConstants
 
 object FileUtils {
@@ -40,6 +41,23 @@ object FileUtils {
         }
 
         return sb.toString()
+    }
+
+    fun recursiveList(file: File?): List<String> {
+        if (file == null) {
+            logW("file was null")
+            return emptyList()
+        }
+
+        val list = file
+            .walkTopDown()
+            .filter { it.isFile && Xmp.testModule(it.path) } // slow???
+            .map { it.path }
+            .sortedBy { it.lowercase(Locale.getDefault()) }
+            .toList()
+
+        logD("Recursive list: $list")
+        return list
     }
 
     /**
@@ -188,7 +206,8 @@ object FileUtils {
     }
 
     fun basename(pathname: String): String {
-        return File(pathname).name.orEmpty()
+        val file = File(pathname)
+        return file.name.orEmpty()
     }
 
     fun delete(filename: String): Boolean {
@@ -203,5 +222,47 @@ object FileUtils {
     fun deleteRecursive(filename: String): Boolean {
         val file = File(filename)
         return file.deleteRecursively()
+    }
+
+    /**
+     * Deletes the module file
+     * @return true if the file was successfully deleted; false otherwise.
+     */
+    fun deleteModuleFile(module: Module): Boolean {
+        val file = localFile(module)!!
+
+        if (file.isDirectory)
+            return false
+
+        if (!file.delete())
+            return false
+
+        if (PrefManager.useArtistFolder) {
+            val parent = file.parentFile!!
+            val contents = parent.listFiles()
+            if (contents != null && contents.isEmpty()) {
+                try {
+                    val path = PrefManager.mediaPath!!
+                    val mediaPath = File(path).canonicalPath
+                    val parentPath = parent.canonicalPath
+
+                    if (parentPath.startsWith(mediaPath) &&
+                        parentPath != mediaPath
+                    ) {
+                        logI("Remove empty directory " + parent.path)
+                        if (!parent.delete()) {
+                            logE("error removing directory")
+                            return false
+                        }
+                    }
+                    return true
+                } catch (e: IOException) {
+                    logW(e.message.toString())
+                    return false
+                }
+            }
+        }
+
+        return true
     }
 }

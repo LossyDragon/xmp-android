@@ -167,6 +167,17 @@ fun ModuleLayout(
         )
         Spacer(modifier = Modifier.height(5.dp))
         // Licence Statement
+        // TODO
+        //      Should I move that No specific license terms to the bottom?
+        //      I just feel that takes up too much space.
+        //      or make it a clickable dialog?
+        //      R4to0 — Today at 10:21 PM
+        //      Yeah before the hosted by
+        //      Would be a nice thing
+        //      So user can see more the comments
+        //      R4to0 — Today at 10:22 PM
+        //      Or you could make a clickable hide/show message
+        //      Rather than a dialog :v
         Text(
             modifier = Modifier.padding(start = 10.dp, end = 10.dp),
             text = module.license?.description ?: "...",

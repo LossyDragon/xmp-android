@@ -17,8 +17,8 @@ import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.service.utils.QueueManager
 import org.helllabs.android.xmp.ui.player.PlayerActivity
-import org.helllabs.android.xmp.ui.preferences.PrefManager
 import org.helllabs.android.xmp.util.Api
+import org.helllabs.android.xmp.util.PrefManager
 import org.helllabs.android.xmp.util.getIconBitmap
 
 // With Android 11 (R), you can swipe the media notification away, and still plays

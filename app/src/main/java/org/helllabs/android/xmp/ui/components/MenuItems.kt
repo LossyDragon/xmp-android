@@ -39,10 +39,10 @@ fun PlaylistMenuItems(
 
 @Composable
 fun DeleteMenu(
+    image: ImageVector = Icons.Default.Delete,
     deleteClick: () -> Unit,
-    image: ImageVector = Icons.Default.Delete
 ) {
-    IconButton(onClick = { deleteClick() }) {
+    IconButton(onClick = deleteClick) {
         Icon(
             imageVector = image,
             contentDescription = stringResource(id = R.string.delete)
@@ -73,7 +73,7 @@ private fun MenuAppBarDeletePreview() {
     XmpTheme3 {
         XmpAppBar3(
             titleText = stringResource(id = R.string.app_name),
-            actions = { DeleteMenu({}) }
+            actions = { DeleteMenu {} }
         )
     }
 }

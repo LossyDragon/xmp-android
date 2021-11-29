@@ -74,7 +74,7 @@ fun fakeDataArtistResult(): List<Item> {
     return result
 }
 
-fun fakeDataSearchListResult(): List<Module> {
+fun fakeDataSearchListResult(): SearchListResult {
     val result = mutableListOf<Module>()
     repeat(8) {
         result.add(
@@ -87,7 +87,7 @@ fun fakeDataSearchListResult(): List<Module> {
         )
     }
 
-    return result
+    return SearchListResult(module = result)
 }
 
 fun fakeModuleResult(): ModuleResult {

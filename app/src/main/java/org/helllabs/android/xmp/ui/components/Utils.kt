@@ -1,13 +1,28 @@
 package org.helllabs.android.xmp.ui.components
 
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.BottomSheetScaffoldState
 import androidx.compose.material.BottomSheetValue
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import org.helllabs.android.xmp.ui.theme.darkAccent
+
+/**
+ * Normal padding modifier but with 16.dp padding applied to start and end.
+ * Additional padding can be added in [Dp]: [start], [top], [end], and [bottom]
+ */
+fun Modifier.waterfallPadding(
+    start: Dp = 0.dp,
+    top: Dp = 0.dp,
+    end: Dp = 0.dp,
+    bottom: Dp = 0.dp
+) = this.padding(start = start + 16.dp, end = end + 16.dp, top = top, bottom = bottom)
 
 // https://github.com/egorikftp/compose-animated-bottomsheet
 @OptIn(ExperimentalMaterialApi::class)

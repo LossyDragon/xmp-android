@@ -29,7 +29,10 @@ fun LazyList(
     boxContent: @Composable BoxScope.() -> Unit,
     lazyContent: LazyListScope.() -> Unit
 ) {
-    Box(modifier = modifier) {
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center
+    ) {
         val listState = rememberLazyListState()
         val scope = rememberCoroutineScope()
 

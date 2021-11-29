@@ -1,9 +1,10 @@
-package org.helllabs.android.xmp.ui.preferences
+package org.helllabs.android.xmp.util
 
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import androidx.preference.PreferenceManager
+import org.helllabs.android.xmp.ui.MainActivity
 
 object PrefManager {
 
@@ -54,6 +55,10 @@ object PrefManager {
         prefs = PreferenceManager.getDefaultSharedPreferences(context)
     }
 
+    fun getPreferences(): SharedPreferences {
+        return prefs
+    }
+
     fun getBooleanPref(key: String, defaultValue: Boolean): Boolean {
         return prefs.getBoolean(key, defaultValue)
     }
@@ -83,7 +88,7 @@ object PrefManager {
         set(value) = prefs.edit { putString(PLAYLIST_MODE, value) }
 
     var mediaPath: String?
-        get() = prefs.getString(MEDIA_PATH, Preferences.DEFAULT_MEDIA_PATH)
+        get() = prefs.getString(MEDIA_PATH, MainActivity.DEFAULT_MEDIA_PATH)
         set(value) = prefs.edit { putString(MEDIA_PATH, value) }
 
     var installExamples: Boolean

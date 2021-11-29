@@ -2,15 +2,20 @@ package org.helllabs.android.xmp.ui.preferences
 
 import android.os.Bundle
 import android.view.MenuItem
-import androidx.preference.Preference
-import androidx.preference.PreferenceFragmentCompat
-import androidx.preference.PreferenceScreen
-import androidx.preference.SeekBarPreference
+import androidx.preference.*
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.service.PlayerService
+import org.helllabs.android.xmp.util.AppTheme
+import org.helllabs.android.xmp.util.PrefTheme
 import org.helllabs.android.xmp.util.logD
 
+@AndroidEntryPoint
 class PreferencesFragment : PreferenceFragmentCompat() {
+
+    @Inject
+    lateinit var prefTheme: PrefTheme
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,6 +35,21 @@ class PreferencesFragment : PreferenceFragmentCompat() {
                 }
             }
         )
+
+        findPreference<ListPreference>("themePref")?.let {
+            it.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _, newValue ->
+                val value = newValue as String
+                logD("Theme: $value")
+
+                when (value) {
+                    "auto" -> prefTheme.theme = AppTheme.fromOrdinal(AppTheme.MODE_AUTO.ordinal)
+                    "dark" -> prefTheme.theme = AppTheme.fromOrdinal(AppTheme.MODE_NIGHT.ordinal)
+                    "light" -> prefTheme.theme = AppTheme.fromOrdinal(AppTheme.MODE_DAY.ordinal)
+                }
+
+                true
+            }
+        }
 
         // It kinda works.
         findPreference<SeekBarPreference>("buffer_ms_opensl")?.let {

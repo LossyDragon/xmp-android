@@ -1,13 +1,7 @@
 package org.helllabs.android.xmp.ui.search
 
-import android.app.Activity
-import android.content.Context
-import android.content.Intent
 import android.content.res.Configuration
-import android.os.Bundle
 import android.util.DisplayMetrics.DENSITY_HIGH
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -25,7 +19,10 @@ import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -42,82 +39,96 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.view.WindowCompat
-import com.google.accompanist.insets.ProvideWindowInsets
-import com.google.accompanist.insets.navigationBarsWithImePadding
-import java.lang.RuntimeException
+import androidx.navigation.NavController
+import com.google.accompanist.insets.imePadding
 import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.ui.NavScreens
 import org.helllabs.android.xmp.ui.components.RadioGroup
 import org.helllabs.android.xmp.ui.components.XmpAppBar3
 import org.helllabs.android.xmp.ui.components.annotatedLinkString
-import org.helllabs.android.xmp.ui.search.ModArchiveConstants.MODULE_ID
-import org.helllabs.android.xmp.ui.search.ModArchiveConstants.SEARCH_TEXT
-import org.helllabs.android.xmp.ui.search.result.ArtistResult
-import org.helllabs.android.xmp.ui.search.result.ModuleResult
-import org.helllabs.android.xmp.ui.search.result.SearchListResult
-import org.helllabs.android.xmp.ui.theme.*
-import org.helllabs.android.xmp.util.logD
+import org.helllabs.android.xmp.ui.components.waterfallPadding
+import org.helllabs.android.xmp.ui.theme.XmpTheme3
+import org.helllabs.android.xmp.ui.theme.darkAccent
+import org.helllabs.android.xmp.ui.theme.darkGray
 import org.helllabs.android.xmp.util.upperCase
 
-class Search : ComponentActivity() {
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        // Set this for all Compose activities.
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-
-        logD("onCreate")
-        setContent {
-            ProvideWindowInsets {
-                SearchLayout(
-                    onBack = { onBackPressed() }
-                )
+@Composable
+fun SearchScreen(
+    navController: NavController,
+    innerPadding: PaddingValues,
+) {
+    SearchLayout(
+        innerPadding = innerPadding,
+        onBack = { navController.popBackStack() },
+        onSearch = { selection, search ->
+            when (selection) {
+                0 -> {
+                    // Search Result
+                    val navArgs = "?querySearch=$search"
+                    navController.navigate(NavScreens.SearchListResult.route + navArgs)
+                }
+                1 -> {
+                    // Artist Result
+                    val navArgs = "?artistQuery=$search"
+                    navController.navigate(NavScreens.SearchArtistResult.route + navArgs)
+                }
             }
-        }
-    }
+        },
+        onRandom = {
+            navController.navigate(
+                NavScreens.SearchModuleResult.route + "?moduleId=${-1}"
+            )
+        },
+        onHistory = { navController.navigate(NavScreens.SearchHistory.route) }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SearchLayout(
+    innerPadding: PaddingValues,
     onBack: () -> Unit,
+    onSearch: (selection: Int, search: String) -> Unit,
+    onRandom: () -> Unit,
+    onHistory: () -> Unit,
 ) {
     val scrollState = rememberScrollState()
     val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
 
-    XmpTheme3 {
-        Scaffold(
-            topBar = {
-                XmpAppBar3(
-                    scrollBehavior = scrollBehavior,
-                    onNavIconPressed = onBack,
-                    titleText = stringResource(id = R.string.search_title)
-                )
-            }
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(start = 16.dp, end = 16.dp)
-                    .navigationBarsWithImePadding()
-                    .nestedScroll(scrollBehavior.nestedScrollConnection)
-                    .verticalScroll(scrollState),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                val search = remember { mutableStateOf(TextFieldValue("")) }
-                val selection = remember { mutableStateOf(0) }
-                val isSearchValid = search.value.text.length >= 3
+    val search = remember { mutableStateOf(TextFieldValue("")) }
+    val selection = remember { mutableStateOf(0) }
+    val isSearchValid = search.value.text.length >= 3
 
-                SearchBox(search, isSearchValid, onBack) // TODO onBack should be onSearch!
-                Spacer(modifier = Modifier.height(16.dp))
-                SearchRadioSelection(selection)
-                Spacer(modifier = Modifier.height(16.dp))
-                SearchButtons(search, isSearchValid, selection)
-                Spacer(modifier = Modifier.height(16.dp))
-                SearchProvidedBy()
-                Spacer(modifier = Modifier.height(16.dp))
-            }
+    val onSearchClick = { onSearch(selection.value, search.value.text.trim()) }
+
+    Scaffold(
+        modifier = Modifier.padding(innerPadding),
+        topBar = {
+            XmpAppBar3(
+                scrollBehavior = scrollBehavior,
+                onNavIconPressed = onBack,
+                titleText = stringResource(id = R.string.search_title)
+            )
+        }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .imePadding()
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
+                .padding(it)
+                .verticalScroll(scrollState)
+                .waterfallPadding(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            SearchBox(search, isSearchValid, onSearchClick)
+            Spacer(modifier = Modifier.height(16.dp))
+            SearchRadioSelection(selection)
+            Spacer(modifier = Modifier.height(16.dp))
+            SearchButtons(isSearchValid, onSearchClick, onRandom, onHistory)
+            Spacer(modifier = Modifier.height(16.dp))
+            SearchProvidedBy()
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
@@ -147,6 +158,7 @@ private fun SearchBox(
                 if (isSearchValid) {
                     onSearch()
                 }
+
                 focusManager.clearFocus()
             }
         ),
@@ -181,6 +193,7 @@ private fun SearchRadioSelection(selection: MutableState<Int>) {
         stringResource(id = R.string.search_title_or_filename),
         stringResource(id = R.string.search_artist)
     )
+
     RadioGroup(
         modifier = Modifier.fillMaxWidth(),
         radioList = radioGroup,
@@ -191,12 +204,11 @@ private fun SearchRadioSelection(selection: MutableState<Int>) {
 
 @Composable
 private fun SearchButtons(
-    search: MutableState<TextFieldValue>,
     isSearchValid: Boolean,
-    selection: MutableState<Int>,
+    onSearch: () -> Unit,
+    onRandom: () -> Unit,
+    onHistory: () -> Unit,
 ) {
-    val context = LocalContext.current
-
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -205,35 +217,19 @@ private fun SearchButtons(
             buttonIcon = Icons.Default.Search,
             buttonText = stringResource(id = R.string.search),
             isEnabled = isSearchValid,
-            onClick = {
-                val intent: Intent = when (selection.value) {
-                    0 -> Intent(context, SearchListResult::class.java)
-                        .putExtra(SEARCH_TEXT, search.value.text.trim())
-                    1 -> Intent(context, ArtistResult::class.java)
-                        .putExtra(SEARCH_TEXT, search.value.text.trim())
-                    else -> throw RuntimeException("Search Selection was ${selection.value}")
-                }
-                onButtonClicked(context, intent)
-            }
+            onClick = onSearch
         )
         SearchButtonContent(
             buttonIcon = Icons.Default.HelpOutline,
             buttonText = stringResource(id = R.string.random),
             isEnabled = true,
-            onClick = {
-                val intent = Intent(context, ModuleResult::class.java)
-                intent.putExtra(MODULE_ID, -1)
-                onButtonClicked(context, intent)
-            }
+            onClick = onRandom
         )
         OutlinedButton(
             modifier = Modifier
                 .fillMaxWidth(.85f)
                 .padding(8.dp),
-            onClick = {
-                val intent = Intent(context, SearchHistory::class.java)
-                onButtonClicked(context, intent)
-            }
+            onClick = onHistory
         ) {
             Row(
                 modifier = Modifier.padding(start = 4.dp, end = 4.dp),
@@ -326,14 +322,6 @@ private fun SearchProvidedBy() {
     }
 }
 
-private fun onButtonClicked(context: Context, intent: Intent) {
-    context.startActivity(intent)
-    (context as Activity).overridePendingTransition(
-        R.anim.slide_in_right,
-        R.anim.slide_out_left
-    )
-}
-
 /************
  * Previews *
  ************/
@@ -342,7 +330,13 @@ private fun onButtonClicked(context: Context, intent: Intent) {
 @Preview(name = "Light Theme", uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Composable
 private fun SearchLayoutPreview() {
-    SearchLayout(
-        onBack = {},
-    )
+    XmpTheme3 {
+        SearchLayout(
+            innerPadding = PaddingValues(),
+            onBack = {},
+            onSearch = { _, _ -> },
+            onRandom = {},
+            onHistory = {},
+        )
+    }
 }

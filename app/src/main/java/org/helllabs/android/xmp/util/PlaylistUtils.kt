@@ -7,9 +7,8 @@ import org.helllabs.android.xmp.Xmp.testModule
 import org.helllabs.android.xmp.model.ModInfo
 import org.helllabs.android.xmp.model.PlaylistItem
 import org.helllabs.android.xmp.model.PlaylistType
-import org.helllabs.android.xmp.ui.playlistDetail.Playlist
-import org.helllabs.android.xmp.ui.preferences.PrefManager
-import org.helllabs.android.xmp.ui.preferences.Preferences
+import org.helllabs.android.xmp.ui.MainActivity
+import org.helllabs.android.xmp.ui.playlist_selected.Playlist
 
 object PlaylistUtils {
 
@@ -100,7 +99,7 @@ object PlaylistUtils {
     }
 
     fun list(): Array<String> {
-        return Preferences.DATA_DIR.list { _, name ->
+        return MainActivity.DATA_DIR.list { _, name ->
             name.endsWith(PLAYLIST_SUFFIX)
         } ?: emptyArray()
     }
@@ -220,7 +219,7 @@ object PlaylistUtils {
             lines.add(playlistItem.toString())
         }
         try {
-            FileUtils.writeToFile(File(Preferences.DATA_DIR, name + PLAYLIST_SUFFIX), lines)
+            FileUtils.writeToFile(File(MainActivity.DATA_DIR, name + PLAYLIST_SUFFIX), lines)
         } catch (e: IOException) {
             return false
         }

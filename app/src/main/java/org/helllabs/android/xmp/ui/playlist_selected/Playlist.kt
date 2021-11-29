@@ -1,11 +1,10 @@
-package org.helllabs.android.xmp.ui.playlistDetail
+package org.helllabs.android.xmp.ui.playlist_selected
 
 import java.io.*
 import java.util.*
 import org.helllabs.android.xmp.model.PlaylistItem
 import org.helllabs.android.xmp.model.PlaylistType
-import org.helllabs.android.xmp.ui.preferences.PrefManager
-import org.helllabs.android.xmp.ui.preferences.Preferences
+import org.helllabs.android.xmp.ui.MainActivity as Preferences // TODO hack
 import org.helllabs.android.xmp.util.FileUtils.readFromFile
 import org.helllabs.android.xmp.util.FileUtils.removeLineFromFile
 import org.helllabs.android.xmp.util.FileUtils.writeToFile
@@ -16,6 +15,7 @@ import org.helllabs.android.xmp.util.PlaylistUtils.DEFAULT_SHUFFLE_MODE
 import org.helllabs.android.xmp.util.PlaylistUtils.LOOP_MODE
 import org.helllabs.android.xmp.util.PlaylistUtils.PLAYLIST_SUFFIX
 import org.helllabs.android.xmp.util.PlaylistUtils.SHUFFLE_MODE
+import org.helllabs.android.xmp.util.PrefManager
 import org.helllabs.android.xmp.util.logD
 import org.helllabs.android.xmp.util.logE
 import org.helllabs.android.xmp.util.logI

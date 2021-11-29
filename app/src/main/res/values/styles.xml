@@ -1,10 +1,5 @@
-<resources xmlns:android="http://schemas.android.com/apk/res/android">
+<resources>
 
-    <style name="ComposeTheme" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Material Dialogs -->
-        <item name="md_corner_radius">8dp</item>
-        <item name="md_color_button_text">@color/dialogButtons</item>
-        <item name="md_color_widget">@color/accent</item>
-    </style>
+    <style name="ComposeTheme" parent="Theme.Material3.DayNight.NoActionBar" />
 
 </resources>

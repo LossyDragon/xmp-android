@@ -7,15 +7,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ListItem
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DragHandle
-import androidx.compose.material.icons.filled.FolderOpen
-import androidx.compose.material.icons.filled.InsertDriveFile
-import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.FolderOpen
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -34,31 +28,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.model.*
-import org.helllabs.android.xmp.ui.preferences.PrefManager
 import org.helllabs.android.xmp.ui.theme.XmpTheme3
 import org.helllabs.android.xmp.util.ifNullOrEmpty
 
 @OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun ItemPlaylistCard(
+    modifier: Modifier,
     playlist: PlaylistItem,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
     val haptic = LocalHapticFeedback.current
-
-    val cardIcon = when (playlist.type) {
-        PlaylistType.TYPE_SPECIAL -> Icons.Outlined.FolderOpen
-        PlaylistType.TYPE_PLAYLIST -> Icons.Default.List
-        else -> throw IllegalArgumentException("Card should only use Type Special or Playlist!")
-    }
-
-    // Lazy sanity check
-    if (playlist.type == PlaylistType.TYPE_SPECIAL && playlist.name == null) {
-        val mediaPath = PrefManager.mediaPath ?: "..."
-        playlist.name = stringResource(id = R.string.playlist_special_title)
-        playlist.comment = stringResource(id = R.string.playlist_special_comment, mediaPath)
-    }
 
     if (playlist.type == PlaylistType.TYPE_PLAYLIST) {
         playlist.comment = playlist.comment.ifNullOrEmpty {
@@ -68,8 +49,8 @@ fun ItemPlaylistCard(
 
     // TODO:  Material 3 Elevated Card
     Surface(
-        modifier = Modifier
-            .padding(start = 16.dp, end = 16.dp, top = 3.dp, bottom = 3.dp),
+        modifier = modifier
+            .waterfallPadding(top = 3.dp, bottom = 3.dp),
         shape = RoundedCornerShape(8.dp),
         color = MaterialTheme.colorScheme.inverseOnSurface,
         border = null,
@@ -86,7 +67,7 @@ fun ItemPlaylistCard(
                 ),
             text = {
                 Text(
-                    text = playlist.name!!,
+                    text = playlist.name,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -94,7 +75,7 @@ fun ItemPlaylistCard(
             secondaryText = {
                 Text(
                     modifier = Modifier.padding(bottom = 10.dp),
-                    text = playlist.comment!!,
+                    text = playlist.comment,
                     maxLines = 3,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -102,7 +83,7 @@ fun ItemPlaylistCard(
             icon = {
                 Icon(
                     modifier = Modifier.padding(top = 8.dp, start = 8.dp),
-                    imageVector = cardIcon,
+                    imageVector = Icons.Default.List,
                     contentDescription = null
                 )
             }
@@ -111,24 +92,29 @@ fun ItemPlaylistCard(
 }
 
 @OptIn(
-    ExperimentalMaterialApi::class,
-    ExperimentalFoundationApi::class,
-    ExperimentalComposeUiApi::class
+    ExperimentalMaterialApi::class, // ListItem
+    ExperimentalFoundationApi::class, // combinedClickable
+    ExperimentalComposeUiApi::class // pointerInteropFilter
 )
 @Composable
 fun ItemList(
     item: PlaylistItem,
+    showMenu: Boolean = false,
+    onMenu: (() -> Unit)? = null,
     isDraggable: Boolean = false,
     onDrag: ((value: Boolean) -> Unit)? = null,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
     val haptic = LocalHapticFeedback.current
+
     val listIcon = when (item.type) {
         PlaylistType.TYPE_DIRECTORY -> Icons.Outlined.FolderOpen
         PlaylistType.TYPE_FILE -> Icons.Default.InsertDriveFile
         else -> throw IllegalArgumentException("Item should only use Type Directory or File!")
     }
+
+    // TODO change background color when isSelected is true.
 
     ListItem(
         modifier = Modifier
@@ -142,15 +128,26 @@ fun ItemList(
                 }
             ),
         icon = {
-            Icon(
-                modifier = Modifier.padding(top = 8.dp, start = 8.dp),
-                imageVector = listIcon,
-                contentDescription = null
-            )
+            Box(
+                modifier = Modifier.size(40.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                if (item.isSelected) {
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = null
+                    )
+                } else {
+                    Icon(
+                        imageVector = listIcon,
+                        contentDescription = null
+                    )
+                }
+            }
         },
         text = {
             Text(
-                text = item.name!!,
+                text = item.name,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -161,7 +158,7 @@ fun ItemList(
                     item.isDirectory() -> stringResource(id = R.string.directory)
                     !item.isPlayable -> stringResource(id = R.string.unplayable_item)
                     else -> item.comment
-                }.orEmpty(),
+                },
                 fontStyle = if (item.isDirectory()) FontStyle.Italic else FontStyle.Normal,
                 color =
                 if (!item.isPlayable && !item.isDirectory()) Color.Red
@@ -172,6 +169,17 @@ fun ItemList(
             )
         },
         trailing = {
+            if (showMenu) {
+                IconButton(onClick = { onMenu?.invoke() }) {
+                    Icon(
+                        modifier = Modifier
+                            .size(24.dp),
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = null
+                    )
+                }
+            }
+
             // TODO: Research way to highlight on drag.
             if (isDraggable) {
                 assert(onDrag != null) { "onDrag should not be null while draggable!" }
@@ -300,15 +308,18 @@ fun ItemModule(
 @Composable
 private fun ItemPlaylistCardPreview() {
     XmpTheme3 {
-        ItemPlaylistCard(
-            playlist = PlaylistItem(
-                type = PlaylistType.TYPE_PLAYLIST,
-                name = "Some very long playlist name that should ellipsize at the end",
-                comment = stringResource(id = R.string.app_description)
-            ),
-            onClick = {},
-            onLongClick = {}
-        )
+        Surface {
+            ItemPlaylistCard(
+                modifier = Modifier,
+                playlist = PlaylistItem(
+                    type = PlaylistType.TYPE_PLAYLIST,
+                    name = "Some very long playlist name that should ellipsize at the end",
+                    comment = stringResource(id = R.string.app_description)
+                ),
+                onClick = {},
+                onLongClick = {}
+            )
+        }
     }
 }
 
@@ -316,17 +327,42 @@ private fun ItemPlaylistCardPreview() {
 @Composable
 private fun ItemListPreview() {
     XmpTheme3 {
-        ItemList(
-            item = PlaylistItem(
-                PlaylistType.TYPE_FILE,
-                "Some Item Some Item Some Item Some Item Some Type",
-                "Some Type Some Type Some Type Some Type Some Type"
-            ),
-            isDraggable = true,
-            onDrag = { /**/ },
-            onClick = {},
-            onLongClick = {},
-        )
+        Surface {
+            ItemList(
+                item = PlaylistItem(
+                    type = PlaylistType.TYPE_FILE,
+                    name = "Some Item Some Item Some Item Some Item Some Type",
+                    comment = "Some Type Some Type Some Type Some Type Some Type"
+                ),
+                isDraggable = true,
+                onDrag = { /**/ },
+                onClick = {},
+                onLongClick = {},
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun ItemListSelectedPreview() {
+    XmpTheme3 {
+        Surface {
+            ItemList(
+                item = PlaylistItem(
+                    type = PlaylistType.TYPE_FILE,
+                    name = "Some Item Some Item Some Item Some Item Some Type",
+                    comment = "Some Type Some Type Some Type Some Type Some Type",
+                    isSelected = true
+                ),
+                showMenu = true,
+                onMenu = {},
+                isDraggable = false,
+                onDrag = { /**/ },
+                onClick = {},
+                onLongClick = {},
+            )
+        }
     }
 }
 
@@ -334,15 +370,17 @@ private fun ItemListPreview() {
 @Composable
 private fun ItemModulePreview() {
     XmpTheme3 {
-        ItemModule(
-            item = Module(
-                format = "XM",
-                songtitle = "Some History Song Title",
-                artistInfo = ArtistInfo(artist = Artist(alias = "Some History Artist Info")),
-                bytes = 6690000
-            ),
-            onClick = {}
-        )
+        Surface {
+            ItemModule(
+                item = Module(
+                    format = "XM",
+                    songtitle = "Some History Song Title",
+                    artistInfo = ArtistInfo(artist = Artist(alias = "Some History Artist Info")),
+                    bytes = 6690000
+                ),
+                onClick = {}
+            )
+        }
     }
 }
 
@@ -350,10 +388,12 @@ private fun ItemModulePreview() {
 @Composable
 private fun ItemBreadCrumbPreview() {
     XmpTheme3 {
-        ItemBreadCrumb(
-            crumb = "Some Bread Crumb",
-            onClick = {},
-            onLongClick = {}
-        )
+        Surface {
+            ItemBreadCrumb(
+                crumb = "Some Bread Crumb",
+                onClick = {},
+                onLongClick = {}
+            )
+        }
     }
 }

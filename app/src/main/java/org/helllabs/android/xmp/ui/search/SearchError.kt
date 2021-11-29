@@ -1,110 +1,104 @@
 package org.helllabs.android.xmp.ui.search
 
-import android.content.Intent
 import android.content.res.Configuration.UI_MODE_NIGHT_NO
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
-import android.os.Bundle
 import androidx.activity.OnBackPressedCallback
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
-import androidx.activity.compose.setContent
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.OnBackPressedDispatcher
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.view.WindowCompat
-import com.google.accompanist.insets.ProvideWindowInsets
+import androidx.navigation.NavController
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.ui.NavScreens
 import org.helllabs.android.xmp.ui.components.XmpAppBar3
-import org.helllabs.android.xmp.ui.search.ModArchiveConstants.ERROR
 import org.helllabs.android.xmp.ui.theme.XmpTheme3
 import org.helllabs.android.xmp.ui.theme.topazFontFamily
 import org.helllabs.android.xmp.util.upperCase
 
-class SearchError : AppCompatActivity() {
+@Composable
+fun SearchErrorScreen(
+    navController: NavController,
+    onBackPressedCallback: OnBackPressedDispatcher,
+    errorMessage: String?,
+) {
+    val context = LocalContext.current
 
-    public override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        // Set this for all Compose activities.
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-
-        // Extract the error message
-        var message: String? = intent.getStringExtra(ERROR)
-        if (message == null) {
-            message = getString(R.string.search_unknown_error)
+    var message by remember { mutableStateOf(errorMessage) }
+    LaunchedEffect(true) {
+        if (message.isNullOrBlank()) {
+            message = context.getString(R.string.search_unknown_error)
         } else {
             // Remove java exception stuff
-            val idx = message.indexOf("Exception: ")
+            val idx = message!!.indexOf("Exception: ")
             if (idx >= 0) {
-                message = message.substring(idx + 11)
+                message = message!!.substring(idx + 11)
             }
-            message = if (message.trim().isEmpty()) {
-                getString(R.string.search_unknown_error)
-            } else {
-                val err = message.substring(0, 1).upperCase() + message.substring(1)
-                getString(R.string.search_known_error, err)
-            }
+            message =
+                if (message!!.trim().isEmpty()) {
+                    context.getString(R.string.search_unknown_error)
+                } else {
+                    val err = message!!.substring(0, 1).upperCase() + message!!.substring(1)
+                    context.getString(R.string.search_known_error, err)
+                }
         }
+    }
 
-        setContent {
-            ProvideWindowInsets {
-                ErrorLayout(message = message)
+    val onBackPressed = {
+        navController.popBackStack(route = NavScreens.Search.route, inclusive = false)
+    }
+
+    val callback = remember {
+        object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                onBackPressed()
             }
         }
     }
+
+    DisposableEffect(onBackPressedCallback) {
+        onBackPressedCallback.addCallback(callback)
+        onDispose {
+            callback.remove()
+        }
+    }
+
+    ErrorLayout(
+        message = message!!,
+        onBack = { onBackPressed() }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ErrorLayout(
     message: String,
+    onBack: () -> Unit,
 ) {
-    val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
-
-    val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
-    val backCallback = remember {
-        object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                val intent = Intent(context, Search::class.java)
-                intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
-                context.startActivity(intent)
-            }
+    Scaffold(
+        topBar = {
+            XmpAppBar3(
+                onNavIconPressed = onBack,
+                titleText = stringResource(id = R.string.search_title_error)
+            )
         }
-    }
-
-    SideEffect { backCallback.isEnabled = true }
-    DisposableEffect(lifecycleOwner, backDispatcher) {
-        backDispatcher?.addCallback(lifecycleOwner, backCallback)
-        onDispose { backCallback.remove() }
-    }
-
-    XmpTheme3 {
-        Scaffold(
-            topBar = {
-                XmpAppBar3(
-                    onNavIconPressed = {
-                        backCallback.handleOnBackPressed()
-                    },
-                    titleText = stringResource(id = R.string.search_title_error)
-                )
-            }
-        ) {
-            GuruFrame(message)
-        }
+    ) {
+        GuruFrame(message)
     }
 }
 
@@ -113,7 +107,7 @@ private fun GuruFrame(message: String) {
     val scope = rememberCoroutineScope()
     var frameState by remember { mutableStateOf(true) }
 
-    SideEffect {
+    LaunchedEffect(frameState) {
         scope.launch {
             delay(1337L)
             frameState = !frameState
@@ -147,7 +141,10 @@ private fun GuruFrame(message: String) {
 @Preview(name = "Light Theme", uiMode = UI_MODE_NIGHT_NO, showBackground = true)
 @Composable
 private fun ErrorLayoutPreview() {
-    ErrorLayout(
-        message = "Guru Error\nGuru Error",
-    )
+    XmpTheme3 {
+        ErrorLayout(
+            onBack = {},
+            message = "Guru Error\nGuru Error",
+        )
+    }
 }

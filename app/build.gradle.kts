@@ -80,7 +80,6 @@ android {
         }
     }
 
-    // View binding
     buildFeatures {
         compose = true
     }
@@ -94,8 +93,8 @@ dependencies {
     implementation(kotlin("stdlib-jdk8", Dependencies.kotlinVersion))
 
     // Android Support Libs
+    api(Dependencies.SupportLibs.preferenceKtx)
     implementation(Dependencies.SupportLibs.media)
-    implementation(Dependencies.SupportLibs.preferenceKtx)
     implementation(Dependencies.SupportLibs.recyclerview)
 
     implementation(Dependencies.Material.materialComponents)
@@ -115,6 +114,7 @@ dependencies {
     implementation(Dependencies.Compose.livedata)
     implementation(Dependencies.Compose.material)
     implementation(Dependencies.Compose.material3)
+    implementation(Dependencies.Compose.navigation)
     implementation(Dependencies.Compose.tooling)
     implementation(Dependencies.Compose.ui)
     implementation(Dependencies.Compose.uiUtil)
@@ -124,7 +124,7 @@ dependencies {
 
     // Dep Injection
     implementation(Dependencies.Hilt.android)
-    implementation(Dependencies.Hilt.viewModel)
+    implementation(Dependencies.Hilt.composeNav)
     kapt(Dependencies.Hilt.kaptCompiler)
     kapt(Dependencies.Hilt.kaptAndroidCompiler)
 
@@ -140,9 +140,6 @@ dependencies {
 
     // Material Dialogs
     implementation(Dependencies.Compose.Dialogs.core)
-    implementation(Dependencies.MaterialDialogs.core)
-    implementation(Dependencies.MaterialDialogs.input)
-    implementation(Dependencies.MaterialDialogs.lifecycle)
 
     // Http & Download
     implementation(Dependencies.XFetch2.fetch)

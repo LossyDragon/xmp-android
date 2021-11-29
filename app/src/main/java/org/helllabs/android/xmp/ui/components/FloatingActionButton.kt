@@ -16,7 +16,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.google.accompanist.insets.navigationBarsPadding
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.ui.theme.XmpTheme3
 
@@ -73,7 +72,6 @@ fun PlaylistsFab(
 ) {
     FloatingActionButton(
         modifier = Modifier
-            .navigationBarsPadding()
             .height(56.dp)
             .widthIn(min = 56.dp),
         onClick = onFabClicked,

@@ -1,6 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- Preference Theme -->
+    <string-array name="themeListArray">
+        <item>@string/pref_theme_array_auto</item>
+        <item>@string/pref_theme_array_dark</item>
+        <item>@string/pref_theme_array_light</item>
+    </string-array>
+
+    <!-- Preference Theme -->
+    <string-array name="themeEntryArray">
+        <item>auto</item>
+        <item>dark</item>
+        <item>light</item>
+    </string-array>
+
     <!-- This Directory Dialog -->
     <string-array name="fileList_this_directory_array">
         <item>Add to playlist</item>
@@ -83,4 +97,7 @@
         <item>48000</item>
     </string-array>
 
+    <string name="pref_theme_array_auto">Auto (default)</string>
+    <string name="pref_theme_array_dark">Dark</string>
+    <string name="pref_theme_array_light">Light</string>
 </resources>

@@ -79,6 +79,7 @@
     <string name="random">Random</string>
     <string name="search">Search</string>
     <string name="play">Play</string>
+    <string name="theme">Theme</string>
 
     <!-- Example playlist -->
     <string name="empty_comment">Long press modules to create new playlists or add to existing playlists. Long press playlists for more options.</string>
@@ -336,5 +337,11 @@
     <string name="msg_no_subsongs">No Subsongs</string>
     <string name="msg_no_valid_files_sent">no files sent to player</string>
     <string name="scrollUp">Scroll Back Up</string>
+
+    <!-- Navigation -->
+    <string name="nav_title_playlists">Playlists</string>
+    <string name="nav_title_explorer">Explorer</string>
+    <string name="nav_title_search">Search</string>
+    <string name="nav_title_settings">Settings</string>
 
 </resources>

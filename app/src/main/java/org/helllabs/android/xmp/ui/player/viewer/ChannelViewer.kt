@@ -9,7 +9,7 @@ import android.view.Surface
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.ui.player.PlayerUtil
-import org.helllabs.android.xmp.ui.preferences.PrefManager
+import org.helllabs.android.xmp.util.PrefManager
 import org.helllabs.android.xmp.util.logE
 
 @SuppressLint("ViewConstructor")

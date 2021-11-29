@@ -5,6 +5,7 @@ import androidx.annotation.StringRes
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
@@ -14,6 +15,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
 val XmpLightThemeColors = lightColorScheme(
     primary = darkPrimary,
@@ -36,7 +38,7 @@ fun themedText(@StringRes res: Int): AnnotatedString {
 
         withStyle(
             style = SpanStyle(
-                color = androidx.compose.material3.MaterialTheme.colorScheme.onBackground
+                color = MaterialTheme.colorScheme.onBackground
             )
         ) {
             append(string.substring(3, string.length))
@@ -52,7 +54,10 @@ fun XmpTheme3(
 ) {
     val colorScheme = if (isDarkTheme) XmpDarkThemeColors else XmpLightThemeColors
 
-    androidx.compose.material3.MaterialTheme(colorScheme = colorScheme) {
+    val uiController = rememberSystemUiController()
+    uiController.systemBarsDarkContentEnabled = !isDarkTheme
+
+    MaterialTheme(colorScheme = colorScheme) {
         val rippleIndication = rememberRipple()
         CompositionLocalProvider(
             LocalIndication provides rippleIndication,

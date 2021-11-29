@@ -2,8 +2,7 @@ package org.helllabs.android.xmp.ui.search.result
 
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import com.squareup.moshi.JsonAdapter
 import com.tonyodev.fetch2.*
 import com.tonyodev.fetch2core.FetchObserver
@@ -18,11 +17,33 @@ import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.api.Repository
 import org.helllabs.android.xmp.model.Module
 import org.helllabs.android.xmp.model.ModuleResult
-import org.helllabs.android.xmp.ui.preferences.PrefManager
 import org.helllabs.android.xmp.ui.search.ModArchiveConstants
 import org.helllabs.android.xmp.ui.search.ModArchiveConstants.isSupported
 import org.helllabs.android.xmp.util.FileUtils
+import org.helllabs.android.xmp.util.PrefManager
 import org.helllabs.android.xmp.util.logE
+import org.helllabs.android.xmp.util.logI
+
+data class ModuleState(
+    val module: ModuleResult? = null,
+    val moduleExists: Boolean = false,
+    val moduleSupported: Boolean = true,
+    val softError: String? = null,
+)
+
+sealed class ModuleEvent {
+    object RandomModule : ModuleEvent()
+    object DeleteModule : ModuleEvent()
+    object ExistingModule : ModuleEvent()
+    data class Module(val id: Int) : ModuleEvent()
+    data class Download(val mod: String, val url: String, val file: String) : ModuleEvent()
+}
+
+sealed class ModuleUiState {
+    data class Error(val error: String?) : ModuleUiState()
+    data class Loading(val isLoading: Boolean) : ModuleUiState()
+    data class Random(val enabled: Boolean) : ModuleUiState()
+}
 
 @HiltViewModel
 class ModuleResultViewModel
@@ -83,10 +104,30 @@ class ModuleResultViewModel
 
     fun onEvent(event: ModuleEvent) {
         when (event) {
+            is ModuleEvent.DeleteModule -> deleteModule()
+            is ModuleEvent.Download -> downloadModule(event.mod, event.url, event.file)
+            is ModuleEvent.ExistingModule -> existingModule()
             is ModuleEvent.Module -> getModuleById(event.id)
             is ModuleEvent.RandomModule -> getRandomModule()
-            is ModuleEvent.DownloadModule -> downloadModule(event.mod, event.url, event.file)
         }
+    }
+
+    private fun existingModule() {
+        val module = state.value.module!!.module!!
+        val file = FileUtils.getDownloadPath(module)
+        val url = module.url!!
+        val mod = module.filename!!
+
+        downloadModule(mod, url, file)
+    }
+
+    private fun deleteModule() {
+        val result = FileUtils.deleteModuleFile(state.value.module?.module!!)
+        logI("Module deleted was: $result")
+        _state.value = state.value.copy(
+            moduleExists = doesModuleExist(state.value.module),
+            moduleSupported = isModuleSupported(state.value.module)
+        )
     }
 
     private fun getModuleById(id: Int) {
@@ -97,10 +138,8 @@ class ModuleResultViewModel
             try {
                 val result = repository.getModuleById(id)
                 _state.value = if (result.error != null) {
-                    _uiState.emit(ModuleUiState.Loading(isLoading = false))
                     ModuleState(softError = result.error)
                 } else {
-                    _uiState.emit(ModuleUiState.Loading(isLoading = false))
                     saveModuleToHistory(result.module)
                     ModuleState(
                         module = result,
@@ -108,6 +147,8 @@ class ModuleResultViewModel
                         moduleSupported = isModuleSupported(result)
                     )
                 }
+
+                _uiState.emit(ModuleUiState.Loading(isLoading = false))
             } catch (e: Exception) {
                 _uiState.emit(ModuleUiState.Error(e.localizedMessage))
             }
@@ -122,10 +163,8 @@ class ModuleResultViewModel
             try {
                 val result = repository.getRandomModule()
                 _state.value = if (!result.error.isNullOrBlank()) {
-                    _uiState.emit(ModuleUiState.Loading(isLoading = false))
                     ModuleState(softError = result.error)
                 } else {
-                    _uiState.emit(ModuleUiState.Loading(isLoading = false))
                     saveModuleToHistory(result.module)
                     ModuleState(
                         module = result,
@@ -133,6 +172,8 @@ class ModuleResultViewModel
                         moduleSupported = isModuleSupported(result)
                     )
                 }
+
+                _uiState.emit(ModuleUiState.Loading(isLoading = false))
             } catch (e: Exception) {
                 _uiState.emit(ModuleUiState.Error(e.localizedMessage))
             }
@@ -191,11 +232,5 @@ class ModuleResultViewModel
 
         // Convert into JSON and save it
         PrefManager.searchHistory = moshiAdapter.toJson(searchHistory)
-    }
-
-    sealed class ModuleUiState {
-        data class Error(val error: String?) : ModuleUiState()
-        data class Loading(val isLoading: Boolean) : ModuleUiState()
-        data class Random(val enabled: Boolean) : ModuleUiState()
     }
 }

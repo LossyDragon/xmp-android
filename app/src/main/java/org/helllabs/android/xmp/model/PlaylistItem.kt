@@ -7,16 +7,16 @@ enum class PlaylistType(val value: Int) {
     TYPE_DIRECTORY(1),
     TYPE_PLAYLIST(2),
     TYPE_FILE(3),
-    TYPE_SPECIAL(4),
 }
 
 data class PlaylistItem(
     val type: PlaylistType,
-    var name: String?,
-    var comment: String?,
+    var name: String,
+    var comment: String,
     var id: Int = 0,
     var file: File? = null,
     var isPlayable: Boolean = true, // Used to detect valid files in FileBrowser
+    var isSelected: Boolean = false
 ) : Comparable<PlaylistItem> {
 
     fun isDirectory() =
@@ -33,7 +33,7 @@ data class PlaylistItem(
         return if (d1 xor d2) {
             if (d1) -1 else 1
         } else {
-            name!!.uppercase(locale).compareTo(other.name!!.uppercase(locale))
+            name.uppercase(locale).compareTo(other.name.uppercase(locale))
         }
     }
 }

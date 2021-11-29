@@ -29,6 +29,7 @@ import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.ui.components.XmpAppBar3
+import org.helllabs.android.xmp.ui.components.waterfallPadding
 import org.helllabs.android.xmp.ui.theme.XmpTheme3
 import org.helllabs.android.xmp.ui.theme.michromaFontFamily
 import org.helllabs.android.xmp.ui.theme.themedText
@@ -55,6 +56,7 @@ class About : ComponentActivity() {
     }
 }
 
+// TODO: Get dynamic day-night theme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AboutLayout(
@@ -70,17 +72,19 @@ private fun AboutLayout(
                 XmpAppBar3(
                     scrollBehavior = scrollBehavior,
                     titleText = stringResource(id = R.string.pref_about_title),
-                    onNavIconPressed = { onBack() }
+                    onNavIconPressed = onBack
                 )
             }
         ) {
+            val scrollState = rememberScrollState()
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(start = 16.dp, end = 16.dp)
+                    .waterfallPadding()
                     .navigationBarsPadding()
                     .nestedScroll(scrollBehavior.nestedScrollConnection)
-                    .verticalScroll(rememberScrollState()),
+                    .verticalScroll(scrollState),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(

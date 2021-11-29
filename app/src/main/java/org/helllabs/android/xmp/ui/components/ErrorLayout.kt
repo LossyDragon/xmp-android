@@ -20,7 +20,7 @@ import org.helllabs.android.xmp.ui.theme.XmpTheme3
 @Composable
 fun ErrorLayout(
     modifier: Modifier = Modifier,
-    message: String? = stringResource(id = R.string.search_error),
+    message: String?,
     color: Color = MaterialTheme.colorScheme.onBackground,
 ) {
     Column(
@@ -37,7 +37,7 @@ fun ErrorLayout(
         Text(
             fontSize = 18.sp,
             textAlign = TextAlign.Center,
-            text = message!!,
+            text = message ?: stringResource(id = R.string.search_error),
             color = color,
         )
     }
