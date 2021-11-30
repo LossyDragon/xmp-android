@@ -27,7 +27,6 @@ import org.helllabs.android.xmp.ui.search.SearchScreen
 import org.helllabs.android.xmp.ui.search.result.ArtistResultScreen
 import org.helllabs.android.xmp.ui.search.result.ModuleResultScreen
 import org.helllabs.android.xmp.ui.search.result.SearchListResult
-import org.helllabs.android.xmp.ui.theme.sectionBackground
 
 private const val NAV_ROOT = "nav_root"
 private const val NAV_PLAYLIST_ROOT = "nav_playlist_root"
@@ -191,11 +190,7 @@ private fun BottomNavigationBar(
     val currentDestination = navBackStackEntry?.destination
 
     if (canShowBottomBar(navBackStackEntry)) {
-        // TODO theme Nav bar
-        NavigationBar(
-            modifier = Modifier.navigationBarsPadding(),
-            containerColor = sectionBackground
-        ) {
+        NavigationBar(modifier = Modifier.navigationBarsPadding()) {
             navigationItems.forEach { screen ->
                 NavigationBarItem(
                     icon = { Icon(screen.third, null) },

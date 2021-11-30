@@ -66,7 +66,7 @@ class SelectedPlaylistViewModel
     val uiState: SharedFlow<SelectedUiEvent> = _uiState.asSharedFlow()
 
     init {
-        savedStateHandle.get<String>("name")?.let { name ->
+        savedStateHandle.get<String>("plistName")?.let { name ->
             mPlaylist = Playlist(name)
 
             mPlaylistAdapter = PlaylistAdapter(mPlaylist.list, PrefManager.useFilename)

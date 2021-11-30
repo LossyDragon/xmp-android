@@ -1,30 +1,24 @@
 package org.helllabs.android.xmp.ui.components
 
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -57,7 +51,6 @@ fun ButtonBar(
             .padding(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // TODO Material 3 Alpha 01 has enable bug. Issue: 205335456
         Button(
             modifier = Modifier.fillMaxWidth(.85f),
             enabled = !isLoading && isSupported,
@@ -102,6 +95,40 @@ fun ModuleLayout(
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
     var moduleFile by rememberSaveable { mutableStateOf(module.filename) }
+
+    var textLayoutResultState by remember { mutableStateOf<TextLayoutResult?>(null) }
+    var isExpanded by remember { mutableStateOf(false) }
+
+    val licenseDescription by remember { mutableStateOf(module.license?.description ?: "") }
+    var licenseText by remember { mutableStateOf(AnnotatedString(licenseDescription)) }
+    LaunchedEffect(textLayoutResultState) {
+        when {
+            isExpanded -> {
+                licenseText = buildAnnotatedString {
+                    append(licenseDescription)
+                    withStyle(style = SpanStyle(color = darkAccent, fontStyle = FontStyle.Italic)) {
+                        append(" Show Less")
+                    }
+                }
+            }
+            !isExpanded && textLayoutResultState!!.hasVisualOverflow -> {
+                val lastCharIndex = textLayoutResultState!!.getLineEnd(1, true)
+                val showMoreString = "Show More"
+                val adjustedText = module.license?.description
+                    ?.substring(startIndex = 0, endIndex = lastCharIndex)
+                    ?.dropLast(showMoreString.length)
+                    ?.dropLastWhile { it == ' ' || it == '.' }
+                    .orEmpty()
+
+                licenseText = buildAnnotatedString {
+                    append("$adjustedText... ")
+                    withStyle(style = SpanStyle(color = darkAccent, fontStyle = FontStyle.Italic)) {
+                        append(showMoreString)
+                    }
+                }
+            }
+        }
+    }
 
     Column(
         modifier = modifier
@@ -167,22 +194,17 @@ fun ModuleLayout(
         )
         Spacer(modifier = Modifier.height(5.dp))
         // Licence Statement
-        // TODO
-        //      Should I move that No specific license terms to the bottom?
-        //      I just feel that takes up too much space.
-        //      or make it a clickable dialog?
-        //      R4to0 — Today at 10:21 PM
-        //      Yeah before the hosted by
-        //      Would be a nice thing
-        //      So user can see more the comments
-        //      R4to0 — Today at 10:22 PM
-        //      Or you could make a clickable hide/show message
-        //      Rather than a dialog :v
         Text(
-            modifier = Modifier.padding(start = 10.dp, end = 10.dp),
-            text = module.license?.description ?: "...",
-            fontSize = 14.sp
+            modifier = modifier
+                .padding(start = 10.dp, end = 10.dp)
+                .clickable { isExpanded = !isExpanded }
+                .animateContentSize(),
+            text = licenseText,
+            fontSize = 14.sp,
+            maxLines = if (isExpanded) Int.MAX_VALUE else 2,
+            onTextLayout = { textLayoutResultState = it },
         )
+
         Spacer(modifier = Modifier.height(10.dp))
         if (!module.comment.isNullOrEmpty()) {
             // Song Message

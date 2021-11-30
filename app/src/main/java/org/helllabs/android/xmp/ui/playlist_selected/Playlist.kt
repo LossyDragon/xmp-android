@@ -4,7 +4,7 @@ import java.io.*
 import java.util.*
 import org.helllabs.android.xmp.model.PlaylistItem
 import org.helllabs.android.xmp.model.PlaylistType
-import org.helllabs.android.xmp.ui.MainActivity as Preferences // TODO hack
+import org.helllabs.android.xmp.ui.MainActivity
 import org.helllabs.android.xmp.util.FileUtils.readFromFile
 import org.helllabs.android.xmp.util.FileUtils.removeLineFromFile
 import org.helllabs.android.xmp.util.FileUtils.writeToFile
@@ -31,15 +31,15 @@ class Playlist(val name: String) {
     val list = mutableListOf<PlaylistItem>()
 
     class ListFile : File {
-        constructor(name: String) : super(Preferences.DATA_DIR, name + PLAYLIST_SUFFIX)
+        constructor(name: String) : super(MainActivity.DATA_DIR, name + PLAYLIST_SUFFIX)
         constructor(name: String, suffix: String) :
-            super(Preferences.DATA_DIR, name + PLAYLIST_SUFFIX + suffix)
+            super(MainActivity.DATA_DIR, name + PLAYLIST_SUFFIX + suffix)
     }
 
     class CommentFile : File {
-        constructor(name: String) : super(Preferences.DATA_DIR, name + COMMENT_SUFFIX)
+        constructor(name: String) : super(MainActivity.DATA_DIR, name + COMMENT_SUFFIX)
         constructor(name: String, suffix: String) :
-            super(Preferences.DATA_DIR, name + COMMENT_SUFFIX + suffix)
+            super(MainActivity.DATA_DIR, name + COMMENT_SUFFIX + suffix)
     }
 
     init {

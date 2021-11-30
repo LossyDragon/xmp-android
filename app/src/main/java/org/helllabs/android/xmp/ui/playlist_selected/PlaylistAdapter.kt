@@ -6,7 +6,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.recyclerview.widget.RecyclerView
-import java.util.*
 import org.helllabs.android.xmp.model.PlaylistItem
 import org.helllabs.android.xmp.ui.components.ItemList
 import org.helllabs.android.xmp.ui.playlist_selected.recyclerview.ItemTouchHelperAdapter

@@ -22,7 +22,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import java.io.File
 import kotlinx.coroutines.delay
@@ -30,7 +29,6 @@ import kotlinx.coroutines.flow.collectLatest
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.ui.components.*
 import org.helllabs.android.xmp.ui.theme.XmpTheme3
-import org.helllabs.android.xmp.ui.theme.sectionBackgroundDark
 import org.helllabs.android.xmp.util.DialogMessage
 import org.helllabs.android.xmp.util.FileUtils
 import org.helllabs.android.xmp.util.FileUtils.recursiveList
@@ -100,6 +98,10 @@ fun ExplorerScreen(
     )
 
     LaunchedEffect(true) {
+        delay(25) // Why do I need this?! Stops the loading bar from sticking...
+        val file = File(PrefManager.mediaPath!!)
+        viewModel.onEvent(ExplorerEvent.DirectoryList(file))
+
         viewModel.uiState.collectLatest { event ->
             when (event) {
                 is ExplorerUiState.Error ->
@@ -113,17 +115,10 @@ fun ExplorerScreen(
         }
     }
 
-    // TODO, this is piss poor. But it keeps the Loading Bar from sticking on first launch
-    LaunchedEffect(true) {
-        delay(50) // WHYYY
-        val file = File(PrefManager.mediaPath!!)
-        viewModel.onEvent(ExplorerEvent.DirectoryList(file))
-    }
-
-    val uiController = rememberSystemUiController()
-    SideEffect {
-        uiController.setNavigationBarColor(color = sectionBackgroundDark)
-    }
+//    val uiController = rememberSystemUiController()
+//    SideEffect {
+//        uiController.setNavigationBarColor(color = sectionBackgroundDark)
+//    }
 
     FileListLayout(
         onBack = { navController.popBackStack() },
@@ -163,7 +158,7 @@ fun ExplorerScreen(
             if (item.file!!.isDirectory) {
                 context.toast("onMenuClick isDirectory item: $item") // TODO
             } else {
-                context.toast("onMenuClick item: $item")
+                context.toast("onMenuClick item: $item") // TODO
             }
         },
         onCrumbClick = {

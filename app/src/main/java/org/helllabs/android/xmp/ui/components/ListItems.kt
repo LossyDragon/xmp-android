@@ -10,7 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -47,7 +47,7 @@ fun ItemPlaylistCard(
         }
     }
 
-    // TODO:  Material 3 Elevated Card
+    // Someday: If Material 3 implements Card, re-implement it.
     Surface(
         modifier = modifier
             .waterfallPadding(top = 3.dp, bottom = 3.dp),
@@ -57,14 +57,7 @@ fun ItemPlaylistCard(
         shadowElevation = 4.dp,
     ) {
         ListItem(
-            modifier = Modifier
-                .combinedClickable(
-                    onClick = { onClick() },
-                    onLongClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onLongClick()
-                    },
-                ),
+            modifier = Modifier.clickable { onClick() },
             text = {
                 Text(
                     text = playlist.name,
@@ -86,6 +79,20 @@ fun ItemPlaylistCard(
                     imageVector = Icons.Default.List,
                     contentDescription = null
                 )
+            },
+            trailing = {
+                IconButton(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onLongClick()
+                    }
+                ) {
+                    Icon(
+                        modifier = Modifier.size(24.dp),
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = null
+                    )
+                }
             }
         )
     }
@@ -114,8 +121,7 @@ fun ItemList(
         else -> throw IllegalArgumentException("Item should only use Type Directory or File!")
     }
 
-    // TODO change background color when isSelected is true.
-
+    // TODO change background color being dragged
     ListItem(
         modifier = Modifier
             .height(72.dp)
@@ -172,24 +178,23 @@ fun ItemList(
             if (showMenu) {
                 IconButton(onClick = { onMenu?.invoke() }) {
                     Icon(
-                        modifier = Modifier
-                            .size(24.dp),
+                        modifier = Modifier.size(24.dp),
                         imageVector = Icons.Default.MoreVert,
                         contentDescription = null
                     )
                 }
             }
 
-            // TODO: Research way to highlight on drag.
             if (isDraggable) {
                 assert(onDrag != null) { "onDrag should not be null while draggable!" }
                 Icon(
                     modifier = Modifier
                         .size(32.dp)
                         .pointerInteropFilter { event ->
-                            when (event.action) {
-                                MotionEvent.ACTION_DOWN -> onDrag!!.invoke(true)
-                                else -> onDrag!!.invoke(false)
+                            if (event.action == MotionEvent.ACTION_DOWN) {
+                                onDrag!!.invoke(true)
+                            } else {
+                                onDrag!!.invoke(false)
                             }
                             true // Continue to consume the touch event.
                         },
@@ -210,7 +215,7 @@ fun ItemBreadCrumb(
 ) {
     val haptic = LocalHapticFeedback.current
 
-    // TODO:  Material 3 Elevated Card
+    // Someday: If Material 3 implements Card, re-implement it.
     Surface(
         modifier = Modifier
             .padding(4.dp)

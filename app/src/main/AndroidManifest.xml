@@ -26,8 +26,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="false"
         android:theme="@style/ComposeTheme"
-        tools:ignore="AllowBackup"
-        tools:replace="supportsRtl">
+        tools:ignore="AllowBackup">
 
         <activity
             android:name="org.helllabs.android.xmp.ui.MainActivity"

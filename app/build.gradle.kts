@@ -105,15 +105,12 @@ dependencies {
     implementation(Dependencies.Compose.Material3.material3)
     implementation(Dependencies.Compose.activity)
     implementation(Dependencies.Compose.animation)
-    implementation(Dependencies.Compose.constraint)
     implementation(Dependencies.Compose.foundation)
     implementation(Dependencies.Compose.graphics)
     implementation(Dependencies.Compose.iconsCore)
     implementation(Dependencies.Compose.iconsExtended)
-    implementation(Dependencies.Compose.lifecycle)
     implementation(Dependencies.Compose.livedata)
     implementation(Dependencies.Compose.material)
-    implementation(Dependencies.Compose.material3)
     implementation(Dependencies.Compose.navigation)
     implementation(Dependencies.Compose.tooling)
     implementation(Dependencies.Compose.ui)
@@ -125,12 +122,7 @@ dependencies {
     // Dep Injection
     implementation(Dependencies.Hilt.android)
     implementation(Dependencies.Hilt.composeNav)
-    kapt(Dependencies.Hilt.kaptCompiler)
     kapt(Dependencies.Hilt.kaptAndroidCompiler)
-
-    // Coroutines
-    implementation(Dependencies.Coroutines.android)
-    implementation(Dependencies.Coroutines.core)
 
     // Retrofit XML Parsing
     val tikXmlVersion = Dependencies.TikXml.version

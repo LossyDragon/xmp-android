@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.ExperimentalMaterialApi
@@ -15,6 +16,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -27,16 +29,24 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.view.WindowCompat
 import com.google.accompanist.insets.ProvideWindowInsets
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.ui.components.ErrorLayout
 import org.helllabs.android.xmp.ui.components.LazyList
 import org.helllabs.android.xmp.ui.components.XmpAppBar3
 import org.helllabs.android.xmp.ui.theme.XmpTheme3
+import org.helllabs.android.xmp.util.AppTheme
+import org.helllabs.android.xmp.util.PrefTheme
 import org.helllabs.android.xmp.util.logD
 import org.helllabs.android.xmp.util.toast
 
+@AndroidEntryPoint
 class ListFormats : ComponentActivity() {
+
+    @Inject
+    lateinit var prefTheme: PrefTheme
 
     private val formats = Xmp.getFormats()
 
@@ -51,9 +61,17 @@ class ListFormats : ComponentActivity() {
 
         logD("onCreate")
         setContent {
+            val theme = prefTheme.themeStream.collectAsState()
+            val themeMode = when (theme.value) {
+                AppTheme.MODE_AUTO -> isSystemInDarkTheme()
+                AppTheme.MODE_DAY -> false
+                AppTheme.MODE_NIGHT -> true
+            }
+
             ProvideWindowInsets {
                 FormatsLayout(
                     onBack = { onBackPressed() },
+                    isDarkTheme = themeMode,
                     formatsList = formats.toList(),
                 )
             }
@@ -61,7 +79,6 @@ class ListFormats : ComponentActivity() {
     }
 }
 
-// TODO: Get dynamic day-night theme
 @OptIn(
     ExperimentalMaterial3Api::class,
     ExperimentalMaterialApi::class,
@@ -70,11 +87,12 @@ class ListFormats : ComponentActivity() {
 @Composable
 private fun FormatsLayout(
     onBack: () -> Unit,
+    isDarkTheme: Boolean,
     formatsList: List<String>,
 ) {
     val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
 
-    XmpTheme3 {
+    XmpTheme3(isDarkTheme = isDarkTheme) {
         Scaffold(
             topBar = {
                 XmpAppBar3(
@@ -126,6 +144,7 @@ private fun ListFormatsLayoutPreview() {
     val list = listOf("String 1", "String 2", "String 3", "String 4", "String 5")
     FormatsLayout(
         onBack = {},
+        isDarkTheme = true,
         formatsList = list,
     )
 }

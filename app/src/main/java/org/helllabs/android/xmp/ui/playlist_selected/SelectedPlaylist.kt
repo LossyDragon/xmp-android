@@ -26,7 +26,6 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.accompanist.insets.*
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.listItemsSingleChoice
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
@@ -36,7 +35,6 @@ import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.model.PlaylistItem
 import org.helllabs.android.xmp.ui.components.*
 import org.helllabs.android.xmp.ui.theme.XmpTheme3
-import org.helllabs.android.xmp.ui.theme.sectionBackgroundDark
 import org.helllabs.android.xmp.util.*
 
 @Composable
@@ -82,8 +80,7 @@ fun SelectedPlaylist(
         viewModel.uiState.collectLatest { event ->
             when (event) {
                 is SelectedUiEvent.OnClick -> {
-                    context.toast("onclick position: ${event.position}")
-                    // TODO
+                    context.toast("onclick position: ${event.position}") // TODO
                 }
                 is SelectedUiEvent.OnLongClick -> {
                     longClickPosition = event.position
@@ -110,8 +107,7 @@ fun SelectedPlaylist(
         mPlaylistAdapter = viewModel.mPlaylistAdapter,
         touchHelper = viewModel.mItemTouchHelper,
         onPlay = {
-            // TODO
-            context.toast("onPlay clicked: $it")
+            context.toast("onPlay clicked: $it") // TODO
         },
     )
 }
@@ -147,10 +143,10 @@ private fun PlaylistActivityScreen(
         )
     }
 
-    val uiController = rememberSystemUiController()
-    SideEffect {
-        uiController.setNavigationBarColor(color = sectionBackgroundDark)
-    }
+//    val uiController = rememberSystemUiController()
+//    SideEffect {
+//        uiController.setNavigationBarColor(color = sectionBackgroundDark)
+//    }
 
     PlaylistActivityLayout(
         onBack = { onBack() },

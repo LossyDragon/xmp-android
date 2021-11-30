@@ -320,7 +320,7 @@ private fun ModuleSection(
         modifier = Modifier
             .fillMaxWidth()
             .height(48.dp)
-            .clip(Shapes.small)
+            .clip(shapes.small)
             .background(sectionBackground),
         verticalAlignment = Alignment.CenterVertically
     ) {
