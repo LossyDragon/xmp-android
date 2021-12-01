@@ -1,52 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- Preference Theme -->
+    <!-- Preference: Theme Key -->
     <string-array name="themeListArray">
         <item>@string/pref_theme_array_auto</item>
         <item>@string/pref_theme_array_dark</item>
         <item>@string/pref_theme_array_light</item>
     </string-array>
 
-    <!-- Preference Theme -->
+    <!-- Preference: Theme Value -->
     <string-array name="themeEntryArray">
         <item>auto</item>
         <item>dark</item>
         <item>light</item>
     </string-array>
 
-    <!-- This Directory Dialog -->
-    <string-array name="fileList_this_directory_array">
-        <item>Add to playlist</item>
-        <item>Add to play queue</item>
-        <item>Play contents</item>
+    <!-- Explorer: Bread Crumb Item -->
+    <string-array name="explorer_breadcrumb_array">
+        <item>Add all to a playlist</item>
+        <item>Add all to play queue</item>
+        <item>Set default media path</item>
+    </string-array>
+
+    <!-- Explorer: File Item -->
+    <string-array name="explorer_file_array">
+        <item>Add item to a playlist</item>
+        <item>Add item to play queue</item>
+        <item>Play this item only</item>
+        <item>Play content starting here</item>
+        <item>Delete item</item>
+    </string-array>
+
+    <!-- Explorer: Directory Item -->
+    <string-array name="explorer_directory_array">
+        <item>Add contents to a playlist</item>
+        <item>Add contents to play queue</item>
         <item>Delete directory</item>
     </string-array>
 
-    <!-- This File Dialog -->
-    <string-array name="fileList_this_files_array">
-        <item>Add to playlist</item>
-        <item>Add to play queue</item>
-        <item>Play this file</item>
+    <!-- Playlist: Module Item -->
+    <string-array name="playlist_item_array">
+        <item>Play only this module</item>
         <item>Play all starting here</item>
-        <item>Delete file</item>
-    </string-array>
-
-    <!-- All Files Dialog -->
-    <string-array name="fileList_all_files_array">
-        <item>Add to playlist</item>
-        <item>Recursive add to playlist</item>
-        <item>Add to play queue</item>
-        <item>Set as default path</item>
-    </string-array>
-
-    <!-- Edit Playlist Dialog -->
-    <string-array name="edit_playlist_dialog_array">
-        <item>Remove from playlist</item>
-        <item>Add to play queue</item>
-        <item>Add all to play queue</item>
-        <item>Play this module</item>
-        <item>Play all starting here</item>
+        <item>Remove module from playlist</item>
     </string-array>
 
     <string-array name="playlist_mode_array">
@@ -96,8 +92,4 @@
         <item>44100</item>
         <item>48000</item>
     </string-array>
-
-    <string name="pref_theme_array_auto">Auto (default)</string>
-    <string name="pref_theme_array_dark">Dark</string>
-    <string name="pref_theme_array_light">Light</string>
 </resources>

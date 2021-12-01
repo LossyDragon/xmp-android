@@ -121,7 +121,7 @@ fun ItemList(
         else -> throw IllegalArgumentException("Item should only use Type Directory or File!")
     }
 
-    // TODO change background color being dragged
+    // TODO change background color being dragged [Waiting on Compose re-order]
     ListItem(
         modifier = Modifier
             .height(72.dp)

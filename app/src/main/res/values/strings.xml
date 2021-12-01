@@ -205,7 +205,7 @@
     <string name="msg_queue_empty">Queue list is empty</string>
     <string name="msg_queue_added">Added to queue</string>
     <string name="msg_file_unrecognized">Unrecognized file format</string>
-    <string name="msg_new_seq_duration">New sequence duration: %d:%02d</string>
+    <string name="msg_new_seq_duration">New sequence duration: %1$d:%2$02d</string>
     <string name="msg_error_create_directory">Error creating directory %s</string>
     <string name="msg_default_path_set">Set as default module path</string>
     <string name="msg_delete_file">Are you sure you want to delete %s?</string>
@@ -337,6 +337,9 @@
     <string name="msg_no_subsongs">No Subsongs</string>
     <string name="msg_no_valid_files_sent">no files sent to player</string>
     <string name="scrollUp">Scroll Back Up</string>
+    <string name="pref_theme_array_auto">Auto (default)</string>
+    <string name="pref_theme_array_dark">Dark</string>
+    <string name="pref_theme_array_light">Light</string>
 
     <!-- Navigation -->
     <string name="nav_title_playlists">Playlists</string>

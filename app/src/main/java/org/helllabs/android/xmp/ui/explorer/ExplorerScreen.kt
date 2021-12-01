@@ -22,18 +22,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.vanpra.composematerialdialogs.MaterialDialog
+import com.vanpra.composematerialdialogs.listItemsSingleChoice
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
+import com.vanpra.composematerialdialogs.title
 import java.io.File
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.ui.components.*
 import org.helllabs.android.xmp.ui.theme.XmpTheme3
-import org.helllabs.android.xmp.util.DialogMessage
-import org.helllabs.android.xmp.util.FileUtils
+import org.helllabs.android.xmp.util.*
 import org.helllabs.android.xmp.util.FileUtils.recursiveList
-import org.helllabs.android.xmp.util.PrefManager
-import org.helllabs.android.xmp.util.toast
 
 @Composable
 fun ExplorerScreen(
@@ -135,7 +135,8 @@ fun ExplorerScreen(
             if (items.isNullOrEmpty()) {
                 context.toast(R.string.error_no_files_to_play)
             } else {
-                context.toast("onPlay items: $items") // TODO
+                context.logD("onPlay items: $items")
+                context.toast("onPlay") // TODO
             }
         },
         onItemClick = { index ->
@@ -145,7 +146,8 @@ fun ExplorerScreen(
             if (item.isDirectory()) {
                 viewModel.onEvent(ExplorerEvent.DirectoryList(item.file!!))
             } else {
-                context.toast("OnItemClick item: $item") // TODO
+                context.logD("OnItemClick item: $item")
+                context.toast("OnItemClick") // TODO
             }
         },
         onItemLongClick = {
@@ -156,9 +158,11 @@ fun ExplorerScreen(
             val item = list[index]
 
             if (item.file!!.isDirectory) {
-                context.toast("onMenuClick isDirectory item: $item") // TODO
+                context.logD("onMenuClick isDirectory item: $item")
+                context.toast("onMenuClick") // TODO
             } else {
-                context.toast("onMenuClick item: $item") // TODO
+                context.logD("onMenuClick item: $item")
+                context.toast("onMenuClick") // TODO
             }
         },
         onCrumbClick = {
@@ -166,7 +170,8 @@ fun ExplorerScreen(
             viewModel.onEvent(ExplorerEvent.DirectoryList(file))
         },
         onCrumbLongClick = {
-            context.toast("onCrumbLongClick $it") // TODO
+            context.logD("onCrumbLongClick $it")
+            context.toast("onCrumbLongClick") // TODO
         }
     )
 }
@@ -288,6 +293,20 @@ private fun BreadCrumbLayout(
             LaunchedEffect(crumbs) {
                 listState.animateScrollToItem(crumbs.size)
             }
+    }
+}
+
+@Composable
+private fun BreadCrumbDialog() {
+    val resources = LocalContext.current.resources
+    val menuItems = resources.getStringArray(R.array.explorer_breadcrumb_array)
+    val state = rememberMaterialDialogState()
+    MaterialDialog(
+        dialogState = state
+    ) {
+        title()
+        listItemsSingleChoice(list = menuItems.toList()) {
+        }
     }
 }
 

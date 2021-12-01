@@ -22,6 +22,8 @@ class XmpApplication : Application() {
     }
 
     companion object {
+        var mAddList = mutableListOf<String>()
+
         @JvmStatic
         var fileList: List<String>? = null
     }

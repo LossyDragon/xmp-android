@@ -38,6 +38,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
 import javax.inject.Inject
 import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.ui.components.waterfallPadding
 import org.helllabs.android.xmp.ui.theme.XmpTheme3
@@ -49,15 +50,13 @@ class MainActivity : AppCompatActivity() {
     @Inject
     lateinit var prefTheme: PrefTheme
 
-    private var mAddList = mutableListOf<String>()
-
     // Connection
     private val connection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             val binder = service as PlayerService.PlayerBinder
 
             val modPlayer = binder.getService()
-            modPlayer.add(mAddList)
+            modPlayer.add(XmpApplication.mAddList)
             unbindService(this)
         }
 

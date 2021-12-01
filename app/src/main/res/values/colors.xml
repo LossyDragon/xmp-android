@@ -1,17 +1,5 @@
 <resources>
-    <color name="lightgray">#FFc0c0c0</color>
-    <color name="white">#FFF0F0F0</color>
-
-    <color name="primary">#1a305d</color>
     <color name="accent">#3460ba</color>
 
-    <color name="section_background_darker">#FF1B1B1B</color>
-
-    <!-- Playlist card's background color -->
     <color name="colorLightGray">#FFC0C0C0</color>
-
-    <color name="playerScreenBackgroundDark">#121212</color>
-    <color name="playerScreenBackground">#FFFFFF</color>
-
-    <color name="dialogButtons">#527bcf</color>
 </resources>

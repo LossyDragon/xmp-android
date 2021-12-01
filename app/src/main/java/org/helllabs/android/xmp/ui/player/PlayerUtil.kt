@@ -1,5 +1,14 @@
 package org.helllabs.android.xmp.ui.player
 
+import android.content.Context
+import android.content.Intent
+import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.Xmp
+import org.helllabs.android.xmp.XmpApplication
+import org.helllabs.android.xmp.service.PlayerService
+import org.helllabs.android.xmp.util.logI
+import org.helllabs.android.xmp.util.toast
+
 object PlayerUtil {
 
     private val digits = charArrayOf(
@@ -33,5 +42,62 @@ object PlayerUtil {
         res[0] = hexDigits[value shr 8]
         res[1] = hexDigits[(value shr 4) and 0x0f]
         res[2] = hexDigits[value and 0x0f]
+    }
+
+    fun addToQueue(
+        context: Context,
+        list: List<String>,
+        isShuffle: Boolean = false,
+        isLoop: Boolean = false,
+        onBind: () -> Unit,
+    ) {
+        val realList = mutableListOf<String>()
+        var realSize = 0
+        var invalid = false
+
+        for (filename in list) {
+            if (Xmp.testModule(filename)) {
+                realList.add(filename)
+                realSize++
+            } else {
+                invalid = true
+            }
+        }
+
+        if (invalid) {
+            context.toast(R.string.msg_only_valid_files_sent)
+        }
+
+        if (realSize > 0) {
+            if (PlayerService.isPlayerAlive.value == true) {
+                onBind()
+            } else {
+                playModule(
+                    context = context,
+                    modList = list,
+                    isShuffle = isShuffle,
+                    isLoop = isLoop
+                )
+            }
+        }
+    }
+
+    private fun playModule(
+        context: Context,
+        modList: List<String>,
+        start: Int = 0,
+        keepFirst: Boolean = false,
+        isShuffle: Boolean = false,
+        isLoop: Boolean = false,
+    ) {
+        XmpApplication.fileList = modList
+        val intent = Intent(context, PlayerActivity::class.java).apply {
+            putExtra(PlayerActivity.PARM_SHUFFLE, isShuffle)
+            putExtra(PlayerActivity.PARM_LOOP, isLoop)
+            putExtra(PlayerActivity.PARM_START, start)
+            putExtra(PlayerActivity.PARM_KEEPFIRST, keepFirst)
+        }
+        logI("Start Player activity")
+        context.startActivity(intent)
     }
 }

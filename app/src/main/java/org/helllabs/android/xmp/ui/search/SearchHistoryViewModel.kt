@@ -10,7 +10,7 @@ import org.helllabs.android.xmp.util.PrefManager
 @HiltViewModel
 class SearchHistoryViewModel
 @Inject constructor(
-    var moshiAdapter: JsonAdapter<List<Module>>
+    private var moshiAdapter: JsonAdapter<List<Module>>
 ) : ViewModel() {
 
     val historyList: List<Module>
