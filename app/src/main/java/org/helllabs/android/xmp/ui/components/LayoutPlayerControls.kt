@@ -14,7 +14,6 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -279,10 +278,6 @@ fun DetailsSheet(
             Column {
                 list.forEachIndexed { index, seq ->
                     RadioButtonItem(
-                        radioColor = RadioButtonDefaults.colors(
-                            selectedColor = MaterialTheme.colorScheme.secondary,
-                            unselectedColor = Color.White
-                        ),
                         textColor = Color.White,
                         item = seq,
                         index = index,

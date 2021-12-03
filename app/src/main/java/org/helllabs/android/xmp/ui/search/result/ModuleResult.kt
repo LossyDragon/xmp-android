@@ -13,7 +13,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberScaffoldState
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -162,7 +161,6 @@ private fun ModuleResultLayout(
     onRandom: () -> Unit,
 ) {
     val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
-    val scaffoldState = rememberScaffoldState()
 
     Scaffold(
         topBar = {
@@ -194,7 +192,6 @@ private fun ModuleResultLayout(
                 onRandom = { onRandom() },
             )
         },
-        scaffoldState = scaffoldState,
     ) { contentPadding ->
         val scrollState = rememberScrollState()
 

@@ -22,8 +22,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.vanpra.composematerialdialogs.MaterialDialog
-import com.vanpra.composematerialdialogs.listItemsSingleChoice
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import com.vanpra.composematerialdialogs.title
 import java.io.File
@@ -144,7 +142,8 @@ fun ExplorerScreen(
             val item = list[index]
 
             if (item.isDirectory()) {
-                viewModel.onEvent(ExplorerEvent.DirectoryList(item.file!!))
+                val event = ExplorerEvent.DirectoryList(item.file!!)
+                viewModel.onEvent(event)
             } else {
                 context.logD("OnItemClick item: $item")
                 context.toast("OnItemClick") // TODO
@@ -167,7 +166,8 @@ fun ExplorerScreen(
         },
         onCrumbClick = {
             val file = File(it)
-            viewModel.onEvent(ExplorerEvent.DirectoryList(file))
+            val event = ExplorerEvent.DirectoryList(file)
+            viewModel.onEvent(event)
         },
         onCrumbLongClick = {
             context.logD("onCrumbLongClick $it")
@@ -194,11 +194,9 @@ private fun FileListLayout(
     onCrumbClick: (path: String) -> Unit,
     onCrumbLongClick: (path: String) -> Unit,
 ) {
-    val scaffoldState = rememberScaffoldState()
     val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
 
     Scaffold(
-        scaffoldState = scaffoldState,
         topBar = {
             Column {
                 XmpAppBar3(
@@ -293,20 +291,6 @@ private fun BreadCrumbLayout(
             LaunchedEffect(crumbs) {
                 listState.animateScrollToItem(crumbs.size)
             }
-    }
-}
-
-@Composable
-private fun BreadCrumbDialog() {
-    val resources = LocalContext.current.resources
-    val menuItems = resources.getStringArray(R.array.explorer_breadcrumb_array)
-    val state = rememberMaterialDialogState()
-    MaterialDialog(
-        dialogState = state
-    ) {
-        title()
-        listItemsSingleChoice(list = menuItems.toList()) {
-        }
     }
 }
 

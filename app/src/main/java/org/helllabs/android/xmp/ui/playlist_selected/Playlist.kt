@@ -144,17 +144,13 @@ class Playlist(val name: String) {
     }
 
     private fun readShuffleModePref(name: String): Boolean {
-        return PrefManager.getBooleanPref(
-            PlaylistUtils.optionName(name, SHUFFLE_MODE),
-            DEFAULT_SHUFFLE_MODE
-        )
+        val prefName = PlaylistUtils.optionName(name, SHUFFLE_MODE)
+        return PrefManager.getBooleanPref(prefName, DEFAULT_SHUFFLE_MODE)
     }
 
     private fun readLoopModePref(name: String): Boolean {
-        return PrefManager.getBooleanPref(
-            PlaylistUtils.optionName(name, LOOP_MODE),
-            DEFAULT_LOOP_MODE
-        )
+        val prefName = PlaylistUtils.optionName(name, LOOP_MODE)
+        return PrefManager.getBooleanPref(prefName, DEFAULT_LOOP_MODE)
     }
 
     fun updateList(newList: List<PlaylistItem>) {

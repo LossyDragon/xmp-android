@@ -1,6 +1,6 @@
 object Dependencies {
 
-    const val kotlinVersion = "1.5.31"
+    const val kotlinVersion = "1.6.0"
 
     // https://developer.android.com/ndk/downloads#lts-downloads
     const val ndkVersion = "23.1.7779620"
@@ -9,7 +9,7 @@ object Dependencies {
     const val ktlintGradle = "10.2.0"
 
     // https://github.com/google/dagger/releases
-    const val hiltAndroid = "2.40.3"
+    const val hiltAndroid = "2.40.4"
 
     // https://mvnrepository.com/artifact/androidx.media/media
     // https://mvnrepository.com/artifact/androidx.preference/preference-ktx
@@ -31,7 +31,7 @@ object Dependencies {
     // https://mvnrepository.com/artifact/androidx.activity/activity-compose
     // https://mvnrepository.com/artifact/androidx.navigation/navigation-compose
     object Compose {
-        const val version = "1.1.0-beta03"
+        const val version = "1.1.0-beta04"
         const val activity = "androidx.activity:activity-compose:1.4.0"
         const val animation = "androidx.compose.animation:animation:$version"
         const val foundation = "androidx.compose.foundation:foundation:$version"
@@ -61,7 +61,7 @@ object Dependencies {
 
         // https://developer.android.com/jetpack/androidx/releases/compose-material3
         object Material3 {
-            private const val version = "1.0.0-alpha01"
+            private const val version = "1.0.0-alpha02"
             const val material3 = "androidx.compose.material3:material3:$version"
         }
     }

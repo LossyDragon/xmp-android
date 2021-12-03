@@ -210,20 +210,6 @@ object FileUtils {
         return file.name.orEmpty()
     }
 
-    fun delete(filename: String): Boolean {
-        val file = File(filename)
-        return file.delete()
-    }
-
-    fun delete(file: File?): Boolean {
-        return file?.delete() ?: false
-    }
-
-    fun deleteRecursive(filename: String): Boolean {
-        val file = File(filename)
-        return file.deleteRecursively()
-    }
-
     /**
      * Deletes the module file
      * @return true if the file was successfully deleted; false otherwise.

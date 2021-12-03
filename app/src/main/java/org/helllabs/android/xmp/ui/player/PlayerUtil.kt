@@ -82,7 +82,7 @@ object PlayerUtil {
         }
     }
 
-    private fun playModule(
+    fun playModule(
         context: Context,
         modList: List<String>,
         start: Int = 0,

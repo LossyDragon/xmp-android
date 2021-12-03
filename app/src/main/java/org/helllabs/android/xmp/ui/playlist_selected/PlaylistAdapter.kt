@@ -60,8 +60,6 @@ class PlaylistAdapter(
         notifyDataSetChanged()
     }
 
-    fun getFilename(location: Int): String = currentList[location].file!!.path
-
     fun setUseFilename(useFilename: Boolean) {
         this.useFilename = useFilename
     }

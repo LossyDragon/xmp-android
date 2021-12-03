@@ -757,8 +757,8 @@ private fun PlayerLayout3(
             },
             backgroundColor = MaterialTheme.colorScheme.background,
             sheetBackgroundColor = sectionBackground,
-            sheetGesturesEnabled = true, // TODO re-add sheet lock?
-            sheetPeekHeight = 155.dp, // TODO fix?
+            sheetGesturesEnabled = true, // NOTE: re-add sheet lock?
+            sheetPeekHeight = 155.dp, // NOTE: Should dynamically get height.
             sheetShape = RoundedCornerShape(topStart = radius, topEnd = radius),
             sheetContent = {
                 PlayerSheetPeekContent(
@@ -813,7 +813,7 @@ private fun PlayerSheetPeekContent(
     ) {
         Spacer(modifier = Modifier.height(8.dp))
 
-        // TODO can't I just draw this via compose?
+        // NOTE: Composed icon?
         Icon(
             painter = painterResource(id = R.drawable.ic_sheet_handle),
             tint = lightGray,

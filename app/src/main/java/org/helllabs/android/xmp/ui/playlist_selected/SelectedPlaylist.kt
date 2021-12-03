@@ -33,7 +33,9 @@ import com.vanpra.composematerialdialogs.title
 import kotlinx.coroutines.flow.collectLatest
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.model.PlaylistItem
+import org.helllabs.android.xmp.model.PlaylistType
 import org.helllabs.android.xmp.ui.components.*
+import org.helllabs.android.xmp.ui.player.PlayerUtil
 import org.helllabs.android.xmp.ui.theme.XmpTheme3
 import org.helllabs.android.xmp.util.*
 
@@ -46,7 +48,43 @@ fun SelectedPlaylist(
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
 
-    var longClickPosition by remember { mutableStateOf(-1) }
+    var clickPosition by remember { mutableStateOf(-1) }
+
+    // TODO: Test this
+    val playThisModule = {
+        val item = viewModel.mPlaylistAdapter.currentList[clickPosition].file!!.path
+        PlayerUtil.playModule(
+            context = context,
+            modList = item.toList(),
+            isLoop = viewModel.isLoopMode,
+            isShuffle = viewModel.isShuffleMode
+        )
+
+        clickPosition = -1
+    }
+
+    // TODO: Test this
+    val playAllStartingHere = {
+        val list = viewModel.mPlaylistAdapter.currentList.map { it.file!!.path }
+        PlayerUtil.playModule(
+            context = context,
+            modList = list,
+            start = clickPosition,
+            isLoop = viewModel.isLoopMode,
+            isShuffle = viewModel.isShuffleMode
+        )
+
+        clickPosition = -1
+    }
+
+    // TODO: Test this
+    val removeItemFromPlaylist = {
+        viewModel.mPlaylist.remove(clickPosition)
+        viewModel.mPlaylist.setListChanged(true)
+        viewModel.mPlaylist.commit()
+        viewModel.mPlaylistAdapter.update()
+        clickPosition = -1
+    }
 
     val longClickState = rememberMaterialDialogState()
     MaterialDialog(
@@ -56,23 +94,23 @@ fun SelectedPlaylist(
             negativeButton(res = R.string.cancel)
         }
     ) {
-        val listItems = context.resources.getStringArray(R.array.edit_playlist_dialog_array)
+        val listItems = context.resources.getStringArray(R.array.playlist_item_array)
         title(res = R.string.dialog_playlist_edit_title)
         listItemsSingleChoice(list = listItems.toList()) { item ->
             when (item) {
                 0 -> {
-                    viewModel.mPlaylist.remove(longClickPosition)
-                    viewModel.mPlaylist.setListChanged(true)
-                    viewModel.mPlaylist.commit()
-                    viewModel.mPlaylistAdapter.update()
+                    // Play this module
+                    playThisModule()
                 }
-                1 -> context.toast("Add to playlist position: $longClickPosition") // TODO
-                2 -> context.toast("All all to playlist $longClickPosition") // TODO
-                3 -> context.toast("play this module $longClickPosition") // TODO
-                4 -> context.toast("play all, starting here: $longClickPosition") // TODO
+                1 -> {
+                    // Play all, starting here
+                    playAllStartingHere()
+                }
+                2 -> {
+                    // Remove from playlist
+                    removeItemFromPlaylist()
+                }
             }
-
-            longClickPosition = -1
         }
     }
 
@@ -80,10 +118,11 @@ fun SelectedPlaylist(
         viewModel.uiState.collectLatest { event ->
             when (event) {
                 is SelectedUiEvent.OnClick -> {
-                    context.toast("onclick position: ${event.position}") // TODO
+                    clickPosition = event.position
+                    playAllStartingHere()
                 }
                 is SelectedUiEvent.OnLongClick -> {
-                    longClickPosition = event.position
+                    clickPosition = event.position
                     longClickState.show()
                 }
                 is SelectedUiEvent.OnStartDrag,
@@ -107,7 +146,8 @@ fun SelectedPlaylist(
         mPlaylistAdapter = viewModel.mPlaylistAdapter,
         touchHelper = viewModel.mItemTouchHelper,
         onPlay = {
-            context.toast("onPlay clicked: $it") // TODO
+            clickPosition = 0
+            playAllStartingHere()
         },
     )
 }
@@ -165,7 +205,10 @@ private fun PlaylistActivityScreen(
             playlist.isShuffleMode = it
         },
         onPlay = {
-            val list = PlaylistUtils.getFilePathList(mPlaylistAdapter.currentList)
+            val list = mPlaylistAdapter.currentList
+                .filter { it.type == PlaylistType.TYPE_FILE }
+                .map { it.file!!.path }
+
             onPlay(list)
         },
     )

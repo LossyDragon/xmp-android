@@ -5,6 +5,7 @@ import java.io.IOException
 import java.util.*
 import org.helllabs.android.xmp.Xmp.testModule
 import org.helllabs.android.xmp.model.ModInfo
+import org.helllabs.android.xmp.model.ModInfoWithPath
 import org.helllabs.android.xmp.model.PlaylistItem
 import org.helllabs.android.xmp.model.PlaylistType
 import org.helllabs.android.xmp.ui.MainActivity
@@ -22,68 +23,59 @@ object PlaylistUtils {
     const val DEFAULT_LOOP_MODE = false
 
     enum class AddFilesResult {
-        RESULT_IO_EXCEPTION,
-        RESULT_SINGLE_UNRECOGNIZED,
-        RESULT_OK,
-        RESULT_OK_VALID_ONLY,
+        ERROR,
+        EMPTY,
+        VALID_FILES_ADDED,
+        SUCCESS,
     }
 
     /**
-     * Send files to the specified playlist
-     * @return the result of adding files [AddFilesResult]
+     * Adds a single file path to a specified playlist
      */
-    private fun addFiles(fileList: List<String>, playlistName: String): AddFilesResult {
-        var result: AddFilesResult = AddFilesResult.RESULT_OK
+    fun addFileToPlaylist(filePath: String, playlistName: String): AddFilesResult {
+        val list = listOf(filePath)
+        return addFilesToPlaylist(list, playlistName)
+    }
 
-        val list: MutableList<PlaylistItem> = ArrayList()
-        var hasInvalid = false
+    /**
+     * Adds a list of file path to a specified playlist
+     */
+    fun addFilesToPlaylist(filePaths: List<String>, playlistName: String): AddFilesResult {
+        var hasInvalidFiles = false
 
-        for (filename in fileList) {
+        val validList = validateModuleList(filePaths).map {
+            PlaylistItem(PlaylistType.TYPE_FILE, it.name, it.type, file = File(it.path))
+        }.ifEmpty {
+            return AddFilesResult.EMPTY
+        }
+
+        if (filePaths.size > validList.size)
+            hasInvalidFiles = true
+
+        if (!addToList(playlistName, validList))
+            return AddFilesResult.ERROR
+
+        if (hasInvalidFiles)
+            return AddFilesResult.VALID_FILES_ADDED
+
+        return AddFilesResult.SUCCESS
+    }
+
+    fun validateModuleList(list: List<String>): List<ModInfoWithPath> {
+        val validList = mutableListOf<ModInfoWithPath>()
+
+        list.forEach { path ->
             val modInfo = ModInfo()
-            if (testModule(filename, modInfo)) {
-                val item = PlaylistItem(PlaylistType.TYPE_FILE, modInfo.name, modInfo.type)
-                item.file = File(filename)
-                list.add(item)
-            } else {
-                hasInvalid = true
+
+            val isValid = testModule(path, modInfo)
+
+            if (isValid) {
+                val mod = ModInfoWithPath(modInfo.name, modInfo.type, path)
+                validList.add(mod)
             }
         }
-        if (list.isNotEmpty()) {
-            if (!addToList(playlistName, list)) {
-                result = AddFilesResult.RESULT_IO_EXCEPTION
-                return result
-            }
 
-            if (hasInvalid) {
-                result = if (list.size > 1)
-                    AddFilesResult.RESULT_OK_VALID_ONLY
-                else
-                    AddFilesResult.RESULT_SINGLE_UNRECOGNIZED
-            }
-        }
-        renumberIds(list)
-
-        return result
-    }
-
-    fun filesToPlaylist(fileList: List<String>, playlistName: String): AddFilesResult {
-        return addFiles(fileList, playlistName)
-    }
-
-    fun filesToPlaylist(filename: String, playlistName: String): AddFilesResult {
-        val fileList = listOf(filename)
-        return addFiles(fileList, playlistName)
-    }
-
-    // Get all the items that are a FILE type.
-    fun getFilePathList(currentList: List<PlaylistItem>): List<String> {
-        val list: MutableList<String> = ArrayList()
-        for (item in currentList) {
-            if (item.type == PlaylistType.TYPE_FILE) {
-                list.add(item.file!!.path)
-            }
-        }
-        return list
+        return validList
     }
 
     // Get a count of any Directories in a current list.
@@ -98,14 +90,14 @@ object PlaylistUtils {
         return count
     }
 
-    fun list(): Array<String> {
+    private fun getPlaylists(): Array<String> {
         return MainActivity.DATA_DIR.list { _, name ->
             name.endsWith(PLAYLIST_SUFFIX)
         } ?: emptyArray()
     }
 
-    fun listNoSuffix(): Array<String> {
-        val pList = list()
+    fun getPlaylistsNoSuffix(): Array<String> {
+        val pList = getPlaylists()
         for (i in pList.indices) {
             pList[i] = pList[i].substring(0, pList[i].lastIndexOf(PLAYLIST_SUFFIX))
         }
@@ -113,7 +105,7 @@ object PlaylistUtils {
     }
 
     fun getPlaylistName(index: Int): String {
-        val pList = list()
+        val pList = getPlaylists()
         return pList[index].substring(0, pList[index].lastIndexOf(PLAYLIST_SUFFIX))
     }
 
@@ -128,7 +120,6 @@ object PlaylistUtils {
         }
     }
 
-    // Stable IDs for used by Advanced RecyclerView
     fun renumberIds(list: List<PlaylistItem>) {
         list.forEachIndexed { index, playlistItem ->
             playlistItem.id = index
@@ -148,6 +139,7 @@ object PlaylistUtils {
         val new1: File = Playlist.ListFile(newName)
         val new2: File = Playlist.CommentFile(newName)
         var error = false
+
         if (!old1.renameTo(new1)) {
             error = true
         } else if (!old2.renameTo(new2)) {
@@ -211,15 +203,16 @@ object PlaylistUtils {
      *
      * @param name     The playlist name
      * @param items    The list of playlist items to add
-     * @return True if successful, false if an IOException occurred.
+     * @return true if successful, false if an IOException occurred.
      */
     private fun addToList(name: String, items: List<PlaylistItem>): Boolean {
-        val lines = mutableListOf<String>()
-        items.forEach { playlistItem ->
-            lines.add(playlistItem.toString())
+        val lines = items.map { playlistItem ->
+            playlistItem.toString()
         }
+
         try {
-            FileUtils.writeToFile(File(MainActivity.DATA_DIR, name + PLAYLIST_SUFFIX), lines)
+            val file = File(MainActivity.DATA_DIR, name + PLAYLIST_SUFFIX)
+            FileUtils.writeToFile(file, lines)
         } catch (e: IOException) {
             return false
         }
@@ -235,7 +228,8 @@ object PlaylistUtils {
      */
     fun readComment(name: String): String? {
         return try {
-            FileUtils.readFromFile(Playlist.CommentFile(name))
+            val file = Playlist.CommentFile(name)
+            FileUtils.readFromFile(file)
         } catch (e: IOException) {
             // Don't care
             null

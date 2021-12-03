@@ -6,3 +6,9 @@ class ModInfo {
     lateinit var name: String
     lateinit var type: String
 }
+
+data class ModInfoWithPath(
+    var name: String,
+    var type: String,
+    var path: String,
+)
