@@ -78,14 +78,6 @@ object Dependencies {
         const val eventBus = "org.greenrobot:eventbus:3.2.0"
     }
 
-    // https://github.com/Tickaroo/tikxml/releases
-    object TikXml {
-        const val version = "0.8.13"
-        const val annotation = "com.tickaroo.tikxml:annotation"
-        const val converter = "com.tickaroo.tikxml:retrofit-converter"
-        const val processor = "com.tickaroo.tikxml:processor"
-    }
-
     // https://github.com/tonyofrancis/Fetch/releases
     object XFetch2 {
         private const val version = "3.1.6"

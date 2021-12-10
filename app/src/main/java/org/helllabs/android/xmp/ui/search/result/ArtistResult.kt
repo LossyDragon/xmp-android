@@ -93,12 +93,12 @@ private fun ArtistLayout(
                 ProgressbarIndicator(isLoading)
             },
             lazyContent = {
-                itemsIndexed(items = state.result?.items.orEmpty()) { _, item ->
+                itemsIndexed(items = state.result?.listItems.orEmpty()) { _, item ->
                     ListItem(
                         modifier = Modifier.clickable {
-                            onClick(item.id!!)
+                            onClick(item.id)
                         },
-                        text = { Text(item.alias!!) }
+                        text = { Text(item.alias) }
                     )
                 }
             }

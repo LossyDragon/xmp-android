@@ -91,7 +91,7 @@ fun ModuleLayout(
     if (moduleResult == null)
         return
 
-    val module = moduleResult.module!!
+    val module = moduleResult.module
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
     var moduleFile by rememberSaveable { mutableStateOf(module.filename) }
@@ -99,7 +99,7 @@ fun ModuleLayout(
     var textLayoutResultState by remember { mutableStateOf<TextLayoutResult?>(null) }
     var isExpanded by remember { mutableStateOf(false) }
 
-    val licenseDescription by remember { mutableStateOf(module.license?.description ?: "") }
+    val licenseDescription by remember { mutableStateOf(module.license.description) }
     var licenseText by remember { mutableStateOf(AnnotatedString(licenseDescription)) }
     LaunchedEffect(textLayoutResultState) {
         when {
@@ -114,11 +114,10 @@ fun ModuleLayout(
             !isExpanded && textLayoutResultState!!.hasVisualOverflow -> {
                 val lastCharIndex = textLayoutResultState!!.getLineEnd(1, true)
                 val showMoreString = "Show More"
-                val adjustedText = module.license?.description
-                    ?.substring(startIndex = 0, endIndex = lastCharIndex)
-                    ?.dropLast(showMoreString.length)
-                    ?.dropLastWhile { it == ' ' || it == '.' }
-                    .orEmpty()
+                val adjustedText = module.license.description
+                    .substring(startIndex = 0, endIndex = lastCharIndex)
+                    .dropLast(showMoreString.length)
+                    .dropLastWhile { it == ' ' || it == '.' }
 
                 licenseText = buildAnnotatedString {
                     append("$adjustedText... ")
@@ -147,7 +146,7 @@ fun ModuleLayout(
         }
 
         val uriHandler = LocalUriHandler.current
-        val size = (module.bytes?.div(1024)) ?: 0
+        val size = (module.bytes.div(1024))
         val info = stringResource(
             R.string.search_result_by,
             module.getFormat(),
@@ -163,7 +162,7 @@ fun ModuleLayout(
         Text(text = module.getFilename())
         Spacer(modifier = Modifier.height(10.dp))
         // Info
-        val infoLink = annotatedLink(info, module.infopage.orEmpty())
+        val infoLink = annotatedLink(info, module.infopage)
         ClickableText(
             text = infoLink,
             onClick = {
@@ -179,8 +178,7 @@ fun ModuleLayout(
         HeaderText(stringResource(id = R.string.text_license))
         Spacer(modifier = Modifier.height(5.dp))
         // Licence Link
-        val licenseLink =
-            annotatedLink(module.license!!.getLegalTitle(), module.license!!.getLegalUrl())
+        val licenseLink = annotatedLink(module.license.title, module.license.legalurl)
         ClickableText(
             text = licenseLink,
             style = TextStyle(fontSize = 16.sp),
@@ -206,7 +204,7 @@ fun ModuleLayout(
         )
 
         Spacer(modifier = Modifier.height(10.dp))
-        if (!module.comment.isNullOrEmpty()) {
+        if (module.comment.isNotEmpty()) {
             // Song Message
             HeaderText(stringResource(id = R.string.text_song_message))
             Spacer(modifier = Modifier.height(10.dp))
@@ -222,8 +220,8 @@ fun ModuleLayout(
         Spacer(modifier = Modifier.height(10.dp))
         // Sponsor
         if (moduleResult.hasSponsor()) {
-            val sponsor = moduleResult.sponsor!!.details!!
-            val sponsorLink = annotatedLink(sponsor.text!!, sponsor.link!!)
+            val sponsor = moduleResult.sponsor.details
+            val sponsorLink = annotatedLink(sponsor.text, sponsor.link)
             HeaderText(stringResource(id = R.string.text_sponsor))
             Spacer(modifier = Modifier.height(10.dp))
             // Sponsor Content

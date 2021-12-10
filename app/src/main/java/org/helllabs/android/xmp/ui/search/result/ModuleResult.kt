@@ -137,10 +137,10 @@ fun ModuleResultScreen(
                 val url = module.url
 
                 context.logI("Downloaded $url to $modDir")
-                if (FileUtils.localFile(url!!, modDir).exists()) {
+                if (FileUtils.localFile(url, modDir).exists()) {
                     fileExistsState.show()
                 } else {
-                    val mod = module.filename!!
+                    val mod = module.filename
                     viewModel.onEvent(ModuleEvent.Download(mod, url, modDir))
                 }
             }
@@ -188,7 +188,7 @@ private fun ModuleResultLayout(
                 playButtonText = buttonText,
                 isLoading = isLoading,
                 isSupported = state.moduleSupported,
-                onPlay = { onPlay(state.module!!.module!!) },
+                onPlay = { onPlay(state.module!!.module) },
                 onRandom = { onRandom() },
             )
         },

@@ -2,206 +2,91 @@ package org.helllabs.android.xmp.model
 
 import android.text.Spanned
 import androidx.core.text.toSpanned
-import com.tickaroo.tikxml.annotation.Element
-import com.tickaroo.tikxml.annotation.Path
-import com.tickaroo.tikxml.annotation.PropertyElement
-import com.tickaroo.tikxml.annotation.Xml
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import nl.adaptivity.xmlutil.serialization.*
 import org.helllabs.android.xmp.util.asHtml
 
-/**
- * -- Main XML data files --
- * To interpret responses from mod archive.
- */
-
-@Xml(name = "modarchive")
+@Serializable
+@SerialName("modarchive")
 data class ModuleResult(
-    @Element
-    var sponsor: Sponsor? = null,
-
-    @PropertyElement
-    var error: String? = null,
-
-    @PropertyElement
-    var results: Int? = null,
-
-    @PropertyElement
-    var totalpages: Int? = null,
-
-    @Element
-    var module: Module? = null
+    @XmlElement(true) val sponsor: Sponsor = Sponsor(),
+    @XmlElement(true) val error: String? = null,
+    @XmlElement(true) val results: Int = 0,
+    @XmlElement(true) val totalpages: Int = 0,
+    @XmlElement(true) val module: Module = Module(),
 ) {
-    override fun toString(): String {
-        return "ModArchive(" +
-            "sponsor=$sponsor, " + "results=$results, " +
-            "totalpages=$totalpages, " + "module=$module" +
-            ")"
-    }
-
     fun hasSponsor(): Boolean {
-        return sponsor?.details != null && !sponsor!!.details!!.text.isNullOrEmpty()
+        return sponsor.details.text.isNotEmpty()
     }
 }
 
-@Xml(name = "modarchive")
-data class ArtistResult(
-    @Element
-    var sponsor: Sponsor? = null,
-
-    @PropertyElement
-    var error: String? = null,
-
-    @PropertyElement
-    var results: Int? = null,
-
-    @PropertyElement
-    var total_results: Int? = null,
-
-    @PropertyElement
-    var totalpages: Int? = null,
-
-    @Path("items")
-    @Element
-    var items: List<Item>? = null
-
-)
-
-@Xml(name = "modarchive")
-data class SearchListResult(
-    @Element
-    var sponsor: Sponsor? = null,
-
-    @PropertyElement
-    var error: String? = null,
-
-    @PropertyElement
-    var results: Int? = null,
-
-    @PropertyElement
-    var totalpages: Int? = null,
-
-    @Element
-    var module: List<Module>? = null
-) {
-    override fun toString(): String {
-        return "SearchListResult(" +
-            "sponsor=$sponsor, " +
-            "results=$results, " +
-            "totalpages=$totalpages, " +
-            "module=$module" +
-            ")"
-    }
-}
-
-/**
- * --  Various XML Element helpers --
- */
-@Xml(name = "sponsor")
+@Serializable
+@SerialName("sponsor")
 data class Sponsor(
-    @Element
-    var details: SponsorDetails? = null
+    @XmlElement(true) val details: SponsorDetails = SponsorDetails()
 )
 
-@Xml(name = "details")
+@Serializable
+@SerialName("details")
 data class SponsorDetails(
-    @PropertyElement
-    var link: String? = null,
-
-    @PropertyElement
-    var image: String? = null,
-
-    @PropertyElement
-    var text: String? = null,
-
-    @PropertyElement
-    var imagehtml: String? = null
+    @XmlElement(true) val link: String = "",
+    @XmlElement(true) val image: String = "",
+    @XmlElement(true) val text: String = "",
+    @XmlElement(true) val imagehtml: String = "",
 )
 
-@Xml(name = "module")
+@Serializable
+@SerialName("module")
 data class Module(
-    @PropertyElement
-    var filename: String? = null,
-
-    @PropertyElement
-    var format: String? = null,
-
-    @PropertyElement
-    var url: String? = null,
-
-    @PropertyElement
-    var date: String? = null,
-
-    @PropertyElement
-    var timestamp: Long? = null,
-
-    @PropertyElement
-    var id: Int? = null,
-
-    @PropertyElement
-    var hash: String? = null,
-
-    @Element
-    var featured: Featured? = null,
-
-    @Element
-    var favourites: Favourites? = null,
-
-    @PropertyElement
-    var size: String? = null,
-
-    @PropertyElement
-    var bytes: Int? = null,
-
-    @PropertyElement
-    var hits: Int? = null,
-
-    @PropertyElement
-    var infopage: String? = null,
-
-    @PropertyElement
-    var songtitle: String? = null,
-
-    @PropertyElement
-    var hidetext: Int? = null,
-
-    @PropertyElement
-    var comment: String? = null,
-
-    @PropertyElement
-    var instruments: String? = null,
-
-    @PropertyElement
-    var genreid: Int? = null,
-
-    @PropertyElement
-    var genretext: String? = null,
-
-    @PropertyElement
-    var channels: Int? = null,
-
-    @Element
-    var overallRatings: OverallRatings? = null,
-
-    @Element
-    var license: License? = null,
-
-    @Element
-    var artistInfo: ArtistInfo? = null
+    @XmlElement(true) val filename: String = "",
+    @XmlElement(true) val format: String = "",
+    @XmlElement(true) val url: String = "",
+    @XmlElement(true) val date: String = "",
+    @XmlElement(true) val timestamp: Long = 0L,
+    @XmlElement(true) val id: Int = 0,
+    @XmlElement(true) val hash: String = "",
+    @XmlElement(true) val featured: Featured = Featured(),
+    @XmlElement(true) val favourites: Favourites = Favourites(),
+    @XmlElement(true) val size: String = "",
+    @XmlElement(true) val bytes: Int = 0,
+    @XmlElement(true) val hits: Int = 0,
+    @XmlElement(true) val infopage: String = "",
+    @XmlElement(true) val songtitle: String = "",
+    @XmlElement(true) val hidetext: Int = 0,
+    @XmlElement(true) val comment: String = "",
+    @XmlElement(true) val instruments: String = "",
+    @XmlElement(true) val genreid: Int = 0,
+    @XmlElement(true) val genretext: String = "",
+    @XmlElement(true) val channels: Int = 0,
+    @XmlElement(true) val overallRatings: OverallRatings = OverallRatings(),
+    @XmlElement(true) val license: License = License(),
+    @XmlElement(true) val artistInfo: ArtistInfo = ArtistInfo(),
 ) {
-
     @JvmName("getFormatText")
-    fun getFormat(): String = format.orEmpty()
+    fun getFormat(): String = format
 
-    fun getBytesFormatted(): Int =
-        bytes?.div(1024) ?: 0
+    fun getBytesFormatted(): Int = bytes.div(1024)
 
-    fun getArtist(): String =
-        artistInfo?.artist?.alias ?: artistInfo?.guessed_artist?.alias ?: "unknown"
+    fun getArtist(): String {
+        with(artistInfo) {
+            artist.firstOrNull {
+                return it.alias
+            }
+
+            guessedArtistList.firstOrNull {
+                return it
+            }
+
+            return "unknown"
+        }
+    }
 
     fun getSongTitle(): Spanned =
-        if (!songtitle.isNullOrEmpty()) songtitle.asHtml() else "(untitled)".toSpanned()
+        if (songtitle.isNotEmpty()) songtitle.asHtml() else "(untitled)".toSpanned()
 
     fun parseInstruments(): String {
-        val lines = instruments?.split("\n")?.toTypedArray().orEmpty()
+        val lines = instruments.split("\n").toTypedArray()
         val buffer = StringBuilder()
 
         lines.forEach {
@@ -212,10 +97,10 @@ data class Module(
     }
 
     @JvmName("getFilenameText")
-    fun getFilename(): String = filename.orEmpty()
+    fun getFilename(): String = filename
 
     fun parseComment(): String {
-        val lines = comment?.split("\n")?.toTypedArray().orEmpty()
+        val lines = comment.split("\n").toTypedArray()
         val buffer = StringBuilder()
 
         lines.forEach {
@@ -226,147 +111,120 @@ data class Module(
     }
 }
 
-@Xml(name = "featured")
+@Serializable
+@SerialName("featured")
 data class Featured(
-    @PropertyElement
-    var state: String? = null,
-
-    @PropertyElement
-    var date: String? = null,
-
-    @PropertyElement
-    var timestamp: String? = null
+    @XmlElement(true) val state: String = "",
+    @XmlElement(true) val date: String = "",
+    @XmlElement(true) val timestamp: String = "",
 )
 
-@Xml(name = "favourites")
+@Serializable
+@SerialName("favourites")
 data class Favourites(
-    @PropertyElement
-    var favoured: Int? = null,
-
-    @PropertyElement
-    var myfav: Int? = null
+    @XmlElement(true) val favoured: Int = 0,
+    @XmlElement(true) val myfav: Int = 0,
 )
 
-@Xml(name = "overall_ratings")
+@Serializable
+@SerialName("overall_ratings")
 data class OverallRatings(
-    @PropertyElement
-    var comment_rating: Double? = null,
-
-    @PropertyElement
-    var comment_total: Int? = null,
-
-    @PropertyElement
-    var review_rating: Int? = null,
-
-    @PropertyElement
-    var review_total: Int? = null
+    @XmlElement(true) val comment_rating: Double = 0.0,
+    @XmlElement(true) val comment_total: Int = 0,
+    @XmlElement(true) val review_rating: Int = 0,
+    @XmlElement(true) val review_total: Int = 0,
 )
 
-@Xml(name = "license")
+@Serializable
+@SerialName("license")
 data class License(
-    @PropertyElement
-    var licenseid: String? = null,
+    @XmlElement(true) val licenseid: String = "",
+    @XmlElement(true) val title: String = "",
+    @XmlElement(true) val description: String = "",
+    @XmlElement(true) val imageurl: String = "",
+    @XmlElement(true) val deedurl: String = "",
+    @XmlElement(true) val legalurl: String = ""
+)
 
-    @PropertyElement
-    var title: String? = null,
-
-    @PropertyElement
-    var description: String? = null,
-
-    @PropertyElement
-    var imageurl: String? = null,
-
-    @PropertyElement
-    var deedurl: String? = null,
-
-    @PropertyElement
-    var legalurl: String? = null
+@Serializable
+@SerialName("artist_info")
+data class ArtistInfo(
+    @XmlElement(true) val artists: Int = 0,
+    @XmlSerialName("artist", "", "") val artist: List<Artist> = emptyList(),
+    @XmlElement(true) val guessed_artists: Int = 0,
+    @XmlElement(true) val guessed_artist: GuessedArtists = GuessedArtists()
 ) {
-    fun getLegalUrl(): String = legalurl.orEmpty()
-
-    fun getLegalTitle(): String = title.orEmpty()
+    val guessedArtistList: List<String>
+        get() = guessed_artist.alias
 }
 
-@Xml(name = "artist_info")
-data class ArtistInfo(
-    @PropertyElement
-    var artists: Int? = null,
-
-    @Element
-    var artist: Artist? = null,
-
-    @PropertyElement
-    var guessed_artists: Int? = null,
-
-    @Element
-    var guessed_artist: GuestArtist? = null
+// https://modarchive.org/forums/index.php?topic=4713.0
+// TODO: I'm not sure of this is correct, rare to see multiple guest artists.
+@Serializable
+@SerialName("guessed_artist")
+data class GuessedArtists(
+    @XmlSerialName("alias", "", "") val alias: List<String> = emptyList()
 )
 
-@Xml(name = "artist")
+@Serializable
+@SerialName("artist")
 data class Artist(
-    @PropertyElement
-    var id: Int? = null,
-
-    @PropertyElement
-    var alias: String? = null,
-
-    @PropertyElement
-    var profile: String? = null,
-
-    @PropertyElement
-    var imageurl: String? = null,
-
-    @PropertyElement
-    var imageurl_thumb: String? = null,
-
-    @PropertyElement
-    var imageurl_icon: String? = null,
-
-    @Element
-    var module_data: ModuleData? = null
+    @XmlElement(true) val id: Int = 0,
+    @XmlElement(true) val alias: String = "",
+    @XmlElement(true) val profile: String = "",
+    @XmlElement(true) val imageurl: String = "",
+    @XmlElement(true) val imageurl_thumb: String = "",
+    @XmlElement(true) val imageurl_icon: String = "",
+    @XmlElement(true) val module_data: ModuleData = ModuleData()
 )
 
-@Xml(name = "module_data")
+@Serializable
+@SerialName("module_data")
 data class ModuleData(
-    @PropertyElement
-    var module_description: String? = null
+    @XmlElement(true) val module_description: String = ""
 )
 
-@Xml(name = "guessed_artist")
-data class GuestArtist(
-    @PropertyElement
-    var alias: String? = null
+@Serializable
+@SerialName("modarchive")
+data class SearchListResult(
+    @XmlElement(true) val sponsor: Sponsor = Sponsor(),
+    @XmlElement(true) val error: String? = null,
+    @XmlElement(true) val results: Int = 0,
+    @XmlElement(true) val totalpages: Int = 0,
+    @XmlSerialName("module", "", "") val module: List<Module> = emptyList()
 )
 
-@Xml(name = "item")
+@Serializable
+@SerialName("modarchive")
+data class ArtistResult(
+    @XmlElement(true) val sponsor: Sponsor = Sponsor(),
+    @XmlElement(true) val error: String? = null,
+    @XmlElement(true) val results: Int = 0,
+    @XmlElement(true) val total_results: Int = 0,
+    @XmlElement(true) val totalpages: Int = 0,
+    @XmlElement(true) val items: Items = Items()
+) {
+    val listItems: List<Item>
+        get() = items.item
+}
+
+@Serializable
+@SerialName("items")
+data class Items(
+    @XmlSerialName("item", "", "") val item: List<Item> = emptyList()
+)
+
+@Serializable
+@SerialName("item")
 data class Item(
-    @PropertyElement
-    var id: Int? = null,
-
-    @PropertyElement
-    var alias: String? = null,
-
-    @PropertyElement
-    var date: String? = null,
-
-    @PropertyElement
-    var timestamp: Int? = null,
-
-    @PropertyElement
-    var lastseen: String? = null,
-
-    @PropertyElement
-    var isartist: String? = null,
-
-    @PropertyElement
-    var imageurl: String? = null,
-
-    @PropertyElement
-    var imageurl_thumb: String? = null,
-
-    @PropertyElement
-    var imageurl_icon: String? = null,
-
-    @PropertyElement
-    var profile: String? = null
+    @XmlElement(true) val id: Int = 0,
+    @XmlElement(true) val alias: String = "",
+    @XmlElement(true) val date: String = "",
+    @XmlElement(true) val timestamp: Int = 0,
+    @XmlElement(true) val lastseen: String = "",
+    @XmlElement(true) val isartist: String = "",
+    @XmlElement(true) val imageurl: String = "",
+    @XmlElement(true) val imageurl_thumb: String = "",
+    @XmlElement(true) val imageurl_icon: String = "",
+    @XmlElement(true) val profile: String = ""
 )

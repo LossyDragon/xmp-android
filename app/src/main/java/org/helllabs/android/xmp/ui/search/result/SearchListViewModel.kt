@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.api.Repository
 import org.helllabs.android.xmp.model.SearchListResult
+import org.helllabs.android.xmp.util.logE
 
 data class SearchListState(
     var result: SearchListResult? = null,
@@ -59,6 +60,7 @@ class SearchListViewModel
 
                 _uiState.emit(SearchListUiState.Loading(isLoading = false))
             } catch (e: Exception) {
+                this@SearchListViewModel.logE(e.stackTraceToString())
                 _uiState.emit(SearchListUiState.Error(e.localizedMessage))
             }
         }
@@ -77,6 +79,7 @@ class SearchListViewModel
 
                 _uiState.emit(SearchListUiState.Loading(isLoading = false))
             } catch (e: Exception) {
+                this@SearchListViewModel.logE(e.stackTraceToString())
                 _uiState.emit(SearchListUiState.Error(e.localizedMessage))
             }
         }

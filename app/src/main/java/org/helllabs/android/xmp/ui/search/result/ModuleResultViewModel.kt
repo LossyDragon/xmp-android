@@ -81,6 +81,7 @@ class ModuleResultViewModel
                     }
                     if (data.error != Error.NONE) {
                         val error = data.error.toString() + "\n" + reason
+                        this@ModuleResultViewModel.logE(error)
                         _uiState.emit(ModuleUiState.Error(error))
                     }
                 }
@@ -113,10 +114,10 @@ class ModuleResultViewModel
     }
 
     private fun existingModule() {
-        val module = state.value.module!!.module!!
+        val module = state.value.module!!.module
         val file = FileUtils.getDownloadPath(module)
-        val url = module.url!!
-        val mod = module.filename!!
+        val url = module.url
+        val mod = module.filename
 
         downloadModule(mod, url, file)
     }
@@ -150,6 +151,7 @@ class ModuleResultViewModel
 
                 _uiState.emit(ModuleUiState.Loading(isLoading = false))
             } catch (e: Exception) {
+                this@ModuleResultViewModel.logE(e.stackTraceToString())
                 _uiState.emit(ModuleUiState.Error(e.localizedMessage))
             }
         }
@@ -175,6 +177,7 @@ class ModuleResultViewModel
 
                 _uiState.emit(ModuleUiState.Loading(isLoading = false))
             } catch (e: Exception) {
+                this@ModuleResultViewModel.logE(e.stackTraceToString())
                 _uiState.emit(ModuleUiState.Error(e.localizedMessage))
             }
         }
@@ -193,6 +196,7 @@ class ModuleResultViewModel
                 { error ->
                     logE("enqueue: $error")
                     viewModelScope.launch {
+                        this@ModuleResultViewModel.logE(error.toString())
                         _uiState.emit(ModuleUiState.Error(error.toString()))
                     }
                 }

@@ -101,7 +101,7 @@ private fun SearchHistoryLayout(
                 itemsIndexed(items = historyList.reversed()) { _, item ->
                     ItemModule(
                         item = item,
-                        onClick = { onClick(item.id!!) }
+                        onClick = { onClick(item.id) }
                     )
                 }
             }
@@ -122,7 +122,7 @@ private fun SearchHistoryPreviewDark() {
         SearchHistoryLayout(
             onBack = {},
             onClick = {},
-            historyList = list.orEmpty(),
+            historyList = list,
             onCleared = {},
         )
     }

@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.api.Repository
 import org.helllabs.android.xmp.model.ArtistResult
+import org.helllabs.android.xmp.util.logE
 
 sealed class ArtistEvent {
     data class FetchArtist(val query: String) : ArtistEvent()
@@ -57,6 +58,7 @@ class ArtistResultViewModel
 
                 _uiState.emit(ArtistUiState.Loading(isLoading = false))
             } catch (e: Exception) {
+                this@ArtistResultViewModel.logE(e.stackTraceToString())
                 _uiState.emit(ArtistUiState.Error(e.localizedMessage))
             }
         }

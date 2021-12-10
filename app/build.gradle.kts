@@ -5,6 +5,7 @@ plugins {
     id("com.android.application")
     kotlin("android")
     kotlin("kapt")
+    id("kotlinx-serialization")
     id("dagger.hilt.android.plugin")
     id("org.jlleitschuh.gradle.ktlint")
 }
@@ -124,12 +125,6 @@ dependencies {
     implementation(Dependencies.Hilt.composeNav)
     kapt(Dependencies.Hilt.kaptAndroidCompiler)
 
-    // Retrofit XML Parsing
-    val tikXmlVersion = Dependencies.TikXml.version
-    implementation(Dependencies.TikXml.annotation) { version { strictly(tikXmlVersion) } }
-    implementation(Dependencies.TikXml.converter) { version { strictly(tikXmlVersion) } }
-    kapt(Dependencies.TikXml.processor) { version { strictly(tikXmlVersion) } }
-
     // Material Dialogs
     implementation(Dependencies.Compose.Dialogs.core)
 
@@ -138,6 +133,9 @@ dependencies {
     implementation(Dependencies.XFetch2.okHttp)
     implementation(Dependencies.SquareUp.okHttp)
     implementation(Dependencies.SquareUp.retrofit)
+    implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:0.8.0")
+    implementation("io.github.pdvrieze.xmlutil:core-android:0.84.0-RC2-SNAPSHOT")
+    implementation("io.github.pdvrieze.xmlutil:serialization-android:0.84.0-RC2-SNAPSHOT")
 
     // Other Libs
     implementation(Dependencies.SquareUp.moshi)

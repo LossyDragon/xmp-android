@@ -17,11 +17,6 @@ object ModArchiveConstants {
     const val BY_SEARCH: String = "search"
     const val TYPE_FILE_OR_TITLE = "filename_or_songtitle"
 
-    const val SEARCH_TEXT = "search_text"
-    const val MODULE_ID = "module_id"
-    const val ARTIST_ID = "artist_id"
-    const val ERROR = "error"
-
     private val UNSUPPORTED = listOf("AHX", "HVL", "MO3")
     fun Module.isSupported(): Boolean = !UNSUPPORTED.contains(this.format)
 }

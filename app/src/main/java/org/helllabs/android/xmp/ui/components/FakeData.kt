@@ -65,13 +65,13 @@ fun fakeDataPlaylistMenu(): List<PlaylistItem> {
     return list
 }
 
-fun fakeDataArtistResult(): List<Item> {
-    val result = mutableListOf<Item>()
+fun fakeDataArtistResult(): Items {
+    val result = arrayListOf<Item>()
     repeat(8) {
         result.add(Item(alias = "Item $it"))
     }
 
-    return result
+    return Items(item = result)
 }
 
 fun fakeDataSearchListResult(): SearchListResult {
@@ -81,7 +81,7 @@ fun fakeDataSearchListResult(): SearchListResult {
             Module(
                 format = "XM",
                 songtitle = "Some Song Title $it",
-                artistInfo = ArtistInfo(artist = Artist(alias = "Some Artist")),
+                artistInfo = ArtistInfo(artist = listOf(Artist(alias = "Some Artist"))),
                 bytes = 669669
             )
         )
@@ -107,7 +107,7 @@ fun fakeModuleResult(): ModuleResult {
             filename = "",
             bytes = 669669,
             format = "XM",
-            artistInfo = ArtistInfo(artist = Artist(alias = "Some Artist")),
+            artistInfo = ArtistInfo(artist = listOf(Artist(alias = "Some Artist"))),
             infopage = "",
             license = License(
                 title = "Some License Title",

@@ -107,7 +107,7 @@ private fun SearchLayout(
                 itemsIndexed(items = state.result?.module.orEmpty()) { _, item ->
                     ItemModule(
                         item = item,
-                        onClick = { onClick(item.id!!) }
+                        onClick = { onClick(item.id) }
                     )
                 }
             }

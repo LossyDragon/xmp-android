@@ -271,7 +271,7 @@ fun ItemModule(
             ) {
                 Text(
                     modifier = Modifier,
-                    text = item.format!!,
+                    text = item.format,
                     fontSize = 12.sp,
                     color = Color.White
                 )
@@ -374,13 +374,14 @@ private fun ItemListSelectedPreview() {
 @Preview
 @Composable
 private fun ItemModulePreview() {
+    val artist = listOf(Artist(alias = "Some History Artist Info"))
     XmpTheme3 {
         Surface {
             ItemModule(
                 item = Module(
                     format = "XM",
                     songtitle = "Some History Song Title",
-                    artistInfo = ArtistInfo(artist = Artist(alias = "Some History Artist Info")),
+                    artistInfo = ArtistInfo(artist = artist),
                     bytes = 6690000
                 ),
                 onClick = {}
