@@ -9,20 +9,20 @@ object Dependencies {
     const val ktlintGradle = "10.2.0"
 
     // https://github.com/google/dagger/releases
-    const val hiltAndroid = "2.40.4"
+    const val hiltAndroid = "2.40.5"
 
     // https://mvnrepository.com/artifact/androidx.media/media
     // https://mvnrepository.com/artifact/androidx.preference/preference-ktx
     // https://mvnrepository.com/artifact/androidx.recyclerview/recyclerview
     object SupportLibs {
-        const val media = "androidx.media:media:1.5.0-alpha01"
+        const val media = "androidx.media:media:1.5.0-beta01"
         const val preferenceKtx = "androidx.preference:preference-ktx:1.2.0-beta01"
         const val recyclerview = "androidx.recyclerview:recyclerview:1.3.0-alpha01"
     }
 
     // https://mvnrepository.com/artifact/com.google.android.material/material
     object Material {
-        private const val version = "1.5.0-beta01"
+        private const val version = "1.6.0-alpha01"
         const val materialComponents = "com.google.android.material:material:$version"
     }
 
@@ -47,7 +47,7 @@ object Dependencies {
 
         // https://github.com/google/accompanist/releases
         object Accompanist {
-            private const val version = "0.21.3-beta"
+            private const val version = "0.21.4-beta"
             const val insets = "com.google.accompanist:accompanist-insets:$version"
             const val controller = "com.google.accompanist:accompanist-systemuicontroller:$version"
             const val permissions = "com.google.accompanist:accompanist-permissions:$version"
@@ -97,8 +97,8 @@ object Dependencies {
     // https://search.maven.org/artifact/com.squareup.retrofit2/retrofit
     // https://search.maven.org/artifact/com.squareup.moshi/moshi-kotlin/
     object SquareUp {
-        const val okHttp = "com.squareup.okhttp3:okhttp:4.9.2"
+        const val okHttp = "com.squareup.okhttp3:okhttp:4.9.3"
         const val retrofit = "com.squareup.retrofit2:retrofit:2.9.0"
-        const val moshi = "com.squareup.moshi:moshi-kotlin:1.12.0"
+        const val moshi = "com.squareup.moshi:moshi-kotlin:1.13.0"
     }
 }
