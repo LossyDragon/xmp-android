@@ -2,6 +2,10 @@ object Dependencies {
 
     const val kotlinVersion = "1.6.0"
 
+    // Feature roadmap: https://developer.android.com/jetpack/androidx/compose-roadmap
+    // Versions: https://developer.android.com/jetpack/androidx/releases/compose#versions
+    const val composeVersion = "1.1.0-beta04"
+
     // https://developer.android.com/ndk/downloads#lts-downloads
     const val ndkVersion = "23.1.7779620"
 
@@ -26,24 +30,21 @@ object Dependencies {
         const val materialComponents = "com.google.android.material:material:$version"
     }
 
-    // Feature roadmap: https://developer.android.com/jetpack/androidx/compose-roadmap
-    // Versions: https://developer.android.com/jetpack/androidx/releases/compose#versions
     // https://mvnrepository.com/artifact/androidx.activity/activity-compose
     // https://mvnrepository.com/artifact/androidx.navigation/navigation-compose
     object Compose {
-        const val version = "1.1.0-beta04"
         const val activity = "androidx.activity:activity-compose:1.4.0"
-        const val animation = "androidx.compose.animation:animation:$version"
-        const val foundation = "androidx.compose.foundation:foundation:$version"
-        const val graphics = "androidx.compose.animation:animation-graphics:$version"
-        const val iconsCore = "androidx.compose.material:material-icons-core:$version"
-        const val iconsExtended = "androidx.compose.material:material-icons-extended:$version"
-        const val livedata = "androidx.compose.runtime:runtime-livedata:$version"
-        const val material = "androidx.compose.material:material:$version"
+        const val animation = "androidx.compose.animation:animation:$composeVersion"
+        const val foundation = "androidx.compose.foundation:foundation:$composeVersion"
+        const val graphics = "androidx.compose.animation:animation-graphics:$composeVersion"
+        const val iconsCore = "androidx.compose.material:material-icons-core:$composeVersion"
+        const val iconsExtended = "androidx.compose.material:material-icons-extended:$composeVersion"
+        const val livedata = "androidx.compose.runtime:runtime-livedata:$composeVersion"
+        const val material = "androidx.compose.material:material:$composeVersion"
         const val navigation = "androidx.navigation:navigation-compose:2.4.0-beta02"
-        const val tooling = "androidx.compose.ui:ui-tooling:$version"
-        const val ui = "androidx.compose.ui:ui:$version"
-        const val uiUtil = "androidx.compose.ui:ui-util:$version"
+        const val tooling = "androidx.compose.ui:ui-tooling:$composeVersion"
+        const val ui = "androidx.compose.ui:ui:$composeVersion"
+        const val uiUtil = "androidx.compose.ui:ui-util:$composeVersion"
 
         // https://github.com/google/accompanist/releases
         object Accompanist {
@@ -91,6 +92,6 @@ object Dependencies {
     object SquareUp {
         const val okHttp = "com.squareup.okhttp3:okhttp:4.9.3"
         const val retrofit = "com.squareup.retrofit2:retrofit:2.9.0"
-        const val moshi = "com.squareup.moshi:moshi-kotlin:1.13.0"
+        const val moshi = "com.squareup.moshi:moshi-kotlin:1.12.0"
     }
 }
