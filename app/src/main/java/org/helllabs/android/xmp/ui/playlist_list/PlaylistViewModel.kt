@@ -60,7 +60,7 @@ class PlaylistViewModel : ViewModel() {
         viewModelScope.launch {
             _uiState.emit(PlaylistUiEvent.Loading(isLoading = true))
 
-            val playlists = PlaylistUtils.listNoSuffix().map { name ->
+            val playlists = PlaylistUtils.getPlaylistsNoSuffix().map { name ->
                 val comment = PlaylistUtils.readComment(name).orEmpty()
                 PlaylistItem(PlaylistType.TYPE_PLAYLIST, name, comment)
             }.toMutableList()
