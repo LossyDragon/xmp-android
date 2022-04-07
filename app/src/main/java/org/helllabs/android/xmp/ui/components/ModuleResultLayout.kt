@@ -149,7 +149,7 @@ fun ModuleLayout(
         val size = (module.bytes.div(1024))
         val info = stringResource(
             R.string.search_result_by,
-            module.getFormat(),
+            module.format,
             module.getArtist(),
             size
         )
@@ -159,7 +159,7 @@ fun ModuleLayout(
         Text(text = module.getSongTitle().toString())
         Spacer(modifier = Modifier.height(5.dp))
         // Filename
-        Text(text = module.getFilename())
+        Text(text = module.filename)
         Spacer(modifier = Modifier.height(10.dp))
         // Info
         val infoLink = annotatedLink(info, module.infopage)

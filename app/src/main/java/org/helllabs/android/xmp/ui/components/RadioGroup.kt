@@ -36,6 +36,7 @@ fun RadioGroup(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class) // ok
 @Composable
 fun RadioButtonItem(
     radioColor: RadioButtonColors = RadioButtonDefaults.colors(

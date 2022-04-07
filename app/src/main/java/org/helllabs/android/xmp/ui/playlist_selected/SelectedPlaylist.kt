@@ -25,7 +25,6 @@ import androidx.navigation.NavController
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.accompanist.insets.*
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.listItemsSingleChoice
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
@@ -57,7 +56,8 @@ fun SelectedPlaylist(
             context = context,
             modList = item.toList(),
             isLoop = viewModel.isLoopMode,
-            isShuffle = viewModel.isShuffleMode
+            isShuffle = viewModel.isShuffleMode,
+            keepFirst = true
         )
 
         clickPosition = -1
@@ -71,7 +71,8 @@ fun SelectedPlaylist(
             modList = list,
             start = clickPosition,
             isLoop = viewModel.isLoopMode,
-            isShuffle = viewModel.isShuffleMode
+            isShuffle = viewModel.isShuffleMode,
+            keepFirst = true
         )
 
         clickPosition = -1

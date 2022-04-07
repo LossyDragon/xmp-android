@@ -134,8 +134,10 @@ dependencies {
     implementation(Dependencies.SquareUp.okHttp)
     implementation(Dependencies.SquareUp.retrofit)
     implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:0.8.0")
-    implementation("io.github.pdvrieze.xmlutil:core-android:0.84.0-RC2-SNAPSHOT")
-    implementation("io.github.pdvrieze.xmlutil:serialization-android:0.84.0-RC2-SNAPSHOT")
+    implementation("io.github.pdvrieze.xmlutil:core-android:0.84.1")
+    implementation("io.github.pdvrieze.xmlutil:serialization-android:0.84.1")
+
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.5.0-alpha05")
 
     // Other Libs
     implementation(Dependencies.SquareUp.moshi)

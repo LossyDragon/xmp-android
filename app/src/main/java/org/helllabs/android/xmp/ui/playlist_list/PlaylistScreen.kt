@@ -5,8 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -27,6 +26,7 @@ import androidx.navigation.NavController
 import com.google.accompanist.insets.LocalWindowInsets
 import com.google.accompanist.insets.rememberInsetsPaddingValues
 import com.vanpra.composematerialdialogs.*
+import input
 import kotlinx.coroutines.flow.collectLatest
 import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.R
@@ -242,7 +242,10 @@ fun PlaylistScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class, // Scaffold and pinnedScrollBehavior()
+    ExperimentalFoundationApi::class // animateItemPlacement()
+)
 @Composable
 private fun PlaylistsContent(
     state: PlaylistState,

@@ -2,6 +2,8 @@ package org.helllabs.android.xmp.ui.components
 
 import androidx.compose.animation.graphics.ExperimentalAnimationGraphicsApi
 import androidx.compose.animation.graphics.res.animatedVectorResource
+import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
+import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
@@ -14,6 +16,8 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -170,7 +174,8 @@ fun PlayerButtons(
             shape = CircleShape,
             shadowElevation = 4.dp,
         ) {
-            val animIcon = animatedVectorResource(id = R.drawable.anim_pause_play)
+            val animIcon =
+                AnimatedImageVector.animatedVectorResource(id = R.drawable.anim_pause_play)
             var atEnd by remember { mutableStateOf(isPlaying) }
 
             IconButton(
@@ -181,7 +186,7 @@ fun PlayerButtons(
             ) {
                 Icon(
                     modifier = Modifier.scale(1.2f),
-                    painter = animIcon.painterFor(atEnd = atEnd),
+                    painter = rememberAnimatedVectorPainter(animIcon, atEnd),
                     contentDescription = stringResource(id = R.string.notif_play),
                     tint = Color.White
                 )

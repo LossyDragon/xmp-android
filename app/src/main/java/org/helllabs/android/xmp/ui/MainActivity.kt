@@ -86,22 +86,29 @@ class MainActivity : AppCompatActivity() {
                 AppTheme.MODE_DAY -> false
                 AppTheme.MODE_NIGHT -> true
             }
-            println("Theme is now: ${theme.value}")
+            logD("Theme is now: ${theme.value}")
 
             ProvideWindowInsets {
                 XmpTheme3(isDarkTheme = themeMode) {
-                    when {
-                        permissions.allPermissionsGranted -> {
-                            NavigationScreen(onBackPressedDispatcher) {
+                    if (permissions.allPermissionsGranted) {
+                        // All Permissions granted.
+                        NavigationScreen(
+                            onBackPressedCallback = onBackPressedDispatcher,
+                            bindService = {
                                 val service = Intent(context, PlayerService::class.java)
-                                bindService(service, connection, ComponentActivity.BIND_AUTO_CREATE)
+
+                                bindService(
+                                    service,
+                                    connection,
+                                    ComponentActivity.BIND_AUTO_CREATE
+                                )
                             }
-                        }
-                        permissions.shouldShowRationale || !permissions.permissionRequested -> {
+                        )
+                    } else {
+                        if (permissions.shouldShowRationale) {
                             // Need Permissions
                             NeedPermissionsScreen(permissions)
-                        }
-                        else -> {
+                        } else {
                             // Permissions most-likely permanently denied.
                             PermissionsDeniedScreen(permissions)
                         }

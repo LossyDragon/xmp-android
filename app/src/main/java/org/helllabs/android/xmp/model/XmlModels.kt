@@ -63,10 +63,8 @@ data class Module(
     @XmlElement(true) val license: License = License(),
     @XmlElement(true) val artistInfo: ArtistInfo = ArtistInfo(),
 ) {
-    @JvmName("getFormatText")
-    fun getFormat(): String = format
-
-    fun getBytesFormatted(): Int = bytes.div(1024)
+    val byteSize: Int
+        get() = bytes.div(1024)
 
     fun getArtist(): String {
         with(artistInfo) {
@@ -82,29 +80,30 @@ data class Module(
         }
     }
 
-    fun getSongTitle(): Spanned =
-        if (songtitle.isNotEmpty()) songtitle.asHtml() else "(untitled)".toSpanned()
+    fun getSongTitle(): Spanned {
+        val title = if (songtitle.isNotEmpty()) songtitle.asHtml() else "(untitled)"
+        return title.toSpanned()
+    }
 
     fun parseInstruments(): String {
         val lines = instruments.split("\n").toTypedArray()
         val buffer = StringBuilder()
 
-        lines.forEach {
-            buffer.appendLine(it.asHtml())
+        lines.map {
+            val line = it.asHtml()
+            buffer.appendLine(line)
         }
 
         return buffer.toString()
     }
 
-    @JvmName("getFilenameText")
-    fun getFilename(): String = filename
-
     fun parseComment(): String {
         val lines = comment.split("\n").toTypedArray()
         val buffer = StringBuilder()
 
-        lines.forEach {
-            buffer.appendLine(it.asHtml())
+        lines.map {
+            val line = it.asHtml()
+            buffer.appendLine(line)
         }
 
         return buffer.toString()

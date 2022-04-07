@@ -32,7 +32,8 @@
             android:name="org.helllabs.android.xmp.ui.MainActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:exported="true"
-            android:theme="@style/ComposeTheme">
+            android:theme="@style/ComposeTheme"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

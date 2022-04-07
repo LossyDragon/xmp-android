@@ -86,9 +86,9 @@ object PlayerUtil {
         context: Context,
         modList: List<String>,
         start: Int = 0,
-        keepFirst: Boolean = false,
-        isShuffle: Boolean = false,
         isLoop: Boolean = false,
+        isShuffle: Boolean = false,
+        keepFirst: Boolean = false,
     ) {
         XmpApplication.fileList = modList
         val intent = Intent(context, PlayerActivity::class.java).apply {

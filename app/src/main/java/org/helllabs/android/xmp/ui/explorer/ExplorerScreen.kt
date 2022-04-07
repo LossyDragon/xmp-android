@@ -23,12 +23,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
-import com.vanpra.composematerialdialogs.title
 import java.io.File
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.ui.components.*
+import org.helllabs.android.xmp.ui.player.PlayerUtil
 import org.helllabs.android.xmp.ui.theme.XmpTheme3
 import org.helllabs.android.xmp.util.*
 import org.helllabs.android.xmp.util.FileUtils.recursiveList
@@ -113,11 +113,6 @@ fun ExplorerScreen(
         }
     }
 
-//    val uiController = rememberSystemUiController()
-//    SideEffect {
-//        uiController.setNavigationBarColor(color = sectionBackgroundDark)
-//    }
-
     FileListLayout(
         onBack = { navController.popBackStack() },
         state = viewModel.state.value,
@@ -133,8 +128,15 @@ fun ExplorerScreen(
             if (items.isNullOrEmpty()) {
                 context.toast(R.string.error_no_files_to_play)
             } else {
-                context.logD("onPlay items: $items")
-                context.toast("onPlay") // TODO
+                // TODO: test this
+                PlayerUtil.playModule(
+                    context = context,
+                    modList = items,
+                    start = 0,
+                    keepFirst = !viewModel.isShuffleMode,
+                    isShuffle = viewModel.isShuffleMode,
+                    isLoop = viewModel.isLoopMode
+                )
             }
         },
         onItemClick = { index ->
@@ -145,8 +147,16 @@ fun ExplorerScreen(
                 val event = ExplorerEvent.DirectoryList(item.file!!)
                 viewModel.onEvent(event)
             } else {
-                context.logD("OnItemClick item: $item")
-                context.toast("OnItemClick") // TODO
+                // TODO still not done, need to collect items in current dir fist
+                //  then collect folders after.
+                //  then start at the offset.
+                PlayerUtil.playModule(
+                    context = context,
+                    modList = list.map { it.file!!.path }, // o.o?
+                    isLoop = viewModel.isLoopMode,
+                    isShuffle = viewModel.isShuffleMode,
+                    keepFirst = true,
+                )
             }
         },
         onItemLongClick = {
@@ -286,11 +296,8 @@ private fun BreadCrumbLayout(
         Divider(color = MaterialTheme.colorScheme.inverseSurface)
     }
 
-    crumbState.crumbList.let { crumbs ->
-        if (crumbs.isNotEmpty()) // Stop a rare crash if crumbs is somehow empty.
-            LaunchedEffect(crumbs) {
-                listState.animateScrollToItem(crumbs.size)
-            }
+    LaunchedEffect(crumbState.crumbList.size) {
+        listState.animateScrollToItem(crumbState.crumbList.size)
     }
 }
 

@@ -225,111 +225,109 @@ class PlayerActivity : ComponentActivity() {
         setContent {
             var currentViewer by remember { mutableStateOf(0) }
 
-            ProvideWindowInsets {
-                // Change System Bar colors.
-                val uiController = rememberSystemUiController()
-                SideEffect {
-                    uiController.setNavigationBarColor(color = sectionBackgroundDark)
-                    uiController.setStatusBarColor(color = darkPrimary)
-                }
+            // Change System Bar colors.
+            val uiController = rememberSystemUiController()
+            SideEffect {
+                uiController.setNavigationBarColor(color = sectionBackgroundDark)
+                uiController.setStatusBarColor(color = darkPrimary)
+            }
 
-                val androidView: @Composable (padding: PaddingValues) -> Unit = {
-                    AndroidView(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .waterfallPadding(
-                                bottom = it.calculateBottomPadding()
-                            ),
-                        factory = { context ->
-                            FrameLayout(context).apply {
-                                layoutParams = FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
-                                addView(viewer)
-                                setOnClickListener {
-                                    if (canChangeViewer) {
-                                        currentViewer++
-                                        currentViewer %= 3
+            val androidView: @Composable (padding: PaddingValues) -> Unit = {
+                AndroidView(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .waterfallPadding(
+                            bottom = it.calculateBottomPadding()
+                        ),
+                    factory = { context ->
+                        FrameLayout(context).apply {
+                            layoutParams = FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
+                            addView(viewer)
+                            setOnClickListener {
+                                if (canChangeViewer) {
+                                    currentViewer++
+                                    currentViewer %= 3
 
-                                        removeAllViews()
-                                        when (currentViewer) {
-                                            0 -> viewer = instrumentViewer
-                                            1 -> viewer = channelViewer
-                                            2 -> viewer = patternViewer
-                                        }
-                                        addView(viewer)
-
-                                        viewer.setup(modVars)
-                                        viewer.setRotation(playerDisplay.rotation)
+                                    removeAllViews()
+                                    when (currentViewer) {
+                                        0 -> viewer = instrumentViewer
+                                        1 -> viewer = channelViewer
+                                        2 -> viewer = patternViewer
                                     }
+                                    addView(viewer)
+
+                                    viewer.setup(modVars)
+                                    viewer.setRotation(playerDisplay.rotation)
                                 }
                             }
-                        },
-                    )
-                }
-
-                PlayerLayout3(
-                    viewModel = viewModel,
-                    androidView = androidView,
-                    onSeek = {
-                        if (isBound) {
-                            val seekTo = (it * 100).toLong()
-                            mediaControls.seekTo(seekTo)
-                            playTime = Xmp.time() / 100F
                         }
                     },
-                    onStop = {
-                        if (isBound) {
-                            logD("Stop button pressed")
-                            mediaControls.stop()
-                        }
-                    },
-                    onPrev = {
-                        if (isBound) {
-                            logD("Back button pressed")
-                            mediaControls.skipToPrevious()
-                            skipToPrevious = true
-                        }
-                    },
-                    onPlay = {
-                        if (isBound) {
-                            val isPaused = modPlayer.isPaused()
-                            logD("Play/pause button pressed (paused=$isPaused)")
-                            if (isPaused) {
-                                mediaControls.play()
-                                viewModel.setPlaying(true)
-                            } else {
-                                mediaControls.pause()
-                                viewModel.setPlaying(false)
-                            }
-                        }
-                    },
-                    onNext = {
-                        if (isBound) {
-                            logD("Next button pressed")
-                            mediaControls.skipToNext()
-                            skipToPrevious = false
-                        }
-                    },
-                    onRepeat = {
-                        if (isBound) {
-                            logD("Loop button pressed")
-                            val bool = modPlayer.toggleLoop()
-                            viewModel.setRepeat(bool)
-                        }
-                    },
-                    onAllSeq = {
-                        if (isBound) {
-                            val bool = modPlayer.toggleAllSequences()
-                            viewModel.setAllSequences(bool)
-                        }
-                    },
-                    onSequence = {
-                        if (isBound) {
-                            modPlayer.setSequence(it)
-                            viewModel.currentSequence(it)
-                        }
-                    }
                 )
             }
+
+            PlayerLayout3(
+                viewModel = viewModel,
+                androidView = androidView,
+                onSeek = {
+                    if (isBound) {
+                        val seekTo = (it * 100).toLong()
+                        mediaControls.seekTo(seekTo)
+                        playTime = Xmp.time() / 100F
+                    }
+                },
+                onStop = {
+                    if (isBound) {
+                        logD("Stop button pressed")
+                        mediaControls.stop()
+                    }
+                },
+                onPrev = {
+                    if (isBound) {
+                        logD("Back button pressed")
+                        mediaControls.skipToPrevious()
+                        skipToPrevious = true
+                    }
+                },
+                onPlay = {
+                    if (isBound) {
+                        val isPaused = modPlayer.isPaused()
+                        logD("Play/pause button pressed (paused=$isPaused)")
+                        if (isPaused) {
+                            mediaControls.play()
+                            viewModel.setPlaying(true)
+                        } else {
+                            mediaControls.pause()
+                            viewModel.setPlaying(false)
+                        }
+                    }
+                },
+                onNext = {
+                    if (isBound) {
+                        logD("Next button pressed")
+                        mediaControls.skipToNext()
+                        skipToPrevious = false
+                    }
+                },
+                onRepeat = {
+                    if (isBound) {
+                        logD("Loop button pressed")
+                        val bool = modPlayer.toggleLoop()
+                        viewModel.setRepeat(bool)
+                    }
+                },
+                onAllSeq = {
+                    if (isBound) {
+                        val bool = modPlayer.toggleAllSequences()
+                        viewModel.setAllSequences(bool)
+                    }
+                },
+                onSequence = {
+                    if (isBound) {
+                        modPlayer.setSequence(it)
+                        viewModel.currentSequence(it)
+                    }
+                }
+            )
         }
 
         if (PrefManager.keepScreenOn)
