@@ -19,11 +19,12 @@ object Dependencies {
     // https://mvnrepository.com/artifact/androidx.preference/preference-ktx
     // https://mvnrepository.com/artifact/androidx.recyclerview/recyclerview
     object SupportLibs {
-        const val media = "androidx.media:media:1.6.0-beta01"
+        const val media = "androidx.media:media:1.6.0-rc01"
         const val preferenceKtx = "androidx.preference:preference-ktx:1.2.0"
-        const val recyclerview = "androidx.recyclerview:recyclerview:1.3.0-alpha01"
+        const val recyclerview = "androidx.recyclerview:recyclerview:1.3.0-alpha02"
     }
 
+    // https://github.com/material-components/material-components-android/releases/
     // https://mvnrepository.com/artifact/com.google.android.material/material
     object Material {
         private const val version = "1.6.0-beta01"
@@ -41,7 +42,7 @@ object Dependencies {
         const val iconsExtended = "androidx.compose.material:material-icons-extended:$composeVersion"
         const val livedata = "androidx.compose.runtime:runtime-livedata:$composeVersion"
         const val material = "androidx.compose.material:material:$composeVersion"
-        const val navigation = "androidx.navigation:navigation-compose:2.4.1"
+        const val navigation = "androidx.navigation:navigation-compose:2.4.2"
         const val tooling = "androidx.compose.ui:ui-tooling:$composeVersion"
         const val ui = "androidx.compose.ui:ui:$composeVersion"
         const val uiUtil = "androidx.compose.ui:ui-util:$composeVersion"
@@ -92,6 +93,6 @@ object Dependencies {
     object SquareUp {
         const val okHttp = "com.squareup.okhttp3:okhttp:4.9.3"
         const val retrofit = "com.squareup.retrofit2:retrofit:2.9.0"
-        const val moshi = "com.squareup.moshi:moshi-kotlin:1.12.0"
+        const val moshi = "com.squareup.moshi:moshi-kotlin:1.13.0"
     }
 }

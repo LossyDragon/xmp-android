@@ -18,6 +18,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -87,6 +88,11 @@ class MainActivity : AppCompatActivity() {
                 AppTheme.MODE_NIGHT -> true
             }
             logD("Theme is now: ${theme.value}")
+
+            // Invoke permissions
+            LaunchedEffect(true) {
+                permissions.launchMultiplePermissionRequest()
+            }
 
             ProvideWindowInsets {
                 XmpTheme3(isDarkTheme = themeMode) {
@@ -174,25 +180,23 @@ private fun PermissionsScreen(
     buttonText: String,
     onClicked: () -> Unit
 ) {
-    XmpTheme3 {
-        Surface {
-            Column(
-                modifier = Modifier
-                    .waterfallPadding()
-                    .fillMaxSize()
-                    .systemBarsPadding(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(text = message)
-                Text(text = permissionsList)
-                Spacer(modifier = Modifier.height(32.dp))
-                Button(onClick = onClicked) {
-                    Text(
-                        text = buttonText,
-                        color = Color.White
-                    )
-                }
+    Surface {
+        Column(
+            modifier = Modifier
+                .waterfallPadding()
+                .fillMaxSize()
+                .systemBarsPadding(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(text = message)
+            Text(text = permissionsList)
+            Spacer(modifier = Modifier.height(32.dp))
+            Button(onClick = onClicked) {
+                Text(
+                    text = buttonText,
+                    color = Color.White
+                )
             }
         }
     }
