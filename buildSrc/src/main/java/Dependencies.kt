@@ -71,7 +71,7 @@ object Dependencies {
     // https://mvnrepository.com/artifact/androidx.hilt/hilt-navigation-compose
     object Hilt {
         const val android = "com.google.dagger:hilt-android:$hiltAndroid"
-        const val kaptAndroidCompiler = "com.google.dagger:hilt-android-compiler:$hiltAndroid"
+        const val kaptAndroidCompiler = "com.google.dagger:hilt-compiler:$hiltAndroid"
         const val composeNav = "androidx.hilt:hilt-navigation-compose:1.0.0"
     }
 

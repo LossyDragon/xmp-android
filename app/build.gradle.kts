@@ -5,9 +5,9 @@ plugins {
     id("com.android.application")
     kotlin("android")
     kotlin("kapt")
-    id("kotlinx-serialization")
-    id("dagger.hilt.android.plugin")
-    id("org.jlleitschuh.gradle.ktlint")
+    kotlin("plugin.serialization") version Dependencies.kotlinVersion
+    id("com.google.dagger.hilt.android") version Dependencies.hiltAndroid
+    id("org.jlleitschuh.gradle.ktlint") version Dependencies.ktlintGradle
 }
 
 android {
