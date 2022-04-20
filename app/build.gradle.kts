@@ -98,11 +98,12 @@ dependencies {
     implementation(Dependencies.SupportLibs.media)
     implementation(Dependencies.SupportLibs.recyclerview)
 
-    implementation(Dependencies.Material.materialComponents)
-
+    // Compose
+    debugImplementation(Dependencies.Compose.tooling)
     implementation(Dependencies.Compose.Accompanist.controller)
     implementation(Dependencies.Compose.Accompanist.insets)
     implementation(Dependencies.Compose.Accompanist.permissions)
+    implementation(Dependencies.Compose.Dialogs.core)
     implementation(Dependencies.Compose.Material3.material3)
     implementation(Dependencies.Compose.activity)
     implementation(Dependencies.Compose.animation)
@@ -113,20 +114,14 @@ dependencies {
     implementation(Dependencies.Compose.livedata)
     implementation(Dependencies.Compose.material)
     implementation(Dependencies.Compose.navigation)
-    implementation(Dependencies.Compose.tooling)
+    implementation(Dependencies.Compose.toolingPreview)
     implementation(Dependencies.Compose.ui)
     implementation(Dependencies.Compose.uiUtil)
-
-    // AIDL-like replacement
-    implementation(Dependencies.EventBus.eventBus)
 
     // Dep Injection
     implementation(Dependencies.Hilt.android)
     implementation(Dependencies.Hilt.composeNav)
     kapt(Dependencies.Hilt.kaptAndroidCompiler)
-
-    // Material Dialogs
-    implementation(Dependencies.Compose.Dialogs.core)
 
     // Http & Download
     implementation(Dependencies.XFetch2.fetch)
@@ -137,7 +132,8 @@ dependencies {
     implementation("io.github.pdvrieze.xmlutil:core-android:0.84.1")
     implementation("io.github.pdvrieze.xmlutil:serialization-android:0.84.1")
 
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.5.0-alpha05")
+    // AIDL-like replacement
+    implementation(Dependencies.EventBus.eventBus)
 
     // Other Libs
     implementation(Dependencies.SquareUp.moshi)
@@ -150,30 +146,4 @@ ktlint {
     android.set(true)
     // Ignore: wildcard imports
     disabledRules.add("no-wildcard-imports")
-}
-
-tasks {
-    // Register manually: ktlintCheck, ktlintFormat, xmp
-
-    val fetchXmp by registering(Exec::class) {
-        val args = "rm -rf libxmp && git clone https://github.com/libxmp/libxmp.git && exit"
-        val file = File("../app/src/main/cpp")
-        workingDir(file)
-        commandLine("bash", "-c", args)
-    }
-
-    // sudo apt install build-essential autoconf -y
-    val buildXmp by registering(Exec::class) {
-        val args = "autoconf && ./configure && make && make check && " +
-            "(cd test-dev; autoconf && ./configure && make) && exit"
-        val file = File("../app/src/main/cpp/libxmp")
-        workingDir(file)
-        commandLine("bash", "-c", args)
-    }
-
-    // Combined task to fetch a new copy of libxmp, then build it.
-    register("xmp") {
-        dependsOn(fetchXmp)
-        dependsOn(buildXmp).mustRunAfter(fetchXmp)
-    }
 }

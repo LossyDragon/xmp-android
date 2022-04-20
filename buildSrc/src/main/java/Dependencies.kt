@@ -24,13 +24,6 @@ object Dependencies {
         const val recyclerview = "androidx.recyclerview:recyclerview:1.3.0-alpha02"
     }
 
-    // https://github.com/material-components/material-components-android/releases/
-    // https://mvnrepository.com/artifact/com.google.android.material/material
-    object Material {
-        private const val version = "1.6.0-beta01"
-        const val materialComponents = "com.google.android.material:material:$version"
-    }
-
     // https://mvnrepository.com/artifact/androidx.activity/activity-compose
     // https://mvnrepository.com/artifact/androidx.navigation/navigation-compose
     object Compose {
@@ -44,6 +37,7 @@ object Dependencies {
         const val material = "androidx.compose.material:material:$composeVersion"
         const val navigation = "androidx.navigation:navigation-compose:2.4.2"
         const val tooling = "androidx.compose.ui:ui-tooling:$composeVersion"
+        const val toolingPreview = "androidx.compose.ui:ui-tooling-preview:$composeVersion"
         const val ui = "androidx.compose.ui:ui:$composeVersion"
         const val uiUtil = "androidx.compose.ui:ui-util:$composeVersion"
 

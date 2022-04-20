@@ -16,7 +16,7 @@
 
 <resources>
 
-    <style name="ComposeTheme" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="ComposeTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">?attr/isLightTheme</item>
     </style>
