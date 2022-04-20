@@ -3,8 +3,50 @@ package org.helllabs.android.xmp.util
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
 import androidx.preference.PreferenceManager
+import de.schnettler.datastore.manager.DataStoreManager
+import de.schnettler.datastore.manager.PreferenceRequest
 import org.helllabs.android.xmp.ui.MainActivity
+
+object PrefManager2 {
+
+    val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
+    private lateinit var dataStoreManager: DataStoreManager
+
+    fun init(context: Context) {
+        dataStoreManager = DataStoreManager(context.dataStore)
+    }
+
+    private const val PREF_THEME = "pref_theme"
+    private const val PREF_TMA_FOLDER = "modarchive_folder"
+    private const val PREF_ARTIST_FOLDER = "artist_folder"
+    private const val PREF_INSTALL_EXAMPLES = "pref_install_examples"
+
+    val themeRequest = PreferenceRequest(
+        key = stringPreferencesKey(PREF_THEME),
+        defaultValue = "auto"
+    )
+
+    val useTmaFolderRequest = PreferenceRequest(
+        key = booleanPreferencesKey(PREF_TMA_FOLDER),
+        defaultValue = true
+    )
+
+    val useArtistFolderRequest = PreferenceRequest(
+        key = booleanPreferencesKey(PREF_ARTIST_FOLDER),
+        defaultValue = true
+    )
+
+    val installExamplesRequest = PreferenceRequest(
+        key = booleanPreferencesKey(PREF_INSTALL_EXAMPLES),
+        defaultValue = true
+    )
+}
 
 object PrefManager {
 

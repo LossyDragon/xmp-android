@@ -7,7 +7,6 @@ import androidx.core.graphics.ColorUtils
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.util.Api
-
 import org.helllabs.android.xmp.util.logD
 
 @SuppressLint("ViewConstructor")

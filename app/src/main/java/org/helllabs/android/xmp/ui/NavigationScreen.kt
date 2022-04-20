@@ -1,6 +1,7 @@
 package org.helllabs.android.xmp.ui
 
 import androidx.activity.OnBackPressedDispatcher
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -15,12 +16,11 @@ import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.*
 import androidx.navigation.navigation
-import com.google.accompanist.insets.navigationBarsPadding
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.ui.explorer.ExplorerScreen
 import org.helllabs.android.xmp.ui.playlist_list.PlaylistScreen
 import org.helllabs.android.xmp.ui.playlist_selected.SelectedPlaylist
-import org.helllabs.android.xmp.ui.preferences.PreferencesScreen
+import org.helllabs.android.xmp.ui.preferences.*
 import org.helllabs.android.xmp.ui.search.SearchErrorScreen
 import org.helllabs.android.xmp.ui.search.SearchHistoryScreen
 import org.helllabs.android.xmp.ui.search.SearchScreen
@@ -31,6 +31,7 @@ import org.helllabs.android.xmp.ui.search.result.SearchListResult
 private const val NAV_ROOT = "nav_root"
 private const val NAV_PLAYLIST_ROOT = "nav_playlist_root"
 private const val NAV_SEARCH_ROOT = "nav_search_root"
+private const val NAV_SETTINGS_ROOT = "nav_settings_root"
 
 sealed class NavScreens(val route: String) {
     object Playlists : NavScreens("playlists")
@@ -43,6 +44,10 @@ sealed class NavScreens(val route: String) {
     object SearchModuleResult : NavScreens("search_module_result")
     object SearchListResult : NavScreens("search_list_result")
     object Settings : NavScreens("settings")
+    object SettingsPlaylist : NavScreens("settings_playlist")
+    object SettingsSound : NavScreens("settings_sound")
+    object SettingsInterface : NavScreens("settings_interface")
+    object SettingsDownload : NavScreens("settings_download")
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -171,11 +176,40 @@ fun NavigationScreen(
                     )
                 }
             }
-            composable(NavScreens.Settings.route) {
-                PreferencesScreen(
-                    navController = navController,
-                    onBackPressedCallback = onBackPressedCallback
-                )
+            navigation(
+                startDestination = NavScreens.Settings.route,
+                route = NAV_SETTINGS_ROOT
+            ) {
+                composable(NavScreens.Settings.route) {
+                    PreferencesScreen(
+                        navController = navController,
+                        onBackPressedCallback = onBackPressedCallback
+                    )
+                }
+                composable(NavScreens.SettingsPlaylist.route) {
+                    PreferencesPlaylistScreen(
+                        navController = navController,
+                        onBackPressedCallback = onBackPressedCallback
+                    )
+                }
+                composable(NavScreens.SettingsSound.route) {
+                    PreferencesSoundScreen(
+                        navController = navController,
+                        onBackPressedCallback = onBackPressedCallback
+                    )
+                }
+                composable(NavScreens.SettingsInterface.route) {
+                    PreferencesInterfaceScreen(
+                        navController = navController,
+                        onBackPressedCallback = onBackPressedCallback
+                    )
+                }
+                composable(NavScreens.SettingsDownload.route) {
+                    PreferencesDownloadScreen(
+                        navController = navController,
+                        onBackPressedCallback = onBackPressedCallback
+                    )
+                }
             }
         }
     }

@@ -346,5 +346,7 @@
     <string name="nav_title_explorer">Explorer</string>
     <string name="nav_title_search">Search</string>
     <string name="nav_title_settings">Settings</string>
+    <string name="pref_title_theme">Choose Theme</string>
+    <string name="pref_summary_theme">Choose the interface theme for the application</string>
 
 </resources>

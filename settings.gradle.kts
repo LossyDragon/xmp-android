@@ -11,6 +11,7 @@ dependencyResolutionManagement {
         google()
         jcenter() // xFetch2
         mavenCentral()
+        maven { url = uri("https://jitpack.io") } // Compose preferences
     }
 }
 rootProject.name = "xmp android"

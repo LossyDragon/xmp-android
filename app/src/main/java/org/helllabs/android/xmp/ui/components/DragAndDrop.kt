@@ -240,18 +240,19 @@ fun LazyItemScope.DraggableItem(
 ) {
     val dragging = index == dragDropState.draggingItemIndex
     val draggingModifier = when {
-        dragging -> Modifier
-            .zIndex(1f)
-            .graphicsLayer {
-                translationY = dragDropState.draggingItemOffset
-            }
-        index == dragDropState.previousIndexOfDraggedItem -> Modifier
-            .zIndex(1f)
-            .graphicsLayer {
-                translationY = dragDropState.previousItemOffset.value
-            }
+        dragging ->
+            Modifier
+                .zIndex(1f)
+                .graphicsLayer {
+                    translationY = dragDropState.draggingItemOffset
+                }
+        index == dragDropState.previousIndexOfDraggedItem ->
+            Modifier
+                .zIndex(1f)
+                .graphicsLayer {
+                    translationY = dragDropState.previousItemOffset.value
+                }
         else -> Modifier.animateItemPlacement()
-
     }
     Column(modifier = modifier.then(draggingModifier)) {
         content(dragging)

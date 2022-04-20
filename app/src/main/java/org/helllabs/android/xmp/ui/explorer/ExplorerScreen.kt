@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
+import java.io.File
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import org.helllabs.android.xmp.R
@@ -30,7 +31,6 @@ import org.helllabs.android.xmp.ui.components.*
 import org.helllabs.android.xmp.ui.player.PlayerUtil
 import org.helllabs.android.xmp.ui.theme.XmpTheme3
 import org.helllabs.android.xmp.util.*
-import java.io.File
 
 @Composable
 fun ExplorerScreen(

@@ -138,6 +138,9 @@ dependencies {
     // Other Libs
     implementation(Dependencies.SquareUp.moshi)
 
+    implementation("com.github.Sh4dowSoul.ComposePreferences:preferences-material3:0.1.4")
+    implementation("com.github.Sh4dowSoul.ComposePreferences:datastore-manager:0.1.4")
+
     // LeakCanary
     // debugImplementation("com.squareup.leakcanary:leakcanary-android:2.7")
 }

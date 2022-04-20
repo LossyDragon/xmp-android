@@ -18,5 +18,4 @@ object Api {
 
     val isAtLeastS: Boolean
         get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-
 }
