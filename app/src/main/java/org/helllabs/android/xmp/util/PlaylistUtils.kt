@@ -2,7 +2,6 @@ package org.helllabs.android.xmp.util
 
 import java.io.File
 import java.io.IOException
-import java.util.*
 import org.helllabs.android.xmp.Xmp.testModule
 import org.helllabs.android.xmp.model.ModInfo
 import org.helllabs.android.xmp.model.ModInfoWithPath
@@ -179,7 +178,7 @@ object PlaylistUtils {
         try {
             file.delete()
             file.createNewFile()
-            FileUtils.writeToFile(file, info)
+            Files.writeToFile(file, info)
         } catch (e: IOException) {
             return false
         }
@@ -212,7 +211,7 @@ object PlaylistUtils {
 
         try {
             val file = File(MainActivity.DATA_DIR, name + PLAYLIST_SUFFIX)
-            FileUtils.writeToFile(file, lines)
+            Files.writeToFile(file, lines)
         } catch (e: IOException) {
             return false
         }
@@ -229,7 +228,7 @@ object PlaylistUtils {
     fun readComment(name: String): String? {
         return try {
             val file = Playlist.CommentFile(name)
-            FileUtils.readFromFile(file)
+            Files.readFromFile(file)
         } catch (e: IOException) {
             // Don't care
             null

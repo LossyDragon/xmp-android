@@ -19,7 +19,7 @@ import org.helllabs.android.xmp.model.Module
 import org.helllabs.android.xmp.model.ModuleResult
 import org.helllabs.android.xmp.ui.search.ModArchiveConstants
 import org.helllabs.android.xmp.ui.search.ModArchiveConstants.isSupported
-import org.helllabs.android.xmp.util.FileUtils
+import org.helllabs.android.xmp.util.Files
 import org.helllabs.android.xmp.util.PrefManager
 import org.helllabs.android.xmp.util.logE
 import org.helllabs.android.xmp.util.logI
@@ -115,7 +115,7 @@ class ModuleResultViewModel
 
     private fun existingModule() {
         val module = state.value.module!!.module
-        val file = FileUtils.getDownloadPath(module)
+        val file = Files.getDownloadPath(module)
         val url = module.url
         val mod = module.filename
 
@@ -123,7 +123,7 @@ class ModuleResultViewModel
     }
 
     private fun deleteModule() {
-        val result = FileUtils.deleteModuleFile(state.value.module?.module!!)
+        val result = Files.deleteModuleFile(state.value.module?.module!!)
         logI("Module deleted was: $result")
         _state.value = state.value.copy(
             moduleExists = doesModuleExist(state.value.module),
@@ -204,7 +204,7 @@ class ModuleResultViewModel
     }
 
     private fun doesModuleExist(result: ModuleResult?): Boolean {
-        val file = FileUtils.localFile(result?.module)
+        val file = Files.localFile(result?.module)
         return file?.exists() ?: false
     }
 

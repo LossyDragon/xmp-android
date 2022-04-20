@@ -5,9 +5,9 @@ import java.util.*
 import org.helllabs.android.xmp.model.PlaylistItem
 import org.helllabs.android.xmp.model.PlaylistType
 import org.helllabs.android.xmp.ui.MainActivity
-import org.helllabs.android.xmp.util.FileUtils.readFromFile
-import org.helllabs.android.xmp.util.FileUtils.removeLineFromFile
-import org.helllabs.android.xmp.util.FileUtils.writeToFile
+import org.helllabs.android.xmp.util.Files.readFromFile
+import org.helllabs.android.xmp.util.Files.removeLineFromFile
+import org.helllabs.android.xmp.util.Files.writeToFile
 import org.helllabs.android.xmp.util.PlaylistUtils
 import org.helllabs.android.xmp.util.PlaylistUtils.COMMENT_SUFFIX
 import org.helllabs.android.xmp.util.PlaylistUtils.DEFAULT_LOOP_MODE

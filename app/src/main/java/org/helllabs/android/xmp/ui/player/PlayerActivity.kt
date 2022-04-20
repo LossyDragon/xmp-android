@@ -29,7 +29,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import com.google.accompanist.insets.ProvideWindowInsets
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import dagger.hilt.android.AndroidEntryPoint
@@ -411,7 +410,7 @@ class PlayerActivity : ComponentActivity() {
         var path: String? = null
         if (intent.data != null) {
             path = if (intent.action == Intent.ACTION_VIEW) {
-                FileUtils.getPathFromUri(this, intent.data!!)
+                Files.getPathFromUri(this, intent.data!!)
             } else {
                 intent.data!!.path
             }

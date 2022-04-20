@@ -6,13 +6,22 @@ import android.graphics.*
 import androidx.core.graphics.ColorUtils
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
-import org.helllabs.android.xmp.util.color
+import org.helllabs.android.xmp.util.Api
+
 import org.helllabs.android.xmp.util.logD
 
 @SuppressLint("ViewConstructor")
 class InstrumentViewer(context: Context, val background: Int) : Viewer(context, background) {
 
-    private val startBlue: Int = resources.color(R.color.accent)
+    private val startBlue: Int
+        get() {
+            return if (Api.isAtLeastM) {
+                resources.getColor(R.color.accent, null)
+            } else {
+                @Suppress("DEPRECATION")
+                resources.getColor(R.color.accent)
+            }
+        }
 
     private lateinit var insName: Array<String>
     private val barPaint = arrayListOf<Paint>()

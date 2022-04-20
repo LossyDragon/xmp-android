@@ -10,7 +10,7 @@ import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.model.Module
 import org.helllabs.android.xmp.ui.search.ModArchiveConstants
 
-object FileUtils {
+object Files {
 
     fun localFile(module: Module?): File? {
         if (module == null || module.url.isBlank())

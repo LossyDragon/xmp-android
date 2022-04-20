@@ -23,7 +23,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
-import java.io.File
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import org.helllabs.android.xmp.R
@@ -31,7 +30,7 @@ import org.helllabs.android.xmp.ui.components.*
 import org.helllabs.android.xmp.ui.player.PlayerUtil
 import org.helllabs.android.xmp.ui.theme.XmpTheme3
 import org.helllabs.android.xmp.util.*
-import org.helllabs.android.xmp.util.FileUtils.recursiveList
+import java.io.File
 
 @Composable
 fun ExplorerScreen(
@@ -79,7 +78,7 @@ fun ExplorerScreen(
         positiveButtonText = R.string.create,
         negativeButtonText = R.string.cancel,
         onPositiveButton = {
-            val ret = FileUtils.installAssets(
+            val ret = Files.installAssets(
                 assets,
                 viewModel.state.value.currentFile,
                 PrefManager.installExamples
@@ -124,7 +123,7 @@ fun ExplorerScreen(
         onShuffleMode = { viewModel.isShuffleMode = it },
         onPlay = {
             val file = File(viewModel.state.value.currentFile)
-            val items = recursiveList(file)
+            val items = Files.recursiveList(file)
             if (items.isNullOrEmpty()) {
                 context.toast(R.string.error_no_files_to_play)
             } else {

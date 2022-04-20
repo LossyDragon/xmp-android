@@ -34,14 +34,15 @@ import com.google.accompanist.permissions.MultiplePermissionsState
 import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import dagger.hilt.android.AndroidEntryPoint
-import java.io.File
-import javax.inject.Inject
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.ui.components.waterfallPadding
 import org.helllabs.android.xmp.ui.theme.XmpTheme3
-import org.helllabs.android.xmp.util.*
+import org.helllabs.android.xmp.util.logD
+import org.helllabs.android.xmp.util.logE
+import org.helllabs.android.xmp.util.logW
+import java.io.File
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {

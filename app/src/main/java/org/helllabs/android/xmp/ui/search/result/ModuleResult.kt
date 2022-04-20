@@ -118,8 +118,8 @@ fun ModuleResultScreen(
         onBack = { navController.popBackStack() },
         onDelete = { moduleDeleteState.show() },
         onPlay = { module ->
-            if (FileUtils.localFile(module)!!.exists()) {
-                val path = FileUtils.localFile(module)!!.path
+            if (Files.localFile(module)!!.exists()) {
+                val path = Files.localFile(module)!!.path
                 val modList = ArrayList<String>()
 
                 modList.add(path)
@@ -131,11 +131,11 @@ fun ModuleResultScreen(
                 context.launchActivity(intent)
             } else {
                 // Does not exist, download module
-                val modDir = FileUtils.getDownloadPath(module)
+                val modDir = Files.getDownloadPath(module)
                 val url = module.url
 
                 context.logI("Downloaded $url to $modDir")
-                if (FileUtils.localFile(url, modDir).exists()) {
+                if (Files.localFile(url, modDir).exists()) {
                     fileExistsState.show()
                 } else {
                     val mod = module.filename

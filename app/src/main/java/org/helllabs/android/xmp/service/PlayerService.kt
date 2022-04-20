@@ -27,7 +27,7 @@ import org.helllabs.android.xmp.service.receiver.ControllerReceiver
 import org.helllabs.android.xmp.service.receiver.NoisyReceiver
 import org.helllabs.android.xmp.service.utils.*
 import org.helllabs.android.xmp.util.*
-import org.helllabs.android.xmp.util.FileUtils.basename
+import org.helllabs.android.xmp.util.Files.basename
 import org.helllabs.android.xmp.util.PrefManager
 
 // Binder is leaking via leak canary  ¯\_(ツ)_/¯
