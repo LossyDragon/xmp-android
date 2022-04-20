@@ -4,48 +4,37 @@ import android.os.Bundle
 import android.view.MenuItem
 import androidx.preference.*
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.service.PlayerService
-import org.helllabs.android.xmp.util.AppTheme
-import org.helllabs.android.xmp.util.PrefTheme
 import org.helllabs.android.xmp.util.logD
 
 @AndroidEntryPoint
 class PreferencesFragment : PreferenceFragmentCompat() {
-
-    @Inject
-    lateinit var prefTheme: PrefTheme
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         // Observe live if player is alive
         PlayerService.isPlayerAlive.observe(
-            this,
-            { isAlive ->
-                findPreference<PreferenceScreen>("sound_screen")?.let {
-                    if (isAlive) {
-                        it.isEnabled = false
-                        it.title = getString(R.string.pref_category_sound_disabled)
-                    } else {
-                        it.isEnabled = true
-                        it.title = getString(R.string.pref_category_sound)
-                    }
+            this
+        ) { isAlive ->
+            findPreference<PreferenceScreen>("sound_screen")?.let {
+                if (isAlive) {
+                    it.isEnabled = false
+                    it.title = getString(R.string.pref_category_sound_disabled)
+                } else {
+                    it.isEnabled = true
+                    it.title = getString(R.string.pref_category_sound)
                 }
             }
-        )
+        }
 
         findPreference<ListPreference>("themePref")?.let {
             it.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _, newValue ->
                 val value = newValue as String
                 logD("Theme: $value")
 
-                when (value) {
-                    "auto" -> prefTheme.theme = AppTheme.fromOrdinal(AppTheme.MODE_AUTO.ordinal)
-                    "dark" -> prefTheme.theme = AppTheme.fromOrdinal(AppTheme.MODE_NIGHT.ordinal)
-                    "light" -> prefTheme.theme = AppTheme.fromOrdinal(AppTheme.MODE_DAY.ordinal)
-                }
+                // no op
 
                 true
             }

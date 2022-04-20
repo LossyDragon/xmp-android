@@ -12,14 +12,12 @@ import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -48,9 +46,6 @@ import org.helllabs.android.xmp.util.*
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
-    @Inject
-    lateinit var prefTheme: PrefTheme
-
     // Connection
     private val connection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
@@ -75,19 +70,12 @@ class MainActivity : AppCompatActivity() {
         logD("onCreate")
         setContent {
             val context = LocalContext.current
-            val theme = prefTheme.themeStream.collectAsState()
             val permissions = rememberMultiplePermissionsState(
                 listOf(
                     Manifest.permission.READ_EXTERNAL_STORAGE,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE
                 )
             )
-            val themeMode = when (theme.value) {
-                AppTheme.MODE_AUTO -> isSystemInDarkTheme()
-                AppTheme.MODE_DAY -> false
-                AppTheme.MODE_NIGHT -> true
-            }
-            logD("Theme is now: ${theme.value}")
 
             // Invoke permissions
             LaunchedEffect(true) {
@@ -95,7 +83,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             ProvideWindowInsets {
-                XmpTheme3(isDarkTheme = themeMode) {
+                XmpTheme3 {
                     if (permissions.allPermissionsGranted) {
                         // All Permissions granted.
                         NavigationScreen(
