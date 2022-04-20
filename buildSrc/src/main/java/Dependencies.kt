@@ -32,7 +32,7 @@ object Dependencies {
         const val foundation = "androidx.compose.foundation:foundation:$composeVersion"
         const val graphics = "androidx.compose.animation:animation-graphics:$composeVersion"
         const val iconsCore = "androidx.compose.material:material-icons-core:$composeVersion"
-        const val iconsExtended = "androidx.compose.material:material-icons-extended:$composeVersion"
+        const val iconsExt = "androidx.compose.material:material-icons-extended:$composeVersion"
         const val livedata = "androidx.compose.runtime:runtime-livedata:$composeVersion"
         const val material = "androidx.compose.material:material:$composeVersion"
         const val navigation = "androidx.navigation:navigation-compose:2.4.2"
@@ -84,9 +84,18 @@ object Dependencies {
     // https://search.maven.org/artifact/com.squareup.okhttp3/okhttp
     // https://search.maven.org/artifact/com.squareup.retrofit2/retrofit
     // https://search.maven.org/artifact/com.squareup.moshi/moshi-kotlin/
+    // https://mvnrepository.com/artifact/com.jakewharton.retrofit/retrofit2-kotlinx-serialization-converter
     object SquareUp {
         const val okHttp = "com.squareup.okhttp3:okhttp:4.9.3"
         const val retrofit = "com.squareup.retrofit2:retrofit:2.9.0"
         const val moshi = "com.squareup.moshi:moshi-kotlin:1.13.0"
+        const val serialization = "com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:0.8.0"
+    }
+
+    // https://github.com/pdvrieze/xmlutil/releases
+    object XmlUtil {
+        private const val version = "0.84.1"
+        const val core = "io.github.pdvrieze.xmlutil:core-android:$version"
+        const val serialization = "io.github.pdvrieze.xmlutil:serialization-android:$version"
     }
 }

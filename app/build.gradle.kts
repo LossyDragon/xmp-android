@@ -110,7 +110,7 @@ dependencies {
     implementation(Dependencies.Compose.foundation)
     implementation(Dependencies.Compose.graphics)
     implementation(Dependencies.Compose.iconsCore)
-    implementation(Dependencies.Compose.iconsExtended)
+    implementation(Dependencies.Compose.iconsExt)
     implementation(Dependencies.Compose.livedata)
     implementation(Dependencies.Compose.material)
     implementation(Dependencies.Compose.navigation)
@@ -128,9 +128,9 @@ dependencies {
     implementation(Dependencies.XFetch2.okHttp)
     implementation(Dependencies.SquareUp.okHttp)
     implementation(Dependencies.SquareUp.retrofit)
-    implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:0.8.0")
-    implementation("io.github.pdvrieze.xmlutil:core-android:0.84.1")
-    implementation("io.github.pdvrieze.xmlutil:serialization-android:0.84.1")
+    implementation(Dependencies.SquareUp.serialization)
+    implementation(Dependencies.XmlUtil.core)
+    implementation(Dependencies.XmlUtil.serialization)
 
     // AIDL-like replacement
     implementation(Dependencies.EventBus.eventBus)
