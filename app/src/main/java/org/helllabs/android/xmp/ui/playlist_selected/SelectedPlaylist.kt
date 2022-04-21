@@ -25,6 +25,7 @@ import androidx.navigation.NavController
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.accompanist.insets.navigationBarsPadding
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.listItemsSingleChoice
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState

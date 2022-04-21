@@ -30,7 +30,10 @@ private const val supportUrl = "https://github.com/cmatsuoka/xmp-android/issues"
 private const val repoUrl = "https://github.com/libxmp/libxmp"
 private const val libXmpUrl = "http://xmp.sourceforge.net/"
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalComposeUiApi::class
+)
 @Composable
 fun PreferencesScreen(
     navController: NavController,
@@ -59,11 +62,7 @@ fun PreferencesScreen(
                     preferenceItems = listOf(
                         Preference.PreferenceItem.ListPreference(
                             enabled = true,
-                            entries = mapOf(
-                                "light" to "Light",
-                                "dark" to "Dark",
-                                "auto" to "Auto (Default)"
-                            ),
+                            entries = PrefManager2.prefThemeItems,
                             icon = { PreferenceIcon(icon = Icons.Default.LightMode) },
                             request = PrefManager2.themeRequest,
                             singleLineTitle = true,

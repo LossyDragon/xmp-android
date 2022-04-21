@@ -1,7 +1,6 @@
 package org.helllabs.android.xmp.ui
 
 import androidx.activity.OnBackPressedDispatcher
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -16,6 +15,7 @@ import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.*
 import androidx.navigation.navigation
+import com.google.accompanist.insets.navigationBarsPadding
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.ui.explorer.ExplorerScreen
 import org.helllabs.android.xmp.ui.playlist_list.PlaylistScreen

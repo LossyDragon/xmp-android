@@ -6,6 +6,7 @@ import androidx.core.content.edit
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.preference.PreferenceManager
@@ -18,6 +19,27 @@ object PrefManager2 {
     val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
     private lateinit var dataStoreManager: DataStoreManager
 
+    val prefThemeItems = mapOf(
+        "light" to "Light",
+        "dark" to "Dark",
+        "auto" to "Auto (Default)"
+    )
+    val prefSamplingRate = mapOf(
+        "8000" to "8kHz",
+        "22050" to "22kHz",
+        "44100" to "44.1kHz",
+        "48000" to "48kHz"
+    )
+    val prefVolumeBoost = mapOf(
+        "1" to "1x (Normal)",
+        "2" to "2x",
+        "3" to "4x",
+    )
+    val prefInterpolationType = mapOf(
+        "1" to "Linear",
+        "2" to "Cubic spline"
+    )
+
     fun init(context: Context) {
         dataStoreManager = DataStoreManager(context.dataStore)
     }
@@ -26,10 +48,35 @@ object PrefManager2 {
     private const val PREF_TMA_FOLDER = "modarchive_folder"
     private const val PREF_ARTIST_FOLDER = "artist_folder"
     private const val PREF_INSTALL_EXAMPLES = "pref_install_examples"
+    private const val PREF_USE_FILENAME = "use_filename"
+    private const val PREF_SAMPLING_RATE = "sampling_rate"
+    private const val PREF_BUFFER_MS = "buffer_ms_opensl"
+    private const val PREF_VOL_BOOST = "vol_boost"
+    private const val PREF_AMIGA_MIXER = "amiga_mixer"
+    private const val PREF_INTERPOLATE = "interpolate"
+    private const val PREF_INTERP_TYPE = "interp_type"
+    private const val PREF_STEREO_MIX = "stereo_mix"
+    private const val PREF_DEFAULT_PAN = "default_pan"
+    private const val PREF_ALL_SEQUENCES = "all_sequences"
 
     val themeRequest = PreferenceRequest(
         key = stringPreferencesKey(PREF_THEME),
         defaultValue = "auto"
+    )
+
+    val samplingRateRequest = PreferenceRequest(
+        key = stringPreferencesKey(PREF_SAMPLING_RATE),
+        defaultValue = "44100"
+    )
+
+    val volumeBoostRequest = PreferenceRequest(
+        key = stringPreferencesKey(PREF_VOL_BOOST),
+        defaultValue = "1"
+    )
+
+    val bufferSizeRequest = PreferenceRequest(
+        key = floatPreferencesKey(PREF_BUFFER_MS),
+        defaultValue = 400f
     )
 
     val useTmaFolderRequest = PreferenceRequest(
@@ -45,6 +92,41 @@ object PrefManager2 {
     val installExamplesRequest = PreferenceRequest(
         key = booleanPreferencesKey(PREF_INSTALL_EXAMPLES),
         defaultValue = true
+    )
+
+    val useFileNamesRequest = PreferenceRequest(
+        key = booleanPreferencesKey(PREF_USE_FILENAME),
+        defaultValue = false
+    )
+
+    val amigaMixerRequest = PreferenceRequest(
+        key = booleanPreferencesKey(PREF_AMIGA_MIXER),
+        defaultValue = false
+    )
+
+    val interpolationRequest = PreferenceRequest(
+        key = booleanPreferencesKey(PREF_INTERPOLATE),
+        defaultValue = false
+    )
+
+    val interpolationTypeRequest = PreferenceRequest(
+        key = stringPreferencesKey(PREF_INTERP_TYPE),
+        defaultValue = "1"
+    )
+
+    val stereoSeparationRequest = PreferenceRequest(
+        key = floatPreferencesKey(PREF_STEREO_MIX),
+        defaultValue = 100f
+    )
+
+    val defaultPanRequest = PreferenceRequest(
+        key = floatPreferencesKey(PREF_DEFAULT_PAN),
+        defaultValue = 50f
+    )
+
+    val hiddenPatternsRequest = PreferenceRequest(
+        key = booleanPreferencesKey(PREF_ALL_SEQUENCES),
+        defaultValue = false
     )
 }
 

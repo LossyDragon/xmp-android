@@ -5,7 +5,6 @@ import android.content.res.Configuration.UI_MODE_NIGHT_NO
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -21,6 +20,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.google.accompanist.insets.navigationBarsPadding
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import kotlinx.coroutines.flow.collectLatest

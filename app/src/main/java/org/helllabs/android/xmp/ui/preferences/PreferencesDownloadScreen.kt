@@ -23,7 +23,10 @@ import org.helllabs.android.xmp.ui.components.XmpAppBar3
 import org.helllabs.android.xmp.util.PrefManager2
 import org.helllabs.android.xmp.util.PrefManager2.dataStore
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalComposeUiApi::class
+)
 @Composable
 fun PreferencesDownloadScreen(
     navController: NavController,

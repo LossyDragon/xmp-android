@@ -23,7 +23,10 @@ import org.helllabs.android.xmp.ui.components.XmpAppBar3
 import org.helllabs.android.xmp.util.PrefManager2
 import org.helllabs.android.xmp.util.PrefManager2.dataStore
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalComposeUiApi::class
+)
 @Composable
 fun PreferencesPlaylistScreen(
     navController: NavController,
@@ -89,6 +92,20 @@ fun PreferencesPlaylistScreen(
                             title = stringResource(id = R.string.pref_examples_title),
                         ),
                     ),
+                ),
+                Preference.PreferenceGroup(
+                    title = stringResource(id = R.string.pref_category_file_playlists),
+                    enabled = true,
+                    preferenceItems = listOf(
+                        Preference.PreferenceItem.SwitchPreference(
+                            enabled = true,
+                            icon = {},
+                            request = PrefManager2.useFileNamesRequest,
+                            singleLineTitle = true,
+                            summary = stringResource(id = R.string.pref_use_filename_summary),
+                            title = stringResource(id = R.string.pref_use_filename_title),
+                        )
+                    )
                 )
             ),
             dataStore = dataStore,

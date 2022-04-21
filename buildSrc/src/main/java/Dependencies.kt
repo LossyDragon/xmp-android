@@ -4,7 +4,7 @@ object Dependencies {
 
     // Feature roadmap: https://developer.android.com/jetpack/androidx/compose-roadmap
     // Versions: https://developer.android.com/jetpack/androidx/releases/compose#versions
-    const val composeVersion = "1.2.0-alpha07"
+    const val composeVersion = "1.1.1"
 
     // https://developer.android.com/ndk/downloads#lts-downloads
     const val ndkVersion = "23.1.7779620"
@@ -35,7 +35,7 @@ object Dependencies {
         const val iconsExt = "androidx.compose.material:material-icons-extended:$composeVersion"
         const val livedata = "androidx.compose.runtime:runtime-livedata:$composeVersion"
         const val material = "androidx.compose.material:material:$composeVersion"
-        const val navigation = "androidx.navigation:navigation-compose:2.4.2"
+        const val navigation = "androidx.navigation:navigation-compose:2.5.0-alpha04"
         const val tooling = "androidx.compose.ui:ui-tooling:$composeVersion"
         const val toolingPreview = "androidx.compose.ui:ui-tooling-preview:$composeVersion"
         const val ui = "androidx.compose.ui:ui:$composeVersion"
@@ -43,7 +43,7 @@ object Dependencies {
 
         // https://github.com/google/accompanist/releases
         object Accompanist {
-            private const val version = "0.24.6-alpha"
+            private const val version = "0.23.1"
             const val insets = "com.google.accompanist:accompanist-insets:$version"
             const val controller = "com.google.accompanist:accompanist-systemuicontroller:$version"
             const val permissions = "com.google.accompanist:accompanist-permissions:$version"
@@ -57,7 +57,7 @@ object Dependencies {
 
         // https://developer.android.com/jetpack/androidx/releases/compose-material3
         object Material3 {
-            private const val version = "1.0.0-alpha09"
+            private const val version = "1.0.0-alpha05"
             const val material3 = "androidx.compose.material3:material3:$version"
         }
     }
