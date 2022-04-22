@@ -11,7 +11,6 @@ import android.os.IBinder
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.Surface
@@ -45,7 +44,7 @@ import org.helllabs.android.xmp.util.logE
 import org.helllabs.android.xmp.util.logW
 
 @AndroidEntryPoint
-class MainActivity : AppCompatActivity() {
+class MainActivity : ComponentActivity() {
 
     // Connection
     private val connection: ServiceConnection = object : ServiceConnection {

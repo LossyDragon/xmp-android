@@ -22,8 +22,8 @@ import org.helllabs.android.xmp.ui.NavScreens
 import org.helllabs.android.xmp.ui.components.XmpAppBar3
 import org.helllabs.android.xmp.ui.preferences.about.About
 import org.helllabs.android.xmp.ui.preferences.about.ListFormats
-import org.helllabs.android.xmp.util.PrefManager2
-import org.helllabs.android.xmp.util.PrefManager2.dataStore
+import org.helllabs.android.xmp.util.PrefManager
+import org.helllabs.android.xmp.util.PrefManager.dataStore
 import org.helllabs.android.xmp.util.launchActivity
 
 private const val supportUrl = "https://github.com/cmatsuoka/xmp-android/issues"
@@ -62,9 +62,9 @@ fun PreferencesScreen(
                     preferenceItems = listOf(
                         Preference.PreferenceItem.ListPreference(
                             enabled = true,
-                            entries = PrefManager2.prefThemeItems,
+                            entries = PrefManager.prefThemeItems,
                             icon = { PreferenceIcon(icon = Icons.Default.LightMode) },
-                            request = PrefManager2.themeRequest,
+                            request = PrefManager.themeRequest,
                             singleLineTitle = true,
                             summary = stringResource(R.string.pref_summary_theme),
                             title = stringResource(R.string.pref_title_theme),

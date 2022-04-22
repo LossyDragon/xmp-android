@@ -94,7 +94,7 @@ dependencies {
     implementation(kotlin("stdlib-jdk8", Dependencies.kotlinVersion))
 
     // Android Support Libs
-    api(Dependencies.SupportLibs.preferenceKtx)
+    // api(Dependencies.SupportLibs.preferenceKtx)
     implementation(Dependencies.SupportLibs.media)
     implementation(Dependencies.SupportLibs.recyclerview)
 

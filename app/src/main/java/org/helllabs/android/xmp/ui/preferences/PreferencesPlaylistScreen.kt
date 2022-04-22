@@ -20,8 +20,8 @@ import de.schnettler.datastore.compose.material3.model.Preference
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.ui.NavScreens
 import org.helllabs.android.xmp.ui.components.XmpAppBar3
-import org.helllabs.android.xmp.util.PrefManager2
-import org.helllabs.android.xmp.util.PrefManager2.dataStore
+import org.helllabs.android.xmp.util.PrefManager
+import org.helllabs.android.xmp.util.PrefManager.dataStore
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -86,7 +86,7 @@ fun PreferencesPlaylistScreen(
                         Preference.PreferenceItem.SwitchPreference(
                             enabled = true,
                             icon = {},
-                            request = PrefManager2.installExamplesRequest,
+                            request = PrefManager.installExamplesRequest,
                             singleLineTitle = true,
                             summary = stringResource(id = R.string.pref_examples_summary),
                             title = stringResource(id = R.string.pref_examples_title),
@@ -100,7 +100,7 @@ fun PreferencesPlaylistScreen(
                         Preference.PreferenceItem.SwitchPreference(
                             enabled = true,
                             icon = {},
-                            request = PrefManager2.useFileNamesRequest,
+                            request = PrefManager.useFileNamesRequest,
                             singleLineTitle = true,
                             summary = stringResource(id = R.string.pref_use_filename_summary),
                             title = stringResource(id = R.string.pref_use_filename_title),

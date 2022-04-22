@@ -20,8 +20,8 @@ import de.schnettler.datastore.compose.material3.model.Preference
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.ui.NavScreens
 import org.helllabs.android.xmp.ui.components.XmpAppBar3
-import org.helllabs.android.xmp.util.PrefManager2
-import org.helllabs.android.xmp.util.PrefManager2.dataStore
+import org.helllabs.android.xmp.util.PrefManager
+import org.helllabs.android.xmp.util.PrefManager.dataStore
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -75,14 +75,14 @@ fun PreferencesDownloadScreen(
                     preferenceItems = listOf(
                         Preference.PreferenceItem.SwitchPreference(
                             icon = {},
-                            request = PrefManager2.useTmaFolderRequest,
+                            request = PrefManager.useTmaFolderRequest,
                             singleLineTitle = true,
                             summary = stringResource(id = R.string.pref_modarchive_folder_summary),
                             title = stringResource(id = R.string.pref_modarchive_folder_title),
                         ),
                         Preference.PreferenceItem.SwitchPreference(
                             icon = {},
-                            request = PrefManager2.useArtistFolderRequest,
+                            request = PrefManager.useArtistFolderRequest,
                             singleLineTitle = true,
                             summary = stringResource(id = R.string.pref_artist_folder_summary),
                             title = stringResource(id = R.string.pref_artist_folder_title),

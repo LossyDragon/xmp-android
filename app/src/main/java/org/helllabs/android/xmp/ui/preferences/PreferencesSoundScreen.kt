@@ -22,8 +22,8 @@ import kotlin.math.roundToInt
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.ui.NavScreens
 import org.helllabs.android.xmp.ui.components.XmpAppBar3
-import org.helllabs.android.xmp.util.PrefManager2
-import org.helllabs.android.xmp.util.PrefManager2.dataStore
+import org.helllabs.android.xmp.util.PrefManager
+import org.helllabs.android.xmp.util.PrefManager.dataStore
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -78,9 +78,9 @@ fun PreferencesSoundScreen(
                     preferenceItems = listOf(
                         Preference.PreferenceItem.ListPreference(
                             enabled = true,
-                            entries = PrefManager2.prefSamplingRate,
+                            entries = PrefManager.prefSamplingRate,
                             icon = {},
-                            request = PrefManager2.samplingRateRequest,
+                            request = PrefManager.samplingRateRequest,
                             singleLineTitle = true,
                             summary = stringResource(id = R.string.pref_sampling_rate_summary),
                             title = stringResource(id = R.string.pref_sampling_rate_title),
@@ -88,7 +88,7 @@ fun PreferencesSoundScreen(
                         Preference.PreferenceItem.SeekBarPreference(
                             enabled = true,
                             icon = {},
-                            request = PrefManager2.bufferSizeRequest,
+                            request = PrefManager.bufferSizeRequest,
                             singleLineTitle = true,
                             summary = stringResource(id = R.string.pref_buffer_ms_summary),
                             title = stringResource(id = R.string.pref_buffer_ms_title),
@@ -98,9 +98,9 @@ fun PreferencesSoundScreen(
                         ),
                         Preference.PreferenceItem.ListPreference(
                             enabled = true,
-                            entries = PrefManager2.prefVolumeBoost,
+                            entries = PrefManager.prefVolumeBoost,
                             icon = {},
-                            request = PrefManager2.volumeBoostRequest,
+                            request = PrefManager.volumeBoostRequest,
                             singleLineTitle = true,
                             summary = stringResource(id = R.string.pref_vol_boost_summary),
                             title = stringResource(id = R.string.pref_vol_boost_title),
@@ -108,7 +108,7 @@ fun PreferencesSoundScreen(
                         Preference.PreferenceItem.SwitchPreference(
                             enabled = true,
                             icon = {},
-                            request = PrefManager2.amigaMixerRequest,
+                            request = PrefManager.amigaMixerRequest,
                             singleLineTitle = true,
                             summary = stringResource(id = R.string.pref_amiga_mixer_summary),
                             title = stringResource(id = R.string.pref_amiga_mixer_title),
@@ -116,16 +116,16 @@ fun PreferencesSoundScreen(
                         Preference.PreferenceItem.SwitchPreference(
                             enabled = true,
                             icon = {},
-                            request = PrefManager2.interpolationRequest,
+                            request = PrefManager.interpolationRequest,
                             singleLineTitle = true,
                             summary = stringResource(id = R.string.pref_interpolate_summary),
                             title = stringResource(id = R.string.pref_interpolate_title),
                         ),
                         Preference.PreferenceItem.ListPreference(
                             enabled = true,
-                            entries = PrefManager2.prefInterpolationType,
+                            entries = PrefManager.prefInterpolationType,
                             icon = {},
-                            request = PrefManager2.interpolationTypeRequest,
+                            request = PrefManager.interpolationTypeRequest,
                             singleLineTitle = true,
                             summary = stringResource(id = R.string.pref_interp_type_summary),
                             title = stringResource(id = R.string.pref_interp_type_title),
@@ -133,7 +133,7 @@ fun PreferencesSoundScreen(
                         Preference.PreferenceItem.SeekBarPreference(
                             enabled = true,
                             icon = {},
-                            request = PrefManager2.stereoSeparationRequest,
+                            request = PrefManager.stereoSeparationRequest,
                             singleLineTitle = true,
                             summary = stringResource(id = R.string.pref_pan_separation_summary),
                             title = stringResource(id = R.string.pref_pan_separation_title),
@@ -144,7 +144,7 @@ fun PreferencesSoundScreen(
                         Preference.PreferenceItem.SeekBarPreference(
                             enabled = true,
                             icon = {},
-                            request = PrefManager2.defaultPanRequest,
+                            request = PrefManager.defaultPanRequest,
                             singleLineTitle = true,
                             summary = stringResource(id = R.string.pref_default_pan_summary),
                             title = stringResource(id = R.string.pref_default_pan_title),
@@ -161,7 +161,7 @@ fun PreferencesSoundScreen(
                         Preference.PreferenceItem.SwitchPreference(
                             enabled = true,
                             icon = {},
-                            request = PrefManager2.hiddenPatternsRequest,
+                            request = PrefManager.hiddenPatternsRequest,
                             singleLineTitle = true,
                             summary = stringResource(id = R.string.pref_all_sequences_summary),
                             title = stringResource(id = R.string.pref_all_sequences_title),
