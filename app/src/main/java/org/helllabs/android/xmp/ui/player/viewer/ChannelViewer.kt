@@ -6,6 +6,7 @@ import android.content.res.Configuration
 import android.graphics.*
 import android.os.RemoteException
 import android.view.Surface
+import kotlinx.coroutines.runBlocking
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.ui.player.PlayerUtil
@@ -45,7 +46,8 @@ class ChannelViewer(context: Context, background: Int) : Viewer(context, backgro
     private var volWidth = 0
 
     // Better waveform
-    private val useNewWaveform = PrefManager.useNewWaveform
+    private val useNewWaveform: Boolean
+        get() = runBlocking { PrefManager.getPreference(PrefManager.useBetterWaveformRequest) }
     private val waveformPath = Path()
 
     // Draw Loop Variables

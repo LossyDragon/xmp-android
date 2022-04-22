@@ -17,7 +17,6 @@ import androidx.media.AudioAttributesCompat
 import androidx.media.AudioFocusRequestCompat
 import androidx.media.AudioManagerCompat
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 import kotlinx.coroutines.*
 import org.greenrobot.eventbus.EventBus
 import org.helllabs.android.xmp.Xmp
@@ -28,7 +27,8 @@ import org.helllabs.android.xmp.service.receiver.NoisyReceiver
 import org.helllabs.android.xmp.service.utils.*
 import org.helllabs.android.xmp.util.*
 import org.helllabs.android.xmp.util.Files.basename
-import org.helllabs.android.xmp.util.PrefManager
+import javax.inject.Inject
+import kotlin.math.roundToInt
 
 // Binder is leaking via leak canary  ¯\_(ツ)_/¯
 // -- I guess it retains it for a very long time? (SO answers)
@@ -173,26 +173,28 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
             logE("Can't get audio focus")
         }
 
-        var bufferMs = PrefManager.bufferMs
-        if (bufferMs < MIN_BUFFER_MS) {
-            bufferMs = MIN_BUFFER_MS
-        } else if (bufferMs > MAX_BUFFER_MS) {
-            bufferMs = MAX_BUFFER_MS
-        }
+        runBlocking {
+            var bufferMs = PrefManager.getPreference(PrefManager.bufferSizeRequest).roundToInt()
+            if (bufferMs < MIN_BUFFER_MS) {
+                bufferMs = MIN_BUFFER_MS
+            } else if (bufferMs > MAX_BUFFER_MS) {
+                bufferMs = MAX_BUFFER_MS
+            }
 
-        sampleRate = PrefManager.samplingRate.toInt()
+            sampleRate = PrefManager.getPreference(PrefManager.samplingRateRequest).toInt()
+            playerAllSequences = PrefManager.getPreference(PrefManager.hiddenPatternsRequest)
 
-        if (Xmp.init(sampleRate, bufferMs)) {
-            audioInitialized = true
-        } else {
-            logE("error initializing audio")
+            if (Xmp.init(sampleRate, bufferMs)) {
+                audioInitialized = true
+            } else {
+                logE("error initializing audio")
+            }
         }
 
         volume = Xmp.getVolume()
         isPlayerAlive.postValue(false)
         isLoaded = false
         isPlayerPaused = false
-        playerAllSequences = PrefManager.allSequences
 
         mediaSession = MediaSessionCompat(this, "PlayerService")
         mediaSession!!.setCallback(sessionCallback)
@@ -542,9 +544,9 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
                 }
 
                 // Set default pan before we load the module
-                val defpan = PrefManager.defaultPan
+                val defpan = PrefManager.getPreference(PrefManager.defaultPanRequest)
                 logI("Set default pan to $defpan")
-                Xmp.setPlayer(Xmp.PLAYER_DEFPAN, defpan)
+                Xmp.setPlayer(Xmp.PLAYER_DEFPAN, defpan.toInt())
 
                 // Ditto if we can't load the module
                 logI("Load $currentFileName")
@@ -569,14 +571,15 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
                     Xmp.INTERP_LINEAR,
                     Xmp.INTERP_SPLINE
                 )
-                val temp = PrefManager.interpType.toInt()
+                val temp = PrefManager.getPreference(PrefManager.interpolationTypeRequest).toInt()
                 var interpType: Int
                 interpType = if (temp in 1..2) {
                     interpTypes[temp]
                 } else {
                     Xmp.INTERP_LINEAR
                 }
-                if (!PrefManager.interpolate) {
+                val interpolate = PrefManager.getPreference(PrefManager.interpolationRequest)
+                if (!interpolate) {
                     interpType = Xmp.INTERP_NEAREST
                 }
 
@@ -592,16 +595,19 @@ class PlayerService : Service(), OnAudioFocusChangeListener, Watchdog.OnTimeoutL
                 }
 
                 // Set player amplification
-                Xmp.setPlayer(Xmp.PLAYER_AMP, PrefManager.volumeBoost.toInt())
+                val volumeBoost = PrefManager.getPreference(PrefManager.volumeBoostRequest)
+                Xmp.setPlayer(Xmp.PLAYER_AMP, volumeBoost.toInt())
                 // Set player stereo mix
-                Xmp.setPlayer(Xmp.PLAYER_MIX, PrefManager.stereoMix)
+                val stereoMix = PrefManager.getPreference(PrefManager.stereoSeparationRequest)
+                Xmp.setPlayer(Xmp.PLAYER_MIX, stereoMix.roundToInt())
                 // Interpolation type
                 Xmp.setPlayer(Xmp.PLAYER_INTERP, interpType)
                 // DSP lowpass filter
                 Xmp.setPlayer(Xmp.PLAYER_DSP, Xmp.DSP_LOWPASS)
 
                 var flags = Xmp.getPlayer(Xmp.PLAYER_CFLAGS)
-                flags = if (PrefManager.amigaMixer) {
+                val amigaMixer = PrefManager.getPreference(PrefManager.amigaMixerRequest)
+                flags = if (amigaMixer) {
                     flags or Xmp.FLAGS_A500
                 } else {
                     flags and Xmp.FLAGS_A500.inv()

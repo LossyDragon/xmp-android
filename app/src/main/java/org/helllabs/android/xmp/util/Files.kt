@@ -4,11 +4,15 @@ import android.content.Context
 import android.content.res.AssetManager
 import android.net.Uri
 import android.provider.OpenableColumns
+import kotlinx.coroutines.runBlocking
 import java.io.*
 import java.util.*
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.model.Module
 import org.helllabs.android.xmp.ui.search.ModArchiveConstants
+import org.helllabs.android.xmp.util.PrefManager.useArtistFolderRequest
+import org.helllabs.android.xmp.util.PrefManager.useTmaFolderRequest
+import org.helllabs.android.xmp.util.PrefManager.mediaPathRequest
 
 object Files {
 
@@ -26,21 +30,25 @@ object Files {
         return File(path, filename)
     }
 
-    fun getDownloadPath(module: Module?): String {
+    fun getDownloadPath(module: Module?): String = runBlocking {
         val sb = StringBuilder()
-        sb.append(PrefManager.mediaPath)
+        val mediaPath = PrefManager.getPreference(mediaPathRequest)
+        val useModFolder = PrefManager.getPreference(useTmaFolderRequest)
+        val useArtistFolder = PrefManager.getPreference(useArtistFolderRequest)
 
-        if (PrefManager.useModArchiveFolder) {
+        sb.append(mediaPath)
+
+        if (useModFolder) {
             sb.append(File.separatorChar)
             sb.append(ModArchiveConstants.DEFAULT_DOWNLOAD_DIR)
         }
 
-        if (PrefManager.useArtistFolder) {
+        if (useArtistFolder) {
             sb.append(File.separatorChar)
             sb.append(module!!.getArtist().asHtml())
         }
 
-        return sb.toString()
+        sb.toString()
     }
 
     fun recursiveList(file: File?): List<String> {
@@ -214,21 +222,22 @@ object Files {
      * Deletes the module file
      * @return true if the file was successfully deleted; false otherwise.
      */
-    fun deleteModuleFile(module: Module): Boolean {
+    fun deleteModuleFile(module: Module): Boolean = runBlocking {
         val file = localFile(module)!!
 
         if (file.isDirectory)
-            return false
+            return@runBlocking false
 
         if (!file.delete())
-            return false
+            return@runBlocking false
 
-        if (PrefManager.useArtistFolder) {
+        val useArtistFolder = PrefManager.getPreference(useArtistFolderRequest)
+        if (useArtistFolder) {
             val parent = file.parentFile!!
             val contents = parent.listFiles()
             if (contents != null && contents.isEmpty()) {
                 try {
-                    val path = PrefManager.mediaPath!!
+                    val path = PrefManager.getPreference(mediaPathRequest)
                     val mediaPath = File(path).canonicalPath
                     val parentPath = parent.canonicalPath
 
@@ -238,17 +247,17 @@ object Files {
                         logI("Remove empty directory " + parent.path)
                         if (!parent.delete()) {
                             logE("error removing directory")
-                            return false
+                            return@runBlocking false
                         }
                     }
-                    return true
+                    return@runBlocking true
                 } catch (e: IOException) {
                     logW(e.message.toString())
-                    return false
+                    return@runBlocking false
                 }
             }
         }
 
-        return true
+        return@runBlocking true
     }
 }

@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.helllabs.android.xmp.model.PlaylistItem
 import org.helllabs.android.xmp.ui.playlist_selected.recyclerview.OnStartDragListener
 import org.helllabs.android.xmp.ui.playlist_selected.recyclerview.SimpleItemTouchHelperCallback
@@ -69,7 +70,10 @@ class SelectedPlaylistViewModel
         savedStateHandle.get<String>("plistName")?.let { name ->
             mPlaylist = Playlist(name)
 
-            mPlaylistAdapter = PlaylistAdapter(mPlaylist.list, PrefManager.useFilename)
+            val mediaPath: Boolean = runBlocking {
+                PrefManager.getPreference(PrefManager.useFileNamesRequest)
+            }
+            mPlaylistAdapter = PlaylistAdapter(mPlaylist.list, mediaPath)
             mPlaylistAdapter.dragListener = dragListener
 
             val callback: ItemTouchHelper.Callback = SimpleItemTouchHelperCallback(mPlaylistAdapter)
@@ -96,8 +100,11 @@ class SelectedPlaylistViewModel
     }
 
     private fun onStart() {
-        mPlaylistAdapter.setUseFilename(PrefManager.useFilename)
-        mPlaylistAdapter.update()
+        runBlocking {
+            val useFileNames = PrefManager.getPreference(PrefManager.useFileNamesRequest)
+            mPlaylistAdapter.setUseFilename(useFileNames)
+            mPlaylistAdapter.update()
+        }
     }
 
     private fun onStop() {

@@ -1,15 +1,14 @@
 package org.helllabs.android.xmp.ui.explorer
 
 import androidx.compose.runtime.State
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import java.io.File
 import java.util.*
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.*
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.model.BreadCrumb
 import org.helllabs.android.xmp.model.ModInfo
@@ -17,6 +16,10 @@ import org.helllabs.android.xmp.model.PlaylistItem
 import org.helllabs.android.xmp.model.PlaylistType
 import org.helllabs.android.xmp.util.PlaylistUtils
 import org.helllabs.android.xmp.util.PrefManager
+import org.helllabs.android.xmp.util.PrefManager.dataStoreManager
+import org.helllabs.android.xmp.util.PrefManager.installExamplesRequest
+import org.helllabs.android.xmp.util.PrefManager.loopModeRequest
+import org.helllabs.android.xmp.util.PrefManager.shuffleModeRequest
 import org.helllabs.android.xmp.util.logE
 
 sealed class ExplorerEvent {
@@ -49,16 +52,27 @@ class ExplorerViewModel : ViewModel() {
     private val _crumbState = mutableStateOf(ExplorerCrumbState())
     val crumbState: State<ExplorerCrumbState> = _crumbState
 
-    var isLoopMode: Boolean
-        get() = PrefManager.fileListLoop
-        set(value) {
-            PrefManager.fileListLoop = value
+    var isLoopMode: Boolean = false
+        private set
+    var isShuffleMode: Boolean = false
+        private set
+    var installExample: Boolean = false
+        private set
+
+
+    init {
+        viewModelScope.launch {
+            dataStoreManager.getPreferenceFlow(loopModeRequest).collect { value ->
+                isLoopMode = value
+            }
+            dataStoreManager.getPreferenceFlow(shuffleModeRequest).collect { value ->
+                isShuffleMode = value
+            }
+            dataStoreManager.getPreferenceFlow(installExamplesRequest).collect { value ->
+                installExample = value
+            }
         }
-    var isShuffleMode: Boolean
-        get() = PrefManager.fileListShuffle
-        set(value) {
-            PrefManager.fileListShuffle = value
-        }
+    }
 
     fun onEvent(event: ExplorerEvent) {
         when (event) {
@@ -132,5 +146,17 @@ class ExplorerViewModel : ViewModel() {
                 commentData = modInfo.type
         }
         return commentData
+    }
+
+    fun setLoop(value: Boolean) {
+        viewModelScope.launch {
+            dataStoreManager.editPreference(loopModeRequest.key, value)
+        }
+    }
+
+    fun setShuffle(value: Boolean) {
+        viewModelScope.launch {
+            dataStoreManager.editPreference(shuffleModeRequest.key, value)
+        }
     }
 }

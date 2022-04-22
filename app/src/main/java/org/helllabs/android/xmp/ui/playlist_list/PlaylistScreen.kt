@@ -28,6 +28,7 @@ import com.google.accompanist.insets.rememberInsetsPaddingValues
 import com.vanpra.composematerialdialogs.*
 import input
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.runBlocking
 import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.model.PlaylistItem
@@ -83,9 +84,11 @@ fun PlaylistScreen(
 
     val changeDirState = rememberMaterialDialogState()
     ChangeDirDialog(dialogState = changeDirState) {
-        context.logD("Change Dir to $it")
-        PrefManager.mediaPath = it
-        viewModel.onEvent(PlaylistEvent.Refresh)
+        runBlocking {
+            context.logD("Change Dir to $it")
+            PrefManager.dataStoreManager.editPreference(PrefManager.mediaPathRequest.key, it)
+            viewModel.onEvent(PlaylistEvent.Refresh)
+        }
     }
 
     val deletePlaylistState = rememberMaterialDialogState()
@@ -194,12 +197,16 @@ fun PlaylistScreen(
 
     val changeLogState = rememberMaterialDialogState()
     DialogShowChangelog(changeLogState) {
-        PrefManager.changelogVersion = BuildConfig.VERSION_CODE
+        runBlocking {
+            PrefManager.dataStoreManager.editPreference(
+                key = PrefManager.changeLogRequest.key,
+                newValue = BuildConfig.VERSION_CODE
+            )
+            val name = context.getString(R.string.empty_playlist)
+            val comment = context.getString(R.string.empty_comment)
 
-        val name = context.getString(R.string.empty_playlist)
-        val comment = context.getString(R.string.empty_comment)
-
-        viewModel.onEvent(PlaylistEvent.Setup(name, comment))
+            viewModel.onEvent(PlaylistEvent.Setup(name, comment))
+        }
     }
 
     LaunchedEffect(true) {
@@ -317,11 +324,14 @@ private fun ChangeDirDialog(
         negativeButton(res = R.string.cancel)
     }
 
-    val currentPath = PrefManager.mediaPath
+    val currentPath = runBlocking {
+        PrefManager.getPreference(PrefManager.mediaPathRequest)
+    }
+
     MaterialDialog(dialogState = dialogState, buttons = buttons) {
         title(res = R.string.dialog_change_dir_title)
         message(res = R.string.dialog_change_dir_msg)
-        input(label = "New Directory", prefill = currentPath.toString()) { inputString ->
+        input(label = "New Directory", prefill = currentPath) { inputString ->
             onNewPath(inputString)
         }
     }
@@ -342,12 +352,14 @@ private fun NewPlaylistDialog(
 }
 
 private fun Context.startPlayerActivity() {
-    if (PrefManager.startOnPlayer) {
-        if (PlayerService.isPlayerAlive.value == true) {
-            val playerIntent = Intent(this, PlayerActivity::class.java)
-            launchActivity(playerIntent)
-        } else {
-            toast(R.string.msg_service_not_alive)
+    runBlocking {
+        if (PrefManager.getPreference(PrefManager.launchInPlayerRequest)) {
+            if (PlayerService.isPlayerAlive.value == true) {
+                val playerIntent = Intent(this@startPlayerActivity, PlayerActivity::class.java)
+                launchActivity(playerIntent)
+            } else {
+                toast(R.string.msg_service_not_alive)
+            }
         }
     }
 }

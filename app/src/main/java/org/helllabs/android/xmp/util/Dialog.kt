@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.vanpra.composematerialdialogs.*
+import kotlinx.coroutines.runBlocking
 import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.R
 
@@ -76,7 +77,11 @@ fun DialogShowChangelog(
         }
     }
 
-    if (PrefManager.changelogVersion < BuildConfig.VERSION_CODE) {
+    val version: Int = runBlocking {
+        PrefManager.getPreference(PrefManager.changeLogRequest)
+    }
+
+    if (version < BuildConfig.VERSION_CODE) {
         SideEffect {
             dialogState.show()
         }

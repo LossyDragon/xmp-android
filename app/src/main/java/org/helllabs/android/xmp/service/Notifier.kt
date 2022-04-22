@@ -12,6 +12,7 @@ import android.content.Context
 import android.content.Intent
 import android.support.v4.media.session.MediaSessionCompat
 import androidx.core.app.NotificationCompat
+import kotlinx.coroutines.runBlocking
 import java.util.*
 import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.R
@@ -19,6 +20,7 @@ import org.helllabs.android.xmp.service.utils.QueueManager
 import org.helllabs.android.xmp.ui.player.PlayerActivity
 import org.helllabs.android.xmp.util.Api
 import org.helllabs.android.xmp.util.PrefManager
+import org.helllabs.android.xmp.util.PrefManager.useMediaStyleNotificationRequest
 import org.helllabs.android.xmp.util.getIconBitmap
 
 // With Android 11 (R), you can swipe the media notification away, and still plays
@@ -84,8 +86,10 @@ class Notifier(
             .setShowCancelButton(true)
 
         // Preference to use the new MediaStyle notification or classic notification
-        if (PrefManager.useMediaStyle)
-            mediaStyle.setMediaSession(mediaSession.sessionToken)
+        runBlocking {
+            if (PrefManager.getPreference(useMediaStyleNotificationRequest))
+                mediaStyle.setMediaSession(mediaSession.sessionToken)
+        }
 
         val notification = NotificationCompat.Builder(service, CHANNEL_ID)
             .setContentIntent(getContentIntent())

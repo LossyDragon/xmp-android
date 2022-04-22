@@ -1,5 +1,10 @@
 package org.helllabs.android.xmp.util
 
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
+import de.schnettler.datastore.manager.PreferenceRequest
+import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.io.IOException
 import org.helllabs.android.xmp.Xmp.testModule
@@ -149,19 +154,6 @@ object PlaylistUtils {
             return false
         }
 
-        PrefManager.run {
-            setBooleanPref(
-                optionName(newName, LOOP_MODE),
-                getBooleanPref(optionName(oldName, LOOP_MODE), DEFAULT_LOOP_MODE)
-            )
-            setBooleanPref(
-                optionName(newName, SHUFFLE_MODE),
-                getBooleanPref(optionName(oldName, SHUFFLE_MODE), DEFAULT_SHUFFLE_MODE)
-            )
-            removeBooleanPref(optionName(oldName, SHUFFLE_MODE))
-            removeBooleanPref(optionName(oldName, LOOP_MODE))
-        }
-
         return true
     }
 
@@ -193,8 +185,6 @@ object PlaylistUtils {
     fun delete(name: String) {
         Playlist.ListFile(name).delete()
         Playlist.CommentFile(name).delete()
-        PrefManager.removeBooleanPref(optionName(name, SHUFFLE_MODE))
-        PrefManager.removeBooleanPref(optionName(name, LOOP_MODE))
     }
 
     /**

@@ -25,7 +25,6 @@ import org.helllabs.android.xmp.ui.NavScreens
 import org.helllabs.android.xmp.ui.components.*
 import org.helllabs.android.xmp.ui.theme.XmpTheme3
 import org.helllabs.android.xmp.util.DialogMessage
-import org.helllabs.android.xmp.util.PrefManager
 
 @Composable
 fun SearchHistoryScreen(
@@ -44,7 +43,7 @@ fun SearchHistoryScreen(
         },
         historyList = list.value,
         onCleared = {
-            PrefManager.clearSearchHistory()
+            viewModel.clearHistory()
             list.value = listOf()
         }
     )

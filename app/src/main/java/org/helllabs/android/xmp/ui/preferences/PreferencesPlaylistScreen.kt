@@ -20,18 +20,17 @@ import de.schnettler.datastore.compose.material3.model.Preference
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.ui.NavScreens
 import org.helllabs.android.xmp.ui.components.XmpAppBar3
-import org.helllabs.android.xmp.util.PrefManager2
-import org.helllabs.android.xmp.util.PrefManager2.dataStore
+import org.helllabs.android.xmp.util.PrefManager
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalComposeUiApi::class
+)
 @Composable
 fun PreferencesPlaylistScreen(
     navController: NavController,
     onBackPressedCallback: OnBackPressedDispatcher
 ) {
-    val context = LocalContext.current
-    val dataStore = context.dataStore
-
     val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
 
     val onBackPressed = {
@@ -65,6 +64,8 @@ fun PreferencesPlaylistScreen(
         },
     ) { innerPadding ->
         PreferenceScreen(
+            dataStore = PrefManager.dataStoreManager.dataStore,
+            contentPadding = innerPadding,
             items = listOf(
                 Preference.PreferenceGroup(
                     title = stringResource(id = R.string.pref_category_file_general),
@@ -83,16 +84,28 @@ fun PreferencesPlaylistScreen(
                         Preference.PreferenceItem.SwitchPreference(
                             enabled = true,
                             icon = {},
-                            request = PrefManager2.installExamplesRequest,
+                            request = PrefManager.installExamplesRequest,
                             singleLineTitle = true,
                             summary = stringResource(id = R.string.pref_examples_summary),
                             title = stringResource(id = R.string.pref_examples_title),
                         ),
                     ),
+                ),
+                Preference.PreferenceGroup(
+                    title = stringResource(id = R.string.pref_category_file_playlists),
+                    enabled = true,
+                    preferenceItems = listOf(
+                        Preference.PreferenceItem.SwitchPreference(
+                            enabled = true,
+                            icon = {},
+                            request = PrefManager.useFileNamesRequest,
+                            singleLineTitle = true,
+                            summary = stringResource(id = R.string.pref_use_filename_summary),
+                            title = stringResource(id = R.string.pref_use_filename_title),
+                        )
+                    )
                 )
             ),
-            dataStore = dataStore,
-            contentPadding = innerPadding,
         )
     }
 }
