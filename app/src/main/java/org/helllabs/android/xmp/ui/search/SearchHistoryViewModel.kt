@@ -1,13 +1,14 @@
 package org.helllabs.android.xmp.ui.search
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.JsonDataException
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
+import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.model.Module
 import org.helllabs.android.xmp.util.PrefManager
 import org.helllabs.android.xmp.util.logW
+import javax.inject.Inject
 
 @HiltViewModel
 class SearchHistoryViewModel
@@ -15,15 +16,28 @@ class SearchHistoryViewModel
     private var moshiAdapter: JsonAdapter<List<Module>>
 ) : ViewModel() {
 
-    val historyList: List<Module>
-        get() = PrefManager.searchHistory?.let {
-            try {
-                moshiAdapter.fromJson(it)
-            } catch (e: JsonDataException) {
+    var historyList: List<Module> = listOf()
+
+    init {
+        viewModelScope.launch {
+            val history = PrefManager.getPreference(PrefManager.searchHistoryRequest)
+            historyList = kotlin.runCatching {
+                moshiAdapter.fromJson(history)
+            }.getOrElse {
                 // Something terrible happened, wipe the data to prevent a crash.
-                logW("Wiping search history because it has an error\n ${e.stackTraceToString()}")
-                PrefManager.clearSearchHistory()
+                logW("An error occurred getting history.\n ${it.stackTraceToString()}")
+                clearHistory()
                 listOf()
-            }
-        }.orEmpty()
+            }.orEmpty()
+        }
+    }
+
+    fun clearHistory() {
+        viewModelScope.launch {
+            PrefManager.dataStoreManager.editPreference(
+                key = PrefManager.searchHistoryRequest.key,
+                newValue = ""
+            )
+        }
+    }
 }

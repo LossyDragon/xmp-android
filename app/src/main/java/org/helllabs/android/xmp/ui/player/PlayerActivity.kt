@@ -329,7 +329,7 @@ class PlayerActivity : ComponentActivity() {
             )
         }
 
-        if (PrefManager.keepScreenOn)
+        if (viewModel.keepScreenOn.value == true)
             window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         if (PlayerService.isLoaded) {
@@ -386,7 +386,7 @@ class PlayerActivity : ComponentActivity() {
         super.onResume()
 
         screenOn = true
-        showHex = PrefManager.showInfoLineHex
+        showHex = (viewModel.showInfoLineHex.value == true)
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -463,9 +463,9 @@ class PlayerActivity : ComponentActivity() {
         // Write our all sequences button status to shared prefs
         if (isBound) {
             val allSeq = modPlayer.getAllSequences()
-            if (allSeq != PrefManager.allSequences) {
+            if (allSeq != viewModel.allSequences.value) {
                 logD("Write all sequences preference")
-                PrefManager.allSequences = allSeq
+                viewModel.saveAllSequences(allSeq)
             }
         }
     }
@@ -705,7 +705,10 @@ class PlayerActivity : ComponentActivity() {
 
         // Phone CPU's are more than capable enough to do more work with drawing.
         // With android O+, we can use hardware rendering on the canvas, if supported.
-        private val FRAME_RATE: Int = 1000 / if (PrefManager.useNewWaveform) 50 else 30
+        private val newWaveform = runBlocking {
+            PrefManager.getPreference(PrefManager.useBetterWaveformRequest)
+        }
+        private val FRAME_RATE: Int = 1000 / if (newWaveform) 50 else 30
 
         private var stopUpdate = false
         private var canChangeViewer = false
@@ -789,7 +792,7 @@ private fun PlayerSheetPeekContent(
     onNext: () -> Unit,
     onRepeat: () -> Unit,
 ) {
-    val showInfo by remember { mutableStateOf(PrefManager.showInfoLine) }
+    val showInfo = viewModel.showInfoLine.observeAsState(true)
     val spd = viewModel.infoSpeed.observeAsState("00")
     val bpm = viewModel.infoBpm.observeAsState("00")
     val pos = viewModel.infoPos.observeAsState("00")
@@ -817,7 +820,7 @@ private fun PlayerSheetPeekContent(
             contentDescription = null
         )
 
-        if (showInfo) {
+        if (showInfo.value) {
             Spacer(modifier = Modifier.height(8.dp))
             PlayerInfo(speed = spd.value, bpm = bpm.value, pos = pos.value, pat = pat.value)
             Spacer(modifier = Modifier.height(12.dp))
@@ -831,7 +834,7 @@ private fun PlayerSheetPeekContent(
         }
         Spacer(modifier = Modifier.height(18.dp))
         PlayerButtons(
-            modifier = if (!showInfo) Modifier.fillMaxHeight() else Modifier,
+            modifier = if (!showInfo.value) Modifier.fillMaxHeight() else Modifier,
             onStop = { onStop() },
             onPrev = { onPrev() },
             onPlay = { onPlay() },

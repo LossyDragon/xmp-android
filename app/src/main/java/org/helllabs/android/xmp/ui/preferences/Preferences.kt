@@ -23,7 +23,6 @@ import org.helllabs.android.xmp.ui.components.XmpAppBar3
 import org.helllabs.android.xmp.ui.preferences.about.About
 import org.helllabs.android.xmp.ui.preferences.about.ListFormats
 import org.helllabs.android.xmp.util.PrefManager
-import org.helllabs.android.xmp.util.PrefManager.dataStore
 import org.helllabs.android.xmp.util.launchActivity
 
 private const val supportUrl = "https://github.com/cmatsuoka/xmp-android/issues"
@@ -40,7 +39,6 @@ fun PreferencesScreen(
     onBackPressedCallback: OnBackPressedDispatcher
 ) {
     val context = LocalContext.current
-    val dataStore = context.dataStore
     val uriHandler = LocalUriHandler.current
 
     val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
@@ -55,6 +53,8 @@ fun PreferencesScreen(
         }
     ) {
         PreferenceScreen(
+            dataStore = PrefManager.dataStoreManager.dataStore,
+            statusBarPadding = true,
             items = listOf(
                 Preference.PreferenceGroup(
                     title = "Theme",
@@ -174,8 +174,6 @@ fun PreferencesScreen(
                     )
                 )
             ),
-            dataStore = dataStore,
-            statusBarPadding = true
         )
     }
 }

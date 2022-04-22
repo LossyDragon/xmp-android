@@ -3,9 +3,24 @@ package org.helllabs.android.xmp.ui.player
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.model.ModInfo
+import org.helllabs.android.xmp.util.PrefManager
 
 class PlayerActivityViewModel : ViewModel() {
+
+    private var _showInfoLine = MutableLiveData<Boolean>()
+    var showInfoLine: LiveData<Boolean> = _showInfoLine
+
+    private var _showInfoLineHex = MutableLiveData<Boolean>()
+    var showInfoLineHex: LiveData<Boolean> = _showInfoLineHex
+
+    private var _keepScreenOn = MutableLiveData<Boolean>()
+    var keepScreenOn: LiveData<Boolean> = _keepScreenOn
+
+    private var _allSequences = MutableLiveData<Boolean>()
+    var allSequences: LiveData<Boolean> = _allSequences
 
     private var _flipperCount = MutableLiveData<Int>()
     var flipperCount: LiveData<Int> = _flipperCount
@@ -105,5 +120,31 @@ class PlayerActivityViewModel : ViewModel() {
     val currentSequence: LiveData<Int> = _currentSequence
     fun currentSequence(value: Int) {
         _currentSequence.value = value
+    }
+
+    fun saveAllSequences(value: Boolean) {
+        viewModelScope.launch {
+            PrefManager.dataStoreManager.editPreference(
+                key = PrefManager.hiddenPatternsRequest.key,
+                newValue = value
+            )
+        }
+    }
+
+    init {
+        viewModelScope.launch {
+            PrefManager.getPreferenceFlow(PrefManager.showInfoLineRequest).collect { value ->
+                _showInfoLine.value = value
+            }
+            PrefManager.getPreferenceFlow(PrefManager.showHexValuesRequest).collect { value ->
+                _showInfoLineHex.value = value
+            }
+            PrefManager.getPreferenceFlow(PrefManager.keepScreenOnRequest).collect { value ->
+                _keepScreenOn.value = value
+            }
+            PrefManager.getPreferenceFlow(PrefManager.hiddenPatternsRequest).collect { value ->
+                _allSequences.value = value
+            }
+        }
     }
 }

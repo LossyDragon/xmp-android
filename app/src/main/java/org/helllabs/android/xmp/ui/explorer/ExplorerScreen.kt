@@ -23,7 +23,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
-import java.io.File
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import org.helllabs.android.xmp.R
@@ -31,6 +30,7 @@ import org.helllabs.android.xmp.ui.components.*
 import org.helllabs.android.xmp.ui.player.PlayerUtil
 import org.helllabs.android.xmp.ui.theme.XmpTheme3
 import org.helllabs.android.xmp.util.*
+import java.io.File
 
 @Composable
 fun ExplorerScreen(
@@ -81,7 +81,7 @@ fun ExplorerScreen(
             val ret = Files.installAssets(
                 assets,
                 viewModel.state.value.currentFile,
-                PrefManager.installExamples
+                viewModel.installExample
             )
             if (ret < 0) {
                 context.toast(R.string.msg_error_create_directory)
@@ -96,7 +96,7 @@ fun ExplorerScreen(
 
     LaunchedEffect(true) {
         delay(25) // Why do I need this?! Stops the loading bar from sticking...
-        val file = File(PrefManager.mediaPath!!)
+        val file = File(PrefManager.getPreference(PrefManager.mediaPathRequest))
         viewModel.onEvent(ExplorerEvent.DirectoryList(file))
 
         viewModel.uiState.collectLatest { event ->
@@ -119,8 +119,8 @@ fun ExplorerScreen(
         isLoading = isLoading,
         isLoopMode = viewModel.isLoopMode,
         isShuffleMode = viewModel.isShuffleMode,
-        onLoopMode = { viewModel.isLoopMode = it },
-        onShuffleMode = { viewModel.isShuffleMode = it },
+        onLoopMode = { viewModel.setLoop(it) },
+        onShuffleMode = { viewModel.setShuffle(it) },
         onPlay = {
             val file = File(viewModel.state.value.currentFile)
             val items = Files.recursiveList(file)

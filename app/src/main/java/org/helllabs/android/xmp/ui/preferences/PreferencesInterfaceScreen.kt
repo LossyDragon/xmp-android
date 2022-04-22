@@ -22,7 +22,6 @@ import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.ui.NavScreens
 import org.helllabs.android.xmp.ui.components.XmpAppBar3
 import org.helllabs.android.xmp.util.PrefManager
-import org.helllabs.android.xmp.util.PrefManager.dataStore
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -33,9 +32,6 @@ fun PreferencesInterfaceScreen(
     navController: NavController,
     onBackPressedCallback: OnBackPressedDispatcher
 ) {
-    val context = LocalContext.current
-    val dataStore = context.dataStore
-
     val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
 
     val onBackPressed = {
@@ -58,7 +54,9 @@ fun PreferencesInterfaceScreen(
     }
 
     Scaffold(
-        modifier = Modifier.fillMaxSize().navigationBarsPadding(),
+        modifier = Modifier
+            .fillMaxSize()
+            .navigationBarsPadding(),
         topBar = {
             XmpAppBar3(
                 title = { Text(text = stringResource(id = R.string.pref_category_interface)) },
@@ -70,7 +68,7 @@ fun PreferencesInterfaceScreen(
     ) { innerPadding ->
         PreferenceScreen(
             contentPadding = innerPadding,
-            dataStore = dataStore,
+            dataStore = PrefManager.dataStoreManager.dataStore,
             items = listOf(
                 Preference.PreferenceGroup(
                     enabled = true,
@@ -79,7 +77,7 @@ fun PreferencesInterfaceScreen(
                         Preference.PreferenceItem.SwitchPreference(
                             enabled = true,
                             icon = {},
-                            request = PrefManager.replayInfoRequest,
+                            request = PrefManager.showInfoLineRequest,
                             singleLineTitle = true,
                             summary = stringResource(id = R.string.pref_show_info_line_summary),
                             title = stringResource(id = R.string.pref_show_info_line_title),

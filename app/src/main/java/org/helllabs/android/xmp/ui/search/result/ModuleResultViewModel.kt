@@ -2,14 +2,13 @@ package org.helllabs.android.xmp.ui.search.result
 
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.*
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.squareup.moshi.JsonAdapter
 import com.tonyodev.fetch2.*
 import com.tonyodev.fetch2core.FetchObserver
 import com.tonyodev.fetch2core.Reason
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.io.File
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -23,6 +22,8 @@ import org.helllabs.android.xmp.util.Files
 import org.helllabs.android.xmp.util.PrefManager
 import org.helllabs.android.xmp.util.logE
 import org.helllabs.android.xmp.util.logI
+import java.io.File
+import javax.inject.Inject
 
 data class ModuleState(
     val module: ModuleResult? = null,
@@ -212,13 +213,15 @@ class ModuleResultViewModel
         return result?.module?.isSupported() ?: true
     }
 
-    private fun saveModuleToHistory(module: Module?) {
+    private suspend fun saveModuleToHistory(module: Module?) {
         if (module == null)
             return
 
         // Load history list first
-        val searchHistory = PrefManager.searchHistory?.let {
-            moshiAdapter.fromJson(it)
+        val searchHistory = PrefManager.getPreference(PrefManager.searchHistoryRequest).let {
+            kotlin.runCatching {
+                moshiAdapter.fromJson(it)
+            }.getOrNull()
         }.orEmpty().toMutableList()
 
         // Check to see if the module has been searched before. Skip if true
@@ -235,6 +238,9 @@ class ModuleResultViewModel
         searchHistory.add(module)
 
         // Convert into JSON and save it
-        PrefManager.searchHistory = moshiAdapter.toJson(searchHistory)
+        PrefManager.dataStoreManager.editPreference(
+            key = PrefManager.searchHistoryRequest.key,
+            newValue = moshiAdapter.toJson(searchHistory)
+        )
     }
 }

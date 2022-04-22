@@ -1,7 +1,5 @@
 package org.helllabs.android.xmp.ui.playlist_selected
 
-import java.io.*
-import java.util.*
 import org.helllabs.android.xmp.model.PlaylistItem
 import org.helllabs.android.xmp.model.PlaylistType
 import org.helllabs.android.xmp.ui.MainActivity
@@ -12,13 +10,11 @@ import org.helllabs.android.xmp.util.PlaylistUtils
 import org.helllabs.android.xmp.util.PlaylistUtils.COMMENT_SUFFIX
 import org.helllabs.android.xmp.util.PlaylistUtils.DEFAULT_LOOP_MODE
 import org.helllabs.android.xmp.util.PlaylistUtils.DEFAULT_SHUFFLE_MODE
-import org.helllabs.android.xmp.util.PlaylistUtils.LOOP_MODE
 import org.helllabs.android.xmp.util.PlaylistUtils.PLAYLIST_SUFFIX
-import org.helllabs.android.xmp.util.PlaylistUtils.SHUFFLE_MODE
-import org.helllabs.android.xmp.util.PrefManager
 import org.helllabs.android.xmp.util.logD
 import org.helllabs.android.xmp.util.logE
 import org.helllabs.android.xmp.util.logI
+import java.io.*
 
 class Playlist(val name: String) {
 
@@ -51,8 +47,6 @@ class Playlist(val name: String) {
             // read list contents
             if (readList(name)) {
                 this.comment = comment
-                isShuffleMode = readShuffleModePref(name)
-                isLoopMode = readLoopModePref(name)
             }
         } else {
             logI("New playlist $name")
@@ -143,16 +137,6 @@ class Playlist(val name: String) {
         }
     }
 
-    private fun readShuffleModePref(name: String): Boolean {
-        val prefName = PlaylistUtils.optionName(name, SHUFFLE_MODE)
-        return PrefManager.getBooleanPref(prefName, DEFAULT_SHUFFLE_MODE)
-    }
-
-    private fun readLoopModePref(name: String): Boolean {
-        val prefName = PlaylistUtils.optionName(name, LOOP_MODE)
-        return PrefManager.getBooleanPref(prefName, DEFAULT_LOOP_MODE)
-    }
-
     fun updateList(newList: List<PlaylistItem>) {
         list.clear()
         newList.forEach {
@@ -174,17 +158,6 @@ class Playlist(val name: String) {
         if (mCommentChanged) {
             writeComment(name)
             mCommentChanged = false
-        }
-        var saveModes = false
-        if (isShuffleMode != readShuffleModePref(name)) {
-            saveModes = true
-        }
-        if (isLoopMode != readLoopModePref(name)) {
-            saveModes = true
-        }
-        if (saveModes) {
-            PrefManager.setBooleanPref(PlaylistUtils.optionName(name, SHUFFLE_MODE), isShuffleMode)
-            PrefManager.setBooleanPref(PlaylistUtils.optionName(name, LOOP_MODE), isLoopMode)
         }
     }
 
