@@ -1,6 +1,5 @@
 package org.helllabs.android.xmp.ui.preferences
 
-import android.content.Intent
 import androidx.activity.OnBackPressedDispatcher
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -10,7 +9,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.ExperimentalComposeUiApi
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
@@ -18,12 +16,9 @@ import de.schnettler.datastore.compose.material3.PreferenceScreen
 import de.schnettler.datastore.compose.material3.model.Preference
 import de.schnettler.datastore.compose.material3.widget.PreferenceIcon
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.ui.NavScreens
+import org.helllabs.android.xmp.ui.NavScreensSettings
 import org.helllabs.android.xmp.ui.components.XmpAppBar3
-import org.helllabs.android.xmp.ui.preferences.about.About
-import org.helllabs.android.xmp.ui.preferences.about.ListFormats
 import org.helllabs.android.xmp.util.PrefManager
-import org.helllabs.android.xmp.util.launchActivity
 
 private const val supportUrl = "https://github.com/cmatsuoka/xmp-android/issues"
 private const val repoUrl = "https://github.com/libxmp/libxmp"
@@ -38,7 +33,6 @@ fun PreferencesScreen(
     navController: NavController,
     onBackPressedCallback: OnBackPressedDispatcher
 ) {
-    val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
 
     val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
@@ -79,7 +73,7 @@ fun PreferencesScreen(
                             enabled = true,
                             icon = { },
                             onClick = {
-                                navController.navigate(NavScreens.SettingsPlaylist.route)
+                                navController.navigate(NavScreensSettings.Playlist.route)
                             },
                             singleLineTitle = true,
                             summary = "",
@@ -89,7 +83,7 @@ fun PreferencesScreen(
                             enabled = true, // TODO disable if service is alive.
                             icon = { },
                             onClick = {
-                                navController.navigate(NavScreens.SettingsSound.route)
+                                navController.navigate(NavScreensSettings.Sound.route)
                             },
                             singleLineTitle = true,
                             summary = "",
@@ -99,7 +93,7 @@ fun PreferencesScreen(
                             enabled = true,
                             icon = { },
                             onClick = {
-                                navController.navigate(NavScreens.SettingsInterface.route)
+                                navController.navigate(NavScreensSettings.Interface.route)
                             },
                             singleLineTitle = true,
                             summary = "",
@@ -109,7 +103,7 @@ fun PreferencesScreen(
                             enabled = true,
                             icon = { },
                             onClick = {
-                                navController.navigate(NavScreens.SettingsDownload.route)
+                                navController.navigate(NavScreensSettings.Download.route)
                             },
                             singleLineTitle = true,
                             summary = "",
@@ -125,7 +119,7 @@ fun PreferencesScreen(
                             enabled = true,
                             icon = { PreferenceIcon(icon = Icons.Default.MusicNote) },
                             onClick = {
-                                context.launchActivity(Intent(context, ListFormats::class.java))
+                                navController.navigate(NavScreensSettings.Formats.route)
                             },
                             singleLineTitle = true,
                             summary = stringResource(R.string.pref_list_formats_summary),
@@ -135,7 +129,7 @@ fun PreferencesScreen(
                             enabled = true,
                             icon = { PreferenceIcon(icon = Icons.Default.Info) },
                             onClick = {
-                                context.launchActivity(Intent(context, About::class.java))
+                                navController.navigate(NavScreensSettings.About.route)
                             },
                             singleLineTitle = true,
                             summary = stringResource(R.string.pref_about_summary),

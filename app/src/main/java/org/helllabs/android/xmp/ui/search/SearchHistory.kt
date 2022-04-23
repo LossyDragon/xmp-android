@@ -21,7 +21,7 @@ import androidx.navigation.NavController
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.model.Module
-import org.helllabs.android.xmp.ui.NavScreens
+import org.helllabs.android.xmp.ui.NavScreensSearch
 import org.helllabs.android.xmp.ui.components.*
 import org.helllabs.android.xmp.ui.theme.XmpTheme3
 import org.helllabs.android.xmp.util.DialogMessage
@@ -38,7 +38,7 @@ fun SearchHistoryScreen(
         onBack = { navController.popBackStack() },
         onClick = { id ->
             navController.navigate(
-                NavScreens.SearchModuleResult.route + "?moduleId=$id"
+                NavScreensSearch.ModuleResult.route + "?moduleId=$id"
             )
         },
         historyList = list.value,

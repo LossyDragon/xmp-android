@@ -22,7 +22,7 @@ import androidx.navigation.NavController
 import kotlinx.coroutines.flow.collectLatest
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.model.ArtistResult as _ArtistResult
-import org.helllabs.android.xmp.ui.NavScreens
+import org.helllabs.android.xmp.ui.NavScreensSearch
 import org.helllabs.android.xmp.ui.components.*
 import org.helllabs.android.xmp.ui.theme.XmpTheme3
 
@@ -41,7 +41,7 @@ fun ArtistResultScreen(
             when (event) {
                 is ArtistUiState.Error -> {
                     navController.navigate(
-                        NavScreens.SearchError.route + "?errorMsg=${event.error}"
+                        NavScreensSearch.Error.route + "?errorMsg=${event.error}"
                     )
                 }
                 is ArtistUiState.Loading ->
@@ -54,7 +54,7 @@ fun ArtistResultScreen(
         onBack = { navController.popBackStack() },
         onClick = { artistId ->
             navController.navigate(
-                NavScreens.SearchListResult.route + "?queryArtist=$artistId"
+                NavScreensSearch.ListResult.route + "?queryArtist=$artistId"
             )
         },
         state = viewModel.state.value,

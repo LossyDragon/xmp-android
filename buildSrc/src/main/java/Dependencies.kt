@@ -27,7 +27,7 @@ object Dependencies {
     // https://mvnrepository.com/artifact/androidx.activity/activity-compose
     // https://mvnrepository.com/artifact/androidx.navigation/navigation-compose
     object Compose {
-        const val activity = "androidx.activity:activity-compose:1.6.0-alpha01"
+        const val activity = "androidx.activity:activity-compose:1.5.0-alpha03"
         const val animation = "androidx.compose.animation:animation:$composeVersion"
         const val foundation = "androidx.compose.foundation:foundation:$composeVersion"
         const val graphics = "androidx.compose.animation:animation-graphics:$composeVersion"

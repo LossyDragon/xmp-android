@@ -37,17 +37,25 @@ sealed class NavScreens(val route: String) {
     object Playlists : NavScreens("playlists")
     object PlaylistSelected : NavScreens("playlist_selected")
     object Explorer : NavScreens("explorer")
+}
+
+sealed class NavScreensSearch(val route: String) {
     object Search : NavScreens("search")
-    object SearchError : NavScreens("search_error")
-    object SearchHistory : NavScreens("search_history")
-    object SearchArtistResult : NavScreens("search_artist_result")
-    object SearchModuleResult : NavScreens("search_module_result")
-    object SearchListResult : NavScreens("search_list_result")
+    object Error : NavScreens("search_error")
+    object History : NavScreens("search_history")
+    object ArtistResult : NavScreens("search_artist_result")
+    object ModuleResult : NavScreens("search_module_result")
+    object ListResult : NavScreens("search_list_result")
+}
+
+sealed class NavScreensSettings(val route: String) {
     object Settings : NavScreens("settings")
-    object SettingsPlaylist : NavScreens("settings_playlist")
-    object SettingsSound : NavScreens("settings_sound")
-    object SettingsInterface : NavScreens("settings_interface")
-    object SettingsDownload : NavScreens("settings_download")
+    object Playlist : NavScreens("settings_playlist")
+    object Sound : NavScreens("settings_sound")
+    object Interface : NavScreens("settings_interface")
+    object Download : NavScreens("settings_download")
+    object About : NavScreens("settings_about")
+    object Formats : NavScreens("settings_formats")
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -61,8 +69,8 @@ fun NavigationScreen(
     val navigationItems: List<Triple<NavScreens, Int, ImageVector>> = listOf(
         Triple(NavScreens.Playlists, R.string.nav_title_playlists, Icons.Filled.PlaylistPlay),
         Triple(NavScreens.Explorer, R.string.nav_title_explorer, Icons.Filled.FolderOpen),
-        Triple(NavScreens.Search, R.string.nav_title_search, Icons.Filled.Search),
-        Triple(NavScreens.Settings, R.string.nav_title_settings, Icons.Filled.Settings)
+        Triple(NavScreensSearch.Search, R.string.nav_title_search, Icons.Filled.Search),
+        Triple(NavScreensSettings.Settings, R.string.nav_title_settings, Icons.Filled.Settings)
     )
 
     Scaffold(
@@ -106,17 +114,17 @@ fun NavigationScreen(
                 )
             }
             navigation(
-                startDestination = NavScreens.Search.route,
+                startDestination = NavScreensSearch.Search.route,
                 route = NAV_SEARCH_ROOT
             ) {
-                composable(NavScreens.Search.route) {
+                composable(NavScreensSearch.Search.route) {
                     SearchScreen(navController = navController, innerPadding)
                 }
-                composable(NavScreens.SearchHistory.route) {
+                composable(NavScreensSearch.History.route) {
                     SearchHistoryScreen(navController = navController)
                 }
                 composable(
-                    route = NavScreens.SearchError.route + "?errorMsg={errorMsg}",
+                    route = NavScreensSearch.Error.route + "?errorMsg={errorMsg}",
                     arguments = listOf(
                         navArgument(name = "errorMsg") {
                             type = NavType.StringType
@@ -132,7 +140,7 @@ fun NavigationScreen(
                     )
                 }
                 composable(
-                    route = NavScreens.SearchArtistResult.route + "?artistQuery={query}",
+                    route = NavScreensSearch.ArtistResult.route + "?artistQuery={query}",
                     arguments = listOf(
                         navArgument(name = "query") {
                             type = NavType.StringType
@@ -144,7 +152,7 @@ fun NavigationScreen(
                     ArtistResultScreen(navController = navController, artistQuery = arg)
                 }
                 composable(
-                    route = NavScreens.SearchModuleResult.route + "?moduleId={moduleId}",
+                    route = NavScreensSearch.ModuleResult.route + "?moduleId={moduleId}",
                     arguments = listOf(
                         navArgument(name = "moduleId") {
                             type = NavType.IntType
@@ -157,7 +165,7 @@ fun NavigationScreen(
                 }
                 val navArgs = "?querySearch={querySearch}&queryArtist={queryArtist}"
                 composable(
-                    route = NavScreens.SearchListResult.route + navArgs,
+                    route = NavScreensSearch.ListResult.route + navArgs,
                     arguments = listOf(
                         navArgument(name = "querySearch") {
                             type = NavType.StringType
@@ -177,35 +185,47 @@ fun NavigationScreen(
                 }
             }
             navigation(
-                startDestination = NavScreens.Settings.route,
+                startDestination = NavScreensSettings.Settings.route,
                 route = NAV_SETTINGS_ROOT
             ) {
-                composable(NavScreens.Settings.route) {
+                composable(NavScreensSettings.Settings.route) {
                     PreferencesScreen(
                         navController = navController,
                         onBackPressedCallback = onBackPressedCallback
                     )
                 }
-                composable(NavScreens.SettingsPlaylist.route) {
+                composable(NavScreensSettings.Playlist.route) {
                     PreferencesPlaylistScreen(
                         navController = navController,
                         onBackPressedCallback = onBackPressedCallback
                     )
                 }
-                composable(NavScreens.SettingsSound.route) {
+                composable(NavScreensSettings.Sound.route) {
                     PreferencesSoundScreen(
                         navController = navController,
                         onBackPressedCallback = onBackPressedCallback
                     )
                 }
-                composable(NavScreens.SettingsInterface.route) {
+                composable(NavScreensSettings.Interface.route) {
                     PreferencesInterfaceScreen(
                         navController = navController,
                         onBackPressedCallback = onBackPressedCallback
                     )
                 }
-                composable(NavScreens.SettingsDownload.route) {
+                composable(NavScreensSettings.Download.route) {
                     PreferencesDownloadScreen(
+                        navController = navController,
+                        onBackPressedCallback = onBackPressedCallback
+                    )
+                }
+                composable(NavScreensSettings.About.route) {
+                    AboutScreen(
+                        navController = navController,
+                        onBackPressedCallback = onBackPressedCallback
+                    )
+                }
+                composable(NavScreensSettings.Formats.route) {
+                    FormatsScreen(
                         navController = navController,
                         onBackPressedCallback = onBackPressedCallback
                     )
@@ -260,8 +280,8 @@ private fun canShowBottomBar(navBackStackEntry: NavBackStackEntry?): Boolean {
     currentDestination?.let {
         if (it == NavScreens.Playlists.route ||
             it == NavScreens.Explorer.route ||
-            it == NavScreens.Search.route ||
-            it == NavScreens.Settings.route
+            it == NavScreensSearch.Search.route ||
+            it == NavScreensSettings.Settings.route
         ) return true
     }
 

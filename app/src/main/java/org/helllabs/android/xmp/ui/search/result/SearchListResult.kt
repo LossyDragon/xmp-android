@@ -18,7 +18,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import kotlinx.coroutines.flow.collectLatest
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.ui.NavScreens
+import org.helllabs.android.xmp.ui.NavScreensSearch
 import org.helllabs.android.xmp.ui.components.*
 import org.helllabs.android.xmp.ui.theme.XmpTheme3
 
@@ -50,7 +50,7 @@ fun SearchListResult(
             when (event) {
                 is SearchListUiState.Error -> {
                     navController.navigate(
-                        NavScreens.SearchError.route + "?errorMsg=${event.error}"
+                        NavScreensSearch.Error.route + "?errorMsg=${event.error}"
                     )
                 }
                 is SearchListUiState.Loading ->
@@ -63,7 +63,7 @@ fun SearchListResult(
         onBack = { navController.popBackStack() },
         onClick = { id ->
             navController.navigate(
-                NavScreens.SearchModuleResult.route + "?moduleId=$id"
+                NavScreensSearch.ModuleResult.route + "?moduleId=$id"
             )
         },
         appTitle = appTitle,

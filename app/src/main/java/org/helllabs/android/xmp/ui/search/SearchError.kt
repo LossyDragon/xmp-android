@@ -25,7 +25,7 @@ import androidx.navigation.NavController
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.ui.NavScreens
+import org.helllabs.android.xmp.ui.NavScreensSearch
 import org.helllabs.android.xmp.ui.components.XmpAppBar3
 import org.helllabs.android.xmp.ui.theme.XmpTheme3
 import org.helllabs.android.xmp.ui.theme.topazFontFamily
@@ -60,7 +60,7 @@ fun SearchErrorScreen(
     }
 
     val onBackPressed = {
-        navController.popBackStack(route = NavScreens.Search.route, inclusive = false)
+        navController.popBackStack(route = NavScreensSearch.Search.route, inclusive = false)
     }
 
     val callback = remember {

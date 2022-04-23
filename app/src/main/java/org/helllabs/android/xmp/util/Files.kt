@@ -4,15 +4,15 @@ import android.content.Context
 import android.content.res.AssetManager
 import android.net.Uri
 import android.provider.OpenableColumns
-import kotlinx.coroutines.runBlocking
 import java.io.*
 import java.util.*
+import kotlinx.coroutines.runBlocking
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.model.Module
 import org.helllabs.android.xmp.ui.search.ModArchiveConstants
+import org.helllabs.android.xmp.util.PrefManager.mediaPathRequest
 import org.helllabs.android.xmp.util.PrefManager.useArtistFolderRequest
 import org.helllabs.android.xmp.util.PrefManager.useTmaFolderRequest
-import org.helllabs.android.xmp.util.PrefManager.mediaPathRequest
 
 object Files {
 

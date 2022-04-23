@@ -12,14 +12,13 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
 import com.google.accompanist.insets.navigationBarsPadding
 import de.schnettler.datastore.compose.material3.PreferenceScreen
 import de.schnettler.datastore.compose.material3.model.Preference
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.ui.NavScreens
+import org.helllabs.android.xmp.ui.NavScreensSettings
 import org.helllabs.android.xmp.ui.components.XmpAppBar3
 import org.helllabs.android.xmp.util.PrefManager
 
@@ -35,7 +34,7 @@ fun PreferencesInterfaceScreen(
     val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
 
     val onBackPressed = {
-        navController.popBackStack(route = NavScreens.Settings.route, inclusive = false)
+        navController.popBackStack(route = NavScreensSettings.Settings.route, inclusive = false)
     }
 
     val callback = remember {

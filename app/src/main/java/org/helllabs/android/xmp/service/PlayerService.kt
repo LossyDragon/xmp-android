@@ -17,6 +17,8 @@ import androidx.media.AudioAttributesCompat
 import androidx.media.AudioFocusRequestCompat
 import androidx.media.AudioManagerCompat
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
+import kotlin.math.roundToInt
 import kotlinx.coroutines.*
 import org.greenrobot.eventbus.EventBus
 import org.helllabs.android.xmp.Xmp
@@ -27,8 +29,6 @@ import org.helllabs.android.xmp.service.receiver.NoisyReceiver
 import org.helllabs.android.xmp.service.utils.*
 import org.helllabs.android.xmp.util.*
 import org.helllabs.android.xmp.util.Files.basename
-import javax.inject.Inject
-import kotlin.math.roundToInt
 
 // Binder is leaking via leak canary  ¯\_(ツ)_/¯
 // -- I guess it retains it for a very long time? (SO answers)

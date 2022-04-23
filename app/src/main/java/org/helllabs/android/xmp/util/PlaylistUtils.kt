@@ -1,10 +1,5 @@
 package org.helllabs.android.xmp.util
 
-import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.stringPreferencesKey
-import de.schnettler.datastore.manager.PreferenceRequest
-import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.io.IOException
 import org.helllabs.android.xmp.Xmp.testModule

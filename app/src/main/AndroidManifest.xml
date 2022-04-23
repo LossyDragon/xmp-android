@@ -195,28 +195,7 @@
             </intent-filter>
         </activity>
 
-        <activity
-            android:name="org.helllabs.android.xmp.ui.preferences.about.ListFormats"
-            android:exported="false"
-            android:theme="@style/ComposeTheme">
-            <intent-filter>
-                <action android:name="org.helllabs.android.xmp.LIST_FORMATS" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
-
-        <activity
-            android:name="org.helllabs.android.xmp.ui.preferences.about.About"
-            android:exported="false"
-            android:theme="@style/ComposeTheme">
-            <intent-filter>
-                <action android:name="org.helllabs.android.xmp.ABOUT" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
-
+        <!-- Service -->
         <service android:name=".service.PlayerService" />
 
     </application>

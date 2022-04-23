@@ -1,9 +1,8 @@
-package org.helllabs.android.xmp.ui.preferences.about
+package org.helllabs.android.xmp.ui.preferences
 
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
+import androidx.activity.OnBackPressedCallback
+import androidx.activity.OnBackPressedDispatcher
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,6 +14,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -25,41 +25,46 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.core.view.WindowCompat
+import androidx.navigation.NavController
 import com.google.accompanist.insets.ProvideWindowInsets
-import dagger.hilt.android.AndroidEntryPoint
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
+import org.helllabs.android.xmp.ui.NavScreensSettings
 import org.helllabs.android.xmp.ui.components.ErrorLayout
 import org.helllabs.android.xmp.ui.components.LazyList
 import org.helllabs.android.xmp.ui.components.XmpAppBar3
 import org.helllabs.android.xmp.ui.theme.XmpTheme3
-import org.helllabs.android.xmp.util.logD
 import org.helllabs.android.xmp.util.toast
 
-@AndroidEntryPoint
-class ListFormats : ComponentActivity() {
+@Composable
+fun FormatsScreen(
+    navController: NavController,
+    onBackPressedCallback: OnBackPressedDispatcher
+) {
+    val onBackPressed = {
+        navController.popBackStack(route = NavScreensSettings.Settings.route, inclusive = false)
+    }
 
-    private val formats = Xmp.getFormats()
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        // Set this for all Compose activities.
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-
-        // Sort alphabetically
-        formats.sort()
-
-        logD("onCreate")
-        setContent {
-            ProvideWindowInsets {
-                FormatsLayout(
-                    onBack = { onBackPressed() },
-                    formatsList = formats.toList(),
-                )
+    val callback = remember {
+        object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                onBackPressed()
             }
         }
+    }
+
+    DisposableEffect(onBackPressedCallback) {
+        onBackPressedCallback.addCallback(callback)
+        onDispose {
+            callback.remove()
+        }
+    }
+
+    ProvideWindowInsets {
+        FormatsLayout(
+            onBack = { onBackPressed() },
+            formatsList = Xmp.getFormats().sortedArray().toList(),
+        )
     }
 }
 

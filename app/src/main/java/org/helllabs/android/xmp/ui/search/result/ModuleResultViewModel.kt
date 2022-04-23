@@ -9,6 +9,8 @@ import com.tonyodev.fetch2.*
 import com.tonyodev.fetch2core.FetchObserver
 import com.tonyodev.fetch2core.Reason
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.io.File
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -22,8 +24,6 @@ import org.helllabs.android.xmp.util.Files
 import org.helllabs.android.xmp.util.PrefManager
 import org.helllabs.android.xmp.util.logE
 import org.helllabs.android.xmp.util.logI
-import java.io.File
-import javax.inject.Inject
 
 data class ModuleState(
     val module: ModuleResult? = null,

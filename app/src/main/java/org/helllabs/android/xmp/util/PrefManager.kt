@@ -62,7 +62,6 @@ object PrefManager {
     private const val PREF_MEDIA_PATH = "media_path"
     private const val PREF_SEARCH_HISTORY = "search_history"
 
-
     fun init(context: Context) {
         dataStoreManager = DataStoreManager(context.dataStore)
     }

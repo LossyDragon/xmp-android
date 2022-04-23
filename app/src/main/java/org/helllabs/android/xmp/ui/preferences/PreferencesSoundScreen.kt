@@ -19,7 +19,7 @@ import de.schnettler.datastore.compose.material3.PreferenceScreen
 import de.schnettler.datastore.compose.material3.model.Preference
 import kotlin.math.roundToInt
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.ui.NavScreens
+import org.helllabs.android.xmp.ui.NavScreensSettings
 import org.helllabs.android.xmp.ui.components.XmpAppBar3
 import org.helllabs.android.xmp.util.PrefManager
 
@@ -35,7 +35,7 @@ fun PreferencesSoundScreen(
     val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
 
     val onBackPressed = {
-        navController.popBackStack(route = NavScreens.Settings.route, inclusive = false)
+        navController.popBackStack(route = NavScreensSettings.Settings.route, inclusive = false)
     }
 
     val callback = remember {

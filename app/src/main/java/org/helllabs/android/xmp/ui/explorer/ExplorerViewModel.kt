@@ -1,7 +1,6 @@
 package org.helllabs.android.xmp.ui.explorer
 
 import androidx.compose.runtime.State
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -15,7 +14,6 @@ import org.helllabs.android.xmp.model.ModInfo
 import org.helllabs.android.xmp.model.PlaylistItem
 import org.helllabs.android.xmp.model.PlaylistType
 import org.helllabs.android.xmp.util.PlaylistUtils
-import org.helllabs.android.xmp.util.PrefManager
 import org.helllabs.android.xmp.util.PrefManager.dataStoreManager
 import org.helllabs.android.xmp.util.PrefManager.installExamplesRequest
 import org.helllabs.android.xmp.util.PrefManager.loopModeRequest
@@ -58,7 +56,6 @@ class ExplorerViewModel : ViewModel() {
         private set
     var installExample: Boolean = false
         private set
-
 
     init {
         viewModelScope.launch {

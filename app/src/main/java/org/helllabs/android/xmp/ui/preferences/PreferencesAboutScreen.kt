@@ -1,15 +1,15 @@
-package org.helllabs.android.xmp.ui.preferences.about
+package org.helllabs.android.xmp.ui.preferences
 
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
+import androidx.activity.OnBackPressedCallback
+import androidx.activity.OnBackPressedDispatcher
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Divider
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,39 +22,49 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.view.WindowCompat
+import androidx.navigation.NavController
 import com.google.accompanist.insets.ProvideWindowInsets
 import com.google.accompanist.insets.navigationBarsPadding
-import dagger.hilt.android.AndroidEntryPoint
 import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
+import org.helllabs.android.xmp.ui.NavScreensSettings
 import org.helllabs.android.xmp.ui.components.XmpAppBar3
 import org.helllabs.android.xmp.ui.components.waterfallPadding
 import org.helllabs.android.xmp.ui.theme.XmpTheme3
 import org.helllabs.android.xmp.ui.theme.michromaFontFamily
 import org.helllabs.android.xmp.ui.theme.themedText
-import org.helllabs.android.xmp.util.logD
 
-@AndroidEntryPoint
-class About : ComponentActivity() {
+@Composable
+fun AboutScreen(
+    navController: NavController,
+    onBackPressedCallback: OnBackPressedDispatcher
+) {
+    val onBackPressed = {
+        navController.popBackStack(route = NavScreensSettings.Settings.route, inclusive = false)
+    }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        // Set this for all Compose activities.
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-
-        logD("onCreate")
-        setContent {
-            ProvideWindowInsets {
-                AboutLayout(
-                    onBack = { onBackPressed() },
-                    appVersion = BuildConfig.VERSION_NAME,
-                    xmpVersion = Xmp.getVersion()
-                )
+    val callback = remember {
+        object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                onBackPressed()
             }
         }
+    }
+
+    DisposableEffect(onBackPressedCallback) {
+        onBackPressedCallback.addCallback(callback)
+        onDispose {
+            callback.remove()
+        }
+    }
+
+    ProvideWindowInsets {
+        AboutLayout(
+            onBack = { onBackPressed() },
+            appVersion = BuildConfig.VERSION_NAME,
+            xmpVersion = Xmp.getVersion()
+        )
     }
 }
 

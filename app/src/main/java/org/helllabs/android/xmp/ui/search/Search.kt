@@ -42,7 +42,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.accompanist.insets.imePadding
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.ui.NavScreens
+import org.helllabs.android.xmp.ui.NavScreensSearch
 import org.helllabs.android.xmp.ui.components.RadioGroup
 import org.helllabs.android.xmp.ui.components.XmpAppBar3
 import org.helllabs.android.xmp.ui.components.annotatedLinkString
@@ -65,21 +65,21 @@ fun SearchScreen(
                 0 -> {
                     // Search Result
                     val navArgs = "?querySearch=$search"
-                    navController.navigate(NavScreens.SearchListResult.route + navArgs)
+                    navController.navigate(NavScreensSearch.ListResult.route + navArgs)
                 }
                 1 -> {
                     // Artist Result
                     val navArgs = "?artistQuery=$search"
-                    navController.navigate(NavScreens.SearchArtistResult.route + navArgs)
+                    navController.navigate(NavScreensSearch.ArtistResult.route + navArgs)
                 }
             }
         },
         onRandom = {
             navController.navigate(
-                NavScreens.SearchModuleResult.route + "?moduleId=${-1}"
+                NavScreensSearch.ModuleResult.route + "?moduleId=${-1}"
             )
         },
-        onHistory = { navController.navigate(NavScreens.SearchHistory.route) }
+        onHistory = { navController.navigate(NavScreensSearch.History.route) }
     )
 }
 
