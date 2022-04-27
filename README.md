@@ -1,4 +1,4 @@
-<img src="https://github.com/LossyDragon/xmp-android/blob/kotlin/resources/icon512.png" width="128px" />
+<img src="https://raw.githubusercontent.com/LossyDragon/xmp-android/rewrite/resources/icon512.png" width="128px" />
 
 # Xmp for Android
 A modplayer that plays over 90 mainstream and obscure module formats, including Protracker (MOD), Scream Tracker 3 (S3M), Fast Tracker II (XM) and Impulse Tracker (IT).
