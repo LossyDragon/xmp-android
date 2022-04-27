@@ -1,5 +1,0 @@
-<resources>
-
-    <style name="ComposeTheme" parent="android:Theme.Material.Light.NoActionBar" />
-
-</resources>

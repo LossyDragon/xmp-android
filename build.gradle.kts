@@ -1,8 +1,19 @@
+buildscript {
+    extra.apply {
+        // Roadmap: https://developer.android.com/jetpack/androidx/compose-roadmap
+        // https://developer.android.com/jetpack/androidx/releases/compose#versions
+        set("compose_version", "1.2.0-alpha08")
+        // https://github.com/google/dagger/releases
+        set("hilt_version", "2.41")
+        // https://github.com/google/accompanist/releases
+        set("accompanist_version", "0.24.7-alpha")
+    }
+}
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 plugins {
-    id("com.android.application") version "7.1.3" apply false
-    id("com.android.library") version "7.1.3" apply false
-    id("org.jetbrains.kotlin.android") version Dependencies.kotlinVersion apply false
+    id("com.android.application") version "7.2.0-rc01" apply false
+    id("com.android.library") version "7.2.0-rc01" apply false
+    id("org.jetbrains.kotlin.android") version "1.6.20" apply false
 }
 
 tasks.register("clean", Delete::class) {
