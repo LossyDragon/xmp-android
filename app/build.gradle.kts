@@ -19,7 +19,6 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        // testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -68,10 +67,12 @@ android {
 
 dependencies {
 
+    project(":modarchive")
+    project(":libxmp")
+
     /** Android Libs **/
     // https://developer.android.com/jetpack/androidx/releases/core
     implementation("androidx.core:core-ktx:1.7.0")
-
     // https://developer.android.com/jetpack/androidx/releases/lifecycle
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.4.1")
 

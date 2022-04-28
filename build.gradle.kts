@@ -21,7 +21,7 @@ tasks.register("clean", Delete::class) {
 }
 
 tasks.register("fetchXmp", Exec::class) {
-    val libXmpDir = "${rootProject.projectDir}/app/src/main/cpp"
+    val libXmpDir = "${rootProject.projectDir}/libxmp/src/main/cpp"
     val args = "rm -rf libxmp && git clone https://github.com/libxmp/libxmp.git && exit"
     val file = File(libXmpDir)
     workingDir(file)
@@ -30,7 +30,7 @@ tasks.register("fetchXmp", Exec::class) {
 
 // sudo apt install build-essential autoconf -y
 tasks.register("buildXmp", Exec::class) {
-    val libXmpDir = "${rootProject.projectDir}/app/src/main/cpp/libxmp"
+    val libXmpDir = "${rootProject.projectDir}/libxmp/src/main/cpp/libxmp"
     val args = "autoconf && ./configure && make && make check && " +
         "(cd test-dev; autoconf && ./configure && make) && exit"
     val file = File(libXmpDir)
