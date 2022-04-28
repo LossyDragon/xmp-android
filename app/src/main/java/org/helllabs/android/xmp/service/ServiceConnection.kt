@@ -40,8 +40,13 @@ class ServiceConnection @Inject constructor(
     private val coroutineScope = CoroutineScope(Dispatchers.Main)
 
     private val mediaBrowser = MediaBrowserCompat(
-        context, ComponentName(context, PlayerService::class.java), connectionCallback, null
-    ).apply { connect() }
+        context,
+        ComponentName(context, PlayerService::class.java),
+        connectionCallback,
+        null
+    ).apply {
+        connect()
+    }
 
     private val transportControls: MediaControllerCompat.TransportControls
         get() = mediaController.transportControls
@@ -61,10 +66,6 @@ class ServiceConnection @Inject constructor(
     fun pause() = transportControls.pause()
 
     fun play() = transportControls.play()
-
-    fun fastForward() = transportControls.fastForward()
-
-    fun rewind() = transportControls.rewind()
 
     fun skipToNextTrack() = transportControls.skipToNext()
 
@@ -92,7 +93,7 @@ class ServiceConnection @Inject constructor(
         }
     }
 
-    private inner class MediaControllerCallback() : MediaControllerCompat.Callback() {
+    private inner class MediaControllerCallback : MediaControllerCompat.Callback() {
         override fun onSessionDestroyed() {
             super.onSessionDestroyed()
             connectionCallback.onConnectionSuspended()

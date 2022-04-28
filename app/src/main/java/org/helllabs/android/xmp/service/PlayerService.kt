@@ -43,69 +43,8 @@ class PlayerService : MediaBrowserServiceCompat() {
     private val currentSong = MutableStateFlow<MediaMetadataCompat?>(null)
 
     private lateinit var mediaSession: MediaSessionCompat
-
-    // Separate function??
-    private fun getPlaylistChildren(): List<MediaBrowserCompat.MediaItem> {
-        val list = playlistDir.list().orEmpty()
-        list.sortBy { it.lowercase() }
-
-        return list.map {
-            val buffer = File(playlistDir, it).source().buffer()
-            val contents = moshiAdapter.fromJson(buffer)!!
-            buffer.close()
-
-            MediaBrowserCompat.MediaItem(
-                MediaDescriptionCompat.Builder().apply {
-                    setMediaId(contents.name)
-                    setTitle(contents.name)
-                    setDescription(contents.comment)
-                }.build(),
-                MediaBrowserCompat.MediaItem.FLAG_BROWSABLE
-            )
-        }
-    }
-
-    // Separate function?
-    private fun getSelectedPlaylistChildren(parentId: String): List<MediaBrowserCompat.MediaItem> {
-        val selectedPlaylist = parentId.substringAfter("::")
-
-        val buffer = File(playlistDir, "$selectedPlaylist.json").source().buffer()
-        val contents = moshiAdapter.fromJson(buffer)!!
-        buffer.close()
-
-        return contents.data.sortedBy { it.id }.map { data ->
-            MediaBrowserCompat.MediaItem(
-                MediaDescriptionCompat.Builder().apply {
-                    setMediaId(data.name)
-                    setTitle(data.name)
-                    setDescription(data.type)
-                    setMediaUri(data.uriPath.toUri())
-                }.build(),
-                MediaBrowserCompat.MediaItem.FLAG_PLAYABLE
-            )
-        }
-    }
-
-    private fun getRootChildren(): List<MediaBrowserCompat.MediaItem> {
-        return listOf(
-            MediaBrowserCompat.MediaItem(
-                MediaDescriptionCompat.Builder().apply {
-                    setMediaId(EXPLORER_ROOT_ID)
-                    setTitle("Module Explorer")
-                    setDescription("Browse modules on the device")
-                }.build(),
-                MediaBrowserCompat.MediaItem.FLAG_BROWSABLE
-            ),
-            MediaBrowserCompat.MediaItem(
-                MediaDescriptionCompat.Builder().apply {
-                    setMediaId(PLAYLIST_ROOT_ID)
-                    setTitle("Playlists")
-                    setDescription("View saved playlists from your device")
-                }.build(),
-                MediaBrowserCompat.MediaItem.FLAG_BROWSABLE
-            )
-        )
-    }
+    private lateinit var mediaCallback: MediaSessionCallback
+    private lateinit var notificationManager: NotificationManager
 
     override fun onCreate() {
         super.onCreate()
@@ -114,8 +53,16 @@ class PlayerService : MediaBrowserServiceCompat() {
             PendingIntent.getActivity(this, 0, it, PendingIntent.FLAG_IMMUTABLE)
         }
 
+        mediaCallback = MediaSessionCallback()
+        notificationManager = NotificationManager(this)
         mediaSession = MediaSessionCompat(this, MEDIA_SESSION).apply {
             setSessionActivity(intent)
+            setCallback(mediaCallback)
+            setFlags(
+                MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS or
+                    MediaSessionCompat.FLAG_HANDLES_QUEUE_COMMANDS or
+                    MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS
+            )
             isActive = true
         }
 
@@ -170,12 +117,121 @@ class PlayerService : MediaBrowserServiceCompat() {
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         super.onTaskRemoved(rootIntent)
-        // TODO stop and cleanup xmp
+        stopSelf()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        // TODO stop and cleanup xmp
+        // notificationManager.onDestroy()
+        mediaCallback.onStop()
+        mediaSession.release()
+
         coroutineScope.cancel()
+    }
+
+    // Separate function??
+    private fun getPlaylistChildren(): List<MediaBrowserCompat.MediaItem> {
+        val list = playlistDir.list().orEmpty()
+        list.sortBy { it.lowercase() }
+
+        return list.map {
+            val buffer = File(playlistDir, it).source().buffer()
+            val contents = moshiAdapter.fromJson(buffer)!!
+            buffer.close()
+
+            MediaBrowserCompat.MediaItem(
+                MediaDescriptionCompat.Builder().apply {
+                    setMediaId(contents.name)
+                    setTitle(contents.name)
+                    setDescription(contents.comment)
+                }.build(),
+                MediaBrowserCompat.MediaItem.FLAG_BROWSABLE
+            )
+        }
+    }
+
+    // Separate function?
+    private fun getSelectedPlaylistChildren(parentId: String): List<MediaBrowserCompat.MediaItem> {
+        val selectedPlaylist = parentId.substringAfter("::")
+
+        val buffer = File(playlistDir, "$selectedPlaylist.json").source().buffer()
+        val contents = moshiAdapter.fromJson(buffer)!!
+        buffer.close()
+
+        return contents.data.sortedBy { it.id }.map { data ->
+            MediaBrowserCompat.MediaItem(
+                MediaDescriptionCompat.Builder().apply {
+                    setMediaId(data.name)
+                    setTitle(data.name)
+                    setDescription(data.type)
+                    setMediaUri(data.uriPath.toUri())
+                }.build(),
+                MediaBrowserCompat.MediaItem.FLAG_PLAYABLE
+            )
+        }
+    }
+
+    // Separate function?
+    private fun getRootChildren(): List<MediaBrowserCompat.MediaItem> {
+        return listOf(
+            MediaBrowserCompat.MediaItem(
+                MediaDescriptionCompat.Builder().apply {
+                    setMediaId(EXPLORER_ROOT_ID)
+                    setTitle("Module Explorer")
+                    setDescription("Browse modules on the device")
+                }.build(),
+                MediaBrowserCompat.MediaItem.FLAG_BROWSABLE
+            ),
+            MediaBrowserCompat.MediaItem(
+                MediaDescriptionCompat.Builder().apply {
+                    setMediaId(PLAYLIST_ROOT_ID)
+                    setTitle("Playlists")
+                    setDescription("View saved playlists from your device")
+                }.build(),
+                MediaBrowserCompat.MediaItem.FLAG_BROWSABLE
+            )
+        )
+    }
+
+    inner class MediaSessionCallback : MediaSessionCompat.Callback() {
+        override fun onMediaButtonEvent(mediaButtonEvent: Intent?): Boolean {
+            return super.onMediaButtonEvent(mediaButtonEvent)
+        }
+
+        override fun onPrepare() {
+            super.onPrepare()
+        }
+
+        override fun onPlay() {
+            super.onPlay()
+        }
+
+        override fun onPause() {
+            super.onPause()
+        }
+
+        override fun onSkipToNext() {
+            super.onSkipToNext()
+        }
+
+        override fun onSkipToPrevious() {
+            super.onSkipToPrevious()
+        }
+
+        override fun onStop() {
+            super.onStop()
+        }
+
+        override fun onSeekTo(pos: Long) {
+            super.onSeekTo(pos)
+        }
+
+        override fun onSetRepeatMode(repeatMode: Int) {
+            super.onSetRepeatMode(repeatMode)
+        }
+
+        override fun onSetShuffleMode(shuffleMode: Int) {
+            super.onSetShuffleMode(shuffleMode)
+        }
     }
 }

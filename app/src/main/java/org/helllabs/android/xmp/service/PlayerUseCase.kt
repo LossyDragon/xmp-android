@@ -54,10 +54,6 @@ class PlayerUseCase @Inject constructor(private val serviceConnection: ServiceCo
 
     fun seekTo(pos: Long) = serviceConnection.seekTo(pos)
 
-    fun fastForward() = serviceConnection.fastForward()
-
-    fun rewind() = serviceConnection.rewind()
-
     fun stopPlaying() = serviceConnection.stopPlaying()
 
     fun playFromMediaId(mediaId: String) = serviceConnection.playFromMediaId(mediaId)
