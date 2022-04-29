@@ -121,7 +121,7 @@ fun ExplorerScreen(
         viewModel.openDocument.collectLatest { event ->
             Timber.d("openDocument")
             event.getContentIfNotHandled()?.let { document ->
-                // TODO
+                viewModel.onMusicItemPressed()
                 Toast.makeText(
                     context,
                     "${document.name},\n${document.uri}",

@@ -73,6 +73,8 @@ class ServiceConnection @Inject constructor(
 
     fun playFromMediaId(mediaId: String) = transportControls.playFromMediaId(mediaId, null)
 
+    fun prepare() = transportControls.prepare()
+
     private inner class ConnectionCallback : MediaBrowserCompat.ConnectionCallback() {
         override fun onConnected() {
             super.onConnected()

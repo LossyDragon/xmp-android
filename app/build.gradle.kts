@@ -67,8 +67,8 @@ android {
 
 dependencies {
 
-    project(":modarchive")
-    project(":libxmp")
+    // implementation(project(":modarchive")) // TODO: 2 files found with path 'META-INF/gradle/incremental.annotation.processors
+    implementation(project(":libxmp"))
 
     /** Android Libs **/
     // https://developer.android.com/jetpack/androidx/releases/core

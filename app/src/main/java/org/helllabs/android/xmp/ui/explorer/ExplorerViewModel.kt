@@ -72,6 +72,8 @@ class ExplorerViewModel @Inject constructor(
             }
 
             loadDirectory(mediaPath.toUri(), true)
+
+            useCase.subscribeToService(EXPLORER_ROOT_ID)
         }
     }
 
@@ -114,5 +116,10 @@ class ExplorerViewModel @Inject constructor(
         _uiState.value = uiState.value.copy(backStack = backStack)
 
         loadDirectory(backStack.last())
+    }
+
+    /* Player Functions */
+    fun onMusicItemPressed() = viewModelScope.launch {
+        useCase.playFromMediaId("TODO TODO")
     }
 }
