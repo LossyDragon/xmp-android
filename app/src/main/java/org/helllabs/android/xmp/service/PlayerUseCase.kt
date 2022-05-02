@@ -1,5 +1,6 @@
 package org.helllabs.android.xmp.service
 
+import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat
 import javax.inject.Inject
@@ -8,7 +9,9 @@ import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
 import timber.log.Timber
+import javax.inject.Singleton
 
+@Singleton
 class PlayerUseCase @Inject constructor(private val serviceConnection: ServiceConnection) {
 
     val currentSong = serviceConnection.currentSong
@@ -32,12 +35,13 @@ class PlayerUseCase @Inject constructor(private val serviceConnection: ServiceCo
                         children: MutableList<MediaBrowserCompat.MediaItem>
                     ) {
                         super.onChildrenLoaded(parentId, children)
-                        Timber.d("children loaded $children")
+                        Timber.d("onChildrenLoaded($children)")
                         it.resume(Resource.Success(children))
                     }
 
                     override fun onError(parentId: String) {
                         super.onError(parentId)
+                        Timber.d("onError($parentId)")
                         it.resume(Resource.Error(message = "Failed to subscribe"))
                     }
                 }
@@ -56,7 +60,10 @@ class PlayerUseCase @Inject constructor(private val serviceConnection: ServiceCo
 
     fun stopPlaying() = serviceConnection.stopPlaying()
 
-    fun playFromMediaId(mediaId: String) = serviceConnection.playFromMediaId(mediaId)
+    fun playFromMediaId(mediaId: String, extras: Bundle? = null) =
+        serviceConnection.playFromMediaId(mediaId, extras)
+
+    fun prepare() = serviceConnection.prepare()
 
     fun isMusicPlayingOrPaused() = serviceConnection.playbackState.value?.let {
         return@let it.isPlaying || it.isPlayEnabled

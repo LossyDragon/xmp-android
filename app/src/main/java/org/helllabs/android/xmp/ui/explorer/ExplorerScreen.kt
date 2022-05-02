@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.InsertDriveFile
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -144,11 +145,22 @@ fun ExplorerScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+                scrollBehavior = scrollBehavior,
                 title = {
                     Text("Explorer")
                 },
                 onNavPressed = {
                     navigator.popBackStack(route = PlaylistScreenDestination, inclusive = false)
+                },
+                actions = {
+                    IconButton(
+                        onClick = {
+                            // TODO add directory reset option
+                        }
+                    ) {
+                        Icon(imageVector = Icons.Default.MoreVert, null)
+                    }
+
                 }
             )
         },

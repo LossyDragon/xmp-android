@@ -10,36 +10,28 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.squareup.moshi.JsonAdapter
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.io.File
-import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.helllabs.android.xmp.model.Module
 import org.helllabs.android.xmp.model.Playlist
-import org.helllabs.android.xmp.service.*
+import org.helllabs.android.xmp.service.EXPLORER_ROOT_ID
+import org.helllabs.android.xmp.service.PlayerUseCase
 import org.helllabs.android.xmp.ui.explorer.util.CachingDocumentFile
 import org.helllabs.android.xmp.ui.explorer.util.Event
 import org.helllabs.android.xmp.ui.explorer.util.toCachingList
 import org.helllabs.android.xmp.util.preferences.Manager.dataStoreManager
 import org.helllabs.android.xmp.util.preferences.requestMediaPath
 import timber.log.Timber
+import java.io.File
+import javax.inject.Inject
 
 data class ExplorerScreenState(
     val items: List<CachingDocumentFile> = emptyList(),
     val backStack: List<Uri> = emptyList(),
     val isLoading: Boolean = false,
-    val currentModule: Module? = null,
-    val playingState: PlayingState = PlayingState.NONE
-) {
-    val isPlayerBarVisible =
-        currentModule != null &&
-            (playingState == PlayingState.PLAYING || playingState == PlayingState.PAUSED)
-
-    val isMusicPlaying = playingState == PlayingState.PLAYING
-}
+)
 
 @HiltViewModel
 class ExplorerViewModel @Inject constructor(

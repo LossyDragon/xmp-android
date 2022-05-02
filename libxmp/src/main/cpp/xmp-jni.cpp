@@ -733,4 +733,9 @@ Java_org_helllabs_xmp_Xmp_getMaxSequences(JNIEnv *env, jobject obj) {
     return MAX_SEQUENCES;
 }
 
+JNIEXPORT jint JNICALL
+Java_org_helllabs_xmp_Xmp_getMaxChannels(JNIEnv *env, jobject obj) {
+    return XMP_MAX_CHANNELS;
+}
+
 }

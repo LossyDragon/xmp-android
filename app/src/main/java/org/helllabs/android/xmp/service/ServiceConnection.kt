@@ -1,7 +1,7 @@
 package org.helllabs.android.xmp.service
 
-import android.content.ComponentName
-import android.content.Context
+import android.content.*
+import android.media.AudioManager
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat
@@ -17,12 +17,18 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.helllabs.xmp.Xmp
 import timber.log.Timber
 
 @Singleton
 class ServiceConnection @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
+
+    companion object {
+        private val AUDIO_NOISY_INTENT_FILTER =
+            IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
+    }
 
     private val _connectionEvent = MutableSharedFlow<Resource<Boolean>>()
     val connectionEvent = _connectionEvent.asSharedFlow()
@@ -39,6 +45,15 @@ class ServiceConnection @Inject constructor(
 
     private val coroutineScope = CoroutineScope(Dispatchers.Main)
 
+    private var audioFocusHelper: AudioFocusHelper = AudioFocusHelper()
+
+    private var audioManager: AudioManager =
+        context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+
+    private var noisyReceiverRegistered = false
+
+    private var playOnAudioFocus = false
+
     private val mediaBrowser = MediaBrowserCompat(
         context,
         ComponentName(context, PlayerService::class.java),
@@ -51,6 +66,32 @@ class ServiceConnection @Inject constructor(
     private val transportControls: MediaControllerCompat.TransportControls
         get() = mediaController.transportControls
 
+    private val audioNoisyReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (AudioManager.ACTION_AUDIO_BECOMING_NOISY == intent.action) {
+                val state = playbackState.value!!
+                val isPlaying = state.isPlaying || state.isPlayEnabled
+                if (isPlaying) {
+                    pause()
+                }
+            }
+        }
+    }
+
+    private fun registerNoisyReceiver() {
+        if (!noisyReceiverRegistered) {
+            context.registerReceiver(audioNoisyReceiver, AUDIO_NOISY_INTENT_FILTER)
+            noisyReceiverRegistered = true
+        }
+    }
+
+    private fun unregisterNoisyReceiver() {
+        if (noisyReceiverRegistered) {
+            context.unregisterReceiver(audioNoisyReceiver)
+            noisyReceiverRegistered = false
+        }
+    }
+
     fun subscribe(parentId: String, callbacks: MediaBrowserCompat.SubscriptionCallback) {
         mediaBrowser.subscribe(parentId, callbacks)
     }
@@ -59,39 +100,63 @@ class ServiceConnection @Inject constructor(
         mediaBrowser.unsubscribe(parentId)
     }
 
-    fun stopPlaying() = transportControls.stop()
-
     fun seekTo(pos: Long) = transportControls.seekTo(pos)
 
-    fun pause() = transportControls.pause()
+    fun play() {
+        if (audioFocusHelper.requestFocus()) {
+            registerNoisyReceiver()
+            transportControls.play()
+        }
+    }
 
-    fun play() = transportControls.play()
+    fun pause() {
+        if (!playOnAudioFocus) {
+            audioFocusHelper.abandonFocus()
+        }
+
+        unregisterNoisyReceiver()
+        transportControls.pause()
+    }
+
+    fun stopPlaying() {
+        audioFocusHelper.abandonFocus()
+        unregisterNoisyReceiver()
+        transportControls.stop()
+    }
 
     fun skipToNextTrack() = transportControls.skipToNext()
 
     fun skipToPrev() = transportControls.skipToPrevious()
 
-    fun playFromMediaId(mediaId: String) = transportControls.playFromMediaId(mediaId, null)
+    fun playFromMediaId(mediaId: String, extras: Bundle? = null) =
+        transportControls.playFromMediaId(mediaId, extras)
 
     fun prepare() = transportControls.prepare()
 
     private inner class ConnectionCallback : MediaBrowserCompat.ConnectionCallback() {
         override fun onConnected() {
             super.onConnected()
+            Timber.d("onConnected")
             mediaController = MediaControllerCompat(context, mediaBrowser.sessionToken).apply {
                 registerCallback(MediaControllerCallback())
             }
-            emit { _connectionEvent.emit(Resource.Success(true)) }
+            coroutineScope.launch {
+                _connectionEvent.emit(Resource.Success(true))
+            }
         }
 
         override fun onConnectionSuspended() {
             super.onConnectionSuspended()
-            emit { _connectionEvent.emit(Resource.Error(message = "connection suspended")) }
+            coroutineScope.launch {
+                _connectionEvent.emit(Resource.Error(message = "connection suspended"))
+            }
         }
 
         override fun onConnectionFailed() {
             super.onConnectionFailed()
-            emit { _connectionEvent.emit(Resource.Error(message = "Failed to connect")) }
+            coroutineScope.launch {
+                _connectionEvent.emit(Resource.Error(message = "Failed to connect"))
+            }
         }
     }
 
@@ -108,16 +173,61 @@ class ServiceConnection @Inject constructor(
 
         override fun onPlaybackStateChanged(state: PlaybackStateCompat?) {
             super.onPlaybackStateChanged(state)
-            emit { _playbackState.emit(state) }
+            coroutineScope.launch {
+                _playbackState.emit(state)
+            }
         }
 
         override fun onMetadataChanged(metadata: MediaMetadataCompat?) {
             super.onMetadataChanged(metadata)
-            emit { _currentSong.emit(metadata) }
+            coroutineScope.launch {
+                _currentSong.emit(metadata)
+            }
         }
     }
 
-    private fun emit(emission: suspend () -> Unit) = coroutineScope.launch {
-        emission()
+    private inner class AudioFocusHelper : AudioManager.OnAudioFocusChangeListener {
+        val state: PlaybackStateCompat? = playbackState.value
+        val isPlaying = state?.isPlaying ?: false || state?.isPlayEnabled ?: false
+
+        fun requestFocus(): Boolean {
+            val result = audioManager.requestAudioFocus(
+                this,
+                AudioManager.STREAM_MUSIC,
+                AudioManager.AUDIOFOCUS_GAIN
+            )
+
+            return result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
+        }
+
+        fun abandonFocus() {
+            audioManager.abandonAudioFocus(this)
+        }
+
+        override fun onAudioFocusChange(focusChange: Int) {
+            when (focusChange) {
+                AudioManager.AUDIOFOCUS_GAIN -> {
+                    if (playOnAudioFocus && !isPlaying) {
+                        play()
+                    } else if (isPlaying) {
+                        Xmp.setVolume(Xmp.UNDUCK_VOLUME)
+                    }
+
+                    playOnAudioFocus = false
+                }
+                AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK ->
+                    Xmp.setVolume(Xmp.DUCK_VOLUME)
+                AudioManager.AUDIOFOCUS_LOSS_TRANSIENT ->
+                    if (isPlaying) {
+                        playOnAudioFocus = true
+                        pause()
+                    }
+                AudioManager.AUDIOFOCUS_LOSS -> {
+                    audioManager.abandonAudioFocus(this)
+                    playOnAudioFocus = false
+                    stopPlaying()
+                }
+            }
+        }
     }
 }

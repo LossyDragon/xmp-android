@@ -2,6 +2,9 @@ package org.helllabs.xmp
 
 object Xmp {
 
+    const val DUCK_VOLUME = 0x500
+    const val UNDUCK_VOLUME = 0xA00 // I guess?
+
     // Return codes
     const val XMP_END = 1 // End of module reached
 
@@ -29,7 +32,8 @@ object Xmp {
     const val DSP_LOWPASS = 1 shl 0 // Lowpass filter effect
 
     // Limits
-    const val MAX_CHANNELS = 64 // Max number of channels in module
+    val MAX_CHANNELS: Int
+        get() = getMaxChannels() // Max number of channels in module
 
     val MAX_SEQUENCES: Int
         get() = getMaxSequences()
@@ -79,6 +83,7 @@ object Xmp {
     external fun testModule(name: String, info: ModInfo): Boolean
     external fun time(): Int
     private external fun getMaxSequences(): Int
+    private external fun getMaxChannels(): Int
 
     external fun getChannelData(
         volumes: IntArray,
