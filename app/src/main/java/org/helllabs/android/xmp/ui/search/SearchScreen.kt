@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package org.helllabs.android.xmp.ui.search
 
 import androidx.compose.foundation.layout.Box
@@ -13,7 +15,6 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import org.helllabs.android.xmp.ui.components.TopAppBar
 import org.helllabs.android.xmp.ui.destinations.PlaylistScreenDestination
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Destination
 @Composable
 fun SearchScreen(

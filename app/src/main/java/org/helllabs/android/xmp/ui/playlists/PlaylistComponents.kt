@@ -1,6 +1,6 @@
 package org.helllabs.android.xmp.ui.playlists
 
-import TextFieldStyle
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
@@ -9,21 +9,15 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.vanpra.composematerialdialogs.MaterialDialog
-import com.vanpra.composematerialdialogs.MaterialDialogState
-import com.vanpra.composematerialdialogs.message
-import com.vanpra.composematerialdialogs.title
-import input
+import com.vanpra.composematerialdialogs.*
 import org.helllabs.android.xmp.ui.components.AnimatingFabContent
 import org.helllabs.android.xmp.ui.components.TwoLineItem
 import org.helllabs.android.xmp.ui.theme.XmpAndroidTheme
@@ -38,8 +32,6 @@ fun PlaylistsFab(
             .height(56.dp)
             .widthIn(min = 56.dp),
         onClick = onFabClicked,
-        containerColor = MaterialTheme.colorScheme.secondary,
-        contentColor = Color.White
     ) {
         AnimatingFabContent(
             extended = extended,
@@ -188,6 +180,7 @@ fun DeletePlaylistDialog(
 }
 
 @Preview(name = "Playlist Fab Button")
+@Preview(name = "Playlist Fab Button", uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun PlaylistFab_Preview() {
     XmpAndroidTheme {
@@ -196,6 +189,7 @@ private fun PlaylistFab_Preview() {
 }
 
 @Preview(name = "Playlist Item Card")
+@Preview(name = "Playlist Item Card", uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun PlaylistItemCard_Preview() {
     XmpAndroidTheme {

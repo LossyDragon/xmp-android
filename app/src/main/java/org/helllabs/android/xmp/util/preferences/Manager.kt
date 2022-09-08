@@ -8,7 +8,7 @@ import de.schnettler.datastore.manager.DataStoreManager
 
 /* Pref Manager */
 object Manager {
-    val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
+    private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
     lateinit var dataStoreManager: DataStoreManager
 

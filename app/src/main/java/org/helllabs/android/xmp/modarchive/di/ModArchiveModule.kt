@@ -1,4 +1,4 @@
-package org.helllabs.modarchive.di
+package org.helllabs.android.xmp.modarchive.di
 
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.squareup.moshi.JsonAdapter
@@ -14,10 +14,10 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import nl.adaptivity.xmlutil.serialization.XML
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
-import org.helllabs.modarchive.Constants
-import org.helllabs.modarchive.api.ApiHelper
-import org.helllabs.modarchive.api.ApiHelperImpl
-import org.helllabs.modarchive.api.ApiService
+import org.helllabs.android.xmp.modarchive.Constants
+import org.helllabs.android.xmp.modarchive.api.ApiHelper
+import org.helllabs.android.xmp.modarchive.api.ApiHelperImpl
+import org.helllabs.android.xmp.modarchive.api.ApiService
 import retrofit2.Retrofit
 
 @Module
@@ -61,7 +61,7 @@ object ModArchiveModule {
 
         val listData = Types.newParameterizedType(
             MutableList::class.java,
-            org.helllabs.modarchive.model.Module::class.java
+            org.helllabs.android.xmp.modarchive.model.Module::class.java
         )
 
         return moshi.adapter(listData)

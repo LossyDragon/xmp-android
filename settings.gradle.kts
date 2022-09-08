@@ -14,7 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-// rootProject.name = "Xmp Android"
+rootProject.name = "Xmp Android"
 include(":app")
-include(":modarchive")
-include(":libxmp")

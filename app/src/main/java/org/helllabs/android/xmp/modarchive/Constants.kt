@@ -1,6 +1,6 @@
-package org.helllabs.modarchive
+package org.helllabs.android.xmp.modarchive
 
-import org.helllabs.modarchive.model.Module
+import org.helllabs.android.xmp.modarchive.model.Module
 
 object Constants {
     const val DEFAULT_DOWNLOAD_DIR = "TheModArchive"

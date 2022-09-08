@@ -1,12 +1,12 @@
-package org.helllabs.modarchive.api
+package org.helllabs.android.xmp.modarchive.api
 
 import javax.inject.Inject
-import org.helllabs.modarchive.Constants.BY_ARTIST
-import org.helllabs.modarchive.Constants.BY_ARTIST_ID
-import org.helllabs.modarchive.Constants.BY_MODULE_ID
-import org.helllabs.modarchive.Constants.BY_RANDOM
-import org.helllabs.modarchive.Constants.BY_SEARCH
-import org.helllabs.modarchive.Constants.TYPE_FILE_OR_TITLE
+import org.helllabs.android.xmp.modarchive.Constants.BY_ARTIST
+import org.helllabs.android.xmp.modarchive.Constants.BY_ARTIST_ID
+import org.helllabs.android.xmp.modarchive.Constants.BY_MODULE_ID
+import org.helllabs.android.xmp.modarchive.Constants.BY_RANDOM
+import org.helllabs.android.xmp.modarchive.Constants.BY_SEARCH
+import org.helllabs.android.xmp.modarchive.Constants.TYPE_FILE_OR_TITLE
 
 class Repository @Inject constructor(private val apiHelper: ApiHelper) {
 

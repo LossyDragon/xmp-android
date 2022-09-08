@@ -1,9 +1,9 @@
-package org.helllabs.modarchive.api
+package org.helllabs.android.xmp.modarchive.api
 
 import javax.inject.Inject
-import org.helllabs.modarchive.model.ArtistResult
-import org.helllabs.modarchive.model.ModuleResult
-import org.helllabs.modarchive.model.SearchListResult
+import org.helllabs.android.xmp.modarchive.model.ArtistResult
+import org.helllabs.android.xmp.modarchive.model.ModuleResult
+import org.helllabs.android.xmp.modarchive.model.SearchListResult
 
 class ApiHelperImpl @Inject constructor(private val apiService: ApiService) : ApiHelper {
 

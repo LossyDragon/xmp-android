@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+
 package org.helllabs.android.xmp.ui.playlists.selected
 
 import androidx.compose.animation.core.animateDpAsState
@@ -28,13 +30,11 @@ import org.helllabs.android.xmp.ui.components.TopAppBar
 import org.helllabs.android.xmp.ui.destinations.PlaylistScreenDestination
 import timber.log.Timber
 
-// TODO: https://github.com/raamcosta/compose-destinations/issues/29
 data class PlaylistNavArgs(
     val title: String,
     val comment: String
 )
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Destination(navArgsDelegate = PlaylistNavArgs::class)
 @Composable
 fun SelectedScreen(
@@ -44,7 +44,8 @@ fun SelectedScreen(
 ) {
     val uiState by viewModel.uiState
 
-    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+    val topBarState = rememberTopAppBarState()
+    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topBarState) }
     val listState = rememberLazyListState()
     val dragDropState = rememberDragDropState(listState) { fromIndex, toIndex ->
         viewModel.setDragDropState(
@@ -66,7 +67,7 @@ fun SelectedScreen(
     )
 
     // Feed the ViewModel playlist data.
-    LaunchedEffect(true) {
+    LaunchedEffect(Unit) {
         viewModel.loadPlaylist(args.title)
     }
 
@@ -86,7 +87,7 @@ fun SelectedScreen(
                             overflow = TextOverflow.Ellipsis,
                         )
                         Text(
-                            text = args.comment,
+                            text = args.comment.ifEmpty { "** No Comment **" },
                             fontSize = 12.sp,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis

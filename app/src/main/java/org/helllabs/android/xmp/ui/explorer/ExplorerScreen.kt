@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+
 package org.helllabs.android.xmp.ui.explorer
 
 import android.app.Activity
@@ -40,10 +42,6 @@ import org.helllabs.android.xmp.util.preferences.Manager.dataStoreManager
 import org.helllabs.android.xmp.util.preferences.requestMediaPath
 import timber.log.Timber
 
-@OptIn(
-    ExperimentalMaterial3Api::class,
-    ExperimentalFoundationApi::class,
-)
 @Destination
 @Composable
 fun ExplorerScreen(
@@ -55,7 +53,8 @@ fun ExplorerScreen(
 
     val scope = rememberCoroutineScope()
     val scrollState = rememberLazyListState()
-    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+    val topBarState = rememberTopAppBarState()
+    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topBarState) }
 
     val onClick: (document: CachingDocumentFile) -> Unit = { document ->
         viewModel.documentClicked(document)
@@ -160,7 +159,6 @@ fun ExplorerScreen(
                     ) {
                         Icon(imageVector = Icons.Default.MoreVert, null)
                     }
-
                 }
             )
         },

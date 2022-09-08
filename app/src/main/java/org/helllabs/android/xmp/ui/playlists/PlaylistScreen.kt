@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+
 package org.helllabs.android.xmp.ui.playlists
 
 import android.support.v4.media.MediaBrowserCompat
@@ -29,10 +31,6 @@ import org.helllabs.android.xmp.ui.components.themedText
 import org.helllabs.android.xmp.ui.destinations.SelectedScreenDestination
 import timber.log.Timber
 
-@OptIn(
-    ExperimentalMaterial3Api::class,
-    ExperimentalFoundationApi::class
-)
 @RootNavGraph(start = true)
 @Destination
 @Composable
@@ -43,7 +41,8 @@ fun PlaylistScreen(
     val uiState by viewModel.uiState
 
     val scrollState = rememberLazyListState()
-    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior() }
+    val topBarState = rememberTopAppBarState()
+    val scrollBehavior = remember { TopAppBarDefaults.pinnedScrollBehavior(topBarState) }
 
     val oldName = remember { mutableStateOf("") }
     val oldComment = remember { mutableStateOf("") }
@@ -91,7 +90,7 @@ fun PlaylistScreen(
         Timber.d("onClick: $it")
 
         val title = it.description.title.toString()
-        val comment = it.description.title.toString()
+        val comment = it.description.description.toString()
         navigator.navigate(SelectedScreenDestination(title, comment))
     }
     val onOverflowClick: (item: MediaBrowserCompat.MediaItem) -> Unit = {

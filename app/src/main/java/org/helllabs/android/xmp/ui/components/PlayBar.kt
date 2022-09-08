@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package org.helllabs.android.xmp.ui.components
 
 import android.content.res.Configuration.UI_MODE_NIGHT_NO
@@ -22,7 +24,6 @@ import androidx.compose.ui.unit.dp
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.ui.theme.XmpAndroidTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlayerBottomBar(
     modifier: Modifier = Modifier,

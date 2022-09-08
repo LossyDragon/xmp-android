@@ -4,12 +4,12 @@ import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat
 import javax.inject.Inject
+import javax.inject.Singleton
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
 import timber.log.Timber
-import javax.inject.Singleton
 
 @Singleton
 class PlayerUseCase @Inject constructor(private val serviceConnection: ServiceConnection) {

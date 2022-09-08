@@ -1,5 +1,8 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package org.helllabs.android.xmp.ui.components
 
+import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.RowScope
@@ -11,10 +14,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.google.accompanist.insets.LocalWindowInsets
-import com.google.accompanist.insets.rememberInsetsPaddingValues
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
 @Composable
 fun TopAppBar(
@@ -24,22 +27,20 @@ fun TopAppBar(
     title: @Composable () -> Unit,
 ) {
     val backgroundColors = TopAppBarDefaults.centerAlignedTopAppBarColors()
-    val backgroundColor = backgroundColors.containerColor(
-        scrollFraction = scrollBehavior?.scrollFraction ?: 0f
-    ).value
-    val foregroundColors = TopAppBarDefaults.smallTopAppBarColors(
+    val minColor = backgroundColors.containerColor(colorTransitionFraction = 0f).value
+    val maxColor = backgroundColors.containerColor(colorTransitionFraction = 1f).value
+    val easing = FastOutLinearInEasing.transform(scrollBehavior?.state?.overlappedFraction ?: 0f)
+    val backgroundColor = lerp(minColor, maxColor, easing)
+
+    val systemUiController = rememberSystemUiController()
+    systemUiController.setStatusBarColor(backgroundColor)
+
+    val foregroundColors = TopAppBarDefaults.centerAlignedTopAppBarColors(
         containerColor = Color.Transparent,
         scrolledContainerColor = Color.Transparent
     )
-    val padding = rememberInsetsPaddingValues(
-        LocalWindowInsets.current.statusBars,
-        applyBottom = false,
-    )
-    Box(
-        modifier = Modifier
-            .background(backgroundColor)
-            .padding(padding)
-    ) {
+
+    Box(modifier = Modifier.background(backgroundColor)) {
         CenterAlignedTopAppBar(
             title = title,
             actions = actions,

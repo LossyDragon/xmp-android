@@ -1,3 +1,8 @@
+@file:OptIn(
+    ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class,
+    ExperimentalAnimationApi::class
+)
+
 package org.helllabs.android.xmp.ui
 
 import android.os.Bundle
@@ -23,7 +28,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -33,14 +37,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.google.accompanist.insets.ProvideWindowInsets
 import com.ramcosta.composedestinations.DestinationsNavHost
-import com.ramcosta.composedestinations.navigation.navigateTo
+import com.ramcosta.composedestinations.navigation.navigate
 import com.ramcosta.composedestinations.spec.DirectionDestinationSpec
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import org.helllabs.android.xmp.ui.components.PlayerBottomBar
-import org.helllabs.android.xmp.ui.destinations.*
 import org.helllabs.android.xmp.ui.theme.XmpAndroidTheme
 import timber.log.Timber
 
@@ -64,22 +66,24 @@ class MainActivity : ComponentActivity() {
 
         Timber.i("onCreate")
         setContent {
+            val windowInset = Modifier
+                .statusBarsPadding()
+                .windowInsetsPadding(
+                    WindowInsets
+                        .navigationBars
+                        .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
+                )
+
             XmpAndroidTheme {
-                ProvideWindowInsets {
-                    MainActivityUI()
-                }
+                MainActivityUI(modifier = windowInset)
             }
         }
     }
 }
 
-@OptIn(
-    ExperimentalMaterial3Api::class,
-    ExperimentalMaterialApi::class,
-    ExperimentalAnimationApi::class
-)
 @Composable
 private fun MainActivityUI(
+    modifier: Modifier = Modifier,
     viewModel: MainViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState
@@ -97,11 +101,11 @@ private fun MainActivityUI(
     }
 
     Scaffold(
+        modifier = modifier,
         bottomBar = {
             Column {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.End
                 ) {
                     val swipeToDismissState = rememberDismissState { dismissValue ->
                         if (dismissValue == DismissValue.DismissedToEnd ||
@@ -158,9 +162,11 @@ private fun MainActivityUI(
                 )
             }
         }
-    ) {
+    ) { paddingValues ->
         Surface(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
             color = MaterialTheme.colorScheme.background
         ) {
             // Show or Hide Bottom Nav Bar
@@ -176,7 +182,7 @@ private fun MainActivityUI(
             }
 
             DestinationsNavHost(
-                modifier = Modifier.padding(it),
+                modifier = Modifier,
                 navController = navController,
                 navGraph = NavGraphs.root
             )
@@ -198,7 +204,7 @@ fun BottomBar(
                 modifier = Modifier.clip(RoundedCornerShape(24.dp)),
                 selected = currentDestination == destination.direction,
                 onClick = {
-                    navController.navigateTo(destination.direction) {
+                    navController.navigate(destination.direction) {
                         launchSingleTop = true
                     }
                 },

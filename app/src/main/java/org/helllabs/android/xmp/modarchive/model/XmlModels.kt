@@ -1,4 +1,4 @@
-package org.helllabs.modarchive.model
+package org.helllabs.android.xmp.modarchive.model
 
 import android.text.Spanned
 import androidx.core.text.toSpanned

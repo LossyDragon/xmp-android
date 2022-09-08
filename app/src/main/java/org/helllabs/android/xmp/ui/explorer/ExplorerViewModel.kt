@@ -10,6 +10,8 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.squareup.moshi.JsonAdapter
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.io.File
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -24,8 +26,6 @@ import org.helllabs.android.xmp.ui.explorer.util.toCachingList
 import org.helllabs.android.xmp.util.preferences.Manager.dataStoreManager
 import org.helllabs.android.xmp.util.preferences.requestMediaPath
 import timber.log.Timber
-import java.io.File
-import javax.inject.Inject
 
 data class ExplorerScreenState(
     val items: List<CachingDocumentFile> = emptyList(),

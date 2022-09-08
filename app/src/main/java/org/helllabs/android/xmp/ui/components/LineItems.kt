@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package org.helllabs.android.xmp.ui.components
 
 import android.content.res.Configuration.UI_MODE_NIGHT_NO
@@ -19,7 +21,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.helllabs.android.xmp.ui.theme.XmpAndroidTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TwoLineItem(
     modifier: Modifier = Modifier,
@@ -112,8 +113,8 @@ private fun TwoLineContent(
 private fun TwoLineItem_Preview() {
     XmpAndroidTheme {
         TwoLineItem(
-            primaryText = "Some Title - Some Title - Some Title",
-            secondaryText = "Come Comment - Come Comment - Come Comment - Come Comment - ",
+            primaryText = "Some Title - ".repeat(10),
+            secondaryText = "Some Comment -".repeat(10),
             cardIcon = Icons.Default.Warning,
             onItemClick = {},
             onOverflow = {}
