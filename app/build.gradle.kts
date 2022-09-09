@@ -1,12 +1,12 @@
 plugins {
     id("com.android.application")
-    id("com.google.dagger.hilt.android") version "2.43.2"
-    id("com.google.devtools.ksp") version "1.7.10-1.0.6"
+    id("com.google.dagger.hilt.android") version Versions.hilt
+    id("com.google.devtools.ksp") version Versions.ksp
     id("kotlin-parcelize")
-    id("org.jlleitschuh.gradle.ktlint") version "11.0.0"
+    id("org.jlleitschuh.gradle.ktlint") version Versions.ktLint
     kotlin("android")
     kotlin("kapt")
-    kotlin("plugin.serialization") version "1.6.20"
+    kotlin("plugin.serialization") version Versions.kotlin
 }
 
 android {
@@ -35,22 +35,18 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
     kotlinOptions {
-        jvmTarget = "1.8"
-        freeCompilerArgs = listOf(
-            "-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi",
-            "-Xopt-in=kotlin.RequiresOptIn"
-        )
+        jvmTarget = JavaVersion.VERSION_11.toString()
     }
     buildFeatures {
         compose = true
     }
     composeOptions {
         // https://developer.android.com/jetpack/androidx/releases/compose#declaring_dependencies
-        kotlinCompilerExtensionVersion = "1.3.1"
+        kotlinCompilerExtensionVersion = Versions.compilerExtension
     }
     packagingOptions {
         resources {
@@ -70,56 +66,31 @@ android {
 dependencies {
 
     /** Android Libs **/
-    // https://developer.android.com/jetpack/androidx/releases/core
-    implementation("androidx.core:core-ktx:1.9.0")
-    // https://developer.android.com/jetpack/androidx/releases/lifecycle
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.5.1")
+    Libs.androidx.forEach(::implementation)
 
     /** Compose **/
-    // https://developer.android.com/jetpack/androidx/releases/activity
-    // https://developer.android.com/jetpack/androidx/releases/navigation
-    val composeVersion = rootProject.extra["compose_version"]
-    implementation("androidx.activity:activity-compose:1.5.1")
-    implementation("androidx.compose.material3:material3:1.0.0-alpha15")
-    implementation("androidx.compose.material:material-icons-core:$composeVersion")
-    implementation("androidx.compose.material:material-icons-extended:$composeVersion")
-    implementation("androidx.compose.material:material:$composeVersion")
-    implementation("androidx.compose.ui:ui-tooling-preview:$composeVersion")
-    implementation("androidx.compose.ui:ui-tooling:$composeVersion")
-    implementation("androidx.compose.ui:ui-util:$composeVersion")
-    implementation("androidx.compose.ui:ui:$composeVersion")
-    implementation("androidx.navigation:navigation-compose:2.6.0-alpha01")
+    Libs.compose.forEach(::implementation)
 
     /** Accompanist **/
-    val accompanistVersion = rootProject.extra["accompanist_version"]
-    implementation("com.google.accompanist:accompanist-insets:$accompanistVersion")
-    implementation("com.google.accompanist:accompanist-permissions:$accompanistVersion")
-    implementation("com.google.accompanist:accompanist-systemuicontroller:$accompanistVersion")
+    Libs.accompanist.forEach(::implementation)
+
+    /** Compose Preferences **/
+    Libs.composePreferences.forEach(::implementation)
+
+    /** Hilt (DI) **/
+    Libs.daggerHilt.forEach(::implementation)
+    Libs.daggerHiltKapt.forEach(::kapt)
+
+    /** XML Parser **/
+    Libs.xmlUtil.forEach(::implementation)
 
     /** Compose Destinations **/
-    // https://github.com/raamcosta/compose-destinations/releases
-    val composeDest = "1.7.19-beta"
-    implementation("io.github.raamcosta.compose-destinations:core:$composeDest")
-    implementation("io.github.raamcosta.compose-destinations:animations-core:$composeDest")
-    ksp("io.github.raamcosta.compose-destinations:ksp:$composeDest")
+    Libs.composeDestination.forEach(::implementation)
+    Libs.composeDestinationKsp.forEach(::ksp)
 
     /** Compose Dialogs **/
     // https://github.com/vanpra/compose-material-dialogs/releases
-    val dialogs = "0.8.1-rc"
-    implementation("io.github.vanpra.compose-material-dialogs:core:$dialogs")
-
-    /** Compose Preferences **/
-    // https://github.com/Sh4dowSoul/ComposePreferences/releases
-    val preferences = "0.1.4"
-    implementation("com.github.Sh4dowSoul.ComposePreferences:preferences-material3:$preferences")
-    implementation("com.github.Sh4dowSoul.ComposePreferences:datastore-manager:$preferences")
-
-    /** Hilt (DI) **/
-    // Hilt Nav Compose: https://developer.android.com/jetpack/androidx/releases/hilt
-    val hiltVersion = rootProject.extra["hilt_version"]
-    implementation("androidx.hilt:hilt-navigation-compose:1.0.0")
-    implementation("com.google.dagger:hilt-android:$hiltVersion")
-    kapt("com.google.dagger:hilt-compiler:$hiltVersion")
+    implementation("io.github.vanpra.compose-material-dialogs:core:0.8.1-rc")
 
     /** Media **/
     // https://developer.android.com/jetpack/androidx/releases/media
@@ -136,12 +107,6 @@ dependencies {
     /** Document Files **/
     // https://developer.android.com/jetpack/androidx/releases/documentfile
     implementation("androidx.documentfile:documentfile:1.0.1")
-
-    /** XML Parser **/
-    // https://github.com/pdvrieze/xmlutil/releases
-    val xmlUtil = "0.84.2"
-    implementation("io.github.pdvrieze.xmlutil:core-android:$xmlUtil")
-    implementation("io.github.pdvrieze.xmlutil:serialization-android:$xmlUtil")
 
     // https://search.maven.org/artifact/com.squareup.okhttp3/okhttp
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
