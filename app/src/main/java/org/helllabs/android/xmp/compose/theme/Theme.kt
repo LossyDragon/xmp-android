@@ -13,6 +13,7 @@ fun XmpTheme(
     val colorScheme = rememberDynamicColorScheme(
         seedColor = seed,
         isDark = useDarkTheme,
+        isAmoled = false, // Maybe Pure-Dark mode?
         style = PaletteStyle.TonalSpot,
         isExtendedFidelity = true
     )

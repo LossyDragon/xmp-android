@@ -22,7 +22,7 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "org.helllabs.android.xmp"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "org.helllabs.android.xmp"
@@ -31,7 +31,7 @@ android {
          * https://apilevels.com/
          */
         minSdk = 23 // Android 6 - Marshmallow
-        targetSdk = 34 // Android 14 - Upside Down Cake
+        targetSdk = 35 // Android 15 Vanilla Ice Cream
 
         versionCode = 110
         versionName = "5.0-SNAPSHOT"

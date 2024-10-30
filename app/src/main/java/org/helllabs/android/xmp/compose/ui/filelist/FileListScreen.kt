@@ -14,7 +14,7 @@ import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
-import androidx.compose.ui.input.nestedscroll.*
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.*
 import androidx.compose.ui.tooling.preview.*
@@ -380,53 +380,39 @@ private fun FileListScreen(
             }
         }
 
-        // Outer Box() to properly hide Pull-Refresh
-        Box(modifier = modifier.padding(paddingValues)) {
-            val pullRefreshState = rememberPullToRefreshState()
-            if (pullRefreshState.isRefreshing) {
-                LaunchedEffect(true) {
-                    onRefresh()
-                    pullRefreshState.endRefresh()
-                }
-            }
-
-            Box(
-                modifier = Modifier.nestedScroll(pullRefreshState.nestedScrollConnection),
-                contentAlignment = Alignment.Center
+        PullToRefreshBox(
+            modifier = modifier.padding(paddingValues),
+            contentAlignment = Alignment.Center,
+            isRefreshing = state.isLoading, // TODO Won't hide when false
+            onRefresh = onRefresh,
+        ) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                state = scrollState,
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    state = scrollState,
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    itemsIndexed(state.list) { index, item ->
-                        FileListCard(
-                            item = item,
-                            onItemClick = { onItemClick(item, index) },
-                            onItemLongClick = { onItemLongClick(item, index, it) }
-                        )
-                    }
-                }
-
-                if (state.list.isEmpty() && !state.isLoading) {
-                    ErrorScreen(
-                        text = stringResource(id = R.string.error_empty_directory),
-                        action = {
-                            OutlinedButton(onClick = onRestore) {
-                                Text(text = stringResource(id = R.string.back))
-                            }
-                        }
+                itemsIndexed(state.list) { index, item ->
+                    FileListCard(
+                        item = item,
+                        onItemClick = { onItemClick(item, index) },
+                        onItemLongClick = { onItemLongClick(item, index, it) }
                     )
                 }
+            }
 
-                ProgressbarIndicator(isLoading = state.isLoading)
-
-                PullToRefreshContainer(
-                    modifier = Modifier.align(Alignment.TopCenter),
-                    state = pullRefreshState
+            if (state.list.isEmpty() && !state.isLoading) {
+                ErrorScreen(
+                    text = stringResource(id = R.string.error_empty_directory),
+                    action = {
+                        OutlinedButton(onClick = onRestore) {
+                            Text(text = stringResource(id = R.string.back))
+                        }
+                    }
                 )
             }
+
+            ProgressbarIndicator(isLoading = state.isLoading)
         }
     }
 }

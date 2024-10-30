@@ -132,8 +132,8 @@ class FileListViewModel : ViewModel() {
             return
         }
 
-        _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch(Dispatchers.IO) {
+            _uiState.update { it.copy(isLoading = true) }
             Timber.d("Path: ${modDir.uri}")
 
             // Rebuild our bread crumbs

@@ -1,28 +1,28 @@
 [versions]
-activityCompose = "1.9.1" # https://mvnrepository.com/artifact/androidx.activity/activity-compose
-androidGradlePlugin = "8.5.2" # https://mvnrepository.com/artifact/com.android.application/com.android.application.gradle.plugin
+activityCompose = "1.9.3" # https://mvnrepository.com/artifact/androidx.activity/activity-compose
+androidGradlePlugin = "8.7.1" # https://mvnrepository.com/artifact/com.android.application/com.android.application.gradle.plugin
 cascadeCompose = "2.3.0" # https://mvnrepository.com/artifact/me.saket.cascade/cascade-compose
-composeBom = "2024.08.00" # https://mvnrepository.com/artifact/androidx.compose/compose-bom
-composeNavigation = "2.8.0-rc01" # https://mvnrepository.com/artifact/androidx.navigation/navigation-compose
-coreKtx = "1.13.1" # https://mvnrepository.com/artifact/androidx.core/core-ktx
+composeBom = "2024.10.01" # https://mvnrepository.com/artifact/androidx.compose/compose-bom
+composeNavigation = "2.8.3" # https://mvnrepository.com/artifact/androidx.navigation/navigation-compose
+coreKtx = "1.15.0" # https://mvnrepository.com/artifact/androidx.core/core-ktx
 dataStore = "1.1.1" # https://mvnrepository.com/artifact/androidx.datastore/datastore-preferences
 dfc = "1.0.8" # https://mvnrepository.com/artifact/com.lazygeniouz/dfc
-kotlin = "2.0.10" # https://mvnrepository.com/artifact/org.jetbrains.kotlin.android/org.jetbrains.kotlin.android.gradle.plugin
+kotlin = "2.0.21" # https://mvnrepository.com/artifact/org.jetbrains.kotlin.android/org.jetbrains.kotlin.android.gradle.plugin
 kotlinterGradle = "4.4.1" # // https://github.com/jeremymailen/kotlinter-gradle
-kotlinxSerializationJson = "1.7.1" # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-serialization-json
+kotlinxSerializationJson = "1.7.3" # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-serialization-json
 leakcanaryAndroid = "2.14" # https://mvnrepository.com/artifact/com.squareup.leakcanary/leakcanary-android
-lifecycleRuntimeCompose = "2.8.4" # https://mvnrepository.com/artifact/androidx.lifecycle/lifecycle-runtime-compose
-lifecycleRuntimeKtx = "2.8.4" # https://mvnrepository.com/artifact/androidx.lifecycle/lifecycle-runtime-ktx
-lifecycleViewModelCompose = "2.8.4" # https://mvnrepository.com/artifact/androidx.lifecycle/lifecycle-viewmodel-compose
-materialKolor = "1.7.0" # https://mvnrepository.com/artifact/com.materialkolor/material-kolor
+lifecycleRuntimeCompose = "2.8.7" # https://mvnrepository.com/artifact/androidx.lifecycle/lifecycle-runtime-compose
+lifecycleRuntimeKtx = "2.8.7" # https://mvnrepository.com/artifact/androidx.lifecycle/lifecycle-runtime-ktx
+lifecycleViewModelCompose = "2.8.7" # https://mvnrepository.com/artifact/androidx.lifecycle/lifecycle-viewmodel-compose
+materialKolor = "2.0.0" # https://mvnrepository.com/artifact/com.materialkolor/material-kolor
 media = "1.7.0" # https://mvnrepository.com/artifact/androidx.media/media
 moshiKotlin = "1.15.1" # https://mvnrepository.com/artifact/com.squareup.moshi/moshi-kotlin
 okhttp = "5.0.0-alpha.14" # https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
-reorderable = "2.3.0" # https://mvnrepository.com/artifact/sh.calvin.reorderable/reorderable
+reorderable = "2.4.0" # https://mvnrepository.com/artifact/sh.calvin.reorderable/reorderable
 retrofit = "2.11.0" # https://mvnrepository.com/artifact/com.squareup.retrofit2/retrofit
-settings = "2.4.0" # https://github.com/alorma/Compose-Settings/releases
+settings = "2.6.0" # https://github.com/alorma/Compose-Settings/releases
 timber = "5.0.1" # https://mvnrepository.com/artifact/com.jakewharton.timber/timber
-xmlUtil = "0.90.1" # https://mvnrepository.com/artifact/io.github.pdvrieze.xmlutil/core-android
+xmlUtil = "0.90.2" # https://mvnrepository.com/artifact/io.github.pdvrieze.xmlutil/core-android
 
 [libraries]
 compose-activity = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }

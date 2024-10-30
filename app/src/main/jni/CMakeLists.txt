@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.4)
 project(xmp-jni LANGUAGES C)
 
 # Add libxmp's CMakeLists.txt

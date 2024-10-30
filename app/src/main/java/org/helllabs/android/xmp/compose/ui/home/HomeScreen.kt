@@ -16,7 +16,6 @@ import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
-import androidx.compose.ui.input.nestedscroll.*
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.*
 import androidx.compose.ui.text.*
@@ -107,7 +106,7 @@ fun HomeScreenImpl(
         val savedUri = PrefManager.safStoragePath.let {
             try {
                 Uri.parse(it)
-            } catch (e: NullPointerException) {
+            } catch (_: NullPointerException) {
                 null
             }
         }
@@ -395,20 +394,13 @@ private fun HomeScreen(
             }
         }
 
-        val pullRefreshState = rememberPullToRefreshState()
-        if (pullRefreshState.isRefreshing) {
-            LaunchedEffect(true) {
-                onRefresh()
-                pullRefreshState.endRefresh()
-            }
-        }
-
-        Box(
+        PullToRefreshBox(
             modifier = modifier
                 .padding(paddingValues)
-                .fillMaxSize()
-                .nestedScroll(pullRefreshState.nestedScrollConnection),
-            contentAlignment = Alignment.Center
+                .fillMaxSize(),
+            contentAlignment = Alignment.Center,
+            isRefreshing = state.isLoading,
+            onRefresh = onRefresh
         ) {
             if (state.playlistItems.isNotEmpty()) {
                 LazyColumn(
@@ -444,11 +436,6 @@ private fun HomeScreen(
                     )
                 }
             }
-
-            PullToRefreshContainer(
-                modifier = Modifier.align(Alignment.TopCenter),
-                state = pullRefreshState
-            )
 
             ProgressbarIndicator(isLoading = state.isLoading)
         }
