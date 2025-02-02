@@ -111,10 +111,6 @@ android {
         jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
-    composeCompiler {
-        enableStrongSkippingMode = true
-    }
-
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
