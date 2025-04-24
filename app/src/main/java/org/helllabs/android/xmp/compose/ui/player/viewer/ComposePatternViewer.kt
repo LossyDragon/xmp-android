@@ -1,7 +1,6 @@
 package org.helllabs.android.xmp.compose.ui.player.viewer
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -11,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -27,8 +25,7 @@ import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.*
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.*
 import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.compose.theme.XmpTheme
@@ -42,8 +39,35 @@ import timber.log.Timber
 
 // Maybe keep the row numbers in view at all times, and move the channel columns instead?
 
-// TODO: Lag when there are many channels, is it culling right?
-//  many calls to textMeasure seems to tank performance.
+// TODO
+//  1. I broke preview
+//  2. Overscrolling issues
+//  3. New song render issues (first few channels don't render if scrolled)
+
+private val headerTextStyle = TextStyle(
+    color = Color.White,
+    fontFamily = FontFamily.Monospace,
+    fontSize = 12.sp,
+    fontWeight = FontWeight.Bold
+)
+private val rowTextStyle = TextStyle(
+    fontSize = 11.sp,
+    fontFamily = FontFamily.Monospace,
+    fontWeight = FontWeight.Bold,
+    platformStyle = PlatformTextStyle(includeFontPadding = true)
+)
+private val patternTextStyle = TextStyle(
+    fontSize = 14.sp,
+    fontFamily = FontFamily.Monospace,
+    fontWeight = FontWeight.Bold
+)
+private val noteColor = Color(140, 140, 160)
+private val noteColorMuted = Color(60, 60, 60)
+private val instrumentColor = Color(160, 80, 80)
+private val instrumentColorMuted = Color(80, 40, 40)
+private val effectColor = Color(34, 158, 60)
+private val effectColorMuted = Color(16, 75, 28)
+private val backgroundColor = Color(0x0D888888)
 
 @Composable
 internal fun ComposePatternViewer(
@@ -54,23 +78,25 @@ internal fun ComposePatternViewer(
     modVars: ModVars
 ) {
     val density = LocalDensity.current
-    val infoTextMeasurer = rememberTextMeasurer(16384)
     val scope = rememberCoroutineScope()
     val view = LocalView.current
 
-    var canvasSize by remember {
-        mutableStateOf(Size.Zero)
-    }
-    val xAxisMultiplier = remember {
-        with(density) { 24.dp.toPx() }
-    }
-    val yAxisMultiplier = remember {
-        with(density) { 24.dp.toPx() }
-    }
-    val offsetX = remember {
-        Animatable(0f)
+    val infoTextMeasurer = rememberTextMeasurer(4096)
+    val rowTextMeasurer = rememberTextMeasurer(256)
+    val headerTextMeasurer = rememberTextMeasurer(64)
+
+    val dimensions = remember(density) {
+        PatternViewerDimensions(density)
     }
 
+    val xAxisMultiplier = dimensions.xAxisMultiplier
+    val yAxisMultiplier = dimensions.yAxisMultiplier
+
+    var canvasSize by remember { mutableStateOf(Size.Zero) }
+
+    val offsetX = remember { Animatable(0f) }
+
+    // Cache effect table based on module type
     var currentType by remember { mutableStateOf("") }
     val effectsTable = remember(modType) {
         val type = Effects.getEffectList(modType)
@@ -78,35 +104,22 @@ internal fun ComposePatternViewer(
         type.table
     }
 
-    val rowTextMeasurer = rememberTextMeasurer(256)
     val rowText = remember(fi.numRows) {
         (0..fi.numRows).map {
             rowTextMeasurer.measure(
                 text = AnnotatedString(it.toString()),
-                density = density,
-                style = TextStyle(
-                    fontSize = 11.sp,
-                    background = if (view.isInEditMode) Color.Green else Color.Unspecified,
-                    fontFamily = FontFamily.Monospace,
-                    fontWeight = FontWeight.Bold,
-                    platformStyle = PlatformTextStyle(includeFontPadding = true)
+                style = rowTextStyle.copy(
+                    background = if (view.isInEditMode) Color.Green else Color.Unspecified
                 )
             )
         }
     }
 
-    val headerTextMeasurer = rememberTextMeasurer(64)
     val headerText = remember(modVars.numChannels) {
         (0 until modVars.numChannels).map {
             headerTextMeasurer.measure(
                 text = AnnotatedString("${it + 1}"),
-                density = density,
-                style = TextStyle(
-                    color = Color.White,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                style = headerTextStyle
             )
         }
     }
@@ -116,38 +129,67 @@ internal fun ComposePatternViewer(
     val rowInsts = remember { ByteArray(64) }
     val rowNotes = remember { ByteArray(64) }
 
-    var hdrDivision by remember { mutableFloatStateOf(0f) }
-    var hdrTxtCenterX by remember { mutableFloatStateOf(0f) }
-    var hdrTxtCenterY by remember { mutableFloatStateOf(0f) }
-
-    var barLineY by remember { mutableFloatStateOf(0f) }
-
-    var currentRow by remember { mutableFloatStateOf(0f) }
-    var rowYOffset by remember { mutableFloatStateOf(0f) }
-
-    var noteRowCenterX by remember { mutableFloatStateOf(0f) }
-    var noteCenterX by remember { mutableFloatStateOf(0f) }
-    var noteCenterY by remember { mutableFloatStateOf(0f) }
-
-    var effectiveNoteCenterX by remember { mutableFloatStateOf(0f) }
-
-    var textCenterX by remember { mutableFloatStateOf(0f) }
-    var textCenterY by remember { mutableFloatStateOf(0f) }
-
-    val scrollState = rememberScrollableState { delta ->
-        scope.launch {
-            val totalContentWidth = (modVars.numChannels * 3 + 1) * xAxisMultiplier
-            val minOffsetX = (canvasSize.width - totalContentWidth).coerceAtMost(0f)
-            val newValue = (offsetX.value + delta).coerceIn(minOffsetX, 0f)
-            offsetX.snapTo(newValue)
+    val textCache = remember(modVars.numChannels, fi.numRows) {
+        Array(fi.numRows) {
+            Array(modVars.numChannels) {
+                PatternTextCacheEntry()
+            }
         }
-        delta
     }
 
-    LaunchedEffect(modVars.numChannels) {
-        // Scroll to the beginning if the channel number changes
+    // Current state of muted channels
+    val mutedState = remember(isMuted) { isMuted.isMuted }
+
+    // Calculate key layout positions
+    val barLineY = remember(canvasSize, yAxisMultiplier) {
+        canvasSize.height.div(2).div(yAxisMultiplier).toInt().times(yAxisMultiplier)
+    }
+
+    val currentRow = fi.row.toFloat()
+    val rowYOffset = remember(barLineY, currentRow, yAxisMultiplier) {
+        barLineY - (currentRow * yAxisMultiplier)
+    }
+
+    val visibleRowRange = remember(canvasSize, rowYOffset, yAxisMultiplier) {
+        val firstVisible = ((yAxisMultiplier - rowYOffset) / yAxisMultiplier).toInt().coerceAtLeast(
+            0
+        )
+        val lastVisible = ((canvasSize.height - rowYOffset) / yAxisMultiplier).toInt().coerceAtMost(
+            fi.numRows - 1
+        )
+        firstVisible..lastVisible
+    }
+
+    val visibleChannelRange = remember(canvasSize, offsetX, modVars.numChannels, xAxisMultiplier) {
+        val firstVisible = ((-offsetX.value - xAxisMultiplier) / (3 * xAxisMultiplier)).toInt()
+            .coerceAtLeast(0)
+        val lastVisible = (
+            (canvasSize.width - offsetX.value + xAxisMultiplier) / (3 * xAxisMultiplier)
+            ).toInt()
+            .coerceAtMost(modVars.numChannels - 1)
+            .coerceAtLeast(0)
+        firstVisible..lastVisible
+    }
+
+    val scrollState = rememberScrollableState { delta ->
+        val totalContentWidth = (modVars.numChannels * 3 + 1) * xAxisMultiplier
+        val minOffsetX = (canvasSize.width - totalContentWidth).coerceAtMost(0f)
+        val current = offsetX.value
+        val target = (current + delta).coerceIn(minOffsetX, 0f)
+
+        if (current != target) {
+            scope.launch { offsetX.snapTo(target) }
+            target - current
+        } else {
+            0f
+        }
+    }
+
+    // Reset scroll position
+    LaunchedEffect(modVars.numChannels, canvasSize, fi.pattern) {
+        Timber.d("Resetting scroll position")
         scope.launch {
-            offsetX.animateTo(targetValue = 0f, animationSpec = tween(durationMillis = 300))
+            offsetX.snapTo(0f)
         }
     }
 
@@ -156,7 +198,7 @@ internal fun ComposePatternViewer(
             .fillMaxSize()
             .scrollable(
                 orientation = Orientation.Horizontal,
-                state = scrollState
+                state = scrollState,
             )
             .pointerInput(Unit) {
                 detectTapGestures(onTap = { onTap() })
@@ -166,34 +208,37 @@ internal fun ComposePatternViewer(
             canvasSize = size
         }
 
-        /***** Column Shadows (Even) *****/
+        // Column backgrounds
         for (i in 1 until modVars.numChannels) {
-            drawRect(
-                color = if (i % 2 == 0) Color(0x00000000) else Color(0x0D888888),
-                topLeft = Offset(
-                    x = (i * 3 + 1) * xAxisMultiplier + offsetX.value,
-                    y = 0f
-                ),
-                size = Size(width = xAxisMultiplier * 3, height = canvasSize.height)
-            )
+            if (i % 2 == 1) {
+                // Only draw for odd columns
+                drawRect(
+                    color = backgroundColor,
+                    topLeft = Offset(
+                        x = (i * 3 + 1) * xAxisMultiplier + offsetX.value,
+                        y = 0f
+                    ),
+                    size = Size(width = xAxisMultiplier * 3, height = canvasSize.height)
+                )
+            }
         }
 
-        /***** Header Text Background *****/
+        // Header background
         drawRect(
             color = seed,
             size = Size(canvasSize.width, yAxisMultiplier),
             topLeft = Offset(0f, 0f)
         )
 
-        /***** Line Bar *****/
-        barLineY = canvasSize.height.div(2).div(yAxisMultiplier).toInt().times(yAxisMultiplier)
+        // Current row highlight bar
+        val dynamicBarLineY = barLineY
         drawRect(
             color = Color.DarkGray,
-            topLeft = Offset(0f, barLineY),
+            topLeft = Offset(0f, dynamicBarLineY),
             size = Size(canvasSize.width, yAxisMultiplier)
         )
 
-        /***** Row Numbers Background *****/
+        // Row numbers background
         drawRect(
             color = Color.DarkGray,
             alpha = 1f,
@@ -201,21 +246,16 @@ internal fun ComposePatternViewer(
             size = Size(xAxisMultiplier, canvasSize.height)
         )
 
+        // Stop drawing if we have no rows, during song change
         if (fi.numRows == 0) {
-            // If row numbers is 0, let's stop drawing for now. (Song change)
             return@Canvas
         }
 
-        /***** Header Text Numbers *****/
-        for (i in 0 until modVars.numChannels) {
-            hdrDivision = xAxisMultiplier + (i * 3 * xAxisMultiplier) + (xAxisMultiplier * 1.5f)
-            hdrTxtCenterX = offsetX.value + (hdrDivision - (headerText[i].size.width / 2))
-            hdrTxtCenterY = (yAxisMultiplier / 2) - (headerText[i].size.height / 2)
-
-            // Left Culling || Right Culling
-            if (hdrTxtCenterX + headerText[i].size.width < 0 || hdrTxtCenterX > canvasSize.width) {
-                continue
-            }
+        // Channel header numbers (only visible ones)
+        for (i in visibleChannelRange) {
+            val hdrDivision = xAxisMultiplier + (i * 3 * xAxisMultiplier) + (xAxisMultiplier * 1.5f)
+            val hdrTxtCenterX = offsetX.value + (hdrDivision - (headerText[i].size.width / 2))
+            val hdrTxtCenterY = (yAxisMultiplier / 2) - (headerText[i].size.height / 2)
 
             drawText(
                 textLayoutResult = headerText[i],
@@ -223,155 +263,179 @@ internal fun ComposePatternViewer(
             )
         }
 
-        currentRow = fi.row.toFloat()
-        rowYOffset = barLineY - (currentRow * yAxisMultiplier)
-
-        for (row in 0 until fi.numRows) {
-            for (chn in 0 until modVars.numChannels) {
+        if (PlayerService.isAlive.value && fi.numRows > 0 && modVars.numChannels > 0) {
+            for (row in visibleRowRange) {
                 // Be very careful here!
                 // Our variables are latency-compensated but pattern data is current
                 // so caution is needed to avoid retrieving data using old variables
                 // from a module with pattern data from a newly loaded one.
-                if (PlayerService.isAlive.value) {
-                    Xmp.getPatternRow(
-                        pat = fi.pattern,
-                        row = row,
-                        rowNotes = rowNotes,
-                        rowInstruments = rowInsts,
-                        rowFxType = rowFxType,
-                        rowFxParm = rowFxParm
-                    )
-                }
+                Xmp.getPatternRow(
+                    pat = fi.pattern,
+                    row = row,
+                    rowNotes = rowNotes,
+                    rowInstruments = rowInsts,
+                    rowFxType = rowFxType,
+                    rowFxParm = rowFxParm
+                )
 
-                val info = infoTextMeasurer.measure(
-                    text = buildAnnotatedString {
-                        /****** Notes *****/
-                        withStyle(
-                            style = SpanStyle(
-                                color = if (isMuted.isMuted[chn]) {
-                                    Color(60, 60, 60)
+                // Update cache for visible channels
+                for (chn in visibleChannelRange) {
+                    val cacheEntry = textCache[row][chn]
+
+                    val needsUpdate = !cacheEntry.isValid ||
+                        cacheEntry.note != rowNotes[chn] ||
+                        cacheEntry.instrument != rowInsts[chn] ||
+                        cacheEntry.effectType != rowFxType[chn] ||
+                        cacheEntry.effectParam != rowFxParm[chn] ||
+                        cacheEntry.isMuted != mutedState[chn]
+
+                    if (needsUpdate) {
+                        cacheEntry.note = rowNotes[chn]
+                        cacheEntry.instrument = rowInsts[chn]
+                        cacheEntry.effectType = rowFxType[chn]
+                        cacheEntry.effectParam = rowFxParm[chn]
+                        cacheEntry.isMuted = mutedState[chn]
+
+                        cacheEntry.textLayout = infoTextMeasurer.measure(
+                            text = buildAnnotatedString {
+                                // Notes
+                                withStyle(
+                                    style = SpanStyle(
+                                        color = if (mutedState[chn]) noteColorMuted else noteColor
+                                    ),
+                                    block = {
+                                        append(Util.note(rowNotes[chn].toInt()))
+                                    }
+                                )
+                                // Instruments
+                                withStyle(
+                                    style = SpanStyle(
+                                        color = if (mutedState[chn]) {
+                                            instrumentColorMuted
+                                        } else {
+                                            instrumentColor
+                                        }
+                                    ),
+                                    block = {
+                                        append(Util.num(rowInsts[chn].toInt()))
+                                    }
+                                )
+                                // Effects
+                                withStyle(
+                                    style = SpanStyle(
+                                        color = if (mutedState[chn]) {
+                                            effectColorMuted
+                                        } else {
+                                            effectColor
+                                        }
+                                    ),
+                                    block = {
+                                        val fxt = rowFxType[chn]
+                                        val fx = if (fxt < 0) {
+                                            "-"
+                                        } else {
+                                            effectsTable.getOrElse(fxt) {
+                                                Timber.w(
+                                                    "Unknown FX: $fxt in chn ${chn + 1}, " +
+                                                        "row $row, using $currentType. Type:$modType"
+                                                )
+                                                "?"
+                                            }
+                                        }
+                                        append(fx)
+                                    }
+                                )
+                                // Effects Params
+                                withStyle(
+                                    style = SpanStyle(
+                                        color = if (mutedState[chn]) {
+                                            effectColorMuted
+                                        } else {
+                                            effectColor
+                                        }
+                                    ),
+                                    block = {
+                                        append(Util.num(rowFxParm[chn].toInt()))
+                                    }
+                                )
+                            },
+                            style = patternTextStyle.copy(
+                                background = if (view.isInEditMode) {
+                                    Color.Green
                                 } else {
-                                    Color(140, 140, 160)
-                                }
-                            ),
-                            block = {
-                                append(Util.note(rowNotes[chn].toInt()))
-                            }
-                        )
-                        /***** Instruments *****/
-                        withStyle(
-                            style = SpanStyle(
-                                color = if (isMuted.isMuted[chn]) {
-                                    Color(80, 40, 40)
-                                } else {
-                                    Color(160, 80, 80)
-                                }
-                            ),
-                            block = {
-                                append(Util.num(rowInsts[chn].toInt()))
-                            }
-                        )
-                        /***** Effects *****/
-                        withStyle(
-                            style = SpanStyle(
-                                color = if (isMuted.isMuted[chn]) {
-                                    Color(16, 75, 28)
-                                } else {
-                                    Color(34, 158, 60)
+                                    Color.Unspecified
                                 }
                             )
-                        ) {
-                            val fxt = rowFxType[chn]
-                            val fx = if (fxt < 0) {
-                                "-"
-                            } else {
-                                effectsTable.getOrElse(fxt) {
-                                    Timber.w(
-                                        "Unknown FX: $fxt in chn ${chn + 1}, row $row, " +
-                                            "using $currentType. Type:$modType"
-                                    )
-                                    "?"
-                                }
-                            }
-                            append(fx)
-                        }
-                        /***** Effects Params *****/
-                        withStyle(
-                            style = SpanStyle(
-                                color = if (isMuted.isMuted[chn]) {
-                                    Color(16, 75, 28)
-                                } else {
-                                    Color(34, 158, 60)
-                                }
-                            ),
-                            block = {
-                                append(Util.num(rowFxParm[chn].toInt()))
-                            }
                         )
-                    },
-                    density = density,
-                    style = TextStyle(
-                        fontSize = 14.sp,
-                        background = if (view.isInEditMode) Color.Green else Color.Unspecified,
-                        fontFamily = FontFamily.Monospace,
-                        fontWeight = FontWeight.Bold
-                    )
-                )
-                noteRowCenterX = xAxisMultiplier.times((chn * 3 + 2))
-                noteCenterX = noteRowCenterX.minus(info.size.width.div(3))
-                noteCenterY = rowYOffset
-                    .plus(row.times(yAxisMultiplier))
-                    .plus(yAxisMultiplier.div(2).minus(info.size.height.div(2)))
 
-                // Top culling || Bottom Culling
-                if (noteCenterY < yAxisMultiplier ||
-                    (noteCenterY - yAxisMultiplier) + info.size.height > size.height
-                ) {
-                    continue
+                        cacheEntry.isValid = true
+                    }
                 }
-
-                // Left Culling || Right Culling
-                effectiveNoteCenterX = noteCenterX.plus(offsetX.value)
-                if (effectiveNoteCenterX + info.size.width < 0 ||
-                    effectiveNoteCenterX > canvasSize.width
-                ) {
-                    continue
-                }
-
-                drawText(
-                    textLayoutResult = info,
-                    topLeft = Offset(noteCenterX.plus(offsetX.value), noteCenterY)
-                )
             }
         }
 
-        for (i in 0 until fi.numRows) {
-            /***** Row numbers *****/
-            textCenterX = xAxisMultiplier.div(2).minus(rowText[i].size.width.div(2))
-            textCenterY = rowYOffset
-                .plus(i.times(yAxisMultiplier))
-                .plus(yAxisMultiplier.div(2).minus(rowText[i].size.height.div(2)))
+        // Draw pattern data for visible rows and channels
+        for (row in visibleRowRange) {
+            for (chn in visibleChannelRange) {
+                val cacheEntry = textCache[row][chn]
+                val textLayout = cacheEntry.textLayout ?: continue
 
-            // Top culling || Bottom Culling
-            if (textCenterY < yAxisMultiplier ||
-                (textCenterY - yAxisMultiplier) + rowText[i].size.height > size.height
-            ) {
-                continue
+                val noteRowCenterX = xAxisMultiplier * (chn * 3 + 2)
+                val noteCenterX = noteRowCenterX - (textLayout.size.width / 3)
+                val noteCenterY = rowYOffset +
+                    (row * yAxisMultiplier) +
+                    (yAxisMultiplier / 2 - textLayout.size.height / 2)
+
+                // Pattern text
+                drawText(
+                    textLayoutResult = textLayout,
+                    topLeft = Offset(noteCenterX + offsetX.value, noteCenterY)
+                )
             }
+
+            // Row numbers
+            val textCenterX = xAxisMultiplier / 2 - rowText[row].size.width / 2
+            val textCenterY = rowYOffset +
+                (row * yAxisMultiplier) +
+                (yAxisMultiplier / 2 - rowText[row].size.height / 2)
+
             drawText(
-                textLayoutResult = rowText[i],
+                textLayoutResult = rowText[row],
                 color = Color.White,
                 topLeft = Offset(textCenterX, textCenterY)
             )
         }
 
         if (view.isInEditMode) {
-            // debugPatternViewColumns()
             debugScreen(rowTextMeasurer, xAxisMultiplier, yAxisMultiplier)
         }
     }
 }
 
+/** Helpers **/
+private class PatternTextCacheEntry(
+    var textLayout: TextLayoutResult? = null,
+    var note: Byte = 0,
+    var instrument: Byte = 0,
+    var effectType: Byte = 0,
+    var effectParam: Byte = 0,
+    var isMuted: Boolean = false,
+    var isValid: Boolean = false
+)
+
+private class PatternViewerDimensions(density: Density) {
+    val xAxisMultiplier: Float
+    val yAxisMultiplier: Float
+
+    init {
+        with(density) {
+            xAxisMultiplier = 24.dp.toPx()
+            yAxisMultiplier = 24.dp.toPx()
+        }
+    }
+}
+
+/** Preview **/
 @Preview
 @Preview(device = "spec:parent=pixel_5,orientation=landscape")
 @Composable

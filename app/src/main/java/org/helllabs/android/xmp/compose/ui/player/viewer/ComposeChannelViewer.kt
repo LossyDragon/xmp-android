@@ -31,6 +31,31 @@ import org.helllabs.android.xmp.service.PlayerService
 
 val c = CharArray(2)
 
+private val waveformStroke = Stroke(
+    width = 0.75f,
+    cap = StrokeCap.Butt,
+    join = StrokeJoin.Bevel,
+)
+private val channelTextStyle = TextStyle(
+    color = Color(200, 200, 200, 255),
+    fontSize = 14.sp,
+    fontFamily = FontFamily.Monospace
+)
+private val instrumentTextStyle = TextStyle(
+    color = Color(200, 200, 200, 255),
+    fontSize = 12.sp,
+    fontFamily = FontFamily.Monospace
+)
+private val muteTextStyle = TextStyle(
+    color = Color.White,
+    fontSize = 8.sp,
+    fontWeight = FontWeight.Bold,
+    fontFamily = michromaFontFamily,
+)
+private val backgroundColor = Color(40, 40, 40, 255)
+private val mutedBackgroundColor = Color(60, 0, 0, 255)
+private val waveformColor = Color.Green
+
 @Composable
 fun ComposeChannelViewer(
     onTap: () -> Unit,
@@ -45,23 +70,8 @@ fun ComposeChannelViewer(
     val textMeasurer = rememberTextMeasurer()
     val view = LocalView.current
 
-    val xMultiplier = remember {
-        with(density) {
-            24.dp.toPx()
-        }
-    }
-    val yMultiplier = remember {
-        // https://m3.material.io/components/lists/specs
-        with(density) {
-            56.dp.toPx()
-        }
-    }
-    val barWidth = remember(density.density) {
-        if (density.density <= 3.0) {
-            xMultiplier.times(4)
-        } else {
-            xMultiplier.times(5)
-        }
+    val dimensions = remember(density) {
+        ChannelViewerDimensions(density)
     }
     var canvasSize by remember {
         mutableStateOf(Size.Zero)
@@ -69,21 +79,11 @@ fun ComposeChannelViewer(
     val yOffset = remember {
         Animatable(0f)
     }
-    val scopeWidth = remember {
-        xMultiplier.times(3) - xMultiplier.div(2)
-    }
     val buffer = remember {
         ByteArray(Xmp.MAX_BUFFERS)
     }
-    val isChnMuted = remember(isMuted) {
-        // Need this to keep pointerInput updated for any changes.
-        isMuted.isMuted
-    }
-    val holdKey = remember(modVars.numChannels) {
-        IntArray(modVars.numChannels)
-    }
-    val keyRow = remember {
-        IntArray(Xmp.MAX_CHANNELS)
+    val channelData = remember(modVars.numChannels) {
+        ChannelViewerData(modVars.numChannels)
     }
     val channelNumber = remember(modVars.numChannels) {
         (0 until modVars.numChannels).map {
@@ -92,13 +92,21 @@ fun ComposeChannelViewer(
     }
     val scrollState = rememberScrollableState { delta ->
         scope.launch {
-            val totalContentHeight = yMultiplier * modVars.numChannels
+            val totalContentHeight = dimensions.yMultiplier * modVars.numChannels
             val maxOffset = (totalContentHeight - canvasSize.height).coerceAtLeast(0f)
             val newOffset = (yOffset.value + delta).coerceIn(-maxOffset, 0f)
             yOffset.snapTo(newOffset)
         }
         delta
     }
+    val waveformPath = remember {
+        Path()
+    }
+    val isChnMuted = remember(isMuted) {
+        // Need this to keep pointerInput updated for any changes.
+        isMuted.isMuted
+    }
+
     LaunchedEffect(modVars.numInstruments, modVars.numChannels) {
         // Scroll to the top on song change
         scope.launch {
@@ -108,7 +116,6 @@ fun ComposeChannelViewer(
             )
         }
     }
-    val waveformPath = remember { Path() }
 
     Canvas(
         modifier = Modifier
@@ -122,37 +129,18 @@ fun ComposeChannelViewer(
                     onTap = { offset ->
                         val adjustedOffset = offset.copy(y = offset.y - yOffset.value)
                         for (chn in 0 until modVars.numChannels) {
-                            val scopeXOffset = xMultiplier + xMultiplier.div(4)
-                            val scopeYOffset = yMultiplier.times(chn) + yMultiplier.div(6)
-                            val scopeHeight = yMultiplier - yMultiplier.div(3)
-                            val scopeRect = Rect(
-                                left = scopeXOffset,
-                                top = scopeYOffset,
-                                right = scopeXOffset + scopeWidth,
-                                bottom = scopeYOffset + scopeHeight
-                            )
-
+                            val scopeRect = getScopeRect(chn, dimensions, yOffset.value)
                             if (scopeRect.contains(adjustedOffset)) {
                                 Xmp.mute(chn, 2)
                                 return@detectTapGestures
                             }
                         }
-
                         onTap()
                     },
                     onLongPress = { offset ->
                         val adjustedOffset = offset.copy(y = offset.y - yOffset.value)
                         for (chn in 0 until modVars.numChannels) {
-                            val scopeXOffset = xMultiplier + xMultiplier.div(4)
-                            val scopeYOffset = yMultiplier.times(chn) + yMultiplier.div(6)
-                            val scopeHeight = yMultiplier - yMultiplier.div(3)
-                            val scopeRect = Rect(
-                                left = scopeXOffset,
-                                top = scopeYOffset,
-                                right = scopeXOffset + scopeWidth,
-                                bottom = scopeYOffset + scopeHeight
-                            )
-
+                            val scopeRect = getScopeRect(chn, dimensions, yOffset.value)
                             if (scopeRect.contains(adjustedOffset)) {
                                 val unMuteCount = isChnMuted.count { !it }
                                 if (unMuteCount == 1) {
@@ -176,257 +164,327 @@ fun ComposeChannelViewer(
             canvasSize = size
         }
 
-        for (chn in 0 until modVars.numChannels) {
-            val ins = channelInfo.instruments[chn]
-            val pan = channelInfo.pans[chn]
-            val period = channelInfo.periods[chn]
-            val row = frameInfo.row
-            var key = channelInfo.keys[chn]
-
-            // IDK what this does, but it was in the legacy viewer
-            if (key >= 0) {
-                holdKey[chn] = key
-                if (keyRow[chn] == row) {
-                    key = -1
-                } else {
-                    keyRow[chn] = row
-                }
-            }
-
-            /***** Channel Number *****/
-            val chnText = textMeasurer.measure(
-                text = AnnotatedString(channelNumber[chn]),
-                style = TextStyle(
-                    color = Color(200, 200, 200, 255),
-                    fontSize = 14.sp,
-                    fontFamily = FontFamily.Monospace
-                )
-            )
-            val textCenterX = xMultiplier.div(2) - chnText.size.width.div(2)
-            val textCenterY =
-                yMultiplier.times(chn) + yMultiplier.div(2) - chnText.size.height.div(2)
-            drawText(
-                textLayoutResult = chnText,
-                color = Color.White,
-                topLeft = Offset(textCenterX, textCenterY + yOffset.value)
-            )
-
-            /***** Instrument Name *****/
-            if (ins in 0..<modVars.numInstruments) {
-                val chnNameText = textMeasurer.measure(
-                    text = AnnotatedString(if (isChnMuted[chn]) "---" else insName[ins]),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    style = TextStyle(
-                        color = Color(200, 200, 200, 255),
-                        fontSize = 12.sp,
-                        fontFamily = FontFamily.Monospace
-                    )
-                )
-                drawText(
-                    textLayoutResult = chnNameText,
-                    topLeft = Offset(
-                        x = xMultiplier.times(4),
-                        y = yMultiplier.times(chn) + yMultiplier.div(4) + yOffset.value
-                    )
-                )
-            }
-
-            val barY = yMultiplier.times(chn + 1) - yMultiplier.div(3) + yOffset.value
-
-            /***** Volume Bar Background *****/
-            drawRect(
-                color = Color(40, 40, 40, 255),
-                topLeft = Offset(
-                    x = xMultiplier.times(4),
-                    y = barY
-                ),
-                size = Size(barWidth, 16f)
-            )
-
-            /***** Volume Bars *****/
-            val vol = if (isChnMuted[chn]) 0 else channelInfo.volumes[chn]
-            drawRect(
-                color = seed.copy(alpha = .35f),
-                topLeft = Offset(
-                    x = xMultiplier.times(4),
-                    y = barY
-                ),
-                size = Size((barWidth * (vol.toFloat() / 64)), 16f)
-            )
-
-            val fVol = if (isChnMuted[chn]) 0 else channelInfo.finalVols[chn]
-            drawRect(
-                color = seed,
-                topLeft = Offset(
-                    x = xMultiplier.times(4),
-                    y = barY
-                ),
-                size = Size((barWidth * (fVol.toFloat() / 64)), 16f)
-            )
-
-            /***** Pan Bar Background *****/
-            drawRect(
-                color = Color(40, 40, 40, 255),
-                topLeft = Offset(
-                    x = xMultiplier.times(10),
-                    y = barY
-                ),
-                size = Size(barWidth, 16f)
-            )
-
-            /***** Pan Bar *****/
-            val panRectWidth = 8.dp.toPx()
-            val panMaxOffset = barWidth - panRectWidth
-            val panOffset = if (isChnMuted[chn]) 0f else panMaxOffset * (pan.toFloat() / 255)
-            drawRect(
-                color = seed,
-                topLeft = Offset(
-                    x = xMultiplier.times(10) + panOffset,
-                    y = barY
-                ),
-                size = Size(panRectWidth, 16f)
-            )
-
-            /***** Scope or Mute Background X/Y *****/
-            val scopeXOffset = xMultiplier + xMultiplier.div(4)
-            val scopeYOffset = yMultiplier.times(chn) + yMultiplier.div(6) + yOffset.value
-            val scopeHeight = yMultiplier - yMultiplier.div(3)
-
-            /***** Waveform *****/
-            if (isChnMuted[chn]) {
-                /***** Muted Channel Scope Background *****/
-                drawRect(
-                    color = Color(60, 0, 0, 255),
-                    size = Size(
-                        width = scopeWidth,
-                        height = scopeHeight
-                    ),
-                    topLeft = Offset(
-                        x = scopeXOffset,
-                        y = scopeYOffset
-                    )
-                )
-                val muteText = textMeasurer.measure(
-                    text = AnnotatedString("MUTE"),
-                    style = TextStyle(
-                        color = Color.White,
-                        fontSize = 8.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = michromaFontFamily,
-                    )
-                )
-                drawText(
-                    textLayoutResult = muteText,
-                    topLeft = Offset(
-                        x = scopeXOffset + (scopeWidth - muteText.size.width) / 2,
-                        y = scopeYOffset + (scopeHeight - muteText.size.height) / 2
-                    )
-                )
-            } else {
-                if (PlayerService.isAlive.value) {
-                    // Be very careful here!
-                    // Our variables are latency-compensated but sample data is current
-                    // so caution is needed to avoid retrieving data using old variables
-                    // from a module with sample data from a newly loaded one.
-                    Xmp.getSampleData(
-                        key >= 0,
-                        ins,
-                        holdKey[chn],
-                        period,
-                        chn,
-                        Xmp.MAX_BUFFERS,
-                        buffer
-                    )
-                }
-
-                /***** Channel Scope Background *****/
-                drawRect(
-                    color = Color(40, 40, 40, 255),
-                    size = Size(
-                        width = scopeWidth,
-                        height = scopeHeight
-                    ),
-                    topLeft = Offset(
-                        x = scopeXOffset,
-                        y = scopeYOffset
-                    )
-                )
-
-                // Waveform testing
-//                val buffer = ByteArray(Xmp.MAX_BUFFERS) { i ->
-//                    val minValue = -128
-//                    val maxValue = 127
-//
-//                    // PI
-//                    // val amplitude = (maxValue - minValue) / 2
-//                    // val offset = (maxValue + minValue) / 2
-//                    // val angle = 2 * PI * i / Xmp.MAX_BUFFERS
-//                    // val value = sin(angle) * amplitude + offset
-//                    // value.toInt().toByte()
-//
-//                    // Random
-//                    // Random.nextInt(minValue, maxValue + 1).toByte()
-//
-//                    // Sawtooth
-//                    val range = maxValue - minValue + 1
-//                    val stepsPerRepeat = Xmp.MAX_BUFFERS / 24 // Tooth Steps
-//                    val value = ((i % stepsPerRepeat) * range / stepsPerRepeat + minValue).toByte()
-//                    value
-//
-//                    // Square
-//                    // val stepsPerRepeat = Xmp.MAX_BUFFERS / 8
-//                    // val halfPeriod = stepsPerRepeat / 2
-//                    // if (i % stepsPerRepeat < halfPeriod) maxValue.toByte() else minValue.toByte()
-//                }
-//                channelInfo.finalVols[chn] = 96
-
-                val centerY = scopeYOffset + (scopeHeight / 2)
-                val halfHeight = scopeHeight.div(2)
-                val maxVal = buffer.maxOrNull()?.toFloat() ?: 127f
-                val minVal = buffer.minOrNull()?.toFloat() ?: -128f
-                val range = maxVal - minVal
-                val volumeScale = channelInfo.finalVols[chn].coerceIn(0, 64) / 64f
-                val widthScale = scopeWidth / buffer.size
-                val xValues = FloatArray(buffer.size) { index -> scopeXOffset + widthScale * index }
-                buffer.forEachIndexed { index, byteValue ->
-                    val x = xValues[index]
-                    val normalizedValue = if (byteValue == 0.toByte()) {
-                        0f
-                    } else {
-                        ((byteValue - minVal) / range - 0.5f) * 2f
-                    }
-                    val y = centerY - (normalizedValue * halfHeight * volumeScale)
-
-                    if (index == 0) {
-                        waveformPath.moveTo(x, y)
-                    } else {
-                        waveformPath.lineTo(x, y)
-                    }
-                }
-
-                drawPath(
-                    path = waveformPath,
-                    color = Color.Green,
-                    style = Stroke(
-                        width = 0.75f,
-                        cap = StrokeCap.Butt,
-                        join = StrokeJoin.Bevel,
-                    )
-                )
-                waveformPath.reset()
-            }
-        }
+        drawChannels(
+            channelInfo = channelInfo,
+            frameInfo = frameInfo,
+            insName = insName,
+            isChnMuted = isChnMuted,
+            modVars = modVars,
+            dimensions = dimensions,
+            channelData = channelData,
+            channelNumber = channelNumber,
+            yOffset = yOffset.value,
+            buffer = buffer,
+            waveformPath = waveformPath,
+            textMeasurer = textMeasurer
+        )
 
         if (view.isInEditMode) {
             debugScreen(
                 textMeasurer = textMeasurer,
-                xValue = xMultiplier,
-                yValue = yMultiplier
+                xValue = dimensions.xMultiplier,
+                yValue = dimensions.yMultiplier
             )
         }
     }
 }
+
+/** Helpers **/
+
+private fun DrawScope.drawChannels(
+    channelInfo: ChannelInfo,
+    frameInfo: FrameInfo,
+    insName: Array<String>,
+    isChnMuted: BooleanArray,
+    modVars: ModVars,
+    dimensions: ChannelViewerDimensions,
+    channelData: ChannelViewerData,
+    channelNumber: List<String>,
+    yOffset: Float,
+    buffer: ByteArray,
+    waveformPath: Path,
+    textMeasurer: TextMeasurer
+) {
+    val xMult = dimensions.xMultiplier
+    val yMult = dimensions.yMultiplier
+    val scopeWidth = dimensions.scopeWidth
+    val barWidth = dimensions.barWidth
+
+    for (chn in 0 until modVars.numChannels) {
+        val ins = channelInfo.instruments[chn]
+        val pan = channelInfo.pans[chn]
+        val period = channelInfo.periods[chn]
+        val row = frameInfo.row
+        var key = channelInfo.keys[chn]
+        val isMuted = isChnMuted[chn]
+
+        // Update key tracking
+        if (key >= 0) {
+            channelData.holdKey[chn] = key
+            if (channelData.keyRow[chn] == row) {
+                key = -1
+            } else {
+                channelData.keyRow[chn] = row
+            }
+        }
+
+        // Calculate reused offsets for this channel once
+        val channelY = yMult * chn
+        val chnYWithOffset = channelY + yOffset
+        val labelCenterY = chnYWithOffset + yMult / 2
+
+        // Channel number
+        val chnText = textMeasurer.measure(
+            text = AnnotatedString(channelNumber[chn]),
+            style = channelTextStyle
+        )
+
+        val textCenterX = xMult / 2 - chnText.size.width / 2
+        val textCenterY = labelCenterY - chnText.size.height / 2
+
+        drawText(
+            textLayoutResult = chnText,
+            color = Color.White,
+            topLeft = Offset(textCenterX, textCenterY)
+        )
+
+        // Instrument name
+        if (ins in 0..<modVars.numInstruments) {
+            val chnNameText = textMeasurer.measure(
+                text = AnnotatedString(if (isMuted) "---" else insName[ins]),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = instrumentTextStyle
+            )
+
+            drawText(
+                textLayoutResult = chnNameText,
+                topLeft = Offset(
+                    x = xMult * 4,
+                    y = chnYWithOffset + yMult / 4
+                )
+            )
+        }
+
+        val barY = chnYWithOffset + yMult - yMult / 3
+        val barX = xMult * 4
+
+        // Volume bar background
+        drawRect(
+            color = backgroundColor,
+            topLeft = Offset(x = barX, y = barY),
+            size = Size(barWidth, 16f)
+        )
+
+        // Volume bars
+        if (!isMuted) {
+            val vol = channelInfo.volumes[chn]
+            if (vol > 0) {
+                val volWidth = barWidth * (vol.toFloat() / 64)
+                drawRect(
+                    color = seed.copy(alpha = .35f),
+                    topLeft = Offset(x = barX, y = barY),
+                    size = Size(volWidth, 16f)
+                )
+            }
+
+            val fVol = channelInfo.finalVols[chn]
+            if (fVol > 0) {
+                val fVolWidth = barWidth * (fVol.toFloat() / 64)
+                drawRect(
+                    color = seed,
+                    topLeft = Offset(x = barX, y = barY),
+                    size = Size(fVolWidth, 16f)
+                )
+            }
+        }
+
+        // Pan bar background
+        val panBarX = xMult * 10
+        drawRect(
+            color = backgroundColor,
+            topLeft = Offset(x = panBarX, y = barY),
+            size = Size(barWidth, 16f)
+        )
+
+        // Pan bar
+        if (!isMuted) {
+            val panRectWidth = 8.dp.toPx()
+            val panMaxOffset = barWidth - panRectWidth
+            val panOffset = panMaxOffset * (pan.toFloat() / 255)
+
+            drawRect(
+                color = seed,
+                topLeft = Offset(x = panBarX + panOffset, y = barY),
+                size = Size(panRectWidth, 16f)
+            )
+        }
+
+        // Scope area, once per chn.
+        val scopeXOffset = xMult + xMult / 4
+        val scopeYOffset = chnYWithOffset + yMult / 6
+        val scopeHeight = yMult - yMult / 3
+
+        if (isMuted) {
+            drawRect(
+                color = mutedBackgroundColor,
+                size = Size(width = scopeWidth, height = scopeHeight),
+                topLeft = Offset(x = scopeXOffset, y = scopeYOffset)
+            )
+
+            val muteText = channelData.muteLabelCache ?: textMeasurer.measure(
+                text = AnnotatedString("MUTE"),
+                style = muteTextStyle
+            ).also { channelData.muteLabelCache = it }
+
+            drawText(
+                textLayoutResult = muteText,
+                topLeft = Offset(
+                    x = scopeXOffset + (scopeWidth - muteText.size.width) / 2,
+                    y = scopeYOffset + (scopeHeight - muteText.size.height) / 2
+                )
+            )
+        } else {
+            // Be very careful here!
+            // Our variables are latency-compensated but sample data is current
+            // so caution is needed to avoid retrieving data using old variables
+            // from a module with sample data from a newly loaded one.
+            if (PlayerService.isAlive.value) {
+                Xmp.getSampleData(
+                    key >= 0,
+                    ins,
+                    channelData.holdKey[chn],
+                    period,
+                    chn,
+                    Xmp.MAX_BUFFERS,
+                    buffer
+                )
+            }
+
+            // Channel scope background
+            drawRect(
+                color = backgroundColor,
+                size = Size(width = scopeWidth, height = scopeHeight),
+                topLeft = Offset(x = scopeXOffset, y = scopeYOffset)
+            )
+
+            // Draw waveform
+            val centerY = scopeYOffset + (scopeHeight / 2)
+            val halfHeight = scopeHeight / 2
+            val volumeScale = channelInfo.finalVols[chn].coerceIn(0, 64) / 64f
+            val widthScale = scopeWidth / buffer.size
+
+            if (volumeScale > 0.01f) {
+                var hasNonZeroValue = false
+                var minVal = 127f
+                var maxVal = -128f
+
+                for (i in buffer.indices) {
+                    val value = buffer[i].toInt()
+                    if (value != 0) {
+                        hasNonZeroValue = true
+                        if (value < minVal) minVal = value.toFloat()
+                        if (value > maxVal) maxVal = value.toFloat()
+                    }
+                }
+
+                if (hasNonZeroValue && maxVal > minVal) {
+                    val range = maxVal - minVal
+
+                    waveformPath.reset()
+
+                    var index = 0
+                    while (index < buffer.size && buffer[index].toInt() == 0) {
+                        index++
+                    }
+
+                    if (index < buffer.size) {
+                        val byteValue = buffer[index].toInt().toFloat()
+                        val normalizedValue = ((byteValue - minVal) / range - 0.5f) * 2f
+                        val x = scopeXOffset + widthScale * index
+                        val y = centerY - (normalizedValue * halfHeight * volumeScale)
+                        waveformPath.moveTo(x, y)
+
+                        for (i in index + 1 until buffer.size) {
+                            val nextValue = buffer[i].toInt().toFloat()
+                            if (nextValue != 0f || (i > 0 && buffer[i - 1].toInt() != 0)) {
+                                val nextNormalized = ((nextValue - minVal) / range - 0.5f) * 2f
+                                val nextX = scopeXOffset + widthScale * i
+                                val nextY = centerY - (nextNormalized * halfHeight * volumeScale)
+                                waveformPath.lineTo(nextX, nextY)
+                            }
+                        }
+
+                        drawPath(
+                            path = waveformPath,
+                            color = waveformColor,
+                            style = waveformStroke
+                        )
+                    }
+                } else {
+                    // Horizontal line when no data
+                    drawLine(
+                        color = waveformColor,
+                        start = Offset(scopeXOffset, centerY),
+                        end = Offset(scopeXOffset + scopeWidth, centerY),
+                        strokeWidth = 0.75f
+                    )
+                }
+            } else {
+                // Horizontal line when volume is too low
+                drawLine(
+                    color = waveformColor,
+                    start = Offset(scopeXOffset, centerY),
+                    end = Offset(scopeXOffset + scopeWidth, centerY),
+                    strokeWidth = 0.75f
+                )
+            }
+        }
+    }
+}
+
+private fun getScopeRect(chn: Int, dimensions: ChannelViewerDimensions, yOffset: Float): Rect {
+    val scopeXOffset = dimensions.xMultiplier + dimensions.xMultiplier.div(4)
+    val scopeYOffset = dimensions.yMultiplier.times(chn) + dimensions.yMultiplier.div(6)
+    val scopeHeight = dimensions.yMultiplier - dimensions.yMultiplier.div(3)
+
+    return Rect(
+        left = scopeXOffset,
+        top = scopeYOffset,
+        right = scopeXOffset + dimensions.scopeWidth,
+        bottom = scopeYOffset + scopeHeight
+    )
+}
+
+private class ChannelViewerDimensions(density: Density) {
+    val xMultiplier: Float
+    val yMultiplier: Float
+    val barWidth: Float
+    val scopeWidth: Float
+
+    init {
+        with(density) {
+            xMultiplier = 24.dp.toPx()
+            yMultiplier = 56.dp.toPx()
+
+            barWidth = if (density.density <= 3.0) {
+                xMultiplier.times(4)
+            } else {
+                xMultiplier.times(5)
+            }
+
+            scopeWidth = xMultiplier.times(3) - xMultiplier.div(2)
+        }
+    }
+}
+
+private class ChannelViewerData(numChannels: Int) {
+    val holdKey: IntArray = IntArray(numChannels)
+    val keyRow: IntArray = IntArray(Xmp.MAX_CHANNELS)
+    var muteLabelCache: TextLayoutResult? = null
+}
+
+/** Preview **/
 
 @Preview(device = "id:pixel_6_pro")
 @Preview(name = "Huawei P20 lite", device = "spec:width=1080px,height=2280px,dpi=480")

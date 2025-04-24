@@ -23,10 +23,17 @@ import org.helllabs.android.xmp.model.ModVars
 
 private const val VOLUME_STEPS = 32
 private val barShape = CornerRadius(8f, 8f)
-private val textColor = (0..VOLUME_STEPS).map {
-    val fraction = it.coerceIn(0, VOLUME_STEPS) / VOLUME_STEPS.toFloat()
-    lerp(Color.Gray, Color.White, fraction)
+private val textColor = buildList {
+    for (i in 0..VOLUME_STEPS) {
+        val fraction = i.coerceIn(0, VOLUME_STEPS) / VOLUME_STEPS.toFloat()
+        add(lerp(Color.Gray, Color.White, fraction))
+    }
 }
+private val instrumentTextStyle = TextStyle(
+    fontSize = 18.sp,
+    fontFamily = FontFamily.Monospace,
+    platformStyle = PlatformTextStyle(includeFontPadding = true)
+)
 
 @Composable
 internal fun InstrumentViewer(
@@ -41,18 +48,14 @@ internal fun InstrumentViewer(
     val textMeasurer = rememberTextMeasurer()
     val view = LocalView.current
 
+    val dimensions = remember(density) {
+        InstrumentDimensions(density)
+    }
     val measuredText = remember(modVars.numInstruments, insName) {
         (0 until modVars.numInstruments).map {
             textMeasurer.measure(
                 text = AnnotatedString(insName[it]),
-                density = density,
-                style = TextStyle(
-                    fontSize = 18.sp,
-                    fontFamily = FontFamily.Monospace,
-                    platformStyle = PlatformTextStyle(
-                        includeFontPadding = true
-                    )
-                )
+                style = instrumentTextStyle
             )
         }
     }
@@ -62,9 +65,12 @@ internal fun InstrumentViewer(
     var canvasSize by remember {
         mutableStateOf(Size.Zero)
     }
+    val channelMuteState = remember(isMuted) {
+        isMuted.isMuted
+    }
     val scrollState = rememberScrollableState { delta ->
         scope.launch {
-            val totalContentHeight = with(density) { 24.dp.toPx() * modVars.numInstruments }
+            val totalContentHeight = dimensions.rowHeight * modVars.numInstruments
             val maxOffset = (totalContentHeight - canvasSize.height).coerceAtLeast(0f)
             val newOffset = (yOffset.value + delta).coerceIn(-maxOffset, 0f)
             yOffset.snapTo(newOffset)
@@ -97,37 +103,30 @@ internal fun InstrumentViewer(
             canvasSize = size
         }
 
-        var maxVol: Int
-        var yPos: Float
-        var vol: Int
+        // Pre-calculate fixed layout values
+        val totalPadding = (modVars.numChannels - 1) * dimensions.padding
+        val availableWidth = size.width - totalPadding
+        val boxWidth = availableWidth / modVars.numChannels
 
-        var totalPadding: Float
-        var availableWidth: Float
-        var boxWidth: Float
-        var start: Float
+        // Get visible range for culling
+        val firstVisibleRow = (-yOffset.value / dimensions.rowHeight).toInt().coerceAtLeast(0)
+        val lastVisibleRow = ((-yOffset.value + size.height) / dimensions.rowHeight).toInt()
+            .coerceAtMost(modVars.numInstruments - 1)
 
-        for (i in 0 until modVars.numInstruments) {
-            maxVol = 0
-            yPos = yOffset.value + (24.dp.toPx() * i)
+        // Only draw visible instruments
+        for (i in firstVisibleRow..lastVisibleRow) {
+            var maxVol = 0
+            val yPos = yOffset.value + (dimensions.rowHeight * i)
 
-            // Top Culling || Bottom Culling
-            if (yPos < -measuredText[0].size.height || yPos > size.height) {
-                // Timber.d(String.format("%s %02X", "Culling: ", i+1))
-                continue
-            }
-
+            // Active channel volume boxes
             for (j in 0 until modVars.numChannels) {
-                if (isMuted.isMuted[j]) {
+                if (channelMuteState[j] || i != channelInfo.instruments[j]) {
                     continue
                 }
 
-                if (i == channelInfo.instruments[j]) {
-                    vol = (channelInfo.volumes[j] / 2).coerceAtMost(VOLUME_STEPS)
-
-                    totalPadding = (modVars.numChannels - 1) * 2.dp.toPx()
-                    availableWidth = size.width - totalPadding
-                    boxWidth = availableWidth / modVars.numChannels
-                    start = j * (boxWidth + 2.dp.toPx())
+                val vol = (channelInfo.volumes[j] / 2).coerceAtMost(VOLUME_STEPS)
+                if (vol > 0) {
+                    val start = j * (boxWidth + dimensions.padding)
 
                     if (vol > maxVol) {
                         maxVol = vol
@@ -138,11 +137,12 @@ internal fun InstrumentViewer(
                         cornerRadius = barShape,
                         alpha = vol / VOLUME_STEPS.toFloat(),
                         topLeft = Offset(start, yPos),
-                        size = Size(boxWidth, 24.dp.toPx())
+                        size = Size(boxWidth, dimensions.rowHeight)
                     )
                 }
             }
 
+            // Instrument name with appropriate color
             drawText(
                 color = textColor[maxVol],
                 textLayoutResult = measuredText[i],
@@ -156,6 +156,20 @@ internal fun InstrumentViewer(
     }
 }
 
+/** Helpers **/
+private class InstrumentDimensions(val density: Density) {
+    val rowHeight: Float
+    val padding: Float
+
+    init {
+        with(density) {
+            rowHeight = 24.dp.toPx()
+            padding = 2.dp.toPx()
+        }
+    }
+}
+
+/** Preview **/
 @Preview
 @Composable
 private fun Preview_InstrumentViewer() {
