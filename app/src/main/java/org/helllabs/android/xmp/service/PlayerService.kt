@@ -375,7 +375,6 @@ class PlayerService :
     private fun showNotification() {
         val controller = mediaSession.controller
         val mediaMetadata = controller.metadata
-        val description = mediaMetadata.description
 
         fun action(icon: Int, title: String, action: String) =
             NotificationCompat.Action(
@@ -389,6 +388,30 @@ class PlayerService :
                 )
             )
 
+        // We failed to get mediaMetadata somehow?!?!
+        if (mediaMetadata == null) {
+            Timber.e("mediaMetadata is null, falling back to a more basic notification")
+            val notification = NotificationCompat.Builder(this, CHANNEL_ID).apply {
+                setContentTitle("Failed to get metadata")
+                setContentText("Failed to get metadata")
+                setSmallIcon(R.drawable.ic_notification)
+                setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                setSmallIcon(R.drawable.ic_notification)
+                setContentIntent(
+                    PendingIntent.getActivity(
+                        this@PlayerService,
+                        0,
+                        Intent(this@PlayerService, PlayerActivity::class.java),
+                        PendingIntent.FLAG_IMMUTABLE
+                    )
+                )
+            }.build()
+
+            startForeground(1, notification)
+            return
+        }
+
+        val description = mediaMetadata.description
         val notification = NotificationCompat.Builder(this, CHANNEL_ID).apply {
             setContentTitle(description.title)
             setContentText(description.subtitle)
