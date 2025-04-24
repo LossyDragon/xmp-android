@@ -376,27 +376,26 @@ class PlayerService :
         val controller = mediaSession.controller
         val mediaMetadata = controller.metadata
 
-        fun action(icon: Int, title: String, action: String) =
-            NotificationCompat.Action(
-                icon,
-                title,
-                PendingIntent.getService(
-                    this,
-                    0,
-                    Intent(this, PlayerService::class.java).setAction(action),
-                    PendingIntent.FLAG_IMMUTABLE
-                )
+        fun action(icon: Int, title: String, action: String) = NotificationCompat.Action(
+            icon,
+            title,
+            PendingIntent.getService(
+                this,
+                0,
+                Intent(this, PlayerService::class.java).setAction(action),
+                PendingIntent.FLAG_IMMUTABLE
             )
+        )
 
         // We failed to get mediaMetadata somehow?!?!
         if (mediaMetadata == null) {
             Timber.e("mediaMetadata is null, falling back to a more basic notification")
+            val title = StorageManager.getFileName(currentFileUri) ?: "<Unable to get module name>"
             val notification = NotificationCompat.Builder(this, CHANNEL_ID).apply {
-                setContentTitle("Failed to get metadata")
-                setContentText("Failed to get metadata")
+                setContentTitle(title)
+                setContentText("Click to open player")
                 setSmallIcon(R.drawable.ic_notification)
                 setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                setSmallIcon(R.drawable.ic_notification)
                 setContentIntent(
                     PendingIntent.getActivity(
                         this@PlayerService,
