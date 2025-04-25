@@ -3,6 +3,7 @@
 package org.helllabs.android.xmp
 
 import android.net.Uri
+import org.helllabs.android.xmp.core.StorageManager
 import org.helllabs.android.xmp.model.ChannelInfo
 import org.helllabs.android.xmp.model.FrameInfo
 import org.helllabs.android.xmp.model.ModInfo
@@ -166,6 +167,8 @@ object Xmp {
      * Test module from File Descriptor
      */
     fun testFromFd(uri: Uri, modInfo: ModInfo = ModInfo()): Boolean {
+        Timber.d("Testing: ${StorageManager.getFileName(uri)}")
+
         val context = XmpApplication.instance!!.applicationContext
         val pfd = context.contentResolver.openFileDescriptor(uri, "r")
         val res = if (pfd != null) {
@@ -177,7 +180,10 @@ object Xmp {
             false
         }
 
-        // Timber.d("Testing $uri returned $res")
+        if (res) {
+            Timber.i("Test Success: ${modInfo.name} | ${modInfo.type}")
+        }
+
         return res
     }
 
@@ -201,7 +207,7 @@ object Xmp {
             -1
         }
 
-        Timber.d("Load Module: Result $res")
+        Timber.d("Load Module from file descriptor, result: $res")
         return res
     }
 }

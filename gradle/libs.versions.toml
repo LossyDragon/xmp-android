@@ -2,11 +2,12 @@
 activityCompose = "1.10.1" # https://mvnrepository.com/artifact/androidx.activity/activity-compose
 androidGradlePlugin = "8.9.2" # https://mvnrepository.com/artifact/com.android.application/com.android.application.gradle.plugin
 cascadeCompose = "2.3.0" # https://mvnrepository.com/artifact/me.saket.cascade/cascade-compose
-composeBom = "2025.04.00" # https://mvnrepository.com/artifact/androidx.compose/compose-bom
+composeBom = "2025.04.01" # https://mvnrepository.com/artifact/androidx.compose/compose-bom
 composeNavigation = "2.8.9" # https://mvnrepository.com/artifact/androidx.navigation/navigation-compose
 coreKtx = "1.16.0" # https://mvnrepository.com/artifact/androidx.core/core-ktx
 dataStore = "1.1.4" # https://mvnrepository.com/artifact/androidx.datastore/datastore-preferences
 dfc = "1.2" # https://mvnrepository.com/artifact/com.lazygeniouz/dfc
+extendedSpans = "1.4.0" # https://mvnrepository.com/artifact/me.saket.extendedspans/extendedspans
 kotlin = "2.1.20" # https://mvnrepository.com/artifact/org.jetbrains.kotlin.android/org.jetbrains.kotlin.android.gradle.plugin
 kotlinterGradle = "5.0.1" # // https://github.com/jeremymailen/kotlinter-gradle
 kotlinxSerializationJson = "1.8.1" # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-serialization-json
@@ -41,6 +42,7 @@ compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview"
 compose-ui-ui = { module = "androidx.compose.ui:ui" }
 
 cascade-compose = { module = "me.saket.cascade:cascade-compose", version.ref = "cascadeCompose" }
+compose-extended-spans = { module = "me.saket.extendedspans:extendedspans", version.ref = "extendedSpans" }
 compose-navigation = { module = "androidx.navigation:navigation-compose", version.ref = "composeNavigation" }
 core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
 datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "dataStore" }
@@ -79,6 +81,7 @@ compose = [
 ]
 compose-utils = [
     "cascade-compose",
+    "compose-extended-spans",
     "lifecycle-runtime-compose",
     "materialKolor",
 ]
