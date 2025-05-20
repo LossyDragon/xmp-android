@@ -126,10 +126,8 @@ dependencies {
     implementation(libs.bundles.compose)
     implementation(libs.bundles.compose.utils)
 
-    implementation("io.github.theapache64:rebugger:1.0.0-rc03")
+    implementation(libs.bundles.ktor)
 
-    implementation(libs.bundles.retrofit)
-    implementation(libs.bundles.xmlUtils)
     implementation(libs.core.ktx)
     implementation(libs.datastore.preferences)
     implementation(libs.dfc)
@@ -138,7 +136,6 @@ dependencies {
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.media)
     implementation(libs.moshi.kotlin)
-    implementation(libs.okhttp)
     implementation(libs.reorderable)
     implementation(libs.timber)
 }

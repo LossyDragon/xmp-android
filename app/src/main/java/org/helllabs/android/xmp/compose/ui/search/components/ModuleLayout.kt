@@ -173,7 +173,7 @@ fun ModuleLayout(
         MonoSpaceText(text = module.parseInstruments())
         Spacer(modifier = Modifier.height(10.dp))
         // Sponsor
-        if (moduleResult.hasSponsor()) {
+        if (moduleResult.hasSponsor) {
             val sponsor = moduleResult.sponsor.details
             HeaderText(stringResource(id = R.string.sponsor))
             Spacer(modifier = Modifier.height(10.dp))

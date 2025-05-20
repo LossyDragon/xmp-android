@@ -1,27 +1,30 @@
 package org.helllabs.android.xmp.compose.ui.search.result
 
+import android.os.Build
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.lazygeniouz.dfc.file.DocumentFileCompat
-import java.io.IOException
+import io.ktor.client.HttpClient
+import io.ktor.client.request.get
+import io.ktor.client.statement.bodyAsChannel
+import io.ktor.http.contentLength
+import io.ktor.utils.io.readAvailable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okio.Buffer
-import okio.ForwardingSource
 import okio.buffer
 import okio.sink
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.api.Repository
 import org.helllabs.android.xmp.core.Constants.isSupported
 import org.helllabs.android.xmp.core.PrefManager
+import org.helllabs.android.xmp.core.Resource
 import org.helllabs.android.xmp.core.StorageManager
 import org.helllabs.android.xmp.model.Module
 import org.helllabs.android.xmp.model.ModuleResult
@@ -55,10 +58,10 @@ class ResultViewModelFactory : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T =
-        ResultViewModel(XmpApplication.modArchiveModule.okHttpClient, repository) as T
+        ResultViewModel(XmpApplication.modArchiveModule.httpClient, repository) as T
 }
 
-class ResultViewModel(private val okHttpClient: OkHttpClient, private val repository: Repository) :
+class ResultViewModel(private val httpClient: HttpClient, private val repository: Repository) :
     ViewModel() {
 
     private val _uiState = MutableStateFlow(ModuleResultState())
@@ -82,10 +85,6 @@ class ResultViewModel(private val okHttpClient: OkHttpClient, private val reposi
 
         currentDownloadJob = viewModelScope.launch(Dispatchers.IO) {
             try {
-                val request = Request.Builder()
-                    .url(mod.url)
-                    .build()
-
                 _uiState.update {
                     it.copy(
                         isLoading = true,
@@ -93,62 +92,63 @@ class ResultViewModel(private val okHttpClient: OkHttpClient, private val reposi
                     )
                 }
 
-                okHttpClient.newCall(request).execute().use { response ->
-                    if (!response.isSuccessful) throw IOException("Unexpected code $response")
+                val modDoc = docFile.createFile("application/octet-stream", mod.filename)
 
-                    response.body.let { body ->
-                        val contentLength = body.contentLength().toFloat()
-                        val source = body.source()
+                if (modDoc == null) {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            downloadStatus = DownloadStatus.ErrorMsg(
+                                "Failed to create file to download"
+                            )
+                        )
+                    }
+                    return@launch
+                }
 
-                        val progressSource = object : ForwardingSource(source) {
-                            var totalBytesRead = 0L
+                val outputStream = modDoc.uri.let { uri ->
+                    val context = XmpApplication.instance!!.applicationContext
+                    context.contentResolver.openOutputStream(uri)
+                }
 
-                            override fun read(sink: Buffer, byteCount: Long): Long {
-                                val bytesRead = super.read(sink, byteCount)
-                                totalBytesRead += if (bytesRead != -1L) bytesRead else 0
-                                _uiState.update {
-                                    val value = (totalBytesRead * 100 / contentLength)
-                                    it.copy(downloadStatus = DownloadStatus.Progress(value))
-                                }
-                                return bytesRead
-                            }
-                        }
+                if (outputStream == null) {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            downloadStatus = DownloadStatus.ErrorMsg(
+                                "Failed to open output stream"
+                            )
+                        )
+                    }
+                    return@launch
+                }
 
-                        val modDoc = docFile.createFile("application/octet-stream", mod.filename)
+                val response = httpClient.get(mod.url)
+                val contentLength = response.contentLength() ?: 0L
 
-                        if (modDoc == null) {
+                val channel = response.bodyAsChannel()
+                outputStream.use { outStream ->
+                    val sink = outStream.sink().buffer()
+                    var totalBytesRead = 0L
+                    val buffer = ByteArray(8192)
+
+                    while (!channel.isClosedForRead) {
+                        val bytesRead = channel.readAvailable(buffer, 0, buffer.size)
+                        if (bytesRead < 0) break
+
+                        sink.write(buffer, 0, bytesRead)
+                        totalBytesRead += bytesRead
+
+                        // Update progress
+                        if (contentLength > 0) {
+                            val progress = (totalBytesRead * 100 / contentLength).toFloat()
                             _uiState.update {
-                                it.copy(
-                                    isLoading = false,
-                                    downloadStatus = DownloadStatus.ErrorMsg(
-                                        "Failed to create file to download"
-                                    )
-                                )
+                                it.copy(downloadStatus = DownloadStatus.Progress(progress))
                             }
-                            return@let
-                        }
-
-                        val outputStream = modDoc.uri.let { uri ->
-                            val context = XmpApplication.instance!!.applicationContext
-                            context.contentResolver.openOutputStream(uri)
-                        }
-
-                        outputStream?.use { outStream ->
-                            val sink = outStream.sink().buffer()
-
-                            progressSource.use { input ->
-                                var totalBytesRead: Long = 0
-                                var bytesRead = input.read(sink.buffer, 8192)
-                                while (bytesRead != -1L) {
-                                    totalBytesRead += bytesRead
-                                    sink.emit()
-                                    bytesRead = input.read(sink.buffer, 8192)
-                                }
-                            }
-
-                            sink.flush()
                         }
                     }
+
+                    sink.flush()
                 }
 
                 _uiState.update {
@@ -179,26 +179,41 @@ class ResultViewModel(private val okHttpClient: OkHttpClient, private val reposi
 
         viewModelScope.launch {
             _uiState.update { it.copy(isRandom = false, isLoading = true) }
-
-            try {
-                val result = repository.getModuleById(id)
-                if (result.error != null) {
-                    _uiState.update { it.copy(softError = result.error) }
-                } else {
-                    saveModuleToHistory(result.module)
-                    _uiState.update {
-                        it.copy(
-                            module = result,
-                            moduleExists = doesModuleExist(result),
-                            moduleSupported = isModuleSupported(result)
-                        )
+            repository.getModuleById(id).collectLatest { resource ->
+                when (resource) {
+                    is Resource.Success -> {
+                        val result = resource.data
+                        if (result != null) {
+                            saveModuleToHistory(result.module)
+                            _uiState.update {
+                                it.copy(
+                                    module = result,
+                                    moduleExists = doesModuleExist(result),
+                                    moduleSupported = isModuleSupported(result),
+                                    isLoading = false
+                                )
+                            }
+                        } else {
+                            _uiState.update {
+                                it.copy(
+                                    softError = "No data returned",
+                                    isLoading = false
+                                )
+                            }
+                        }
+                    }
+                    is Resource.Error -> {
+                        _uiState.update {
+                            it.copy(
+                                softError = resource.message,
+                                isLoading = false
+                            )
+                        }
+                    }
+                    is Resource.Loading -> {
+                        _uiState.update { it.copy(isLoading = true) }
                     }
                 }
-            } catch (e: Exception) {
-                Timber.e(e)
-                _uiState.update { it.copy(hardError = e.message) }
-            } finally {
-                _uiState.update { it.copy(isLoading = false) }
             }
         }
     }
@@ -207,25 +222,41 @@ class ResultViewModel(private val okHttpClient: OkHttpClient, private val reposi
         viewModelScope.launch {
             _uiState.update { it.copy(isRandom = true, isLoading = true) }
 
-            try {
-                val result = repository.getRandomModule()
-                if (!result.error.isNullOrBlank()) {
-                    _uiState.update { it.copy(softError = result.error) }
-                } else {
-                    saveModuleToHistory(result.module)
-                    _uiState.update {
-                        it.copy(
-                            module = result,
-                            moduleExists = doesModuleExist(result),
-                            moduleSupported = isModuleSupported(result)
-                        )
+            repository.getRandomModule().collectLatest { resource ->
+                when (resource) {
+                    is Resource.Success -> {
+                        val result = resource.data
+                        if (result != null) {
+                            saveModuleToHistory(result.module)
+                            _uiState.update {
+                                it.copy(
+                                    module = result,
+                                    moduleExists = doesModuleExist(result),
+                                    moduleSupported = isModuleSupported(result),
+                                    isLoading = false
+                                )
+                            }
+                        } else {
+                            _uiState.update {
+                                it.copy(
+                                    softError = "No data returned",
+                                    isLoading = false
+                                )
+                            }
+                        }
+                    }
+                    is Resource.Error -> {
+                        _uiState.update {
+                            it.copy(
+                                softError = resource.message,
+                                isLoading = false
+                            )
+                        }
+                    }
+                    is Resource.Loading -> {
+                        _uiState.update { it.copy(isLoading = true) }
                     }
                 }
-            } catch (e: Exception) {
-                Timber.e(e)
-                _uiState.update { it.copy(hardError = e.message) }
-            } finally {
-                _uiState.update { it.copy(isLoading = false) }
             }
         }
     }
@@ -287,7 +318,11 @@ class ResultViewModel(private val okHttpClient: OkHttpClient, private val reposi
         history.add(moduleToAdd)
 
         if (history.size >= 50) {
-            history.removeFirst()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+                history.removeFirst()
+            } else {
+                history.removeAt(0)
+            }
         }
 
         PrefManager.searchHistory = history

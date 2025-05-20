@@ -1,23 +1,40 @@
 package org.helllabs.android.xmp.api
 
+import kotlinx.coroutines.flow.Flow
+import org.helllabs.android.xmp.core.Resource
 import org.helllabs.android.xmp.model.ArtistResult
 import org.helllabs.android.xmp.model.ModuleResult
 import org.helllabs.android.xmp.model.SearchListResult
 
 interface ApiHelper {
 
-    suspend fun getArtistSearch(apiKey: String, byArtist: String, query: String): ArtistResult
+    suspend fun getArtistSearch(
+        apiKey: String,
+        request: String,
+        query: String
+    ): Flow<Resource<ArtistResult>>
 
-    suspend fun getModuleById(apiKey: String, byModuleId: String, query: Int): ModuleResult
+    suspend fun getModuleById(
+        apiKey: String,
+        request: String,
+        query: Int
+    ): Flow<Resource<ModuleResult>>
 
-    suspend fun getRandomModule(apiKey: String, byRandom: String): ModuleResult
+    suspend fun getRandomModule(
+        apiKey: String,
+        request: String
+    ): Flow<Resource<ModuleResult>>
 
-    suspend fun getArtistById(apiKey: String, byArtistId: String, query: Int): SearchListResult
+    suspend fun getArtistById(
+        apiKey: String,
+        request: String,
+        query: Int
+    ): Flow<Resource<SearchListResult>>
 
     suspend fun getSearchByFileNameOrTitle(
         apiKey: String,
-        bySearch: String,
-        typeFileOrTitle: String,
+        request: String,
+        type: String,
         query: String
-    ): SearchListResult
+    ): Flow<Resource<SearchListResult>>
 }

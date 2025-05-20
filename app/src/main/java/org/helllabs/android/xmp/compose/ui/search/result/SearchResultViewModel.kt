@@ -6,11 +6,12 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.api.Repository
-import timber.log.Timber
+import org.helllabs.android.xmp.core.Resource
 
 @Stable
 data class SearchResultState(
@@ -39,54 +40,97 @@ class SearchResultViewModel(private val repository: Repository) : ViewModel() {
     fun getFileOrTitle(string: String, query: String) = viewModelScope.launch {
         _uiState.update { it.copy(title = string, isLoading = true) }
 
-        try {
-            val result = repository.getFileNameOrTitle(query)
-            if (!result.error.isNullOrBlank()) {
-                _uiState.update { it.copy(softError = result.error) }
-            } else {
-                _uiState.update { it.copy(result = result, softError = "") }
+        repository.getFileNameOrTitle(query).collectLatest { resource ->
+            when (resource) {
+                is Resource.Success -> {
+                    val result = resource.data
+                    if (result != null) {
+                        _uiState.update {
+                            it.copy(result = result, softError = "", isLoading = false)
+                        }
+                    } else {
+                        _uiState.update {
+                            it.copy(softError = "No data returned", isLoading = false)
+                        }
+                    }
+                }
+
+                is Resource.Error -> {
+                    _uiState.update {
+                        it.copy(softError = resource.message, isLoading = false)
+                    }
+                }
+
+                is Resource.Loading -> {
+                    _uiState.update { it.copy(isLoading = true) }
+                }
             }
-        } catch (e: Exception) {
-            Timber.e(e)
-            _uiState.update { it.copy(hardError = e.message) }
-        } finally {
-            _uiState.update { it.copy(isLoading = false) }
         }
     }
 
     fun getArtistById(id: Int) = viewModelScope.launch {
         _uiState.update { it.copy(isLoading = true) }
 
-        try {
-            val result = repository.getArtistById(id)
-            if (!result.error.isNullOrBlank()) {
-                _uiState.update { it.copy(softError = result.error) }
-            } else {
-                _uiState.update { it.copy(result = result, softError = "") }
+        repository.getArtistById(id).collectLatest { resource ->
+            when (resource) {
+                is Resource.Success -> {
+                    val result = resource.data
+                    if (result != null) {
+                        _uiState.update {
+                            it.copy(result = result, softError = "", isLoading = false)
+                        }
+                    } else {
+                        _uiState.update {
+                            it.copy(softError = "No data returned", isLoading = false)
+                        }
+                    }
+                }
+
+                is Resource.Error -> {
+                    _uiState.update {
+                        it.copy(softError = resource.message, isLoading = false)
+                    }
+                }
+
+                is Resource.Loading -> {
+                    _uiState.update { it.copy(isLoading = true) }
+                }
             }
-        } catch (e: Exception) {
-            Timber.e(e)
-            _uiState.update { it.copy(hardError = e.message) }
-        } finally {
-            _uiState.update { it.copy(isLoading = false) }
         }
     }
 
     fun getArtists(string: String, query: String) = viewModelScope.launch {
         _uiState.update { it.copy(title = string, isLoading = true) }
 
-        try {
-            val result = repository.getArtistSearch(query)
-            if (!result.error.isNullOrBlank()) {
-                _uiState.update { it.copy(softError = result.error) }
-            } else {
-                _uiState.update { it.copy(result = result, softError = "") }
+        repository.getArtistSearch(query).collectLatest { resource ->
+            when (resource) {
+                is Resource.Success -> {
+                    val result = resource.data
+                    if (result != null) {
+                        _uiState.update {
+                            it.copy(
+                                result = result,
+                                softError = "",
+                                isLoading = false
+                            )
+                        }
+                    } else {
+                        _uiState.update {
+                            it.copy(softError = "No data returned", isLoading = false)
+                        }
+                    }
+                }
+
+                is Resource.Error -> {
+                    _uiState.update {
+                        it.copy(softError = resource.message, isLoading = false)
+                    }
+                }
+
+                is Resource.Loading -> {
+                    _uiState.update { it.copy(isLoading = true) }
+                }
             }
-        } catch (e: Exception) {
-            Timber.e(e)
-            _uiState.update { it.copy(hardError = e.message) }
-        } finally {
-            _uiState.update { it.copy(isLoading = false) }
         }
     }
 }

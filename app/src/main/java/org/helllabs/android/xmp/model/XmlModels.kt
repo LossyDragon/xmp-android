@@ -8,6 +8,7 @@ import android.text.Spanned
 import androidx.core.text.toSpanned
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import nl.adaptivity.xmlutil.serialization.*
 
 @Serializable
@@ -19,7 +20,8 @@ data class ModuleResult(
     @XmlElement val totalpages: Int = 0,
     @XmlElement val module: Module = Module()
 ) {
-    fun hasSponsor(): Boolean = sponsor.details.text.isNotEmpty()
+    @Transient
+    val hasSponsor: Boolean = sponsor.details.text.isNotEmpty()
 }
 
 @Serializable

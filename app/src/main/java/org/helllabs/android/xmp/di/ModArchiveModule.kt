@@ -1,45 +1,37 @@
 package org.helllabs.android.xmp.di
 
-import nl.adaptivity.xmlutil.serialization.XML
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.android.Android
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.request.accept
+import io.ktor.http.ContentType
+import io.ktor.serialization.kotlinx.xml.xml
 import org.helllabs.android.xmp.api.ApiHelper
 import org.helllabs.android.xmp.api.ApiHelperImpl
 import org.helllabs.android.xmp.api.ApiService
 import org.helllabs.android.xmp.core.Constants
-import retrofit2.Retrofit
-import retrofit2.converter.kotlinx.serialization.asConverterFactory
 
 interface ModArchiveModule {
-    val okHttpClient: OkHttpClient
-    val retrofit: Retrofit
+    val httpClient: HttpClient
     val apiService: ApiService
     val apiHelper: ApiHelper
 }
 
 class ModArchiveModuleImpl : ModArchiveModule {
-    override val okHttpClient: OkHttpClient by lazy {
-        OkHttpClient.Builder().build()
+    override val httpClient: HttpClient by lazy {
+        HttpClient(Android) {
+            install(ContentNegotiation) {
+                xml()
+            }
+            defaultRequest {
+                url(Constants.BASE_URL)
+                accept(ContentType.Application.Xml)
+            }
+        }
     }
 
-    override val retrofit: Retrofit by lazy {
-        val contentType = "application/xml;".toMediaType()
-        Retrofit.Builder()
-            .baseUrl(Constants.BASE_URL)
-            .addConverterFactory(
-                XML {
-                    autoPolymorphic = true
-                }.asConverterFactory(contentType)
-            )
-            .client(okHttpClient)
-            .build()
-    }
+    override val apiService: ApiService by lazy { ApiService(httpClient) }
 
-    override val apiService: ApiService by lazy {
-        retrofit.create(ApiService::class.java)
-    }
-
-    override val apiHelper: ApiHelper by lazy {
-        ApiHelperImpl(apiService)
-    }
+    override val apiHelper: ApiHelper by lazy { ApiHelperImpl(apiService) }
 }

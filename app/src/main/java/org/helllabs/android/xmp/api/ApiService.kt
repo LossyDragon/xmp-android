@@ -1,50 +1,101 @@
 package org.helllabs.android.xmp.api
 
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.ClientRequestException
+import io.ktor.client.plugins.ServerResponseException
+import io.ktor.client.request.get
+import io.ktor.client.request.parameter
+import io.ktor.client.statement.bodyAsText
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import nl.adaptivity.xmlutil.serialization.*
+import org.helllabs.android.xmp.core.Resource
 import org.helllabs.android.xmp.model.ArtistResult
 import org.helllabs.android.xmp.model.ModuleResult
 import org.helllabs.android.xmp.model.SearchListResult
-import retrofit2.http.GET
-import retrofit2.http.Query
 
-interface ApiService {
+class ApiService(private val client: HttpClient) {
 
-    // Search modules by an Artist's ID.
-    @GET("/xml-tools.php")
-    suspend fun getArtistById(
-        @Query("key") apiKey: String,
-        @Query("request") request: String,
-        @Query("query") query: Int
-    ): SearchListResult
+    private inline fun <reified T> executeRequest(
+        apiKey: String,
+        request: String,
+        additionalParams: Map<String, Any?> = emptyMap()
+    ): Flow<Resource<T>> = flow {
+        emit(Resource.Loading())
 
-    // Search by Artist's name.
-    @GET("/xml-tools.php")
-    suspend fun getArtistSearch(
-        @Query("key") apiKey: String,
-        @Query("request") request: String,
-        @Query("query") query: String
-    ): ArtistResult
+        try {
+            val response = client.get("/xml-tools.php") {
+                parameter("key", apiKey)
+                parameter("request", request)
 
-    // View a module ID.
-    @GET("/xml-tools.php")
-    suspend fun getModuleById(
-        @Query("key") apiKey: String,
-        @Query("request") request: String,
-        @Query("query") query: Int
-    ): ModuleResult
+                // Add any additional parameters
+                additionalParams.forEach { (key, value) ->
+                    if (value != null) {
+                        parameter(key, value)
+                    }
+                }
+            }.bodyAsText()
 
-    // Search a random module.
-    @GET("/xml-tools.php")
-    suspend fun getRandomModule(
-        @Query("key") apiKey: String,
-        @Query("request") request: String
-    ): ModuleResult
+            val data: T = XML.decodeFromString(response)
 
-    // Search by Filename or by Song title.
-    @GET("/xml-tools.php")
-    suspend fun getSearchByFileNameOrTitle(
-        @Query("key") apiKey: String,
-        @Query("request") request: String,
-        @Query("type") type: String,
-        @Query("query") query: String
-    ): SearchListResult
+            // Check API error response
+            when {
+                data is ModuleResult && !data.error.isNullOrEmpty() ->
+                    emit(Resource.Error(data.error))
+
+                data is SearchListResult && !data.error.isNullOrEmpty() ->
+                    emit(Resource.Error(data.error))
+
+                data is ArtistResult && !data.error.isNullOrEmpty() ->
+                    emit(Resource.Error(data.error))
+
+                else -> emit(Resource.Success(data))
+            }
+        } catch (e: ClientRequestException) {
+            emit(Resource.Error("Network error: ${e.response.status.description}"))
+        } catch (e: ServerResponseException) {
+            emit(Resource.Error("Server error: ${e.response.status.description}"))
+        } catch (e: Exception) {
+            emit(Resource.Error("Error: ${e.localizedMessage ?: "Unknown error"}"))
+        }
+    }
+
+    // Search modules by an Artist's ID
+    fun getArtistById(
+        apiKey: String,
+        request: String,
+        query: Int
+    ): Flow<Resource<SearchListResult>> = executeRequest(apiKey, request, mapOf("query" to query))
+
+    // Search by Artist's name
+    fun getArtistSearch(
+        apiKey: String,
+        request: String,
+        query: String
+    ): Flow<Resource<ArtistResult>> = executeRequest(apiKey, request, mapOf("query" to query))
+
+    // View a module ID
+    fun getModuleById(
+        apiKey: String,
+        request: String,
+        query: Int
+    ): Flow<Resource<ModuleResult>> = executeRequest(apiKey, request, mapOf("query" to query))
+
+    // Search a random module
+    fun getRandomModule(
+        apiKey: String,
+        request: String
+    ): Flow<Resource<ModuleResult>> = executeRequest(apiKey, request)
+
+    // Search by Filename or by Song title
+    fun getSearchByFileNameOrTitle(
+        apiKey: String,
+        request: String,
+        type: String,
+        query: String
+    ): Flow<Resource<SearchListResult>> = executeRequest(
+        apiKey,
+        request,
+        mapOf("type" to type, "query" to query)
+    )
 }

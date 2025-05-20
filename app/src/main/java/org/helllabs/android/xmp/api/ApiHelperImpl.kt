@@ -1,39 +1,44 @@
 package org.helllabs.android.xmp.api
 
+import kotlinx.coroutines.flow.Flow
+import org.helllabs.android.xmp.core.Resource
 import org.helllabs.android.xmp.model.ArtistResult
 import org.helllabs.android.xmp.model.ModuleResult
 import org.helllabs.android.xmp.model.SearchListResult
 
 class ApiHelperImpl(private val apiService: ApiService) : ApiHelper {
+    override suspend fun getArtistById(
+        apiKey: String,
+        request: String,
+        query: Int
+    ): Flow<Resource<SearchListResult>> =
+        apiService.getArtistById(apiKey, request, query)
 
     override suspend fun getArtistSearch(
         apiKey: String,
-        byArtist: String,
+        request: String,
         query: String
-    ): ArtistResult = apiService.getArtistSearch(apiKey, byArtist, query)
+    ): Flow<Resource<ArtistResult>> =
+        apiService.getArtistSearch(apiKey, request, query)
 
     override suspend fun getModuleById(
         apiKey: String,
-        byModuleId: String,
+        request: String,
         query: Int
-    ): ModuleResult = apiService.getModuleById(apiKey, byModuleId, query)
+    ): Flow<Resource<ModuleResult>> =
+        apiService.getModuleById(apiKey, request, query)
 
     override suspend fun getRandomModule(
         apiKey: String,
-        byRandom: String
-    ): ModuleResult = apiService.getRandomModule(apiKey, byRandom)
-
-    override suspend fun getArtistById(
-        apiKey: String,
-        byArtistId: String,
-        query: Int
-    ): SearchListResult = apiService.getArtistById(apiKey, byArtistId, query)
+        request: String
+    ): Flow<Resource<ModuleResult>> =
+        apiService.getRandomModule(apiKey, request)
 
     override suspend fun getSearchByFileNameOrTitle(
         apiKey: String,
-        bySearch: String,
-        typeFileOrTitle: String,
+        request: String,
+        type: String,
         query: String
-    ): SearchListResult =
-        apiService.getSearchByFileNameOrTitle(apiKey, bySearch, typeFileOrTitle, query)
+    ): Flow<Resource<SearchListResult>> =
+        apiService.getSearchByFileNameOrTitle(apiKey, request, type, query)
 }
