@@ -15,7 +15,6 @@ fun XmpTheme(
         isDark = useDarkTheme,
         isAmoled = false, // Maybe Pure-Dark mode?
         style = PaletteStyle.TonalSpot,
-        isExtendedFidelity = true
     )
 
     MaterialTheme(

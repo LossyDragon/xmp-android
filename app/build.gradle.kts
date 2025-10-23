@@ -22,7 +22,7 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "org.helllabs.android.xmp"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "org.helllabs.android.xmp"
@@ -31,9 +31,9 @@ android {
          * https://apilevels.com/
          */
         minSdk = 23 // Android 6 - Marshmallow
-        targetSdk = 35 // Android 15 Vanilla Ice Cream
+        targetSdk = 36 // Android 15 Vanilla Ice Cream
 
-        versionCode = 111
+        versionCode = 112
         versionName = "5.0-SNAPSHOT"
 
         ndk.abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")

@@ -1,26 +1,26 @@
 [versions]
-activityCompose = "1.10.1" # https://mvnrepository.com/artifact/androidx.activity/activity-compose
-androidGradlePlugin = "8.10.0" # https://mvnrepository.com/artifact/com.android.application/com.android.application.gradle.plugin
+activityCompose = "1.11.0" # https://mvnrepository.com/artifact/androidx.activity/activity-compose
+androidGradlePlugin = "8.13.0" # https://mvnrepository.com/artifact/com.android.application/com.android.application.gradle.plugin
 cascadeCompose = "2.3.0" # https://mvnrepository.com/artifact/me.saket.cascade/cascade-compose
-composeBom = "2025.05.01" # https://mvnrepository.com/artifact/androidx.compose/compose-bom
-composeNavigation = "2.9.0" # https://mvnrepository.com/artifact/androidx.navigation/navigation-compose
-coreKtx = "1.16.0" # https://mvnrepository.com/artifact/androidx.core/core-ktx
+composeBom = "2025.10.01" # https://mvnrepository.com/artifact/androidx.compose/compose-bom
+composeNavigation = "2.9.5" # https://mvnrepository.com/artifact/androidx.navigation/navigation-compose
+coreKtx = "1.17.0" # https://mvnrepository.com/artifact/androidx.core/core-ktx
 dataStore = "1.1.7" # https://mvnrepository.com/artifact/androidx.datastore/datastore-preferences
 dfc = "1.2" # https://mvnrepository.com/artifact/com.lazygeniouz/dfc
 extendedSpans = "1.4.0" # https://mvnrepository.com/artifact/me.saket.extendedspans/extendedspans
-kotlin = "2.1.21" # https://mvnrepository.com/artifact/org.jetbrains.kotlin.android/org.jetbrains.kotlin.android.gradle.plugin
-kotlinterGradle = "5.0.2" # // https://github.com/jeremymailen/kotlinter-gradle
-kotlinxSerialization = "1.8.1" # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-serialization-json
-ktor = "3.1.3" # https://mvnrepository.com/artifact/io.ktor/ktor-client-core
+kotlin = "2.2.21" # https://mvnrepository.com/artifact/org.jetbrains.kotlin.android/org.jetbrains.kotlin.android.gradle.plugin
+kotlinterGradle = "5.2.0" # // https://github.com/jeremymailen/kotlinter-gradle
+kotlinxSerialization = "1.9.0" # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-serialization-json
+ktor = "3.3.1" # https://mvnrepository.com/artifact/io.ktor/ktor-client-core
 leakcanaryAndroid = "2.14" # https://mvnrepository.com/artifact/com.squareup.leakcanary/leakcanary-android
-lifecycleRuntimeCompose = "2.9.0" # https://mvnrepository.com/artifact/androidx.lifecycle/lifecycle-runtime-compose
-lifecycleRuntimeKtx = "2.9.0" # https://mvnrepository.com/artifact/androidx.lifecycle/lifecycle-runtime-ktx
-lifecycleViewModelCompose = "2.9.0" # https://mvnrepository.com/artifact/androidx.lifecycle/lifecycle-viewmodel-compose
-materialKolor = "2.1.1" # https://mvnrepository.com/artifact/com.materialkolor/material-kolor
-media = "1.7.0" # https://mvnrepository.com/artifact/androidx.media/media
+lifecycleRuntimeCompose = "2.9.4" # https://mvnrepository.com/artifact/androidx.lifecycle/lifecycle-runtime-compose
+lifecycleRuntimeKtx = "2.9.4" # https://mvnrepository.com/artifact/androidx.lifecycle/lifecycle-runtime-ktx
+lifecycleViewModelCompose = "2.9.4" # https://mvnrepository.com/artifact/androidx.lifecycle/lifecycle-viewmodel-compose
+materialKolor = "4.0.1" # https://mvnrepository.com/artifact/com.materialkolor/material-kolor
+media = "1.7.1" # https://mvnrepository.com/artifact/androidx.media/media
 moshiKotlin = "1.15.2" # https://mvnrepository.com/artifact/com.squareup.moshi/moshi-kotlin
-reorderable = "2.4.3" # https://mvnrepository.com/artifact/sh.calvin.reorderable/reorderable
-settings = "2.10.0" # https://github.com/alorma/Compose-Settings/releases
+reorderable = "3.0.0" # https://mvnrepository.com/artifact/sh.calvin.reorderable/reorderable
+settings = "2.13.0" # https://github.com/alorma/Compose-Settings/releases
 timber = "5.0.1" # https://mvnrepository.com/artifact/com.jakewharton.timber/timber
 
 [libraries]
