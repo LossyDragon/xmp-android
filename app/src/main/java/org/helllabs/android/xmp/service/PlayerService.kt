@@ -112,6 +112,8 @@ class PlayerService :
 
     var isRepeating: Boolean = false
         private set
+    var isLoopPlaylist: Boolean = false
+        private set
     var playAllSequences: Boolean = false
         private set
 
@@ -508,7 +510,8 @@ class PlayerService :
         Timber.d("Start: $playlistPosition")
         Timber.d("Size: ${playlist.size}")
 
-        isRepeating = loopList
+        // isRepeating = loopList
+        isLoopPlaylist = loopList
 
         if (isAlive.value) {
             Timber.i("Use existing player thread")
@@ -776,8 +779,13 @@ class PlayerService :
                     skipToPrevious = true
                 } else {
                     playlistPosition = playlistPosition.plus(1)
+
+                    // Loop back to 0
+                    if (isLoopPlaylist && playlistPosition >= playlist.size) {
+                        playlistPosition = 0
+                    }
                 }
-            } while (cmd != CMD_STOP && playlistPosition < playlist.size)
+            } while (cmd != CMD_STOP && (isLoopPlaylist || playlistPosition < playlist.size))
 
             Timber.d("Exiting play loop")
 
