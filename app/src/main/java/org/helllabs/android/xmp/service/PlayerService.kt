@@ -285,8 +285,8 @@ class PlayerService :
                     } else {
                         Xmp.stopModule()
                         cmd = CMD_PREV
+                        discardBuffer = true
                     }
-                    discardBuffer = true
                     if (!isPlaying.value) {
                         mediaController.transportControls.play()
                     }
@@ -785,12 +785,19 @@ class PlayerService :
                 // Used when current files are replaced by a new set
                 if (playerRestart) {
                     Timber.i("Restart")
-                    // playlistPosition = 0
                     playerRestart = false
                     cmd = CMD_NONE
                 } else if (cmd == CMD_PREV) {
                     Timber.d("Command: Previous")
-                    playlistPosition = playlistPosition.minus(1).coerceAtLeast(0)
+                    playlistPosition = playlistPosition.minus(1)
+
+                    // Wrap to end of playlist if looping is enabled
+                    if (isLoopPlaylist && playlistPosition < 0) {
+                        playlistPosition = playlist.size - 1
+                    } else if (playlistPosition < 0) {
+                        playlistPosition = 0
+                    }
+
                     skipToPrevious = true
                 } else {
                     playlistPosition = playlistPosition.plus(1)
