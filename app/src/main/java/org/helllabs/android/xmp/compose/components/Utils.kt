@@ -32,7 +32,7 @@ fun themedText(
             )
         ) {
             withStyle(style = SpanStyle(color = seed)) {
-                append(text.substring(0, 3))
+                append(text.take(3))
             }
             withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.onBackground)) {
                 append(text.substring(3, text.length))
@@ -40,7 +40,7 @@ fun themedText(
         }
     } else {
         withStyle(style = SpanStyle(color = seed)) {
-            append(text.substring(0, 3))
+            append(text.take(3))
         }
         withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.onBackground)) {
             append(text.substring(3, text.length))
