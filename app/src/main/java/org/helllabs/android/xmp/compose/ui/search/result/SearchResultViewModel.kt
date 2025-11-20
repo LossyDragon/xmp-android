@@ -12,6 +12,7 @@ import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.api.Repository
 import org.helllabs.android.xmp.core.Resource
+import org.helllabs.android.xmp.di.ModArchiveModule
 
 @Stable
 data class SearchResultState(
@@ -24,7 +25,7 @@ data class SearchResultState(
 
 @Stable
 class SearchResultViewModelFactory : ViewModelProvider.Factory {
-    private val repository = Repository(XmpApplication.modArchiveModule.apiHelper)
+    private val repository = ModArchiveModule.repository
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T =

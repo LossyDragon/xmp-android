@@ -4,8 +4,6 @@ import android.app.Application
 import android.net.Uri
 import android.util.Log
 import org.helllabs.android.xmp.core.PrefManager
-import org.helllabs.android.xmp.di.ModArchiveModule
-import org.helllabs.android.xmp.di.ModArchiveModuleImpl
 import timber.log.Timber
 
 // TODO add migration tool for older playlists.
@@ -16,8 +14,6 @@ class XmpApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         setInstance(this)
-
-        modArchiveModule = ModArchiveModuleImpl()
 
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
@@ -33,8 +29,6 @@ class XmpApplication : Application() {
     }
 
     companion object {
-        lateinit var modArchiveModule: ModArchiveModule
-
         @get:Synchronized
         var instance: XmpApplication? = null
             private set

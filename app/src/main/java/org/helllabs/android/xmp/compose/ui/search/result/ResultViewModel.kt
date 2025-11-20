@@ -26,6 +26,7 @@ import org.helllabs.android.xmp.core.Constants.isSupported
 import org.helllabs.android.xmp.core.PrefManager
 import org.helllabs.android.xmp.core.Resource
 import org.helllabs.android.xmp.core.StorageManager
+import org.helllabs.android.xmp.di.ModArchiveModule
 import org.helllabs.android.xmp.model.Module
 import org.helllabs.android.xmp.model.ModuleResult
 import timber.log.Timber
@@ -54,11 +55,11 @@ data class ModuleResultState(
 
 @Stable
 class ResultViewModelFactory : ViewModelProvider.Factory {
-    private val repository = Repository(XmpApplication.modArchiveModule.apiHelper)
+    private val repository = ModArchiveModule.repository
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T =
-        ResultViewModel(XmpApplication.modArchiveModule.httpClient, repository) as T
+        ResultViewModel(ModArchiveModule.httpClient, repository) as T
 }
 
 class ResultViewModel(private val httpClient: HttpClient, private val repository: Repository) :

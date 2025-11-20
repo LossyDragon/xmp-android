@@ -14,10 +14,9 @@ import org.helllabs.android.xmp.model.ArtistResult
 import org.helllabs.android.xmp.model.ModuleResult
 import org.helllabs.android.xmp.model.SearchListResult
 
-class ApiService(private val client: HttpClient) {
+class ApiService(private val client: HttpClient, private val apiKey: String) {
 
     private inline fun <reified T> executeRequest(
-        apiKey: String,
         request: String,
         additionalParams: Map<String, Any?> = emptyMap()
     ): Flow<Resource<T>> = flow {
@@ -60,39 +59,33 @@ class ApiService(private val client: HttpClient) {
 
     // Search modules by an Artist's ID
     fun getArtistById(
-        apiKey: String,
         request: String,
         query: Int
-    ): Flow<Resource<SearchListResult>> = executeRequest(apiKey, request, mapOf("query" to query))
+    ): Flow<Resource<SearchListResult>> = executeRequest(request, mapOf("query" to query))
 
     // Search by Artist's name
     fun getArtistSearch(
-        apiKey: String,
         request: String,
         query: String
-    ): Flow<Resource<ArtistResult>> = executeRequest(apiKey, request, mapOf("query" to query))
+    ): Flow<Resource<ArtistResult>> = executeRequest(request, mapOf("query" to query))
 
     // View a module ID
     fun getModuleById(
-        apiKey: String,
         request: String,
         query: Int
-    ): Flow<Resource<ModuleResult>> = executeRequest(apiKey, request, mapOf("query" to query))
+    ): Flow<Resource<ModuleResult>> = executeRequest(request, mapOf("query" to query))
 
     // Search a random module
     fun getRandomModule(
-        apiKey: String,
         request: String
-    ): Flow<Resource<ModuleResult>> = executeRequest(apiKey, request)
+    ): Flow<Resource<ModuleResult>> = executeRequest(request)
 
     // Search by Filename or by Song title
     fun getSearchByFileNameOrTitle(
-        apiKey: String,
         request: String,
         type: String,
         query: String
     ): Flow<Resource<SearchListResult>> = executeRequest(
-        apiKey,
         request,
         mapOf("type" to type, "query" to query)
     )

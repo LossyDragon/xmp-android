@@ -13,20 +13,20 @@ import org.helllabs.android.xmp.model.ArtistResult
 import org.helllabs.android.xmp.model.ModuleResult
 import org.helllabs.android.xmp.model.SearchListResult
 
-class Repository(private val apiHelper: ApiHelper) {
+class Repository(private val apiService: ApiService) {
 
-    suspend fun getModuleById(query: Int): Flow<Resource<ModuleResult>> =
-        apiHelper.getModuleById(APIKEY, BY_MODULE_ID, query)
+    fun getModuleById(query: Int): Flow<Resource<ModuleResult>> =
+        apiService.getModuleById(BY_MODULE_ID, query)
 
-    suspend fun getArtistSearch(query: String): Flow<Resource<ArtistResult>> =
-        apiHelper.getArtistSearch(APIKEY, BY_ARTIST, query)
+    fun getArtistSearch(query: String): Flow<Resource<ArtistResult>> =
+        apiService.getArtistSearch(BY_ARTIST, query)
 
-    suspend fun getArtistById(query: Int): Flow<Resource<SearchListResult>> =
-        apiHelper.getArtistById(APIKEY, BY_ARTIST_ID, query)
+    fun getArtistById(query: Int): Flow<Resource<SearchListResult>> =
+        apiService.getArtistById(BY_ARTIST_ID, query)
 
-    suspend fun getFileNameOrTitle(query: String): Flow<Resource<SearchListResult>> =
-        apiHelper.getSearchByFileNameOrTitle(APIKEY, BY_SEARCH, TYPE_FILE_OR_TITLE, query)
+    fun getFileNameOrTitle(query: String): Flow<Resource<SearchListResult>> =
+        apiService.getSearchByFileNameOrTitle(BY_SEARCH, TYPE_FILE_OR_TITLE, query)
 
-    suspend fun getRandomModule(): Flow<Resource<ModuleResult>> =
-        apiHelper.getRandomModule(APIKEY, BY_RANDOM)
+    fun getRandomModule(): Flow<Resource<ModuleResult>> =
+        apiService.getRandomModule(BY_RANDOM)
 }
