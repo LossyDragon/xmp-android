@@ -10,6 +10,7 @@ import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.core.Constants.DEFAULT_DOWNLOAD_DIR
 import org.helllabs.android.xmp.model.Module
 import timber.log.Timber
+import androidx.core.net.toUri
 
 class XmpException(string: String) : Exception(string)
 
@@ -29,7 +30,7 @@ object StorageManager {
             return false
         }
 
-        val preference = Uri.parse(PrefManager.safStoragePath)
+        val preference = PrefManager.safStoragePath.toUri()
         val persistedUriPermissions = context.contentResolver.persistedUriPermissions
         return persistedUriPermissions.any {
             it.uri == preference && it.isReadPermission && it.isWritePermission
@@ -43,8 +44,7 @@ object StorageManager {
         val context = XmpApplication.instance?.applicationContext
             ?: return Result.failure(XmpException("App context is null"))
 
-        val prefUri = PrefManager.safStoragePath.let { Uri.parse(it) }
-            ?: return Result.failure(XmpException("Getting saved uri returned null"))
+        val prefUri = PrefManager.safStoragePath.toUri()
 
         val parent = DocumentFileCompat.fromTreeUri(context, prefUri)
             ?: return Result.failure(XmpException("Getting parent directory returned null"))

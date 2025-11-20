@@ -50,6 +50,7 @@ import org.helllabs.android.xmp.core.StorageManager
 import org.helllabs.android.xmp.model.FileItem
 import org.helllabs.android.xmp.service.PlayerService
 import timber.log.Timber
+import androidx.core.net.toUri
 
 @Serializable
 object NavigationHome
@@ -103,19 +104,13 @@ fun HomeScreenImpl(
 
     // Ask for Permissions
     LaunchedEffect(Unit) {
-        val savedUri = PrefManager.safStoragePath.let {
-            try {
-                Uri.parse(it)
-            } catch (_: NullPointerException) {
-                null
-            }
-        }
+        val savedUri = PrefManager.safStoragePath.toUri()
         val persistedUris = context.contentResolver.persistedUriPermissions
         val hasAccess = persistedUris.any {
             it.uri == savedUri && it.isWritePermission
         }
 
-        if (savedUri == null || !hasAccess) {
+        if (!hasAccess) {
             viewModel.askForStorage(true)
         } else {
             viewModel.setDefaultPath()

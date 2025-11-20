@@ -701,7 +701,7 @@ class PlayerService :
                                 }
                                 Timber.d("Paused...")
                                 Thread.sleep(1000)
-                            } catch (e: InterruptedException) {
+                            } catch (_: InterruptedException) {
                                 break
                             }
                             watchdog.refresh()
@@ -717,7 +717,7 @@ class PlayerService :
                         while (!Xmp.hasFreeBuffer() && isPlaying.value && cmd == CMD_NONE) {
                             try {
                                 Thread.sleep(40)
-                            } catch (e: InterruptedException) {
+                            } catch (_: InterruptedException) {
                                 // Nothing
                             }
                         }

@@ -2,7 +2,6 @@ package org.helllabs.android.xmp.compose.ui.preferences
 
 import android.content.Intent
 import android.content.res.Configuration
-import android.net.Uri
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -25,6 +24,7 @@ import org.helllabs.android.xmp.compose.theme.XmpTheme
 import org.helllabs.android.xmp.core.PrefManager
 import org.helllabs.android.xmp.core.StorageManager
 import timber.log.Timber
+import androidx.core.net.toUri
 
 @Serializable
 object NavPreferences
@@ -85,7 +85,7 @@ fun PreferencesScreen(
             SettingsGroupPlaylist(
                 onChangeDir = {
                     scope.launch {
-                        val dir = PrefManager.safStoragePath.run { Uri.parse(this) }
+                        val dir = PrefManager.safStoragePath.toUri()
                         documentTreeResult.launch(dir)
                     }
                 }
@@ -110,7 +110,7 @@ fun PreferencesScreen(
                                         Intent.FLAG_GRANT_READ_URI_PERMISSION or
                                             Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                                     )
-                                } catch (e: SecurityException) {
+                                } catch (_: SecurityException) {
                                     val uri = permission.uri
                                     Timber.d("Failed to revoke perms for URI: $uri")
                                 }

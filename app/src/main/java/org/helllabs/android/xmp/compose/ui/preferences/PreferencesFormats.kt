@@ -1,5 +1,6 @@
 package org.helllabs.android.xmp.compose.ui.preferences
 
+import android.content.ClipData
 import android.content.res.Configuration
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -9,8 +10,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.hapticfeedback.*
 import androidx.compose.ui.platform.*
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.res.*
-import androidx.compose.ui.text.*
 import androidx.compose.ui.tooling.preview.*
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -45,7 +46,7 @@ fun FormatsScreen(
             )
         }
     ) { paddingValues ->
-        val clip = LocalClipboardManager.current
+        val clip = LocalClipboard.current
         val context = LocalContext.current
         val haptic = LocalHapticFeedback.current
         val scope = rememberCoroutineScope()
@@ -74,8 +75,10 @@ fun FormatsScreen(
                                 snackBarHostState.showSnackbar(
                                     message = context.getString(R.string.copied)
                                 )
+
+                                val entry = ClipData.newPlainText(item, item)
+                                clip.setClipEntry(entry.toClipEntry())
                             }
-                            clip.setText(buildAnnotatedString { append(item) })
                         }
                     ),
                     headlineContent = {

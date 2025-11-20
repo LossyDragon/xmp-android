@@ -36,17 +36,15 @@ class ApiService(private val client: HttpClient) {
                 }
             }.bodyAsText()
 
-            val data: T = XML.decodeFromString(response)
-
             // Check API error response
-            when {
-                data is ModuleResult && !data.error.isNullOrEmpty() ->
+            when (val data: T = XML.decodeFromString(response)) {
+                is ModuleResult if !data.error.isNullOrEmpty() ->
                     emit(Resource.Error(data.error))
 
-                data is SearchListResult && !data.error.isNullOrEmpty() ->
+                is SearchListResult if !data.error.isNullOrEmpty() ->
                     emit(Resource.Error(data.error))
 
-                data is ArtistResult && !data.error.isNullOrEmpty() ->
+                is ArtistResult if !data.error.isNullOrEmpty() ->
                     emit(Resource.Error(data.error))
 
                 else -> emit(Resource.Success(data))
