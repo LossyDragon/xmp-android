@@ -33,13 +33,14 @@ android {
         minSdk = 23 // Android 6 - Marshmallow
         targetSdk = 36 // Android 15 Vanilla Ice Cream
 
-        versionCode = 112
+        versionCode = 113
         versionName = "5.0-SNAPSHOT"
 
         ndk.abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
         externalNativeBuild.cmake.arguments += listOf(
             "-DCMAKE_BUILD_TYPE=Release", // DEBUG
-            "-DBUILD_SHARED=OFF"
+            "-DBUILD_SHARED=OFF",
+            "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
         )
 
         // ModArchive API Key
