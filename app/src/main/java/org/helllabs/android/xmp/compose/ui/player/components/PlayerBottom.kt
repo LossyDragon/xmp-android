@@ -11,6 +11,7 @@ import org.helllabs.android.xmp.compose.theme.XmpTheme
 import org.helllabs.android.xmp.compose.ui.player.PlayerButtonsState
 import org.helllabs.android.xmp.compose.ui.player.PlayerInfoState
 import org.helllabs.android.xmp.compose.ui.player.PlayerTimeState
+import org.helllabs.android.xmp.compose.ui.player.RepeatMode
 
 /**
  * Height-less [androidx.compose.material3.BottomAppBar]
@@ -71,7 +72,7 @@ private fun Preview_PlayerBottomAppBar() {
             PlayerControls(
                 state = PlayerButtonsState(
                     isPlaying = false,
-                    isRepeating = false
+                    repeatMode = RepeatMode.OFF
                 ),
                 onEvent = { },
             )

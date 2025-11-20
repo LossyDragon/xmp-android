@@ -3,6 +3,7 @@ package org.helllabs.android.xmp.compose.ui.player.components
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.*
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.Repeat
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
@@ -11,6 +12,7 @@ import androidx.compose.ui.graphics.*
 import androidx.compose.ui.tooling.preview.*
 import org.helllabs.android.xmp.compose.theme.XmpTheme
 import org.helllabs.android.xmp.compose.ui.player.PlayerButtonsState
+import org.helllabs.android.xmp.compose.ui.player.RepeatMode
 
 @Stable
 sealed class PlayerControlsEvent {
@@ -18,7 +20,7 @@ sealed class PlayerControlsEvent {
     data object OnPrev : PlayerControlsEvent()
     data object OnPlay : PlayerControlsEvent()
     data object OnNext : PlayerControlsEvent()
-    data object OnRepeat : PlayerControlsEvent()
+    data class OnRepeat(val value: RepeatMode) : PlayerControlsEvent()
 }
 
 @Composable
@@ -66,16 +68,26 @@ fun PlayerControls(
                 contentDescription = null
             )
         }
-        IconToggleButton(
-            checked = state.isRepeating,
-            onCheckedChange = { onEvent(PlayerControlsEvent.OnRepeat) }
+        IconButton(
+            onClick = {
+                val nextMode = when (state.repeatMode) {
+                    RepeatMode.OFF -> RepeatMode.REPEAT_ALL
+                    RepeatMode.REPEAT_ALL -> RepeatMode.REPEAT_ONE
+                    RepeatMode.REPEAT_ONE -> RepeatMode.OFF
+                }
+                onEvent(PlayerControlsEvent.OnRepeat(nextMode))
+            },
         ) {
-            val repeatMode = remember(state.isRepeating) {
-                if (state.isRepeating) Icons.Default.RepeatOneOn else Icons.Default.Repeat
-            }
             Icon(
                 modifier = Modifier.scale(1.2f),
-                imageVector = repeatMode,
+                imageVector = when (state.repeatMode) {
+                    RepeatMode.OFF -> Icons.Default.Repeat
+
+                    RepeatMode.REPEAT_ALL -> Icons.Default.RepeatOn
+
+                    // TODO terrible button
+                    RepeatMode.REPEAT_ONE -> Icons.Default.RepeatOne
+                },
                 contentDescription = null
             )
         }
@@ -89,7 +101,7 @@ private fun Preview_PlayerButtons() {
         PlayerBottomAppBar {
             PlayerControls(
                 onEvent = { },
-                state = PlayerButtonsState(isPlaying = true, isRepeating = true)
+                state = PlayerButtonsState(isPlaying = true, repeatMode = RepeatMode.REPEAT_ONE)
             )
         }
     }

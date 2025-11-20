@@ -35,6 +35,7 @@ import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.compose.ui.player.PlayerActivity
+import org.helllabs.android.xmp.compose.ui.player.RepeatMode
 import org.helllabs.android.xmp.core.PrefManager
 import org.helllabs.android.xmp.core.StorageManager
 import org.helllabs.android.xmp.model.FrameInfo
@@ -454,9 +455,23 @@ class PlayerService :
         startForeground(1, notification)
     }
 
-    fun toggleLoop(): Boolean {
-        isRepeating = !isRepeating
-        return isRepeating
+    fun toggleLoop(repeatMode: RepeatMode) {
+        when (repeatMode) {
+            RepeatMode.OFF -> {
+                isRepeating = false
+                isLoopPlaylist = false
+            }
+
+            RepeatMode.REPEAT_ALL -> {
+                isRepeating = false
+                isLoopPlaylist = true
+            }
+
+            RepeatMode.REPEAT_ONE -> {
+                isRepeating = true
+                isLoopPlaylist = false
+            }
+        }
     }
 
     fun toggleAllSequences(): Boolean {

@@ -225,13 +225,13 @@ class PlayerActivity : ComponentActivity() {
                             viewModel.isPlaying(PlayerService.isPlaying.value)
                         }
 
-                        PlayerControlsEvent.OnRepeat -> {
-                            val res = modPlayer!!.toggleLoop()
-                            viewModel.toggleLoop(res)
-                        }
-
                         PlayerControlsEvent.OnStop -> {
                             controls!!.transportControls.stop()
+                        }
+
+                        is PlayerControlsEvent.OnRepeat -> {
+                            modPlayer!!.toggleLoop(it.value)
+                            viewModel.toggleLoop(it.value)
                         }
                     }
                 }
@@ -672,7 +672,7 @@ private fun Preview_PlayerScreen(
             ),
             buttonState = PlayerButtonsState(
                 isPlaying = true,
-                isRepeating = false
+                repeatMode = RepeatMode.REPEAT_ALL
             ),
             timeState = PlayerTimeState(
                 timeNow = "00:00",

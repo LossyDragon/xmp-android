@@ -15,6 +15,12 @@ import org.helllabs.android.xmp.model.SequenceVars
 import org.helllabs.android.xmp.service.PlayerService
 import timber.log.Timber
 
+enum class RepeatMode {
+    OFF,
+    REPEAT_ALL,
+    REPEAT_ONE
+}
+
 @Stable
 data class PlayerState(
     val currentMessage: String = "",
@@ -38,7 +44,10 @@ data class PlayerInfoState(
 )
 
 @Stable
-data class PlayerButtonsState(val isPlaying: Boolean = false, val isRepeating: Boolean = false)
+data class PlayerButtonsState(
+    val isPlaying: Boolean = false,
+    val repeatMode: RepeatMode = RepeatMode.OFF
+)
 
 @Stable
 data class PlayerTimeState(
@@ -128,8 +137,8 @@ class PlayerViewModel : ViewModel() {
         _uiState.update { it.copy(serviceConnected = value) }
     }
 
-    fun toggleLoop(value: Boolean) {
-        _buttonState.update { it.copy(isRepeating = value) }
+    fun toggleLoop(value: RepeatMode) {
+        _buttonState.update { it.copy(repeatMode = value) }
     }
 
     fun isPlaying(value: Boolean) {
@@ -230,7 +239,14 @@ class PlayerViewModel : ViewModel() {
             )
         }
 
-        toggleLoop(modPlayer.isRepeating)
+        val mode = if (modPlayer.isLoopPlaylist) {
+            RepeatMode.REPEAT_ALL
+        } else if (modPlayer.isRepeating) {
+            RepeatMode.REPEAT_ONE
+        } else {
+            RepeatMode.OFF
+        }
+        toggleLoop(mode)
 
         val name: String = Xmp.getModName().trim().ifEmpty { modPlayer.getFileName() }
         val type: String = Xmp.getModType()
