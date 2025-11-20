@@ -4,13 +4,13 @@ import android.content.Intent
 import android.net.Uri
 import android.provider.DocumentsContract
 import android.provider.OpenableColumns
+import androidx.core.net.toUri
 import com.lazygeniouz.dfc.file.DocumentFileCompat
 import java.util.Locale
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.core.Constants.DEFAULT_DOWNLOAD_DIR
 import org.helllabs.android.xmp.model.Module
 import timber.log.Timber
-import androidx.core.net.toUri
 
 class XmpException(string: String) : Exception(string)
 

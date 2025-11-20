@@ -2,9 +2,7 @@ package org.helllabs.android.xmp.core
 
 import android.net.Uri
 import com.lazygeniouz.dfc.file.DocumentFileCompat
-import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import kotlinx.serialization.json.Json
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.model.Playlist
 import org.helllabs.android.xmp.model.PlaylistItem
@@ -12,26 +10,17 @@ import timber.log.Timber
 
 class PlaylistManager {
 
-    private lateinit var moshi: Moshi
-
-    private lateinit var adapter: JsonAdapter<Playlist>
+    private val json = Json {
+        prettyPrint = true
+        ignoreUnknownKeys = true
+        encodeDefaults = true
+    }
 
     lateinit var playlist: Playlist
 
     private var oldName: String? = null
 
-    fun init() {
-        moshi = Moshi.Builder()
-            .add(KotlinJsonAdapterFactory())
-            .add(UriAdapter())
-            .build()
-
-        adapter = moshi.adapter(Playlist::class.java)
-    }
-
     fun new(name: String, comment: String): Result<Boolean> {
-        init()
-
         playlist = Playlist(
             name = name.trim(),
             comment = comment.trim()
@@ -46,12 +35,10 @@ class PlaylistManager {
             return false
         }
 
-        init()
-
         val context = XmpApplication.instance!!.applicationContext
         context.contentResolver.openInputStream(uri)?.use { inputStream ->
             val jsonString = inputStream.bufferedReader().use { it.readText() }
-            playlist = adapter.fromJson(jsonString) ?: return false
+            playlist = json.decodeFromString<Playlist>(jsonString)
         }
 
         return true
@@ -73,7 +60,7 @@ class PlaylistManager {
 
         playlist.uri = newFile.uri
 
-        val jsonString = adapter.toJson(playlist)
+        val jsonString = json.encodeToString(Playlist.serializer(), playlist)
         val context = XmpApplication.instance?.applicationContext
             ?: throw IllegalStateException("Application context is null")
 

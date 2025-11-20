@@ -1,22 +1,29 @@
 package org.helllabs.android.xmp.model
 
 import android.net.Uri
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
+import org.helllabs.android.xmp.core.UriSerializer
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class Playlist(
     var comment: String = "",
     var isLoop: Boolean = false,
     var isShuffle: Boolean = false,
     var list: List<PlaylistItem> = listOf(),
     var name: String = "",
+    @Serializable(with = UriSerializer::class)
     var uri: Uri = Uri.EMPTY,
     var useFileName: Boolean = false
 )
 
-@JsonClass(generateAdapter = true)
-data class PlaylistItem(val name: String, val type: String, val uri: Uri) {
-    @field:Json(ignore = true)
-    var id = 0
+@Serializable
+data class PlaylistItem(
+    val name: String,
+    val type: String,
+    @Serializable(with = UriSerializer::class)
+    val uri: Uri
+) {
+    @Transient
+    var id: Int = 0
 }

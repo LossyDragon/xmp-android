@@ -202,6 +202,7 @@ class ResultViewModel(private val httpClient: HttpClient, private val repository
                             }
                         }
                     }
+
                     is Resource.Error -> {
                         _uiState.update {
                             it.copy(
@@ -210,6 +211,7 @@ class ResultViewModel(private val httpClient: HttpClient, private val repository
                             )
                         }
                     }
+
                     is Resource.Loading -> {
                         _uiState.update { it.copy(isLoading = true) }
                     }
@@ -245,6 +247,7 @@ class ResultViewModel(private val httpClient: HttpClient, private val repository
                             }
                         }
                     }
+
                     is Resource.Error -> {
                         _uiState.update {
                             it.copy(
@@ -253,6 +256,7 @@ class ResultViewModel(private val httpClient: HttpClient, private val repository
                             )
                         }
                     }
+
                     is Resource.Loading -> {
                         _uiState.update { it.copy(isLoading = true) }
                     }

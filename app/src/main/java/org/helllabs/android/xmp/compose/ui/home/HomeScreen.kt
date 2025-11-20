@@ -22,6 +22,7 @@ import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.*
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
+import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -50,7 +51,6 @@ import org.helllabs.android.xmp.core.StorageManager
 import org.helllabs.android.xmp.model.FileItem
 import org.helllabs.android.xmp.service.PlayerService
 import timber.log.Timber
-import androidx.core.net.toUri
 
 @Serializable
 object NavigationHome

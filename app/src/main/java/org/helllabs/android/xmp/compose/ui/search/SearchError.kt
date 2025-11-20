@@ -76,6 +76,7 @@ fun ErrorScreen(
             modifier = modifier.padding(paddingValues),
             message = when {
                 errorMsg.isNullOrEmpty() -> stringResource(R.string.search_unknown_error)
+
                 else -> stringResource(
                     R.string.search_known_error,
                     errorMsg.replaceFirstChar {

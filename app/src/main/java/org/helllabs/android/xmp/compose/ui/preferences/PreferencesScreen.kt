@@ -13,6 +13,7 @@ import androidx.compose.ui.*
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.*
 import androidx.compose.ui.tooling.preview.*
+import androidx.core.net.toUri
 import com.alorma.compose.settings.ui.SettingsGroup
 import com.alorma.compose.settings.ui.SettingsMenuLink
 import kotlinx.coroutines.launch
@@ -24,7 +25,6 @@ import org.helllabs.android.xmp.compose.theme.XmpTheme
 import org.helllabs.android.xmp.core.PrefManager
 import org.helllabs.android.xmp.core.StorageManager
 import timber.log.Timber
-import androidx.core.net.toUri
 
 @Serializable
 object NavPreferences

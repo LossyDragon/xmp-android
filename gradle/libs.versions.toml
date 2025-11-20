@@ -18,7 +18,6 @@ lifecycleRuntimeKtx = "2.10.0" # https://mvnrepository.com/artifact/androidx.lif
 lifecycleViewModelCompose = "2.10.0" # https://mvnrepository.com/artifact/androidx.lifecycle/lifecycle-viewmodel-compose
 materialKolor = "4.0.4" # https://mvnrepository.com/artifact/com.materialkolor/material-kolor
 media = "1.7.1" # https://mvnrepository.com/artifact/androidx.media/media
-moshiKotlin = "1.15.2" # https://mvnrepository.com/artifact/com.squareup.moshi/moshi-kotlin
 reorderable = "3.0.0" # https://mvnrepository.com/artifact/sh.calvin.reorderable/reorderable
 settings = "2.15.0" # https://github.com/alorma/Compose-Settings/releases
 timber = "5.0.1" # https://mvnrepository.com/artifact/com.jakewharton.timber/timber
@@ -57,7 +56,6 @@ lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", v
 lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleViewModelCompose" }
 materialKolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
 media = { module = "androidx.media:media", version.ref = "media" }
-moshi-kotlin = { module = "com.squareup.moshi:moshi-kotlin", version.ref = "moshiKotlin" }
 reorderable = { module = "sh.calvin.reorderable:reorderable", version.ref = "reorderable" }
 timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 

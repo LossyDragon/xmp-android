@@ -136,7 +136,6 @@ dependencies {
     implementation(libs.lifecycle.runtime.ktx)
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.media)
-    implementation(libs.moshi.kotlin)
     implementation(libs.reorderable)
     implementation(libs.timber)
 }
