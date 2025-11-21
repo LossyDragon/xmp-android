@@ -11,6 +11,8 @@ import android.media.AudioManager
 import android.net.Uri
 import android.os.Binder
 import android.os.Build
+import android.os.Handler
+import android.os.HandlerThread
 import android.os.IBinder
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
@@ -22,11 +24,9 @@ import androidx.core.app.NotificationCompat
 import androidx.media.AudioAttributesCompat
 import androidx.media.AudioFocusRequestCompat
 import androidx.media.AudioManagerCompat
-import androidx.media.session.MediaButtonReceiver
 import java.lang.ref.WeakReference
 import java.util.LinkedList
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -87,7 +87,9 @@ class PlayerService :
     }
 
     private val binder = PlayerBinder(this)
-    private val serviceScope = CoroutineScope(Dispatchers.Main + Job())
+    private val serviceScope = CoroutineScope(Job())
+    private val handlerThread = HandlerThread("MediaSession").apply { start() }
+    private val handler = Handler(handlerThread.looper)
 
     private val _playerEvent = MutableSharedFlow<PlayerEvent>()
     val playerEvent = _playerEvent.asSharedFlow()
@@ -150,6 +152,8 @@ class PlayerService :
 
         mediaSession.isActive = false
         mediaSession.release()
+
+        handlerThread.quitSafely()
 
         playThread = null
     }
@@ -297,7 +301,8 @@ class PlayerService :
                     Xmp.seek(pos.toInt())
                     updatePlaybackState(PlaybackStateCompat.STATE_PLAYING)
                 }
-            }
+            },
+            handler
         )
     }
 
@@ -429,9 +434,16 @@ class PlayerService :
             ) /* controller.sessionActivity */
             setCategory(NotificationCompat.CATEGORY_PROGRESS)
             setDeleteIntent(
-                MediaButtonReceiver.buildMediaButtonPendingIntent(
+                // MediaButtonReceiver.buildMediaButtonPendingIntent(
+                //     this@PlayerService,
+                //     PlaybackStateCompat.ACTION_STOP
+                // )
+
+                PendingIntent.getService(
                     this@PlayerService,
-                    PlaybackStateCompat.ACTION_STOP
+                    1,
+                    Intent(this@PlayerService, PlayerService::class.java).setAction("ACTION_STOP"),
+                    PendingIntent.FLAG_IMMUTABLE
                 )
             )
             setVisibility(NotificationCompat.VISIBILITY_PUBLIC)

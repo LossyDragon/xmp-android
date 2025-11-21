@@ -8,11 +8,14 @@
 #include "audio.h"
 #include "common.h"
 #include "xmp.h"
+#include <android/log.h>
 #include <jni.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <sys/syscall.h>
+#include <unistd.h>
 
 #define MAX_BUFFER_SIZE 256
 #define PERIOD_BASE 13696
@@ -21,6 +24,14 @@
 #define unlock() pthread_mutex_unlock(&mutex)
 
 #define JNI_FUNCTION(name) Java_org_helllabs_android_xmp_Xmp_##name
+
+#define TAG "Xmp Mod Player jni"
+#define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, TAG, __VA_ARGS__)
+#define LOGI(...) __android_log_print(ANDROID_LOG_INFO,  TAG, __VA_ARGS__)
+#define LOGW(...) __android_log_print(ANDROID_LOG_WARN,  TAG, __VA_ARGS__)
+#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, TAG, __VA_ARGS__)
+
+#define gettid() syscall(SYS_gettid)
 
 static xmp_context ctx = NULL;
 static struct xmp_module_info mi;
@@ -45,6 +56,7 @@ static int g_pos[XMP_MAX_CHANNELS];
 static int g_sequence;
 static jbyte g_buffer[MAX_BUFFER_SIZE];
 static pthread_mutex_t mutex;
+static volatile int g_initialized = 0;
 
 typedef struct {
     jfieldID name;
@@ -145,6 +157,8 @@ void cacheFrameInfoIDs(JNIEnv *env) {
 /* For ModList */
 JNIEXPORT jboolean JNICALL
 JNI_FUNCTION(init)(JNIEnv *env, jobject obj, jint rate, jint ms) {
+    LOGI("init() called - rate: %d, ms: %d, tid: %ld", rate, ms, (long) gettid());
+
     (void) env;
     (void) obj;
 
@@ -152,10 +166,12 @@ JNI_FUNCTION(init)(JNIEnv *env, jobject obj, jint rate, jint ms) {
     pthread_mutex_init(&mutex, NULL);
 
     if (ctx == NULL) {
+        LOGE("init() failed - could not create context");
         return JNI_FALSE;
     }
 
     if ((g_buffer_num = open_audio(rate, ms)) < 0) {
+        LOGE("init() failed - could not open audio");
         return JNI_FALSE;
     }
 
@@ -168,17 +184,30 @@ JNI_FUNCTION(init)(JNIEnv *env, jobject obj, jint rate, jint ms) {
     cacheModVarsIDs(env);
     cacheSequenceVarsIDs(env);
 
+    g_initialized = 1;
+    LOGI("init() completed successfully");
     return JNI_TRUE;
 }
 
 JNIEXPORT jint JNICALL
 JNI_FUNCTION(deinit)(JNIEnv *env, jobject obj) {
+    LOGI("deinit() called - tid: %ld", (long) gettid());
     (void) env;
     (void) obj;
 
+    lock();
+    LOGD("deinit() - acquired lock");
+    g_initialized = 0;
+    unlock();
+    LOGD("deinit() - released lock, set g_initialized=0");
+
     xmp_free_context(ctx);
+    LOGD("deinit() - freed context");
     pthread_mutex_destroy(&mutex);
+    LOGD("deinit() - destroyed mutex");
+
     close_audio();
+    LOGI("deinit() completed - tid: %ld", (long) gettid());
 
     return 0;
 }
@@ -267,13 +296,16 @@ JNIEXPORT jint JNICALL
 JNI_FUNCTION(startPlayer)(JNIEnv *env, jobject obj, jint rate) {
     (void) env;
     (void) obj;
+    LOGI("startPlayer() called - rate: %d, tid: %ld", rate, (long) gettid());
 
     int i, ret;
 
     lock();
+    LOGD("startPlayer() - acquired lock");
 
     fi = calloc(1, g_buffer_num * sizeof(struct xmp_frame_info));
     if (fi == NULL) {
+        LOGE("startPlayer() - failed to allocate frame info");
         unlock();
         return -101;
     }
@@ -289,6 +321,7 @@ JNI_FUNCTION(startPlayer)(JNIEnv *env, jobject obj, jint rate) {
     ret = xmp_start_player(ctx, rate, 0);
 
     unlock();
+    LOGI("startPlayer() completed - result: %d, tid: %ld", ret, (long) gettid());
 
     return ret;
 }
@@ -297,17 +330,22 @@ JNIEXPORT jint JNICALL
 JNI_FUNCTION(endPlayer)(JNIEnv *env, jobject obj) {
     (void) env;
     (void) obj;
+    LOGI("endPlayer() called - tid: %ld", (long) gettid());
 
     lock();
+    LOGD("endPlayer() - acquired lock");
 
     if (g_playing) {
         g_playing = 0;
+        LOGD("endPlayer() - stopping player");
         xmp_end_player(ctx);
         free(fi);
         fi = NULL;
+        LOGD("endPlayer() - freed frame info");
     }
 
     unlock();
+    LOGI("endPlayer() completed - tid: %ld", (long) gettid());
 
     return 0;
 }
@@ -517,10 +555,20 @@ JNI_FUNCTION(getLoopCount)(JNIEnv *env, jobject obj) {
 JNIEXPORT void JNICALL
 JNI_FUNCTION(getModVars)(JNIEnv *env, jobject obj, jobject modVars) {
     (void) obj;
+    long tid = (long) gettid();
+    LOGD("getModVars() called - tid: %ld, g_initialized: %d", tid, g_initialized);
 
+    if (!g_initialized) {
+        LOGW("getModVars() - early exit: not initialized - tid: %ld", tid);
+        return;
+    }
+
+    LOGD("getModVars() - attempting lock - tid: %ld", tid);
     lock();
+    LOGD("getModVars() - acquired lock - tid: %ld", tid);
 
     if (!g_mod_is_loaded) {
+        LOGW("getModVars() - module not loaded - tid: %ld", tid);
         unlock();
         return;
     }
@@ -540,6 +588,7 @@ JNI_FUNCTION(getModVars)(JNIEnv *env, jobject obj, jobject modVars) {
     (*env)->SetIntField(env, modVars, modVarsIDs.currentSequence, g_sequence);
 
     unlock();
+    LOGD("getModVars() completed - tid: %ld", tid);
 }
 
 JNIEXPORT jstring JNICALL
@@ -667,6 +716,13 @@ static struct xmp_subinstrument *get_subinstrument(int ins, int key) {
 JNIEXPORT void JNICALL
 JNI_FUNCTION(getChannelData)(JNIEnv *env, jobject obj, jobject channelInfo) {
     (void) obj;
+    long tid = (long) gettid();
+    // LOGD("getChannelData() called - tid: %ld, g_initialized: %d", tid, g_initialized);
+
+    if (!g_initialized) {
+        LOGW("getChannelData() - early exit: not initialized - tid: %ld", tid);
+        return;
+    }
 
     struct xmp_subinstrument *sub;
     int chn = mi.mod->chn;

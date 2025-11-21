@@ -253,13 +253,23 @@ class PlayerActivity : ComponentActivity() {
             }
 
             // Restart the loop on info change
-            LaunchedEffect(uiState.infoTitle, uiState.infoType) {
+            LaunchedEffect(uiState.infoTitle, uiState.infoType, uiState.serviceConnected) {
+                if (!uiState.serviceConnected) {
+                    Timber.d("Service not connected, skipping update loop")
+                    return@LaunchedEffect
+                }
+
                 launch(Dispatchers.Default) {
                     Timber.d("Start LaunchedEffect Loop")
 
                     viewModel.resetPlayTime()
 
                     while (true) {
+                        if (!viewModel.uiState.value.serviceConnected) {
+                            Timber.i("Service disconnected, stopping update loop")
+                            break
+                        }
+
                         if (viewModel.activityState.value.playTime < 0) {
                             Timber.i("Stop update")
                             break
@@ -295,6 +305,8 @@ class PlayerActivity : ComponentActivity() {
 
                         delay(33.milliseconds)
                     }
+
+                    Timber.i("Update loop ended")
                 }
             }
 
