@@ -1,6 +1,5 @@
 package org.helllabs.android.xmp.compose.ui.player
 
-import android.content.Context
 import android.net.Uri
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
@@ -16,6 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.Xmp
+import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.core.PlaylistManager
 import org.helllabs.android.xmp.core.StorageManager
 import org.helllabs.android.xmp.model.ChannelInfo
@@ -381,7 +381,7 @@ class PlayerViewModel : ViewModel() {
 
     // TODO this is duplicated in FileListViewModel, maybe its time to unify it?
 
-    fun onAddToPlaylist(context: Context, uri: Uri) {
+    fun onAddToPlaylist(uri: Uri) {
         if (uri == Uri.EMPTY) {
             Timber.e("Uri was empty adding to playlist.")
             viewModelScope.launch {
@@ -390,17 +390,49 @@ class PlayerViewModel : ViewModel() {
             return
         }
 
-        val docFile = DocumentFileCompat.fromSingleUri(context, uri)
-        if (docFile == null) {
-            Timber.e("$uri could not be made into a Document File")
+        Timber.i("Preparing to save $uri to a playlist.")
+
+        if (uri.scheme != "content" && uri.scheme != "file") {
+            Timber.e("Unsupported URI scheme: ${uri.scheme}")
             viewModelScope.launch {
-                _softError.emit("Unable to create Document File")
+                _softError.emit("Unsupported file type")
             }
             return
         }
 
-        playlistList.value = PlaylistManager.listPlaylists()
-        playlistChoice.value = docFile
+        // TODO heavy IO, show some loading indicator.
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val finalUri = transformToManagedUri(uri) ?: uri
+
+                if (finalUri != uri) {
+                    Timber.i("Transformed external URI to managed URI")
+                }
+
+                val context = XmpApplication.instance!!.applicationContext
+                val docFile = try {
+                    DocumentFileCompat.fromSingleUri(context, finalUri)
+                } catch (e: IllegalStateException) {
+                    Timber.e(e, "DocumentFileCompat failed for URI: $finalUri")
+                    null
+                } catch (e: SecurityException) {
+                    Timber.e(e, "Permission denied for URI: $finalUri")
+                    null
+                }
+                if (docFile == null) {
+                    Timber.e("$finalUri could not be made into a Document File")
+                    _softError.emit("Unable to create Document File")
+                    return@launch
+                }
+
+                // Update on main thread
+                playlistList.value = PlaylistManager.listPlaylists()
+                playlistChoice.value = docFile
+            } catch (e: Exception) {
+                Timber.e(e, "Unexpected error in onAddToPlaylist")
+                _softError.emit("Failed to prepare file for playlist: ${e.message}")
+            }
+        }
     }
 
     fun clearPlaylist() {
@@ -475,6 +507,32 @@ class PlayerViewModel : ViewModel() {
             }
 
             playlistChoice.value = null
+        }
+    }
+
+    private fun transformToManagedUri(uri: Uri): Uri? {
+        if (uri.authority == "com.android.externalstorage.documents") {
+            return uri
+        }
+
+        val fileName = StorageManager.getFileName(uri)
+        if (fileName.isNullOrBlank()) {
+            Timber.w("Could not determine filename from URI: $uri")
+            return null
+        }
+
+        return try {
+            val modsUri = StorageManager.getModDirectory().getOrNull()?.uri ?: return null
+            val allFiles = StorageManager.walkDownDirectory(modsUri, includeDirectories = false)
+
+            allFiles.firstOrNull { fileUri ->
+                StorageManager.getFileName(fileUri) == fileName
+            }?.also {
+                Timber.i("Successfully found file in managed storage: $it")
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to transform URI")
+            null
         }
     }
 }

@@ -211,7 +211,7 @@ class PlayerActivity : ComponentActivity() {
                         }
 
                         PlayerSheetEvent.OnAddToPlaylist -> {
-                            viewModel.onAddToPlaylist(context, modPlayer!!.currentFileUri)
+                            viewModel.onAddToPlaylist(modPlayer!!.currentFileUri)
                         }
 
                         is PlayerSheetEvent.OnSequence -> {
