@@ -75,6 +75,7 @@
     <string name="screen_title_search_module">Search Module</string>
 
     <!-- Player sidebar -->
+    <string name="sidebar_add_playlist">Add to playlist</string>
     <string name="sidebar_button_allseqs">Play all subsongs</string>
     <string name="sidebar_button_loopseq">Loop subsong</string>
     <string name="sidebar_channels">Channels:</string>

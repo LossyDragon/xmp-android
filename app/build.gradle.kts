@@ -33,7 +33,7 @@ android {
         minSdk = 23 // Android 6 - Marshmallow
         targetSdk = 36 // Android 15 Vanilla Ice Cream
 
-        versionCode = 115
+        versionCode = 116
         versionName = "5.0-SNAPSHOT"
 
         ndk.abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")

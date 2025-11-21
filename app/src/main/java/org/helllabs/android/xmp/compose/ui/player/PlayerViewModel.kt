@@ -1,16 +1,29 @@
 package org.helllabs.android.xmp.compose.ui.player
 
+import android.content.Context
 import android.net.Uri
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.lazygeniouz.dfc.file.DocumentFileCompat
 import java.util.Collections
+import kotlin.text.ifEmpty
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.Xmp
+import org.helllabs.android.xmp.core.PlaylistManager
+import org.helllabs.android.xmp.core.StorageManager
 import org.helllabs.android.xmp.model.ChannelInfo
 import org.helllabs.android.xmp.model.FrameInfo
+import org.helllabs.android.xmp.model.ModInfo
 import org.helllabs.android.xmp.model.ModVars
+import org.helllabs.android.xmp.model.Playlist
+import org.helllabs.android.xmp.model.PlaylistItem
 import org.helllabs.android.xmp.model.SequenceVars
 import org.helllabs.android.xmp.service.PlayerService
 import timber.log.Timber
@@ -130,6 +143,12 @@ class PlayerViewModel : ViewModel() {
     val frameInfo = MutableStateFlow(FrameInfo())
 
     val channelInfo = MutableStateFlow(ChannelInfo())
+
+    private val _softError = MutableSharedFlow<String>()
+    val softError = _softError.asSharedFlow()
+
+    val playlistList: MutableStateFlow<List<Playlist>> = MutableStateFlow(listOf())
+    val playlistChoice: MutableStateFlow<DocumentFileCompat?> = MutableStateFlow(null)
 
     /** Player Functions **/
 
@@ -357,6 +376,105 @@ class PlayerViewModel : ViewModel() {
                 Xmp.mute(it, -1) == 1
             }
             _isMuted.update { it.copy(isMuted = muteArray) }
+        }
+    }
+
+    // TODO this is duplicated in FileListViewModel, maybe its time to unify it?
+
+    fun onAddToPlaylist(context: Context, uri: Uri) {
+        if (uri == Uri.EMPTY) {
+            Timber.e("Uri was empty adding to playlist.")
+            viewModelScope.launch {
+                _softError.emit("Unable to add, uri empty.")
+            }
+            return
+        }
+
+        val docFile = DocumentFileCompat.fromSingleUri(context, uri)
+        if (docFile == null) {
+            Timber.e("$uri could not be made into a Document File")
+            viewModelScope.launch {
+                _softError.emit("Unable to create Document File")
+            }
+            return
+        }
+
+        playlistList.value = PlaylistManager.listPlaylists()
+        playlistChoice.value = docFile
+    }
+
+    fun clearPlaylist() {
+        playlistChoice.value = null
+    }
+
+    fun addToPlaylist(index: Int) {
+        val choice = playlistList.value[index]
+
+        viewModelScope.launch(Dispatchers.IO) {
+            if (playlistChoice.value == null) {
+                _softError.emit("Playlist choice is null")
+                playlistChoice.value = null
+                return@launch
+            }
+
+            val manager = PlaylistManager()
+            if (!manager.load(choice.uri)) {
+                _softError.emit("Playlist manager failed to load playlist")
+                playlistChoice.value = null
+                return@launch
+            }
+
+            val modInfo = ModInfo()
+            if (playlistChoice.value!!.isFile()) {
+                if (!Xmp.testFromFd(playlistChoice.value!!.uri, modInfo)) {
+                    _softError.emit("Failed to validate file")
+                    playlistChoice.value = null
+                    return@launch
+                }
+
+                val playlist = PlaylistItem(
+                    name = modInfo.name,
+                    type = modInfo.type,
+                    uri = playlistChoice.value!!.uri
+                )
+                val list = listOf(playlist)
+                val res = manager.add(list)
+
+                if (!res) {
+                    _softError.emit("Couldn't add module to playlist")
+                }
+            } else if (playlistChoice.value!!.isDirectory()) {
+                val list = mutableListOf<PlaylistItem>()
+                StorageManager.walkDownDirectory(playlistChoice.value!!.uri, false).forEach { uri ->
+                    if (!Xmp.testFromFd(uri, modInfo)) {
+                        Timber.w("Invalid playlist item $uri")
+                        return@forEach
+                    }
+
+                    val playlist = PlaylistItem(
+                        name = modInfo.name.ifEmpty {
+                            StorageManager.getFileName(uri)
+                        } ?: "",
+                        type = modInfo.type,
+                        uri = uri
+                    )
+
+                    list.add(playlist)
+                }
+
+                if (list.isEmpty()) {
+                    _softError.emit("Empty directory")
+                    playlistChoice.value = null
+                    return@launch
+                }
+
+                val res = manager.add(list)
+                if (!res) {
+                    _softError.emit("Couldn't add modules to playlist")
+                }
+            }
+
+            playlistChoice.value = null
         }
     }
 }

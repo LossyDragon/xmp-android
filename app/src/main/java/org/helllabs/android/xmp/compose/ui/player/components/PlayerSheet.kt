@@ -24,6 +24,7 @@ sealed class PlayerSheetEvent {
     data class OnSequence(val seq: Int) : PlayerSheetEvent()
     data object OnAllSeq : PlayerSheetEvent()
     data object OnMessage : PlayerSheetEvent()
+    data object OnAddToPlaylist : PlayerSheetEvent()
 }
 
 @Stable
@@ -60,6 +61,22 @@ fun PlayerSheet(
                 .padding(16.dp)
                 .fillMaxWidth()
         ) {
+            Spacer(modifier = Modifier.height(12.dp))
+
+            ModuleSection(text = stringResource(id = R.string.sidebar_add_playlist)) {
+                IconButton(
+                    modifier = Modifier
+                        .weight(1f)
+                        .wrapContentWidth(Alignment.End),
+                    onClick = { onEvent(PlayerSheetEvent.OnAddToPlaylist) }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = null,
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.height(12.dp))
 
             ModuleSection(text = stringResource(id = R.string.sidebar_details)) {

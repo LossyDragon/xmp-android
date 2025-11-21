@@ -17,6 +17,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.*
+import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -32,12 +33,15 @@ import java.nio.charset.StandardCharsets
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.compose.MainActivity
 import org.helllabs.android.xmp.compose.components.MessageDialog
+import org.helllabs.android.xmp.compose.components.SingleChoiceListDialog
 import org.helllabs.android.xmp.compose.theme.XmpTheme
 import org.helllabs.android.xmp.compose.ui.player.components.PlayerBottomAppBar
 import org.helllabs.android.xmp.compose.ui.player.components.PlayerControls
@@ -157,6 +161,18 @@ class PlayerActivity : ComponentActivity() {
             val channelInfo by viewModel.channelInfo.collectAsStateWithLifecycle()
             val frameInfo by viewModel.frameInfo.collectAsStateWithLifecycle()
 
+            // Add to playlist
+            val scope = rememberCoroutineScope()
+            val context = LocalContext.current
+            val choice by viewModel.playlistChoice.collectAsStateWithLifecycle()
+            val playlists by viewModel.playlistList.collectAsStateWithLifecycle()
+
+            LaunchedEffect(Unit) {
+                viewModel.softError.collectLatest {
+                    snackBarHostState.showSnackbar(it)
+                }
+            }
+
             // Stabilize lambdas, this helps reduce useless recompositions.
             val onChangeViewer: () -> Unit = remember {
                 {
@@ -192,6 +208,10 @@ class PlayerActivity : ComponentActivity() {
                                 viewModel.showMessage(true, comment.trim())
                             }
                             viewModel.showSheet(false)
+                        }
+
+                        PlayerSheetEvent.OnAddToPlaylist -> {
+                            viewModel.onAddToPlaylist(context, modPlayer!!.currentFileUri)
                         }
 
                         is PlayerSheetEvent.OnSequence -> {
@@ -319,6 +339,26 @@ class PlayerActivity : ComponentActivity() {
                     text = uiState.currentMessage,
                     confirmText = stringResource(id = android.R.string.ok),
                     onConfirm = { closeMessage(false) }
+                )
+
+                SingleChoiceListDialog(
+                    isShowing = choice != null,
+                    icon = Icons.AutoMirrored.Filled.PlaylistAdd,
+                    title = stringResource(id = R.string.dialog_title_select_playlist),
+                    selectedIndex = -1,
+                    list = playlists.map { it.name },
+                    onConfirm = viewModel::addToPlaylist,
+                    onDismiss = {
+                        viewModel.clearPlaylist()
+                    },
+                    onEmpty = {
+                        scope.launch {
+                            snackBarHostState.showSnackbar(
+                                message = context.getString(R.string.error_snack_no_playlists)
+                            )
+                            viewModel.clearPlaylist()
+                        }
+                    }
                 )
 
                 PlayerScreen(

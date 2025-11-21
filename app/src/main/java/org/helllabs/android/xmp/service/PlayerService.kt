@@ -111,8 +111,9 @@ class PlayerService :
     private var playerSequence: Int = 0
     private var playerVolume: Int = 0
     private var playlistPosition: Int = 0
-    private var currentFileUri: Uri = Uri.EMPTY
 
+    var currentFileUri: Uri = Uri.EMPTY
+        private set
     var isRepeating: Boolean = false
         private set
     var isLoopPlaylist: Boolean = false
