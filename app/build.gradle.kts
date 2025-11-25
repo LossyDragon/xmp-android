@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.gradle.kotlinter)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.kotlin.compiler)
+    alias(libs.plugins.stability.analyzer)
 }
 
 /**

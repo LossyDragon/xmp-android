@@ -94,3 +94,5 @@ android-kotlin = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 gradle-kotlinter = { id = "org.jmailen.kotlinter", version.ref = "kotlinterGradle" }
 kotlin-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+stability-analyzer = { id = "com.github.skydoves.compose.stability.analyzer", version = "0.6.0" }
+

@@ -5,12 +5,14 @@ package org.helllabs.android.xmp.model
 import android.os.Build
 import android.text.Html
 import android.text.Spanned
+import androidx.compose.runtime.Stable
 import androidx.core.text.toSpanned
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import nl.adaptivity.xmlutil.serialization.*
 
+@Stable
 @Serializable
 @SerialName("modarchive")
 data class ModuleResult(
@@ -24,10 +26,12 @@ data class ModuleResult(
     val hasSponsor: Boolean = sponsor.details.text.isNotEmpty()
 }
 
+@Stable
 @Serializable
 @SerialName("sponsor")
 data class Sponsor(@XmlElement val details: SponsorDetails = SponsorDetails())
 
+@Stable
 @Serializable
 @SerialName("details")
 data class SponsorDetails(
@@ -37,6 +41,7 @@ data class SponsorDetails(
     @XmlElement val imagehtml: String = ""
 )
 
+@Stable
 @Serializable
 @SerialName("module")
 data class Module(
@@ -81,6 +86,7 @@ data class Module(
         }
     }
 
+    @Stable
     fun getSongTitle(): Spanned {
         val title = if (songtitle.isNotEmpty()) songtitle.asHtml() else "(untitled)"
         return title.toSpanned()
@@ -111,6 +117,7 @@ data class Module(
     }
 }
 
+@Stable
 @Serializable
 @SerialName("featured")
 data class Featured(
@@ -119,10 +126,12 @@ data class Featured(
     @XmlElement val timestamp: String = ""
 )
 
+@Stable
 @Serializable
 @SerialName("favourites")
 data class Favourites(@XmlElement val favoured: Int = 0, @XmlElement val myfav: Int = 0)
 
+@Stable
 @Serializable
 @SerialName("overall_ratings")
 data class OverallRatings(
@@ -132,6 +141,7 @@ data class OverallRatings(
     @XmlElement val review_total: Int = 0
 )
 
+@Stable
 @Serializable
 @SerialName("license")
 data class License(
@@ -143,6 +153,7 @@ data class License(
     @XmlElement val legalurl: String = ""
 )
 
+@Stable
 @Serializable
 @SerialName("artist_info")
 data class ArtistInfo(
@@ -158,10 +169,12 @@ data class ArtistInfo(
 // (Link Dead) https://modarchive.org/forums/index.php?topic=4713.0
 // Not even TMA knows much about this.
 // NOTE: I'm not sure of this is correct, rare to see multiple guest artists.
+@Stable
 @Serializable
 @SerialName("guessed_artist")
 data class GuessedArtists(@XmlSerialName("alias", "", "") val alias: List<String> = emptyList())
 
+@Stable
 @Serializable
 @SerialName("artist")
 data class Artist(
@@ -174,10 +187,12 @@ data class Artist(
     @XmlElement val module_data: ModuleData = ModuleData()
 )
 
+@Stable
 @Serializable
 @SerialName("module_data")
 data class ModuleData(@XmlElement val module_description: String = "")
 
+@Stable
 @Serializable
 @SerialName("modarchive")
 data class SearchListResult(
@@ -188,6 +203,7 @@ data class SearchListResult(
     @XmlSerialName("module", "", "") val module: List<Module> = emptyList()
 )
 
+@Stable
 @Serializable
 @SerialName("modarchive")
 data class ArtistResult(
@@ -202,10 +218,12 @@ data class ArtistResult(
         get() = items.item
 }
 
+@Stable
 @Serializable
 @SerialName("items")
 data class Items(@XmlSerialName("item", "", "") val item: List<Item> = emptyList())
 
+@Stable
 @Serializable
 @SerialName("item")
 data class Item(
