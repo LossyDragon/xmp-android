@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.*
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.serialization.Serializable
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.compose.components.BottomBarButtons
@@ -266,11 +267,10 @@ private fun Preview_PlaylistScreen() {
                     PlaylistItem(
                         name = "Name $it",
                         type = "Comment $it",
-                        uri = Uri.EMPTY
-                    ).also { item ->
-                        item.id = it
-                    }
-                }
+                        uri = Uri.EMPTY,
+                        id = it
+                    )
+                }.toPersistentList()
             ),
             snackBarHostState = SnackbarHostState(),
             onItemClick = { _ -> },

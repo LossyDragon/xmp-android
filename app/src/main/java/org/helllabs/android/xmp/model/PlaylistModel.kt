@@ -1,29 +1,40 @@
 package org.helllabs.android.xmp.model
 
 import android.net.Uri
+import androidx.compose.runtime.Immutable
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import org.helllabs.android.xmp.core.UriSerializer
 
+@Immutable
 @Serializable
 data class Playlist(
-    var comment: String = "",
-    var isLoop: Boolean = false,
-    var isShuffle: Boolean = false,
-    var list: List<PlaylistItem> = listOf(),
-    var name: String = "",
+    val comment: String = "",
+    val isLoop: Boolean = false,
+    val isShuffle: Boolean = false,
+    val list: ImmutableList<PlaylistItem> = persistentListOf(),
+    val name: String = "",
     @Serializable(with = UriSerializer::class)
-    var uri: Uri = Uri.EMPTY,
-    var useFileName: Boolean = false
-)
+    val uri: Uri = Uri.EMPTY,
+    val useFileName: Boolean = false
+) {
+    fun withComment(newComment: String) = copy(comment = newComment)
+    fun withName(newName: String) = copy(name = newName)
+    fun withLoop(value: Boolean) = copy(isLoop = value)
+    fun withShuffle(value: Boolean) = copy(isShuffle = value)
+    fun withList(newList: ImmutableList<PlaylistItem>) = copy(list = newList)
+    fun withUri(newUri: Uri) = copy(uri = newUri)
+}
 
+@Immutable
 @Serializable
 data class PlaylistItem(
     val name: String,
     val type: String,
     @Serializable(with = UriSerializer::class)
-    val uri: Uri
-) {
+    val uri: Uri,
     @Transient
-    var id: Int = 0
-}
+    val id: Int = 0  // Can now be copied/modified
+)

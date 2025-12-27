@@ -41,6 +41,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toPersistentList
 import me.saket.cascade.CascadeDropdownMenu
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.compose.components.XmpDropdownMenuHeader
@@ -157,7 +159,7 @@ fun FileListCard(
 fun BreadCrumbs(
     modifier: Modifier = Modifier,
     crumbScrollState: LazyListState,
-    crumbs: List<BreadCrumb>,
+    crumbs: ImmutableList<BreadCrumb>,
     onCrumbMenu: (DropDownSelection) -> Unit,
     onCrumbClick: (BreadCrumb, Int) -> Unit
 ) {
@@ -267,7 +269,7 @@ private fun Preview_BreadCrumbs() {
                 BreadCrumb("Bread Crumb 1", null),
                 BreadCrumb("Bread Crumb 2", null),
                 BreadCrumb("Bread Crumb 3", null)
-            ),
+            ).toPersistentList(),
             onCrumbMenu = { },
             onCrumbClick = { _, _ -> }
         )

@@ -1,7 +1,9 @@
 package org.helllabs.android.xmp.model
 
+import androidx.compose.runtime.Stable
 import com.lazygeniouz.dfc.file.DocumentFileCompat
 
+@Stable
 data class FileItem(
     val name: String,
     val comment: String,

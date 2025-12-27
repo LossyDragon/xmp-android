@@ -11,6 +11,8 @@ import androidx.compose.ui.*
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.*
 import androidx.compose.ui.tooling.preview.*
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.serialization.Serializable
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.compose.components.ErrorScreen
@@ -25,7 +27,7 @@ object NavSearchHistory
 
 @Composable
 fun SearchHistoryScreen(
-    historyList: List<Module>,
+    historyList: ImmutableList<Module>,
     onBack: () -> Unit,
     onClear: () -> Unit,
     onClicked: (Int) -> Unit
@@ -108,7 +110,7 @@ private fun Preview_HistoryScreen() {
         SearchHistoryScreen(
             historyList = List(12) {
                 Module(songtitle = "Module $it")
-            },
+            }.toPersistentList(),
             onBack = { },
             onClear = { },
             onClicked = { }

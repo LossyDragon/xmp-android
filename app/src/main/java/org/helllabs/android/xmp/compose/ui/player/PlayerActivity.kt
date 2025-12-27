@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.*
 import androidx.compose.ui.window.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import kotlinx.collections.immutable.toPersistentList
 import java.nio.charset.StandardCharsets
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.Dispatchers
@@ -346,7 +347,7 @@ class PlayerActivity : ComponentActivity() {
                     icon = Icons.AutoMirrored.Filled.PlaylistAdd,
                     title = stringResource(id = R.string.dialog_title_select_playlist),
                     selectedIndex = -1,
-                    list = playlists.map { it.name },
+                    list = playlists.map { it.name }.toPersistentList(),
                     onConfirm = viewModel::addToPlaylist,
                     onDismiss = {
                         viewModel.clearPlaylist()

@@ -10,6 +10,7 @@ import com.alorma.compose.settings.ui.SettingsGroup
 import com.alorma.compose.settings.ui.SettingsMenuLink
 import com.alorma.compose.settings.ui.SettingsSlider
 import com.alorma.compose.settings.ui.SettingsSwitch
+import kotlinx.collections.immutable.toPersistentList
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.compose.components.SingleChoiceListDialog
 import org.helllabs.android.xmp.core.PrefManager
@@ -45,7 +46,7 @@ fun SettingsGroupSound() {
             isShowing = samplingRateDialog,
             title = stringResource(id = R.string.pref_sampling_rate_title),
             icon = Icons.Filled.CheckCircle,
-            list = stringArrayResource(id = R.array.sampling_rate_array).toList(),
+            list = stringArrayResource(id = R.array.sampling_rate_array).toPersistentList(),
             selectedIndex = samplingRate,
             onConfirm = {
                 PrefManager.samplingRate = samplingRateValues[it].toInt()
@@ -103,7 +104,7 @@ fun SettingsGroupSound() {
             isShowing = volBoostDialog,
             title = stringResource(id = R.string.pref_vol_boost_title),
             icon = Icons.Filled.CheckCircle,
-            list = stringArrayResource(id = R.array.vol_boost_array).toList(),
+            list = stringArrayResource(id = R.array.vol_boost_array).toPersistentList(),
             selectedIndex = volBoost,
             onConfirm = {
                 PrefManager.volumeBoost = it + 1
@@ -160,7 +161,7 @@ fun SettingsGroupSound() {
             isShowing = interpTypeDialog,
             icon = Icons.Filled.CheckCircle,
             title = stringResource(id = R.string.pref_interp_type_title),
-            list = stringArrayResource(id = R.array.interp_type_array).toList(),
+            list = stringArrayResource(id = R.array.interp_type_array).toPersistentList(),
             selectedIndex = interpType,
             onConfirm = {
                 PrefManager.interpType = it + 1

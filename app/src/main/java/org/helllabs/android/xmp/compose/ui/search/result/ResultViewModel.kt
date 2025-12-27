@@ -11,6 +11,7 @@ import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.http.contentLength
 import io.ktor.utils.io.readAvailable
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -330,6 +331,6 @@ class ResultViewModel(private val httpClient: HttpClient, private val repository
             }
         }
 
-        PrefManager.searchHistory = history
+        PrefManager.searchHistory = history.toPersistentList()
     }
 }

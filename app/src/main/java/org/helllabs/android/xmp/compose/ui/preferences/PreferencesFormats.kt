@@ -13,6 +13,8 @@ import androidx.compose.ui.platform.*
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.res.*
 import androidx.compose.ui.tooling.preview.*
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import org.helllabs.android.xmp.R
@@ -26,7 +28,7 @@ object NavPreferenceFormats
 @Composable
 fun FormatsScreen(
     snackBarHostState: SnackbarHostState,
-    formatsList: List<String>,
+    formatsList: ImmutableList<String>,
     onBack: () -> Unit
 ) {
     val scrollState = rememberLazyListState()
@@ -96,7 +98,7 @@ private fun Preview_FormatsScreen() {
     XmpTheme(useDarkTheme = true) {
         FormatsScreen(
             snackBarHostState = SnackbarHostState(),
-            formatsList = List(14) { "Format $it" },
+            formatsList = List(14) { "Format $it" }.toPersistentList(),
             onBack = { }
         )
     }

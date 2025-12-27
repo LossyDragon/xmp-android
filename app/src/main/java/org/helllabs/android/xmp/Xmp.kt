@@ -3,6 +3,8 @@
 package org.helllabs.android.xmp
 
 import android.net.Uri
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toPersistentList
 import org.helllabs.android.xmp.core.StorageManager
 import org.helllabs.android.xmp.model.ChannelInfo
 import org.helllabs.android.xmp.model.FrameInfo
@@ -160,8 +162,8 @@ object Xmp {
     /**
      * Helper to get formats
      */
-    val formats: List<String>
-        get() = getFormats().orEmpty().toList()
+    val formats: ImmutableList<String>
+        get() = getFormats().orEmpty().toPersistentList()
 
     /**
      * Test module from File Descriptor

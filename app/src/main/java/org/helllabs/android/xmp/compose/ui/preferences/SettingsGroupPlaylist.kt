@@ -9,6 +9,7 @@ import androidx.compose.ui.res.stringResource
 import com.alorma.compose.settings.ui.SettingsGroup
 import com.alorma.compose.settings.ui.SettingsMenuLink
 import com.alorma.compose.settings.ui.SettingsSwitch
+import kotlinx.collections.immutable.toPersistentList
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.compose.components.SingleChoiceListDialog
 import org.helllabs.android.xmp.core.PrefManager
@@ -64,7 +65,7 @@ fun SettingsGroupPlaylist(
             icon = Icons.Filled.CheckCircle,
             title = stringResource(id = R.string.pref_playlist_mode_title),
             selectedIndex = playlistMode,
-            list = stringArrayResource(id = R.array.playlist_mode_array).toList(),
+            list = stringArrayResource(id = R.array.playlist_mode_array).toPersistentList(),
             onConfirm = {
                 PrefManager.playlistMode = it + 1
                 playlistModeDialog = false

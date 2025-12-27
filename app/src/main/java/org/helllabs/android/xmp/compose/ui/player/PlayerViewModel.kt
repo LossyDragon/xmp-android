@@ -470,9 +470,7 @@ class PlayerViewModel : ViewModel() {
                     uri = playlistChoice.value!!.uri
                 )
                 val list = listOf(playlist)
-                val res = manager.add(list)
-
-                if (!res) {
+                manager.add(list).onFailure {
                     _softError.emit("Couldn't add module to playlist")
                 }
             } else if (playlistChoice.value!!.isDirectory()) {
@@ -500,8 +498,7 @@ class PlayerViewModel : ViewModel() {
                     return@launch
                 }
 
-                val res = manager.add(list)
-                if (!res) {
+                manager.add(list).onFailure {
                     _softError.emit("Couldn't add modules to playlist")
                 }
             }

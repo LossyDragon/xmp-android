@@ -136,6 +136,7 @@ dependencies {
     implementation(libs.core.ktx)
     implementation(libs.datastore.preferences)
     implementation(libs.dfc)
+    implementation(libs.kotlinx.immutable)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.lifecycle.runtime.ktx)
     implementation(libs.lifecycle.viewmodel.compose)

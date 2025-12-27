@@ -5,6 +5,9 @@ import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lazygeniouz.dfc.file.DocumentFileCompat
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import java.text.DateFormat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -31,7 +34,7 @@ data class BreadCrumb(val name: String, val path: DocumentFileCompat?, val enabl
 // State class for UI related stuff
 @Stable
 data class FileListState(
-    val crumbs: List<BreadCrumb> = listOf(),
+    val crumbs: ImmutableList<BreadCrumb> = persistentListOf(),
     val isLoading: Boolean = false,
     val isLoop: Boolean = false,
     val isShuffle: Boolean = false,
@@ -149,7 +152,7 @@ class FileListViewModel : ViewModel() {
                 crumbs.add(crumb)
                 docFile = docFile.parentFile
             }
-            _uiState.update { it.copy(crumbs = crumbs.reversed()) }
+            _uiState.update { it.copy(crumbs = crumbs.reversed().toPersistentList()) }
 
             val list = modDir.listFiles().map { file ->
                 val item = if (file.isDirectory()) {
@@ -212,9 +215,7 @@ class FileListViewModel : ViewModel() {
                     uri = playlistChoice.value!!.uri
                 )
                 val list = listOf(playlist)
-                val res = manager.add(list)
-
-                if (!res) {
+                manager.add(list).onFailure {
                     _softError.emit("Couldn't add module to playlist")
                 }
             } else if (playlistChoice.value!!.isDirectory()) {
@@ -243,8 +244,7 @@ class FileListViewModel : ViewModel() {
                     return@launch
                 }
 
-                val res = manager.add(list)
-                if (!res) {
+                manager.add(list).onFailure {
                     _softError.emit("Couldn't add modules to playlist")
                 }
             }

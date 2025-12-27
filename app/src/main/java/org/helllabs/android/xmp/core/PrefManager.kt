@@ -10,6 +10,8 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
@@ -212,18 +214,18 @@ object PrefManager {
         }
 
     private val SEARCH_HISTORY = stringPreferencesKey("search_history")
-    var searchHistory: List<Module>
+    var searchHistory: ImmutableList<Module>
         get() {
             val string = getPref(SEARCH_HISTORY, "[]")
             var list: List<Module>
             try {
                 list = Json.decodeFromString(string)
             } catch (e: Exception) {
-                Timber.e("Error getting search history")
+                Timber.e(e, "Error getting search history")
                 removePref(SEARCH_HISTORY)
                 list = listOf()
             }
-            return list
+            return list.toPersistentList()
         }
         set(value) {
             var json: String

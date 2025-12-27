@@ -11,6 +11,7 @@ extendedSpans = "1.4.0" # https://mvnrepository.com/artifact/me.saket.extendedsp
 kotlin = "2.3.0" # https://mvnrepository.com/artifact/org.jetbrains.kotlin.android/org.jetbrains.kotlin.android.gradle.plugin
 kotlinterGradle = "5.3.0" # // https://github.com/jeremymailen/kotlinter-gradle
 kotlinxSerialization = "1.9.0" # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-serialization-json
+kotlinXImmutable = "0.4.0" # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-collections-immutable
 ktor = "3.3.3" # https://mvnrepository.com/artifact/io.ktor/ktor-client-core
 leakcanaryAndroid = "2.14" # https://mvnrepository.com/artifact/com.squareup.leakcanary/leakcanary-android
 lifecycleRuntimeCompose = "2.10.0" # https://mvnrepository.com/artifact/androidx.lifecycle/lifecycle-runtime-compose
@@ -48,6 +49,7 @@ compose-navigation = { module = "androidx.navigation:navigation-compose", versio
 core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
 datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "dataStore" }
 dfc = { module = "com.lazygeniouz:dfc", version.ref = "dfc" }
+kotlinx-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinXImmutable" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 kotlinx-serialization-xml = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinxSerialization" }
 leakcanary-android = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanaryAndroid" }

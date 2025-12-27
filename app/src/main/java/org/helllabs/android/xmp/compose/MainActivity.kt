@@ -27,6 +27,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.R
@@ -337,8 +338,8 @@ class MainActivity : ComponentActivity() {
                             historyList = historyList,
                             onBack = navController::navigateUp,
                             onClear = {
-                                PrefManager.searchHistory = listOf()
-                                historyList = listOf()
+                                PrefManager.searchHistory = persistentListOf()
+                                historyList = persistentListOf()
                             },
                             onClicked = {
                                 navController.navigate(NavSearchResult(it))

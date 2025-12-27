@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.*
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.collections.immutable.toPersistentList
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.collectLatest
@@ -115,7 +116,7 @@ fun FileListScreenImpl(
         icon = Icons.AutoMirrored.Filled.PlaylistAdd,
         title = stringResource(id = R.string.dialog_title_select_playlist),
         selectedIndex = -1,
-        list = playlists.map { it.name },
+        list = playlists.map { it.name }.toPersistentList(),
         onConfirm = viewModel::addToPlaylist,
         onDismiss = {
             viewModel.clearPlaylist()
@@ -436,7 +437,7 @@ private fun Preview_FileListScreen() {
                         name = "Crumb $it",
                         path = null
                     )
-                },
+                }.toPersistentList(),
                 isLoop = true,
                 isShuffle = false
             ),

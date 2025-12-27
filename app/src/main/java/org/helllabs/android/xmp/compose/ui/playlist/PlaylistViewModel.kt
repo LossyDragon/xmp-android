@@ -3,6 +3,7 @@ package org.helllabs.android.xmp.compose.ui.playlist
 import android.net.Uri
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -38,7 +39,7 @@ class PlaylistViewModel : ViewModel() {
     fun onMove(from: Int, to: Int) {
         val list = _uiState.value.list.toMutableList().apply {
             add(to, removeAt(from))
-        }
+        }.toPersistentList()
 
         _uiState.update { it.copy(list = list) }
     }
@@ -55,16 +56,16 @@ class PlaylistViewModel : ViewModel() {
         with(manager.value) {
             load(Uri.parse(name))
 
-            playlist.list.forEachIndexed { index, playlistItem ->
-                playlistItem.id = index
-            }
+            val listWithIds = playlist.list.mapIndexed { index, playlistItem ->
+                playlistItem.copy(id = index)
+            }.toPersistentList()
 
             _uiState.update {
                 it.copy(
                     comment = playlist.comment,
                     isLoop = playlist.isLoop,
                     isShuffle = playlist.isShuffle,
-                    list = playlist.list,
+                    list = listWithIds,
                     name = playlist.name,
                     uri = playlist.uri
                 )
@@ -73,8 +74,9 @@ class PlaylistViewModel : ViewModel() {
     }
 
     fun removeItem(index: Int) {
-        val list = _uiState.value.list.toMutableList()
-        list.removeAt(index)
+        val list = _uiState.value.list.toMutableList().apply {
+            removeAt(index)
+        }.toPersistentList()
 
         _uiState.update { it.copy(list = list) }
         save() // Save just in-case

@@ -26,6 +26,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.compose.theme.XmpTheme
 import org.helllabs.android.xmp.model.FileItem
@@ -39,7 +41,7 @@ fun SingleChoiceListDialog(
     icon: ImageVector,
     title: String,
     selectedIndex: Int,
-    list: List<String>,
+    list: ImmutableList<String>,
     confirmText: String = stringResource(id = android.R.string.ok),
     dismissText: String = stringResource(id = android.R.string.cancel),
     onConfirm: (Int) -> Unit,
@@ -345,7 +347,7 @@ fun Preview_SingleChoiceListDialog() {
                 selectedIndex = 2,
                 list = List(6) {
                     Playlist(name = "Playlist $it")
-                }.map { it.name },
+                }.map { it.name }.toImmutableList(),
                 onConfirm = { },
                 onDismiss = { },
                 onEmpty = { }
