@@ -28,6 +28,7 @@ import java.lang.ref.WeakReference
 import java.util.LinkedList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -144,6 +145,8 @@ class PlayerService :
     override fun onDestroy() {
         super.onDestroy()
         Timber.d("onDestroy")
+
+        serviceScope.cancel()
 
         cmd = CMD_STOP
 
