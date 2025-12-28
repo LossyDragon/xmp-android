@@ -1,5 +1,6 @@
 package org.helllabs.android.xmp.core
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.DocumentsContract
@@ -7,31 +8,44 @@ import android.provider.OpenableColumns
 import androidx.core.net.toUri
 import com.lazygeniouz.dfc.file.DocumentFileCompat
 import java.util.Locale
-import org.helllabs.android.xmp.XmpApplication
+import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.core.Constants.DEFAULT_DOWNLOAD_DIR
+import org.helllabs.android.xmp.model.ModInfo
 import org.helllabs.android.xmp.model.Module
 import timber.log.Timber
 
 class XmpException(string: String) : Exception(string)
 
 /**
- * This object class is kinda of a mash up of anything related to SAF and the Document Tree
+ * Handles SAF (Storage Access Framework) operations and document tree management
  */
-object StorageManager {
+class StorageManager(private val context: Context, private val prefManager: PrefManager) {
+
+    fun testModule(uri: Uri, modInfo: ModInfo = ModInfo()): Boolean = Xmp.testFromFd(
+        context = context,
+        storageManager = this,
+        uri = uri,
+        modInfo = modInfo
+    )
+
+    fun loadModule(uri: Uri): Int = Xmp.loadFromFd(
+        context = context,
+        storageManager = this,
+        uri = uri
+    )
 
     /**
      * Checks if we have a URI in preferences, then checks to see if we have R/W access
      */
-    fun checkPermissions(): Boolean {
-        val context = XmpApplication.instance!!.applicationContext
-
-        val isPreferenceEmpty = PrefManager.safStoragePath.isBlank()
-        if (isPreferenceEmpty) {
+    suspend fun checkPermissions(): Boolean {
+        val safPath = prefManager.getSafStoragePath()
+        if (safPath.isBlank()) {
             return false
         }
 
-        val preference = PrefManager.safStoragePath.toUri()
+        val preference = safPath.toUri()
         val persistedUriPermissions = context.contentResolver.persistedUriPermissions
+
         return persistedUriPermissions.any {
             it.uri == preference && it.isReadPermission && it.isWritePermission
         }
@@ -40,24 +54,20 @@ object StorageManager {
     /**
      * Get our parent/root directory
      */
-    private fun getParentDirectory(): Result<DocumentFileCompat> {
-        val context = XmpApplication.instance?.applicationContext
-            ?: return Result.failure(XmpException("App context is null"))
+    private suspend fun getParentDirectory(): Result<DocumentFileCompat> = runCatching {
+        val prefUri = prefManager.getSafStoragePath().toUri()
 
-        val prefUri = PrefManager.safStoragePath.toUri()
-
-        val parent = DocumentFileCompat.fromTreeUri(context, prefUri)
-            ?: return Result.failure(XmpException("Getting parent directory returned null"))
-
-        return Result.success(parent)
+        DocumentFileCompat.fromTreeUri(context, prefUri)
+            ?: throw XmpException("Getting parent directory returned null")
     }
 
     /**
      * Get the playlist directory that was set
      */
-    fun getPlaylistDirectory(): Result<DocumentFileCompat> =
+    suspend fun getPlaylistDirectory(): Result<DocumentFileCompat> =
         getParentDirectory().mapCatching { parent ->
-            parent.findFile("playlists") ?: throw XmpException("Playlist directory not found")
+            parent.findFile("playlists")
+                ?: throw XmpException("Playlist directory not found")
         }
 
     /**
@@ -65,41 +75,40 @@ object StorageManager {
      * This will be where modules are downloaded,
      * and where File Explorer should start
      */
-    fun getModDirectory(): Result<DocumentFileCompat> = getParentDirectory().mapCatching { parent ->
-        parent.findFile("mods") ?: throw XmpException("Mods directory not found")
-    }
+    suspend fun getModDirectory(): Result<DocumentFileCompat> =
+        getParentDirectory().mapCatching { parent ->
+            parent.findFile("mods")
+                ?: throw XmpException("Mods directory not found")
+        }
 
     /**
      * Set the playlist directory to the specified [Uri]
      * Create `playlist` and `mod` folders respectively.
      */
-    fun setPlaylistDirectory(uri: Uri?): Result<Unit> {
-        return runCatching {
-            if (uri == null) {
-                throw XmpException("Unable to set default Playlist directory")
-            }
+    suspend fun setPlaylistDirectory(uri: Uri?): Result<Unit> = runCatching {
+        requireNotNull(uri) { "Unable to set default Playlist directory" }
 
-            val context = XmpApplication.instance?.applicationContext
-                ?: return Result.failure(XmpException("App context is null"))
+        prefManager.setSafStoragePath(uri.toString())
 
-            PrefManager.safStoragePath = uri.toString()
+        val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
+            Intent.FLAG_GRANT_WRITE_URI_PERMISSION
 
-            val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
-                Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+        context.contentResolver.takePersistableUriPermission(uri, flags)
 
-            context.contentResolver.takePersistableUriPermission(uri, flags)
+        val parentDocument = getParentDirectory().getOrThrow()
 
-            val parentDocument = getParentDirectory().getOrElse { throw it }
+        createRequiredDirectories(parentDocument)
+    }
 
-            listOf("mods", "playlists").forEach { directoryName ->
-                val exists = parentDocument.findFile(directoryName) != null
-                if (!exists) {
-                    parentDocument.createDirectory(directoryName)
+    private suspend fun createRequiredDirectories(parentDocument: DocumentFileCompat) {
+        listOf("mods", "playlists").forEach { directoryName ->
+            val exists = parentDocument.findFile(directoryName) != null
+            if (!exists) {
+                parentDocument.createDirectory(directoryName)
 
-                    if (directoryName == "mods") {
-                        val modDir = parentDocument.findFile("mods")
-                        installExampleMod(modDir)
-                    }
+                if (directoryName == "mods") {
+                    val modDir = parentDocument.findFile("mods")
+                    installExampleMod(modDir)
                 }
             }
         }
@@ -108,79 +117,100 @@ object StorageManager {
     /**
      * Get the name of the default path we're allowed to work in.
      */
-    fun getDefaultPathName(): Result<String> = getParentDirectory().mapCatching { parent ->
-        parent.name.ifEmpty { throw XmpException("Couldn't get default path name") }
-    }
+    suspend fun getDefaultPathName(): Result<String> =
+        getParentDirectory().mapCatching { parent ->
+            parent.name.ifEmpty {
+                throw XmpException("Couldn't get default path name")
+            }
+        }
 
     /**
      * Attempt to install sample modules in our assets folder. Skip if it exists
      */
-    private fun installExampleMod(modPath: DocumentFileCompat?): Boolean {
-        if (!PrefManager.examples) return true
+    private suspend fun installExampleMod(modPath: DocumentFileCompat?): Boolean {
+        if (!prefManager.getExamples()) return true
 
         if (modPath == null) {
             Timber.w("modDir is null")
             return false
         }
 
-        val context = XmpApplication.instance!!.applicationContext
         return runCatching {
             val assets = context.resources.assets
             assets.list("mod")?.forEach { asset ->
-                val mod = modPath.findFile(asset) ?: return@forEach
-                if (mod.exists()) {
+                if (shouldSkipAsset(modPath, asset)) {
                     Timber.i("Skipping $asset")
                     return@forEach
                 }
 
-                val inStream = assets.open("mod/$asset")
-                val file = modPath.createFile("application/octet-stream", asset)
-                val outStream = context.contentResolver.openOutputStream(file!!.uri)
-                    ?: return@forEach
-
-                inStream.copyTo(outStream)
+                copyAssetToModPath(assets, asset, modPath)
             }
         }.onFailure { exception ->
-            Timber.e(exception)
-            return false
+            Timber.e(exception, "Failed to install example mod")
         }.isSuccess
+    }
+
+    private fun shouldSkipAsset(modPath: DocumentFileCompat, asset: String): Boolean {
+        val mod = modPath.findFile(asset) ?: return false
+        return mod.exists()
+    }
+
+    private fun copyAssetToModPath(
+        assets: android.content.res.AssetManager,
+        asset: String,
+        modPath: DocumentFileCompat
+    ) {
+        assets.open("mod/$asset").use { inStream ->
+            val file = modPath.createFile("application/octet-stream", asset)
+                ?: return
+
+            context.contentResolver.openOutputStream(file.uri)?.use { outStream ->
+                inStream.copyTo(outStream)
+            }
+        }
     }
 
     /**
      * Get the download path a mod should be downloaded to.
      *
-     * @see [PrefManager.modArchiveFolder] if the pref was set to download
-     * @see [PrefManager.artistFolder]
+     * @see [PrefManager.getModArchiveFolder] if the pref was set to download
+     * @see [PrefManager.getArtistFolder]
      */
-    private fun getDownloadPath(module: Module): Result<DocumentFileCompat> =
+    private suspend fun getDownloadPath(module: Module): Result<DocumentFileCompat> =
         getModDirectory().mapCatching { modDir ->
-            if (!modDir.isDirectory()) {
-                throw XmpException("Unable to access the mod directory.")
+            require(modDir.isDirectory()) {
+                "Unable to access the mod directory."
             }
 
             var targetDir = modDir
 
-            if (PrefManager.modArchiveFolder) {
-                targetDir = targetDir.findFile(DEFAULT_DOWNLOAD_DIR) ?: targetDir.createDirectory(
-                    DEFAULT_DOWNLOAD_DIR
-                )
-                    ?: throw XmpException("Failed to access or create TMA directory.")
-                if (!targetDir.isDirectory()) {
-                    throw IllegalArgumentException("TMA directory is not a directory.")
-                }
+            if (prefManager.getModArchiveFolder()) {
+                targetDir = getOrCreateDirectory(targetDir, DEFAULT_DOWNLOAD_DIR, "TMA")
             }
 
-            if (PrefManager.artistFolder) {
+            if (prefManager.getArtistFolder()) {
                 val artistName = module.getArtist()
-                targetDir = targetDir.findFile(artistName) ?: targetDir.createDirectory(artistName)
-                    ?: throw XmpException("Failed to access or create the artist directory.")
-                if (!targetDir.isDirectory()) {
-                    throw IllegalArgumentException("Artist directory is not a directory.")
-                }
+                targetDir = getOrCreateDirectory(targetDir, artistName, "artist")
             }
 
             targetDir
         }
+
+    private fun getOrCreateDirectory(
+        parent: DocumentFileCompat,
+        directoryName: String,
+        type: String
+    ): DocumentFileCompat {
+        val dir = parent.findFile(directoryName)
+            ?: parent.createDirectory(directoryName)
+            ?: throw XmpException("Failed to access or create the $type directory.")
+
+        require(dir.isDirectory()) {
+            "$type directory is not a directory."
+        }
+
+        return dir
+    }
 
     /**
      * Delete a File or Directory
@@ -190,37 +220,32 @@ object StorageManager {
      * @return true if successful, otherwise false
      */
     fun deleteFileOrDirectory(uri: Uri?): Boolean {
-        if (uri == null) {
-            return false
-        }
+        if (uri == null) return false
 
-        val context = XmpApplication.instance!!.applicationContext
         val docFile = DocumentFileCompat.fromSingleUri(context, uri)
-
         return docFile?.delete() ?: false
     }
 
     /**
      * Check if a module exists in a location given the preferences
-     * @see [PrefManager.artistFolder]
-     * @see [PrefManager.modArchiveFolder]
+     * @see [PrefManager.getArtistFolder]
+     * @see [PrefManager.getModArchiveFolder]
      *
-     *  @param module the [Module] in question
+     * @param module the [Module] in question
      */
-    fun doesModuleExist(module: Module?): Result<DocumentFileCompat> = runCatching {
-        if (module == null || module.url.isBlank()) {
-            throw XmpException("Module or module URL is null or blank.")
-        }
+    suspend fun doesModuleExist(module: Module?): Result<DocumentFileCompat> = runCatching {
+        requireNotNull(module) { "Module is null" }
+        require(module.url.isNotBlank()) { "Module URL is blank" }
 
-        getDownloadPath(module).mapCatching { dir ->
-            val moduleFilename = module.url.substringAfterLast('#')
-            val file = dir.findFile(moduleFilename)
-            if (file != null && file.exists() && file.isFile()) {
-                file
-            } else {
-                dir
-            }
-        }.getOrElse { throw it }
+        val dir = getDownloadPath(module).getOrThrow()
+        val moduleFilename = module.url.substringAfterLast('#')
+        val file = dir.findFile(moduleFilename)
+
+        if (file != null && file.exists() && file.isFile()) {
+            file
+        } else {
+            dir
+        }
     }
 
     /**
@@ -230,19 +255,18 @@ object StorageManager {
      *
      * @return if successful or not
      */
-    fun deleteModule(module: Module?): Result<Boolean> {
-        if (module == null || module.url.isBlank()) {
-            Timber.w("Module was null")
-            return Result.failure(XmpException("Module was null or url is blank"))
-        }
+    suspend fun deleteModule(module: Module?): Result<Boolean> = runCatching {
+        requireNotNull(module) { "Module is null" }
+        require(module.url.isNotBlank()) { "Module URL is blank" }
 
-        return getDownloadPath(module).mapCatching { dir ->
-            val moduleFilename = module.url.substringAfterLast('#')
-            val file = dir.findFile(moduleFilename)
-                ?: throw XmpException("$moduleFilename not found in directory")
+        val dir = getDownloadPath(module).getOrThrow()
+        val moduleFilename = module.url.substringAfterLast('#')
+        val file = dir.findFile(moduleFilename)
+            ?: throw XmpException("$moduleFilename not found in directory")
 
-            file.delete()
-        }
+        file.delete()
+    }.onFailure {
+        Timber.e(it, "Failed to delete module")
     }
 
     /**
@@ -256,11 +280,8 @@ object StorageManager {
      * @return a list of [Uri]'s in order.
      */
     fun walkDownDirectory(uri: Uri?, includeDirectories: Boolean = true): List<Uri> {
-        if (uri == null) {
-            return emptyList()
-        }
+        if (uri == null) return emptyList()
 
-        val context = XmpApplication.instance!!.applicationContext
         val docId = DocumentsContract.getDocumentId(uri)
         val childDocUri = DocumentsContract.buildChildDocumentsUriUsingTree(uri, docId)
         val projection = arrayOf(
@@ -268,17 +289,36 @@ object StorageManager {
             DocumentsContract.Document.COLUMN_MIME_TYPE,
         )
 
+        val (directories, files) = collectDirectoriesAndFiles(childDocUri, uri, projection)
+
+        return buildSortedUriList(directories, files, includeDirectories)
+    }
+
+    private fun collectDirectoriesAndFiles(
+        childDocUri: Uri,
+        parentUri: Uri,
+        projection: Array<String>
+    ): Pair<MutableList<Uri>, MutableList<Uri>> {
         val directories = mutableListOf<Uri>()
         val files = mutableListOf<Uri>()
 
-        context.contentResolver.query(childDocUri, projection, null, null, null)?.use { cursor ->
+        context.contentResolver.query(
+            childDocUri,
+            projection,
+            null,
+            null,
+            null
+        )?.use { cursor ->
             val idCol = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DOCUMENT_ID)
             val mimeCol = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_MIME_TYPE)
 
             while (cursor.moveToNext()) {
                 val childDocumentId = cursor.getString(idCol)
                 val mimeType = cursor.getString(mimeCol)
-                val childUri = DocumentsContract.buildDocumentUriUsingTree(uri, childDocumentId)
+                val childUri = DocumentsContract.buildDocumentUriUsingTree(
+                    parentUri,
+                    childDocumentId
+                )
 
                 if (mimeType == DocumentsContract.Document.MIME_TYPE_DIR) {
                     directories.add(childUri)
@@ -288,16 +328,28 @@ object StorageManager {
             }
         }
 
+        return Pair(directories, files)
+    }
+
+    private fun buildSortedUriList(
+        directories: List<Uri>,
+        files: List<Uri>,
+        includeDirectories: Boolean
+    ): List<Uri> {
         val sortedUris = mutableListOf<Uri>()
 
-        directories.sortedBy { it.toString().lowercase(Locale.getDefault()) }.forEach { dirUri ->
+        directories.sortedBy {
+            it.toString().lowercase(Locale.getDefault())
+        }.forEach { dirUri ->
             if (includeDirectories) {
                 sortedUris.add(dirUri)
             }
             sortedUris.addAll(walkDownDirectory(dirUri, includeDirectories))
         }
 
-        sortedUris.addAll(files.sortedBy { it.toString().lowercase(Locale.getDefault()) })
+        sortedUris.addAll(
+            files.sortedBy { it.toString().lowercase(Locale.getDefault()) }
+        )
 
         return sortedUris
     }
@@ -308,20 +360,38 @@ object StorageManager {
      * @return the name of the uri file
      */
     fun getFileName(uri: Uri?): String? {
-        if (uri == null) {
-            return null
-        }
+        if (uri == null) return null
 
-        val context = XmpApplication.instance!!.applicationContext
-        val cursor = context.contentResolver.query(uri, null, null, null, null)
-        cursor?.moveToFirst()
-        val idx = cursor?.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-        if (idx == null || idx < 0) {
-            return null
-        }
-        val fileName = cursor.getString(idx)
-        cursor.close()
+        return context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+            if (!cursor.moveToFirst()) return@use null
 
-        return fileName // DocumentFileCompat.fromSingleUri(context, uri)?.name
+            val idx = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+            if (idx < 0) return@use null
+
+            cursor.getString(idx)
+        }
+    }
+
+    /**
+     * Creates a DocumentFileCompat instance from a given URI.
+     *
+     * This method safely wraps the DocumentFileCompat creation process and handles
+     * common exceptions that may occur when working with URIs from different sources.
+     *
+     * @param uri The URI to convert to a DocumentFileCompat instance. Can be from
+     *            content providers, file system, or other sources.
+     * @return A DocumentFileCompat instance if successful, null if the URI is invalid,
+     *         permissions are denied, or any other error occurs during creation.
+     *
+     * @throws None - All exceptions are caught and logged, returning null instead.
+     */
+    fun getDocumentFileFromUri(uri: Uri): DocumentFileCompat? = try {
+        DocumentFileCompat.fromSingleUri(context, uri)
+    } catch (e: IllegalStateException) {
+        Timber.e(e, "DocumentFileCompat failed for URI: $uri")
+        null
+    } catch (e: SecurityException) {
+        Timber.e(e, "Permission denied for URI: $uri")
+        null
     }
 }

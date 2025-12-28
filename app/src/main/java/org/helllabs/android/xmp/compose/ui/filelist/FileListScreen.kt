@@ -14,7 +14,6 @@ import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.*
 import androidx.compose.ui.tooling.preview.*
@@ -22,13 +21,12 @@ import androidx.compose.ui.unit.*
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlinx.collections.immutable.toPersistentList
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
-import kotlinx.serialization.Serializable
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.compose.components.BottomBarButtons
 import org.helllabs.android.xmp.compose.components.ErrorScreen
@@ -39,14 +37,11 @@ import org.helllabs.android.xmp.compose.components.XmpTopBar
 import org.helllabs.android.xmp.compose.theme.XmpTheme
 import org.helllabs.android.xmp.compose.ui.filelist.components.BreadCrumbs
 import org.helllabs.android.xmp.compose.ui.filelist.components.FileListCard
-import org.helllabs.android.xmp.core.PrefManager
 import org.helllabs.android.xmp.core.StorageManager
 import org.helllabs.android.xmp.model.DropDownSelection
 import org.helllabs.android.xmp.model.FileItem
+import org.koin.compose.koinInject
 import timber.log.Timber
-
-@Serializable
-object NavFileList
 
 @Composable
 fun FileListScreenImpl(
@@ -62,6 +57,7 @@ fun FileListScreenImpl(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val storageManager = koinInject<StorageManager>()
 
     LifecycleResumeEffect(Lifecycle.Event.ON_RESUME) {
         Timber.d("Lifecycle onResume")
@@ -87,11 +83,7 @@ fun FileListScreenImpl(
             }
 
             override fun handleOnBackPressed() {
-                if (PrefManager.backButtonNavigation) {
-                    if (!viewModel.onBackPressed()) {
-                        goBack()
-                    }
-                } else {
+                if (!viewModel.onBackPressed()) {
                     goBack()
                 }
             }
@@ -259,7 +251,7 @@ fun FileListScreenImpl(
                         )
                     } else {
                         onPlayModule(
-                            StorageManager.walkDownDirectory(
+                            storageManager.walkDownDirectory(
                                 uri = item.docFile?.uri,
                                 includeDirectories = false
                             ),
@@ -272,7 +264,7 @@ fun FileListScreenImpl(
                 }
 
                 DropDownSelection.DIR_PLAY_CONTENTS -> onPlayModule(
-                    StorageManager.walkDownDirectory(
+                    storageManager.walkDownDirectory(
                         uri = item.docFile?.uri,
                         includeDirectories = false
                     ),

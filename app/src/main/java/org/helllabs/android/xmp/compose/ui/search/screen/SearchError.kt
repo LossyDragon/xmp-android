@@ -1,4 +1,4 @@
-package org.helllabs.android.xmp.compose.ui.search
+package org.helllabs.android.xmp.compose.ui.search.screen
 
 import android.content.res.Configuration
 import androidx.activity.OnBackPressedCallback
@@ -18,41 +18,19 @@ import androidx.compose.ui.unit.*
 import java.util.Locale
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.serialization.Serializable
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.compose.components.XmpTopBar
 import org.helllabs.android.xmp.compose.theme.XmpTheme
 import org.helllabs.android.xmp.compose.theme.topazFontFamily
 import timber.log.Timber
 
-@Serializable
-data class NavSearchError(val error: String? = null)
-
 @Composable
-fun ErrorScreen(
+fun SearchErrorScreen(
     message: String?,
-    onBackPressedCallback: OnBackPressedDispatcher,
     onBack: () -> Unit
 ) {
     val errorMsg = remember {
         message?.substringAfter("Exception: ")?.trim()
-    }
-
-    val callback = remember {
-        object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                onBack()
-            }
-        }
-    }
-
-    // Set up and override on back pressed.
-    DisposableEffect(onBackPressedCallback) {
-        onBackPressedCallback.addCallback(callback)
-        onDispose {
-            Timber.d("Removing callback")
-            callback.remove()
-        }
     }
 
     Scaffold(
@@ -127,9 +105,8 @@ private fun GuruFrame(
 @Composable
 private fun Preview_ErrorScreen() {
     XmpTheme(useDarkTheme = true) {
-        ErrorScreen(
+        SearchErrorScreen(
             message = null,
-            onBackPressedCallback = OnBackPressedDispatcher(),
             onBack = {}
         )
     }
@@ -139,9 +116,8 @@ private fun Preview_ErrorScreen() {
 @Composable
 private fun Preview_ErrorScreen_WithMessage() {
     XmpTheme(useDarkTheme = true) {
-        ErrorScreen(
+        SearchErrorScreen(
             message = "Exception: Some Error Message",
-            onBackPressedCallback = OnBackPressedDispatcher(),
             onBack = {}
         )
     }

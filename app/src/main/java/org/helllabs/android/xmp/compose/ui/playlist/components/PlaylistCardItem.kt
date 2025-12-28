@@ -38,6 +38,7 @@ import org.helllabs.android.xmp.core.StorageManager
 import org.helllabs.android.xmp.model.DropDownItem
 import org.helllabs.android.xmp.model.DropDownSelection
 import org.helllabs.android.xmp.model.PlaylistItem
+import org.koin.compose.koinInject
 import sh.calvin.reorderable.ReorderableCollectionItemScope
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
@@ -89,8 +90,9 @@ fun PlaylistCardItem(
                     )
                 },
                 headlineContent = {
+                    val storageManager = koinInject<StorageManager>()
                     val text = if (useFileName) {
-                        StorageManager.getFileName(item.uri) ?: item.name
+                        storageManager.getFileName(item.uri) ?: item.name
                     } else {
                         item.name
                     }

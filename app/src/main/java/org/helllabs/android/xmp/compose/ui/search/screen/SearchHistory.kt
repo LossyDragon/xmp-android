@@ -1,4 +1,4 @@
-package org.helllabs.android.xmp.compose.ui.search
+package org.helllabs.android.xmp.compose.ui.search.screen
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.*
@@ -13,7 +13,6 @@ import androidx.compose.ui.res.*
 import androidx.compose.ui.tooling.preview.*
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
-import kotlinx.serialization.Serializable
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.compose.components.ErrorScreen
 import org.helllabs.android.xmp.compose.components.MessageDialog
@@ -21,9 +20,6 @@ import org.helllabs.android.xmp.compose.components.XmpTopBar
 import org.helllabs.android.xmp.compose.theme.XmpTheme
 import org.helllabs.android.xmp.compose.ui.search.components.ItemModule
 import org.helllabs.android.xmp.model.Module
-
-@Serializable
-object NavSearchHistory
 
 @Composable
 fun SearchHistoryScreen(

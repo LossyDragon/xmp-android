@@ -21,9 +21,6 @@ import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.compose.components.XmpTopBar
 import org.helllabs.android.xmp.compose.theme.XmpTheme
 
-@Serializable
-object NavPreferenceFormats
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FormatsScreen(

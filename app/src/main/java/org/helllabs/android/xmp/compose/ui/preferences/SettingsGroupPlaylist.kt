@@ -6,19 +6,35 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alorma.compose.settings.ui.SettingsGroup
 import com.alorma.compose.settings.ui.SettingsMenuLink
 import com.alorma.compose.settings.ui.SettingsSwitch
 import kotlinx.collections.immutable.toPersistentList
+import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.compose.components.SingleChoiceListDialog
 import org.helllabs.android.xmp.core.PrefManager
+import org.koin.compose.koinInject
 import timber.log.Timber
 
 @Composable
 fun SettingsGroupPlaylist(
     onChangeDir: () -> Unit
 ) {
+    val prefManager: PrefManager = koinInject()
+    val scope = rememberCoroutineScope()
+
+    // Collect preferences as state
+    val examplesValue by prefManager.examplesFlow().collectAsStateWithLifecycle(initialValue = true)
+    val playlistModeValue by prefManager.playlistModeFlow().collectAsStateWithLifecycle(
+        initialValue = 1
+    )
+    val useFileNameValue by prefManager.useFileNameFlow().collectAsStateWithLifecycle(
+        initialValue = false
+    )
+    // val backButtonValue by prefManager.backButtonNavigationFlow().collectAsStateWithLifecycle(initialValue = true)
+
     SettingsGroup(
         title = {
             Text(text = stringResource(id = R.string.pref_category_files))
@@ -30,29 +46,25 @@ fun SettingsGroupPlaylist(
             onClick = onChangeDir
         )
 
-        var installModules by remember { mutableStateOf(PrefManager.examples) }
+        // Install Modules
         SettingsSwitch(
             title = { Text(text = stringResource(id = R.string.pref_examples_title)) },
             subtitle = { Text(text = stringResource(id = R.string.pref_examples_summary)) },
-            state = installModules,
+            state = examplesValue,
             onCheckedChange = {
-                PrefManager.examples = it
-                installModules = it
-            }
-
-        )
-
-        var playlistMode by remember { mutableIntStateOf(0) }
-        val playlistModeValues = stringArrayResource(id = R.array.playlist_mode_values)
-        var playlistModeDialog by remember { mutableStateOf(false) }
-        LaunchedEffect(playlistModeDialog) {
-            val mode = PrefManager.playlistMode
-            playlistModeValues.forEachIndexed { index, s ->
-                if (mode == s.toInt()) {
-                    playlistMode = index
+                scope.launch {
+                    prefManager.setExamples(it)
                 }
             }
+        )
+
+        // Playlist Mode
+        var playlistModeDialog by remember { mutableStateOf(false) }
+        val playlistModeValues = stringArrayResource(id = R.array.playlist_mode_values)
+        val playlistMode = remember(playlistModeValue) {
+            playlistModeValues.indexOfFirst { it.toInt() == playlistModeValue }.coerceAtLeast(0)
         }
+
         SettingsMenuLink(
             title = { Text(text = stringResource(id = R.string.pref_playlist_mode_title)) },
             subtitle = { Text(text = stringResource(id = R.string.pref_playlist_mode_summary)) },
@@ -67,8 +79,10 @@ fun SettingsGroupPlaylist(
             selectedIndex = playlistMode,
             list = stringArrayResource(id = R.array.playlist_mode_array).toPersistentList(),
             onConfirm = {
-                PrefManager.playlistMode = it + 1
-                playlistModeDialog = false
+                scope.launch {
+                    prefManager.setPlaylistMode(playlistModeValues[it].toInt())
+                    playlistModeDialog = false
+                }
             },
             onDismiss = {
                 playlistModeDialog = false
@@ -79,30 +93,32 @@ fun SettingsGroupPlaylist(
             }
         )
 
-        var useFileName by remember { mutableStateOf(PrefManager.useFileName) }
+        // Use Filename
         SettingsSwitch(
             title = { Text(text = stringResource(id = R.string.pref_use_filename_title)) },
             subtitle = { Text(text = stringResource(id = R.string.pref_use_filename_summary)) },
-            state = useFileName,
+            state = useFileNameValue,
             onCheckedChange = {
-                PrefManager.useFileName = it
-                useFileName = it
+                scope.launch {
+                    prefManager.setUseFileName(it)
+                }
             }
         )
 
-        var backButton by remember { mutableStateOf(PrefManager.backButtonNavigation) }
-        SettingsSwitch(
-            title = {
-                Text(text = stringResource(id = R.string.pref_back_button_navigation_title))
-            },
-            subtitle = {
-                Text(text = stringResource(id = R.string.pref_back_button_navigation_summary))
-            },
-            state = backButton,
-            onCheckedChange = {
-                PrefManager.backButtonNavigation = it
-                backButton = it
-            }
-        )
+        // Back Button Navigation
+        // SettingsSwitch(
+        //     title = {
+        //         Text(text = stringResource(id = R.string.pref_back_button_navigation_title))
+        //     },
+        //     subtitle = {
+        //         Text(text = stringResource(id = R.string.pref_back_button_navigation_summary))
+        //     },
+        //     state = backButtonValue,
+        //     onCheckedChange = {
+        //         scope.launch {
+        //             prefManager.setBackButtonNavigation(it)
+        //         }
+        //     }
+        // )
     }
 }

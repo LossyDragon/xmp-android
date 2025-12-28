@@ -30,13 +30,11 @@ import org.helllabs.android.xmp.core.PrefManager
 import org.helllabs.android.xmp.model.DropDownSelection
 import org.helllabs.android.xmp.model.Playlist
 import org.helllabs.android.xmp.model.PlaylistItem
+import org.koin.compose.koinInject
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import sh.calvin.reorderable.rememberScroller
 import timber.log.Timber
-
-@Serializable
-data class NavPlaylist(val playlist: String)
 
 @Composable
 fun PlaylistScreenImpl(
@@ -50,11 +48,12 @@ fun PlaylistScreenImpl(
     onItemClick: (List<Uri>, Int, Boolean, Boolean) -> Unit
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val prefManager = koinInject<PrefManager>()
 
     LifecycleResumeEffect(Lifecycle.Event.ON_RESUME) {
         Timber.d("Lifecycle onResume")
         viewModel.onRefresh(playlist)
-        viewModel.useFileName(PrefManager.useFileName)
+        viewModel.useFileName()
 
         onPauseOrDispose {
             Timber.d("Lifecycle onPause")

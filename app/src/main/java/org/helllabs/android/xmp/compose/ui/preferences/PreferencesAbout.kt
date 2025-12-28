@@ -20,9 +20,6 @@ import org.helllabs.android.xmp.compose.components.themedText
 import org.helllabs.android.xmp.compose.theme.XmpTheme
 import org.helllabs.android.xmp.compose.theme.michromaFontFamily
 
-@Serializable
-object NavPreferenceAbout
-
 @Composable
 fun AboutScreen(
     buildVersionName: String,

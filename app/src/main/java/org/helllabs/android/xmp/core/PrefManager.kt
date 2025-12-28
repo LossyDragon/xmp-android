@@ -11,238 +11,210 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.Json
 import org.helllabs.android.xmp.model.Module
 import timber.log.Timber
 
-object PrefManager {
+private val Context.dataStore by preferencesDataStore(
+    name = "preferences",
+    corruptionHandler = ReplaceFileCorruptionHandler {
+        Timber.e("Preferences corrupted, resetting.")
+        emptyPreferences()
+    }
+)
 
-    private val Context.dataStore by preferencesDataStore(
-        name = "preferences",
-        corruptionHandler = ReplaceFileCorruptionHandler {
-            Timber.e("Preferences corrupted, resetting.")
-            emptyPreferences()
-        }
-    )
+class PrefManager(context: Context, private val json: Json) {
+    private val dataStore: DataStore<Preferences> = context.dataStore
 
-    private lateinit var dataStore: DataStore<Preferences>
+    // Preference Keys
+    private object Keys {
+        val SAF_PATH = stringPreferencesKey("saf_storage_path")
+        val PLAYLIST_MODE = intPreferencesKey("playlist_mode")
+        val ALL_SEQUENCES = booleanPreferencesKey("all_sequences")
+        val SCREEN_ON = booleanPreferencesKey("keep_screen_on")
+        val SHOW_INFO_LINE = booleanPreferencesKey("show_info_line")
+        val USE_FILENAME = booleanPreferencesKey("use_filename")
+        val INSTALL_EXAMPLE_PLAYLIST = booleanPreferencesKey("example_playlist_created")
+        val INSTALL_EXAMPLES = booleanPreferencesKey("examples")
 
-    fun init(context: Context) {
-        dataStore = context.dataStore
+        // val BACK_BUTTON = booleanPreferencesKey("back_button_navigation")
+        val SHUFFLE_MODE = booleanPreferencesKey("options_shuffleMode")
+        val LOOP_MODE = booleanPreferencesKey("options_loopMode")
+        val MODARCHIVE_FOLDER = booleanPreferencesKey("modarchive_folder")
+        val ARTIST_FOLDER = booleanPreferencesKey("artist_folder")
+        val BUFFER_MS = intPreferencesKey("buffer_ms_opensl")
+        val SAMPLE_RATE = intPreferencesKey("sampling_rate")
+        val DEFAULT_PAN = intPreferencesKey("default_pan")
+        val VOLUME_BOOST = intPreferencesKey("vol_boost")
+        val INTERP_TYPE = intPreferencesKey("interp_type")
+        val INTERPOLATE = booleanPreferencesKey("interpolate")
+        val STEREO_MIX = intPreferencesKey("stereo_mix")
+        val AMIGA_MIXER = booleanPreferencesKey("amiga_mixer")
+        val SEARCH_HISTORY = stringPreferencesKey("search_history")
+        val SHOW_HEX = booleanPreferencesKey("player_show_hex")
     }
 
-    fun clearPreferences() {
-        runBlocking {
-            dataStore.edit { it.clear() }
+    // Helper functions for async operations
+    private fun <T> getFlow(key: Preferences.Key<T>, defaultValue: T): Flow<T> =
+        dataStore.data.map { preferences ->
+            preferences[key] ?: defaultValue
+        }
+
+    private suspend fun <T> get(key: Preferences.Key<T>, defaultValue: T): T =
+        dataStore.data.map { preferences ->
+            preferences[key] ?: defaultValue
+        }.firstOrNull() ?: defaultValue
+
+    private suspend fun <T> set(key: Preferences.Key<T>, value: T) {
+        dataStore.edit { preferences ->
+            preferences[key] = value
         }
     }
 
-    private fun <T> getPref(key: Preferences.Key<T>, defaultValue: T): T = runBlocking {
-        dataStore.data.first()[key] ?: defaultValue
+    suspend fun clearPreferences() {
+        dataStore.edit { it.clear() }
     }
 
-    private fun <T> setPref(key: Preferences.Key<T>, value: T) {
-        runBlocking {
-            dataStore.edit { pref -> pref[key] = value }
-        }
-    }
-
-    @Suppress("SameParameterValue")
-    private fun <T> removePref(key: Preferences.Key<T>) {
-        runBlocking {
-            dataStore.edit { pref -> pref.remove(key) }
-        }
-    }
-
-    private val SAF_PATH = stringPreferencesKey("saf_storage_path")
-    var safStoragePath: String
-        get() = getPref(SAF_PATH, "")
-        set(value) {
-            setPref(SAF_PATH, value)
-        }
+    // String preferences
+    suspend fun getSafStoragePath(): String = get(Keys.SAF_PATH, "")
+    suspend fun setSafStoragePath(value: String) = set(Keys.SAF_PATH, value)
+    fun safStoragePathFlow(): Flow<String> = getFlow(Keys.SAF_PATH, "")
 
     /**
      * 1: Start playing at selection
      * 2: Play selected file
      * 3: Enqueue selected file
      */
-    private val PLAYLIST_MODE = intPreferencesKey("playlist_mode")
-    var playlistMode: Int
-        get() = getPref(PLAYLIST_MODE, 1)
-        set(value) {
-            setPref(PLAYLIST_MODE, value)
-        }
+    suspend fun getPlaylistMode(): Int = get(Keys.PLAYLIST_MODE, 1)
+    suspend fun setPlaylistMode(value: Int) = set(Keys.PLAYLIST_MODE, value)
+    fun playlistModeFlow(): Flow<Int> = getFlow(Keys.PLAYLIST_MODE, 1)
 
-    private val ALL_SEQUENCES = booleanPreferencesKey("all_sequences")
-    var allSequences: Boolean
-        get() = getPref(ALL_SEQUENCES, false)
-        set(value) {
-            setPref(ALL_SEQUENCES, value)
-        }
+    // Boolean preferences
+    suspend fun getAllSequences(): Boolean = get(Keys.ALL_SEQUENCES, false)
+    suspend fun setAllSequences(value: Boolean) = set(Keys.ALL_SEQUENCES, value)
+    fun allSequencesFlow(): Flow<Boolean> = getFlow(Keys.ALL_SEQUENCES, false)
 
-    private val SCREEN_ON = booleanPreferencesKey("keep_screen_on")
-    var keepScreenOn: Boolean
-        get() = getPref(SCREEN_ON, false)
-        set(value) {
-            setPref(SCREEN_ON, value)
-        }
+    suspend fun getKeepScreenOn(): Boolean = get(Keys.SCREEN_ON, false)
+    suspend fun setKeepScreenOn(value: Boolean) = set(Keys.SCREEN_ON, value)
+    fun keepScreenOnFlow(): Flow<Boolean> = getFlow(Keys.SCREEN_ON, false)
 
-    private val SHOW_INFO_LINE = booleanPreferencesKey("show_info_line")
-    var showInfoLine: Boolean
-        get() = getPref(SHOW_INFO_LINE, true)
-        set(value) {
-            setPref(SHOW_INFO_LINE, value)
-        }
+    suspend fun getShowInfoLine(): Boolean = get(Keys.SHOW_INFO_LINE, true)
+    suspend fun setShowInfoLine(value: Boolean) = set(Keys.SHOW_INFO_LINE, value)
+    fun showInfoLineFlow(): Flow<Boolean> = getFlow(Keys.SHOW_INFO_LINE, true)
 
-    private val USE_FILENAME = booleanPreferencesKey("use_filename")
-    var useFileName: Boolean
-        get() = getPref(USE_FILENAME, false)
-        set(value) {
-            setPref(USE_FILENAME, value)
-        }
+    suspend fun getUseFileName(): Boolean = get(Keys.USE_FILENAME, false)
+    suspend fun setUseFileName(value: Boolean) = set(Keys.USE_FILENAME, value)
+    fun useFileNameFlow(): Flow<Boolean> = getFlow(Keys.USE_FILENAME, false)
 
-    private val INSTALL_EXAMPLE_PLAYLIST = booleanPreferencesKey("example_playlist_created")
-    var installedExamplePlaylist: Boolean
-        get() = getPref(INSTALL_EXAMPLE_PLAYLIST, false)
-        set(value) {
-            setPref(INSTALL_EXAMPLE_PLAYLIST, value)
-        }
+    suspend fun getInstalledExamplePlaylist(): Boolean = get(Keys.INSTALL_EXAMPLE_PLAYLIST, false)
+    suspend fun setInstalledExamplePlaylist(value: Boolean) =
+        set(Keys.INSTALL_EXAMPLE_PLAYLIST, value)
+    fun installedExamplePlaylistFlow(): Flow<Boolean> = getFlow(
+        Keys.INSTALL_EXAMPLE_PLAYLIST,
+        false
+    )
 
-    private val INSTALL_EXAMPLES = booleanPreferencesKey("examples")
-    var examples: Boolean
-        get() = getPref(INSTALL_EXAMPLES, true)
-        set(value) {
-            setPref(INSTALL_EXAMPLES, value)
-        }
+    suspend fun getExamples(): Boolean = get(Keys.INSTALL_EXAMPLES, true)
+    suspend fun setExamples(value: Boolean) = set(Keys.INSTALL_EXAMPLES, value)
+    fun examplesFlow(): Flow<Boolean> = getFlow(Keys.INSTALL_EXAMPLES, true)
 
-    private val BACK_BUTTON = booleanPreferencesKey("back_button_navigation")
-    var backButtonNavigation: Boolean
-        get() = getPref(BACK_BUTTON, true)
-        set(value) {
-            setPref(BACK_BUTTON, value)
-        }
+    // suspend fun getBackButtonNavigation(): Boolean = get(Keys.BACK_BUTTON, true)
+    // suspend fun setBackButtonNavigation(value: Boolean) = set(Keys.BACK_BUTTON, value)
+    // fun backButtonNavigationFlow(): Flow<Boolean> = getFlow(Keys.BACK_BUTTON, true)
 
-    private val SHUFFLE_MODE = booleanPreferencesKey("options_shuffleMode")
-    var shuffleMode: Boolean
-        get() = getPref(SHUFFLE_MODE, true)
-        set(value) {
-            setPref(SHUFFLE_MODE, value)
-        }
+    suspend fun getShuffleMode(): Boolean = get(Keys.SHUFFLE_MODE, true)
+    suspend fun setShuffleMode(value: Boolean) = set(Keys.SHUFFLE_MODE, value)
+    fun shuffleModeFlow(): Flow<Boolean> = getFlow(Keys.SHUFFLE_MODE, true)
 
-    private val LOOP_MODE = booleanPreferencesKey("options_loopMode")
-    var loopMode: Boolean
-        get() = getPref(LOOP_MODE, false)
-        set(value) {
-            setPref(LOOP_MODE, value)
-        }
+    suspend fun getLoopMode(): Boolean = get(Keys.LOOP_MODE, false)
+    suspend fun setLoopMode(value: Boolean) = set(Keys.LOOP_MODE, value)
+    fun loopModeFlow(): Flow<Boolean> = getFlow(Keys.LOOP_MODE, false)
 
-    private val MODARCHIVE_FOLDER = booleanPreferencesKey("modarchive_folder")
-    var modArchiveFolder: Boolean
-        get() = getPref(MODARCHIVE_FOLDER, true)
-        set(value) {
-            setPref(MODARCHIVE_FOLDER, value)
-        }
+    suspend fun getModArchiveFolder(): Boolean = get(Keys.MODARCHIVE_FOLDER, true)
+    suspend fun setModArchiveFolder(value: Boolean) = set(Keys.MODARCHIVE_FOLDER, value)
+    fun modArchiveFolderFlow(): Flow<Boolean> = getFlow(Keys.MODARCHIVE_FOLDER, true)
 
-    private val ARTIST_FOLDER = booleanPreferencesKey("artist_folder")
-    var artistFolder: Boolean
-        get() = getPref(ARTIST_FOLDER, true)
-        set(value) {
-            setPref(ARTIST_FOLDER, value)
-        }
+    suspend fun getArtistFolder(): Boolean = get(Keys.ARTIST_FOLDER, true)
+    suspend fun setArtistFolder(value: Boolean) = set(Keys.ARTIST_FOLDER, value)
+    fun artistFolderFlow(): Flow<Boolean> = getFlow(Keys.ARTIST_FOLDER, true)
 
-    private val BUFFER_MS = intPreferencesKey("buffer_ms_opensl")
-    var bufferMs: Int
-        get() = getPref(BUFFER_MS, 400)
-        set(value) {
-            setPref(BUFFER_MS, value)
-        }
+    suspend fun getInterpolate(): Boolean = get(Keys.INTERPOLATE, true)
+    suspend fun setInterpolate(value: Boolean) = set(Keys.INTERPOLATE, value)
+    fun interpolateFlow(): Flow<Boolean> = getFlow(Keys.INTERPOLATE, true)
 
-    private val SAMPLE_RATE = intPreferencesKey("sampling_rate")
-    var samplingRate: Int
-        get() = getPref(SAMPLE_RATE, 44100)
-        set(value) {
-            setPref(SAMPLE_RATE, value)
-        }
+    suspend fun getAmigaMixer(): Boolean = get(Keys.AMIGA_MIXER, false)
+    suspend fun setAmigaMixer(value: Boolean) = set(Keys.AMIGA_MIXER, value)
+    fun amigaMixerFlow(): Flow<Boolean> = getFlow(Keys.AMIGA_MIXER, false)
 
-    private val DEFAULT_PAN = intPreferencesKey("default_pan")
-    var defaultPan: Int
-        get() = getPref(DEFAULT_PAN, 50)
-        set(value) {
-            setPref(DEFAULT_PAN, value)
-        }
+    suspend fun getShowHex(): Boolean = get(Keys.SHOW_HEX, false)
+    suspend fun setShowHex(value: Boolean) = set(Keys.SHOW_HEX, value)
+    fun showHexFlow(): Flow<Boolean> = getFlow(Keys.SHOW_HEX, false)
 
-    private val VOLUME_BOOST = intPreferencesKey("vol_boost")
-    var volumeBoost: Int
-        get() = getPref(VOLUME_BOOST, 1)
-        set(value) {
-            setPref(VOLUME_BOOST, value)
-        }
+    // Integer preferences
+    suspend fun getBufferMs(): Int = get(Keys.BUFFER_MS, 400)
+    suspend fun setBufferMs(value: Int) = set(Keys.BUFFER_MS, value)
+    fun bufferMsFlow(): Flow<Int> = getFlow(Keys.BUFFER_MS, 400)
+
+    suspend fun getSamplingRate(): Int = get(Keys.SAMPLE_RATE, 44100)
+    suspend fun setSamplingRate(value: Int) = set(Keys.SAMPLE_RATE, value)
+    fun samplingRateFlow(): Flow<Int> = getFlow(Keys.SAMPLE_RATE, 44100)
+
+    suspend fun getDefaultPan(): Int = get(Keys.DEFAULT_PAN, 50)
+    suspend fun setDefaultPan(value: Int) = set(Keys.DEFAULT_PAN, value)
+    fun defaultPanFlow(): Flow<Int> = getFlow(Keys.DEFAULT_PAN, 50)
+
+    suspend fun getVolumeBoost(): Int = get(Keys.VOLUME_BOOST, 1)
+    suspend fun setVolumeBoost(value: Int) = set(Keys.VOLUME_BOOST, value)
+    fun volumeBoostFlow(): Flow<Int> = getFlow(Keys.VOLUME_BOOST, 1)
 
     /**
      * 1: Linear
      * 2: Cubic spline
      */
-    private val INTERP_TYPE = intPreferencesKey("interp_type")
-    var interpType: Int
-        get() = getPref(INTERP_TYPE, 1)
-        set(value) {
-            setPref(INTERP_TYPE, value)
-        }
+    suspend fun getInterpType(): Int = get(Keys.INTERP_TYPE, 1)
+    suspend fun setInterpType(value: Int) = set(Keys.INTERP_TYPE, value)
+    fun interpTypeFlow(): Flow<Int> = getFlow(Keys.INTERP_TYPE, 1)
 
-    private val INTERPOLATE = booleanPreferencesKey("interpolate")
-    var interpolate: Boolean
-        get() = getPref(INTERPOLATE, true)
-        set(value) {
-            setPref(INTERPOLATE, value)
-        }
+    suspend fun getStereoMix(): Int = get(Keys.STEREO_MIX, 100)
+    suspend fun setStereoMix(value: Int) = set(Keys.STEREO_MIX, value)
+    fun stereoMixFlow(): Flow<Int> = getFlow(Keys.STEREO_MIX, 100)
 
-    private val STEREO_MIX = intPreferencesKey("stereo_mix")
-    var stereoMix: Int
-        get() = getPref(STEREO_MIX, 100)
-        set(value) {
-            setPref(STEREO_MIX, value)
+    // Complex type - Search History
+    suspend fun getSearchHistory(): ImmutableList<Module> {
+        val string = get(Keys.SEARCH_HISTORY, "[]")
+        return try {
+            val list: List<Module> = json.decodeFromString(string)
+            list.toPersistentList()
+        } catch (e: Exception) {
+            Timber.e(e, "Error getting search history")
+            dataStore.edit { it.remove(Keys.SEARCH_HISTORY) }
+            persistentListOf()
         }
+    }
 
-    private val AMIGA_MIXER = booleanPreferencesKey("amiga_mixer")
-    var amigaMixer: Boolean
-        get() = getPref(AMIGA_MIXER, false)
-        set(value) {
-            setPref(AMIGA_MIXER, value)
+    suspend fun setSearchHistory(value: ImmutableList<Module>) {
+        try {
+            val jsonString = json.encodeToString(value)
+            set(Keys.SEARCH_HISTORY, jsonString)
+        } catch (e: Exception) {
+            Timber.e(e, "Error setting search history")
+            dataStore.edit { it.remove(Keys.SEARCH_HISTORY) }
         }
+    }
 
-    private val SEARCH_HISTORY = stringPreferencesKey("search_history")
-    var searchHistory: ImmutableList<Module>
-        get() {
-            val string = getPref(SEARCH_HISTORY, "[]")
-            var list: List<Module>
-            try {
-                list = Json.decodeFromString(string)
-            } catch (e: Exception) {
-                Timber.e(e, "Error getting search history")
-                removePref(SEARCH_HISTORY)
-                list = listOf()
-            }
-            return list.toPersistentList()
+    fun searchHistoryFlow(): Flow<ImmutableList<Module>> = dataStore.data.map { preferences ->
+        val string = preferences[Keys.SEARCH_HISTORY] ?: "[]"
+        try {
+            val list: List<Module> = json.decodeFromString(string)
+            list.toPersistentList()
+        } catch (e: Exception) {
+            Timber.e(e, "Error parsing search history")
+            persistentListOf()
         }
-        set(value) {
-            var json: String
-            try {
-                json = Json.encodeToString(value)
-            } catch (e: Exception) {
-                Timber.e("Error setting search history")
-                removePref(SEARCH_HISTORY)
-                json = ""
-            }
-            setPref(SEARCH_HISTORY, json)
-        }
-
-    private val SHOW_HEX = booleanPreferencesKey("player_show_hex")
-    var showHex: Boolean
-        get() = getPref(SHOW_HEX, false)
-        set(value) {
-            setPref(SHOW_HEX, value)
-        }
+    }
 }

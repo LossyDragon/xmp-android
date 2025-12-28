@@ -1,4 +1,4 @@
-package org.helllabs.android.xmp.compose.ui.search
+package org.helllabs.android.xmp.compose.ui.search.screen
 
 import android.content.res.Configuration
 import androidx.annotation.StringRes
@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.*
 import androidx.compose.ui.*
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.*
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.*
@@ -18,50 +19,33 @@ import androidx.compose.ui.text.*
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
-import kotlinx.serialization.Serializable
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.compose.components.XmpTopBar
 import org.helllabs.android.xmp.compose.components.annotatedLinkString
 import org.helllabs.android.xmp.compose.theme.XmpTheme
 
-@Serializable
-object NavSearch
-
 @Stable
-data class SearchSegmentedButton(val index: Int, @StringRes val string: Int)
+data class SearchSegmentedButton(val type: SearchType, @StringRes val string: Int)
 
 @Composable
 fun SearchScreen(
+    modifier: Modifier,
     onBack: () -> Unit,
-    onSearch: (String, Int) -> Unit,
+    onSearch: (String, SearchType) -> Unit,
     onRandom: () -> Unit,
     onHistory: () -> Unit
 ) {
     val focusManager = LocalFocusManager.current
     val focusRequester = remember { FocusRequester() }
     var searchText by rememberSaveable { mutableStateOf("") }
-    var currentSelection by rememberSaveable {
-        mutableIntStateOf(0)
-    }
+    var currentSelection by rememberSaveable { mutableStateOf(SearchType.TITLE) }
 
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
     }
 
     Scaffold(
-        modifier = Modifier.imePadding(),
+        modifier = modifier.imePadding(),
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        topBar = {
-            XmpTopBar(
-                title = stringResource(id = R.string.screen_title_search_module),
-                onBack = onBack,
-                actions = {
-                    IconButton(onClick = onHistory) {
-                        Icon(imageVector = Icons.Default.History, contentDescription = null)
-                    }
-                }
-            )
-        }
     ) { paddingValues ->
         val configuration = LocalConfiguration.current
         val modifier = remember(configuration.orientation) {
@@ -76,11 +60,9 @@ fun SearchScreen(
         // https://issuetracker.google.com/issues/249727298
         Box(
             modifier = modifier
-                .systemBarsPadding()
-                .imePadding()
+                .padding(paddingValues)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(paddingValues)
         ) {
             Column(
                 modifier = Modifier.align(Alignment.TopCenter),
@@ -118,7 +100,7 @@ fun SearchScreen(
 
                 SegmentedButtons(
                     onSearchType = { currentSelection = it },
-                    currentSelection = currentSelection,
+                    searchType = currentSelection,
                 )
 
                 Spacer(modifier = Modifier.height(32.dp))
@@ -143,11 +125,11 @@ fun SearchScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SegmentedButtons(onSearchType: (Int) -> Unit, currentSelection: Int) {
+private fun SegmentedButtons(onSearchType: (SearchType) -> Unit, searchType: SearchType) {
     val buttonOptions = remember {
         listOf(
-            SearchSegmentedButton(0, R.string.title_or_filename),
-            SearchSegmentedButton(1, R.string.artist)
+            SearchSegmentedButton(SearchType.TITLE, R.string.title_or_filename),
+            SearchSegmentedButton(SearchType.ARTIST, R.string.artist)
         )
     }
 
@@ -157,17 +139,17 @@ private fun SegmentedButtons(onSearchType: (Int) -> Unit, currentSelection: Int)
             .fillMaxWidth()
     ) {
         val activeColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = .75f)
-        buttonOptions.forEach { item ->
+        buttonOptions.forEachIndexed { idx, item ->
             SegmentedButton(
                 colors = SegmentedButtonDefaults.colors(
                     activeContainerColor = activeColor
                 ),
                 shape = SegmentedButtonDefaults.itemShape(
-                    index = item.index,
+                    index = idx,
                     count = buttonOptions.size
                 ),
-                onClick = { onSearchType(item.index) },
-                selected = currentSelection == item.index,
+                onClick = { onSearchType(item.type) },
+                selected = searchType == item.type,
                 label = { Text(text = stringResource(id = item.string)) }
             )
         }
@@ -224,6 +206,7 @@ private fun DownloadsText(
 private fun Preview_SearchScreen() {
     XmpTheme(useDarkTheme = true) {
         SearchScreen(
+            modifier = Modifier,
             onBack = {},
             onSearch = { _, _ -> },
             onRandom = {},

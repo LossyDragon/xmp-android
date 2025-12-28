@@ -1,4 +1,4 @@
-package org.helllabs.android.xmp.compose.ui.search.result
+package org.helllabs.android.xmp.compose.ui.search.screen
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -10,13 +10,14 @@ import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.*
 import androidx.compose.ui.tooling.preview.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlinx.serialization.Serializable
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.compose.components.ErrorScreen
 import org.helllabs.android.xmp.compose.components.ProgressbarIndicator
 import org.helllabs.android.xmp.compose.components.XmpTopBar
 import org.helllabs.android.xmp.compose.theme.XmpTheme
 import org.helllabs.android.xmp.compose.ui.search.components.ItemModule
+import org.helllabs.android.xmp.compose.ui.search.viewmodel.SearchResultState
+import org.helllabs.android.xmp.compose.ui.search.viewmodel.SearchResultViewModel
 import org.helllabs.android.xmp.model.Artist
 import org.helllabs.android.xmp.model.ArtistInfo
 import org.helllabs.android.xmp.model.ArtistResult
@@ -26,13 +27,15 @@ import org.helllabs.android.xmp.model.Sponsor
 import org.helllabs.android.xmp.model.SponsorDetails
 import timber.log.Timber
 
-@Serializable
-data class NavSearchTitleResult(val searchQuery: String, val searchSelection: Int)
+enum class SearchType {
+    ARTIST,
+    TITLE
+}
 
 @Composable
 fun TitleResultScreenImpl(
     viewModel: SearchResultViewModel,
-    searchSelection: Int,
+    searchType: SearchType,
     searchQuery: String,
     onBack: () -> Unit,
     onClick: (Int) -> Unit,
@@ -42,7 +45,7 @@ fun TitleResultScreenImpl(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
-        if (searchSelection == 1) {
+        if (searchType == SearchType.ARTIST) {
             val title = context.getString(R.string.screen_title_artist)
             viewModel.getArtists(title, searchQuery)
         } else {

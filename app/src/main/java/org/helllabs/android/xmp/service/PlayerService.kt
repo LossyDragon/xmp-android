@@ -42,6 +42,7 @@ import org.helllabs.android.xmp.core.StorageManager
 import org.helllabs.android.xmp.model.FrameInfo
 import org.helllabs.android.xmp.model.ModInfo
 import org.helllabs.android.xmp.model.ModVars
+import org.koin.android.ext.android.inject
 import timber.log.Timber
 
 typealias MediaStyle = androidx.media.app.NotificationCompat.MediaStyle
@@ -85,7 +86,23 @@ class PlayerService :
 
         val isAlive = MutableStateFlow(false)
         val isPlaying = MutableStateFlow(false)
+
+        val fileListUri: MutableList<Uri> = mutableListOf()
     }
+
+    private val storageManager: StorageManager by inject()
+    private val prefManager: PrefManager by inject()
+
+    // Cache preference values that are accessed in the play thread
+    private var cachedBufferMs: Int = 400
+    private var cachedSamplingRate: Int = 44100
+    private var cachedAllSequences: Boolean = false
+    private var cachedDefaultPan: Int = 50
+    private var cachedVolumeBoost: Int = 1
+    private var cachedInterpType: Int = 1
+    private var cachedInterpolate: Boolean = true
+    private var cachedAmigaMixer: Boolean = false
+    private var cachedStereoMix: Int = 100
 
     private val binder = PlayerBinder(this)
     private val serviceScope = CoroutineScope(Job())
@@ -135,7 +152,10 @@ class PlayerService :
         initializeAudioFocus()
         createNotificationChannel()
 
-        initializeXmpPlayer()
+        serviceScope.launch {
+            loadPreferences()
+            initializeXmpPlayer()
+        }
 
         logo = BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher_foreground)
 
@@ -319,10 +339,22 @@ class PlayerService :
         }
     }
 
-    private fun initializeXmpPlayer() {
-        val bufferMs = PrefManager.bufferMs.coerceIn(Xmp.MIN_BUFFER_MS, Xmp.MAX_BUFFER_MS)
+    private suspend fun loadPreferences() {
+        cachedBufferMs = prefManager.getBufferMs()
+        cachedSamplingRate = prefManager.getSamplingRate()
+        cachedAllSequences = prefManager.getAllSequences()
+        cachedDefaultPan = prefManager.getDefaultPan()
+        cachedVolumeBoost = prefManager.getVolumeBoost()
+        cachedInterpType = prefManager.getInterpType()
+        cachedInterpolate = prefManager.getInterpolate()
+        cachedAmigaMixer = prefManager.getAmigaMixer()
+        cachedStereoMix = prefManager.getStereoMix()
+    }
 
-        if (!Xmp.init(PrefManager.samplingRate, bufferMs)) {
+    private fun initializeXmpPlayer() {
+        val bufferMs = cachedBufferMs.coerceIn(Xmp.MIN_BUFFER_MS, Xmp.MAX_BUFFER_MS)
+
+        if (!Xmp.init(cachedSamplingRate, bufferMs)) {
             Timber.e("Unable to init Xmp audio (OpenSLES)")
 
             serviceScope.launch {
@@ -334,12 +366,10 @@ class PlayerService :
         }
 
         playerVolume = Xmp.getVolume()
-        playAllSequences = PrefManager.allSequences
+        playAllSequences = cachedAllSequences
 
         isAlive.value = false
         isPlaying.value = false
-
-        playAllSequences = PrefManager.allSequences
 
         watchdog = Watchdog(10).apply {
             setOnTimeoutListener {
@@ -402,7 +432,7 @@ class PlayerService :
         // We failed to get mediaMetadata somehow?!?!
         if (mediaMetadata == null) {
             Timber.e("mediaMetadata is null, falling back to a more basic notification")
-            val title = StorageManager.getFileName(currentFileUri) ?: "<Unable to get module name>"
+            val title = storageManager.getFileName(currentFileUri) ?: "<Unable to get module name>"
             val notification = NotificationCompat.Builder(this, CHANNEL_ID).apply {
                 setContentTitle(title)
                 setContentText("Click to open player")
@@ -506,7 +536,7 @@ class PlayerService :
         return playerSequence
     }
 
-    fun getFileName(): String = StorageManager.getFileName(currentFileUri) ?: "<Unknown Title>"
+    fun getFileName(): String = storageManager.getFileName(currentFileUri) ?: "<Unknown Title>"
 
     fun play(
         fileList: List<Uri>,
@@ -564,7 +594,7 @@ class PlayerService :
 
         val items = list.mapNotNull { item ->
             val modInfo = ModInfo()
-            if (Xmp.testFromFd(item, modInfo)) {
+            if (storageManager.testModule(item, modInfo)) {
                 val desc = MediaDescriptionCompat.Builder()
                     .setTitle(modInfo.name.ifEmpty { item.lastPathSegment })
                     .setMediaUri(item)
@@ -606,7 +636,9 @@ class PlayerService :
 
                 // If this file is unrecognized, and we're going backwards, go to previous
                 // If we're at the start of the list, go to the last recognized file
-                val isValid = queueItem.description.mediaUri?.let { Xmp.testFromFd(it) } ?: false
+                val isValid = queueItem.description.mediaUri
+                    ?.let { storageManager.testModule(it) } ?: false
+
                 if (!isValid) {
                     Timber.w("$currentFileUri: unrecognized format")
                     serviceScope.launch {
@@ -629,13 +661,13 @@ class PlayerService :
                 }
 
                 // Set default pan before we load the module
-                val defpan = PrefManager.defaultPan
+                val defpan = cachedDefaultPan
                 Timber.i("Set default pan to $defpan")
                 Xmp.setPlayer(Xmp.PLAYER_DEFPAN, defpan)
 
                 // Ditto if we can't load the module
                 Timber.i("Load $currentFileUri")
-                if (Xmp.loadFromFd(currentFileUri) < 0) {
+                if (storageManager.loadModule(currentFileUri) < 0) {
                     Timber.e("Error loading $currentFileUri")
                     if (cmd == CMD_PREV) {
                         if (playlistPosition <= 0) {
@@ -650,25 +682,25 @@ class PlayerService :
                 lastRecognized = playlistPosition
                 cmd = CMD_NONE
 
-                val volBoost = PrefManager.volumeBoost
+                val volBoost = cachedVolumeBoost
 
                 val interp = intArrayOf(Xmp.INTERP_NEAREST, Xmp.INTERP_LINEAR, Xmp.INTERP_SPLINE)
-                    .getOrElse(PrefManager.interpType) {
-                        if (!PrefManager.interpolate) {
+                    .getOrElse(cachedInterpType) {
+                        if (!cachedInterpolate) {
                             Xmp.INTERP_NEAREST
                         } else {
                             Xmp.INTERP_LINEAR
                         }
                     }
 
-                Xmp.startPlayer(PrefManager.samplingRate)
+                Xmp.startPlayer(cachedSamplingRate)
 
                 // Unmute all channels
                 for (i in 0 until Xmp.MAX_CHANNELS) {
                     Xmp.mute(i, 0)
                 }
 
-                val flags = if (PrefManager.amigaMixer) {
+                val flags = if (cachedAmigaMixer) {
                     Xmp.getPlayer(Xmp.PLAYER_CFLAGS) or Xmp.FLAGS_A500
                 } else {
                     Xmp.getPlayer(Xmp.PLAYER_CFLAGS) and Xmp.FLAGS_A500.inv()
@@ -678,7 +710,7 @@ class PlayerService :
                 Xmp.setPlayer(Xmp.PLAYER_CFLAGS, flags)
                 Xmp.setPlayer(Xmp.PLAYER_DSP, Xmp.DSP_LOWPASS)
                 Xmp.setPlayer(Xmp.PLAYER_INTERP, interp)
-                Xmp.setPlayer(Xmp.PLAYER_MIX, PrefManager.stereoMix)
+                Xmp.setPlayer(Xmp.PLAYER_MIX, cachedStereoMix)
                 Xmp.setPlayer(Xmp.PLAYER_VOLUME, 100)
 
                 playerSequence = 0

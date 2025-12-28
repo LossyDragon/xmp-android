@@ -3,36 +3,53 @@ package org.helllabs.android.xmp.compose.ui.preferences
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.res.*
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alorma.compose.settings.ui.SettingsGroup
 import com.alorma.compose.settings.ui.SettingsSwitch
+import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.core.PrefManager
+import org.koin.compose.koinInject
 
 @Composable
 fun SettingsGroupDownload() {
+    val prefManager: PrefManager = koinInject()
+    val scope = rememberCoroutineScope()
+
+    // Collect preferences as state
+    val modArchiveFolderValue by prefManager.modArchiveFolderFlow().collectAsStateWithLifecycle(
+        initialValue = true
+    )
+    val artistFolderValue by prefManager.artistFolderFlow().collectAsStateWithLifecycle(
+        initialValue = true
+    )
+
     SettingsGroup(
         title = { Text(text = stringResource(id = R.string.pref_category_modarchive)) }
     ) {
-        var modArchive by remember { mutableStateOf(PrefManager.modArchiveFolder) }
+        // ModArchive Folder
         SettingsSwitch(
             title = { Text(text = stringResource(id = R.string.pref_modarchive_folder_title)) },
             subtitle = {
                 Text(text = stringResource(id = R.string.pref_modarchive_folder_summary))
             },
-            state = modArchive,
+            state = modArchiveFolderValue,
             onCheckedChange = {
-                modArchive = it
-                PrefManager.modArchiveFolder = it
+                scope.launch {
+                    prefManager.setModArchiveFolder(it)
+                }
             }
         )
-        var artist by remember { mutableStateOf(PrefManager.artistFolder) }
+
+        // Artist Folder
         SettingsSwitch(
             title = { Text(text = stringResource(id = R.string.pref_artist_folder_title)) },
             subtitle = { Text(text = stringResource(id = R.string.pref_artist_folder_summary)) },
-            state = artist,
+            state = artistFolderValue,
             onCheckedChange = {
-                artist = it
-                PrefManager.artistFolder = it
+                scope.launch {
+                    prefManager.setArtistFolder(it)
+                }
             }
         )
     }

@@ -29,18 +29,18 @@ import androidx.compose.ui.unit.*
 import androidx.compose.ui.window.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
-import kotlinx.collections.immutable.toPersistentList
 import java.nio.charset.StandardCharsets
 import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.helllabs.android.xmp.MainActivity
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.XmpApplication
-import org.helllabs.android.xmp.compose.MainActivity
 import org.helllabs.android.xmp.compose.components.MessageDialog
 import org.helllabs.android.xmp.compose.components.SingleChoiceListDialog
 import org.helllabs.android.xmp.compose.theme.XmpTheme
@@ -67,9 +67,12 @@ import org.helllabs.android.xmp.service.EndPlayback
 import org.helllabs.android.xmp.service.PlayerBinder
 import org.helllabs.android.xmp.service.PlayerEvent
 import org.helllabs.android.xmp.service.PlayerService
+import org.koin.android.ext.android.inject
 import timber.log.Timber
 
 class PlayerActivity : ComponentActivity() {
+
+    private val prefManager: PrefManager by inject()
 
     private val viewModel by viewModels<PlayerViewModel>()
 
@@ -143,10 +146,13 @@ class PlayerActivity : ComponentActivity() {
         screenReceiver.register(this)
 
         // Keep screen on if preference is set.
-        if (PrefManager.keepScreenOn) {
-            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        } else {
-            window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        lifecycleScope.launch {
+            val value = prefManager.getKeepScreenOn()
+            if (value) {
+                window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            } else {
+                window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            }
         }
 
         setContent {
@@ -393,7 +399,10 @@ class PlayerActivity : ComponentActivity() {
         super.onResume()
         Timber.d("onResume")
 
-        viewModel.showInfoLine(PrefManager.showInfoLine)
+        lifecycleScope.launch {
+            val value = prefManager.getShowInfoLine()
+            viewModel.showInfoLine(value)
+        }
     }
 
     override fun onDestroy() {
@@ -455,15 +464,14 @@ class PlayerActivity : ComponentActivity() {
             }
 
             Timber.i("Player started from intent extras")
-            val app = XmpApplication.instance!!
             viewModel.setActivityState(
-                fileList = app.fileListUri.orEmpty(),
+                fileList = PlayerService.fileListUri,
                 shuffleMode = extras.getBoolean(Constants.PARM_SHUFFLE),
                 loopListMode = extras.getBoolean(Constants.PARM_LOOP),
                 keepFirst = extras.getBoolean(Constants.PARM_KEEPFIRST),
                 start = extras.getInt(Constants.PARM_START)
             )
-            app.clearFileList()
+            PlayerService.fileListUri.clear()
         }
 
         val service = Intent(this, PlayerService::class.java)
@@ -547,7 +555,9 @@ class PlayerActivity : ComponentActivity() {
     private fun saveAllSeqPreference() {
         Timber.d("Write all sequences preference")
         // Write our all sequences button status to shared prefs
-        PrefManager.allSequences = modPlayer?.playAllSequences ?: false
+        lifecycleScope.launch {
+            prefManager.setAllSequences(modPlayer?.playAllSequences ?: false)
+        }
     }
 
     private fun playNewMod(fileList: List<Uri>, start: Int) {

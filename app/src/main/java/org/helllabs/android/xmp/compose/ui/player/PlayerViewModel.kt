@@ -10,13 +10,16 @@ import kotlin.text.ifEmpty
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.core.PlaylistManager
+import org.helllabs.android.xmp.core.PrefManager
 import org.helllabs.android.xmp.core.StorageManager
 import org.helllabs.android.xmp.model.ChannelInfo
 import org.helllabs.android.xmp.model.FrameInfo
@@ -106,7 +109,11 @@ data class ChannelMuteState(val isMuted: BooleanArray = BooleanArray(Xmp.MAX_CHA
 }
 
 @Stable
-class PlayerViewModel : ViewModel() {
+class PlayerViewModel(
+    private val playlistManager: PlaylistManager,
+    private val storageManager: StorageManager,
+    private val prefManager: PrefManager
+) : ViewModel() {
 
     private val _activityState = MutableStateFlow(PlayerActivityState())
     val activityState = _activityState.asStateFlow()
@@ -149,6 +156,13 @@ class PlayerViewModel : ViewModel() {
 
     val playlistList: MutableStateFlow<List<Playlist>> = MutableStateFlow(listOf())
     val playlistChoice: MutableStateFlow<DocumentFileCompat?> = MutableStateFlow(null)
+
+    private val showHex = prefManager.showHexFlow()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = false
+        )
 
     /** Player Functions **/
 
@@ -349,10 +363,22 @@ class PlayerViewModel : ViewModel() {
     fun updateInfoState() {
         _infoState.update {
             it.copy(
-                infoPat = Util.updateFrameInfo(value = frameInfo.value.pattern),
-                infoPos = Util.updateFrameInfo(value = frameInfo.value.pos),
-                infoBpm = Util.updateFrameInfo(value = frameInfo.value.bpm),
-                infoSpeed = Util.updateFrameInfo(value = frameInfo.value.speed),
+                infoPat = Util.updateFrameInfo(
+                    showHex = showHex.value,
+                    value = frameInfo.value.pattern
+                ),
+                infoPos = Util.updateFrameInfo(
+                    showHex = showHex.value,
+                    value = frameInfo.value.pos
+                ),
+                infoBpm = Util.updateFrameInfo(
+                    showHex = showHex.value,
+                    value = frameInfo.value.bpm
+                ),
+                infoSpeed = Util.updateFrameInfo(
+                    showHex = showHex.value,
+                    value = frameInfo.value.speed
+                ),
             )
         }
     }
@@ -409,16 +435,7 @@ class PlayerViewModel : ViewModel() {
                     Timber.i("Transformed external URI to managed URI")
                 }
 
-                val context = XmpApplication.instance!!.applicationContext
-                val docFile = try {
-                    DocumentFileCompat.fromSingleUri(context, finalUri)
-                } catch (e: IllegalStateException) {
-                    Timber.e(e, "DocumentFileCompat failed for URI: $finalUri")
-                    null
-                } catch (e: SecurityException) {
-                    Timber.e(e, "Permission denied for URI: $finalUri")
-                    null
-                }
+                val docFile = storageManager.getDocumentFileFromUri(finalUri)
                 if (docFile == null) {
                     Timber.e("$finalUri could not be made into a Document File")
                     _softError.emit("Unable to create Document File")
@@ -426,7 +443,7 @@ class PlayerViewModel : ViewModel() {
                 }
 
                 // Update on main thread
-                playlistList.value = PlaylistManager.listPlaylists()
+                playlistList.value = playlistManager.listPlaylists().getOrDefault(emptyList())
                 playlistChoice.value = docFile
             } catch (e: Exception) {
                 Timber.e(e, "Unexpected error in onAddToPlaylist")
@@ -449,8 +466,7 @@ class PlayerViewModel : ViewModel() {
                 return@launch
             }
 
-            val manager = PlaylistManager()
-            if (!manager.load(choice.uri)) {
+            if (!playlistManager.load(choice.uri).isSuccess) {
                 _softError.emit("Playlist manager failed to load playlist")
                 playlistChoice.value = null
                 return@launch
@@ -458,7 +474,7 @@ class PlayerViewModel : ViewModel() {
 
             val modInfo = ModInfo()
             if (playlistChoice.value!!.isFile()) {
-                if (!Xmp.testFromFd(playlistChoice.value!!.uri, modInfo)) {
+                if (!storageManager.testModule(playlistChoice.value!!.uri, modInfo)) {
                     _softError.emit("Failed to validate file")
                     playlistChoice.value = null
                     return@launch
@@ -470,20 +486,20 @@ class PlayerViewModel : ViewModel() {
                     uri = playlistChoice.value!!.uri
                 )
                 val list = listOf(playlist)
-                manager.add(list).onFailure {
+                playlistManager.add(list).onFailure {
                     _softError.emit("Couldn't add module to playlist")
                 }
             } else if (playlistChoice.value!!.isDirectory()) {
                 val list = mutableListOf<PlaylistItem>()
-                StorageManager.walkDownDirectory(playlistChoice.value!!.uri, false).forEach { uri ->
-                    if (!Xmp.testFromFd(uri, modInfo)) {
+                storageManager.walkDownDirectory(playlistChoice.value!!.uri, false).forEach { uri ->
+                    if (!storageManager.testModule(uri, modInfo)) {
                         Timber.w("Invalid playlist item $uri")
                         return@forEach
                     }
 
                     val playlist = PlaylistItem(
                         name = modInfo.name.ifEmpty {
-                            StorageManager.getFileName(uri)
+                            storageManager.getFileName(uri)
                         } ?: "",
                         type = modInfo.type,
                         uri = uri
@@ -498,7 +514,7 @@ class PlayerViewModel : ViewModel() {
                     return@launch
                 }
 
-                manager.add(list).onFailure {
+                playlistManager.add(list).onFailure {
                     _softError.emit("Couldn't add modules to playlist")
                 }
             }
@@ -507,23 +523,23 @@ class PlayerViewModel : ViewModel() {
         }
     }
 
-    private fun transformToManagedUri(uri: Uri): Uri? {
+    private suspend fun transformToManagedUri(uri: Uri): Uri? {
         if (uri.authority == "com.android.externalstorage.documents") {
             return uri
         }
 
-        val fileName = StorageManager.getFileName(uri)
+        val fileName = storageManager.getFileName(uri)
         if (fileName.isNullOrBlank()) {
             Timber.w("Could not determine filename from URI: $uri")
             return null
         }
 
         return try {
-            val modsUri = StorageManager.getModDirectory().getOrNull()?.uri ?: return null
-            val allFiles = StorageManager.walkDownDirectory(modsUri, includeDirectories = false)
+            val modsUri = storageManager.getModDirectory().getOrNull()?.uri ?: return null
+            val allFiles = storageManager.walkDownDirectory(modsUri, includeDirectories = false)
 
             allFiles.firstOrNull { fileUri ->
-                StorageManager.getFileName(fileUri) == fileName
+                storageManager.getFileName(fileUri) == fileName
             }?.also {
                 Timber.i("Successfully found file in managed storage: $it")
             }

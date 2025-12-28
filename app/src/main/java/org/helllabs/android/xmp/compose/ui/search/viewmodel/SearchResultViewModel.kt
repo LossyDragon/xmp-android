@@ -1,18 +1,15 @@
-package org.helllabs.android.xmp.compose.ui.search.result
+package org.helllabs.android.xmp.compose.ui.search.viewmodel
 
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.api.Repository
 import org.helllabs.android.xmp.core.Resource
-import org.helllabs.android.xmp.di.ModArchiveModule
 
 @Stable
 data class SearchResultState(
@@ -22,15 +19,6 @@ data class SearchResultState(
     val title: String = "",
     val result: Any? = null
 )
-
-@Stable
-class SearchResultViewModelFactory : ViewModelProvider.Factory {
-    private val repository = ModArchiveModule.repository
-
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(modelClass: Class<T>): T =
-        SearchResultViewModel(repository) as T
-}
 
 @Stable
 class SearchResultViewModel(private val repository: Repository) : ViewModel() {

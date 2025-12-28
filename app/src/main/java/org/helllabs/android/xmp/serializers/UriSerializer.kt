@@ -1,4 +1,4 @@
-package org.helllabs.android.xmp.core
+package org.helllabs.android.xmp.serializers
 
 import android.net.Uri
 import androidx.core.net.toUri

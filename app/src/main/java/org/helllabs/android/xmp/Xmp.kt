@@ -2,6 +2,7 @@
 
 package org.helllabs.android.xmp
 
+import android.content.Context
 import android.net.Uri
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
@@ -168,10 +169,14 @@ object Xmp {
     /**
      * Test module from File Descriptor
      */
-    fun testFromFd(uri: Uri, modInfo: ModInfo = ModInfo()): Boolean {
-        Timber.d("Testing: ${StorageManager.getFileName(uri)}")
+    fun testFromFd(
+        context: Context,
+        storageManager: StorageManager,
+        uri: Uri,
+        modInfo: ModInfo = ModInfo()
+    ): Boolean {
+        Timber.d("Testing: ${storageManager.getFileName(uri)}")
 
-        val context = XmpApplication.instance!!.applicationContext
         val pfd = context.contentResolver.openFileDescriptor(uri, "r")
         val res = if (pfd != null) {
             val fd = pfd.detachFd()
@@ -192,13 +197,16 @@ object Xmp {
     /**
      * Load module from File Descriptor
      */
-    fun loadFromFd(uri: Uri): Int {
-        if (!testFromFd(uri)) {
+    fun loadFromFd(
+        context: Context,
+        storageManager: StorageManager,
+        uri: Uri
+    ): Int {
+        if (!testFromFd(context = context, storageManager = storageManager, uri = uri)) {
             Timber.d("Load Module: $uri, Result failed")
             return -1
         }
 
-        val context = XmpApplication.instance!!.applicationContext
         val pfd = context.contentResolver.openFileDescriptor(uri, "r")
         val res = if (pfd != null) {
             val fd = pfd.detachFd()

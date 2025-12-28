@@ -131,7 +131,11 @@ dependencies {
     implementation(libs.bundles.compose)
     implementation(libs.bundles.compose.utils)
 
+    implementation(platform(libs.koin.bom))
+    implementation(libs.bundles.koin)
+
     implementation(libs.bundles.ktor)
+    implementation(libs.bundles.nav3) // TODO trial
 
     implementation(libs.core.ktx)
     implementation(libs.datastore.preferences)

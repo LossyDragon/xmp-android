@@ -1,111 +1,101 @@
 package org.helllabs.android.xmp.core
 
+import android.content.Context
 import android.net.Uri
 import com.lazygeniouz.dfc.file.DocumentFileCompat
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.serialization.json.Json
-import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.model.Playlist
 import org.helllabs.android.xmp.model.PlaylistItem
 import timber.log.Timber
 
-class PlaylistManager {
-
-    private val json = Json {
-        prettyPrint = true
-        ignoreUnknownKeys = true
-        encodeDefaults = true
-    }
+class PlaylistManager(
+    private val context: Context,
+    private val json: Json,
+    private val storageManager: StorageManager
+) {
 
     var playlist: Playlist = Playlist()
         private set
 
     private var oldName: String? = null
 
-    fun new(name: String, comment: String): Result<Boolean> {
+    suspend fun new(name: String, comment: String): Result<Boolean> {
         playlist = Playlist(
             name = name.trim(),
             comment = comment.trim()
         )
-
         return save()
     }
 
-    fun load(uri: Uri): Boolean {
-        if (!uri.pathSegments.last().contains(".json")) {
-            Timber.w("Uri: $uri is not a .json file")
-            return false
+    fun load(uri: Uri): Result<Boolean> = runCatching {
+        require(uri.pathSegments.last().endsWith(".json")) {
+            "Uri: $uri is not a .json file"
         }
 
-        val context = XmpApplication.instance?.applicationContext ?: return false
+        context.contentResolver.openInputStream(uri)?.use { inputStream ->
+            val jsonString = inputStream.bufferedReader().use { it.readText() }
+            playlist = json.decodeFromString<Playlist>(jsonString)
+        } ?: throw XmpException("Failed to open input stream for $uri")
 
-        return try {
-            context.contentResolver.openInputStream(uri)?.use { inputStream ->
-                val jsonString = inputStream.bufferedReader().use { it.readText() }
-                playlist = json.decodeFromString<Playlist>(jsonString)
-            }
-            true
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to load playlist from $uri")
-            false
-        }
+        true
+    }.onFailure {
+        Timber.e(it, "Failed to load playlist from $uri")
     }
 
-    fun save(): Result<Boolean> = runCatching {
-        val dir = StorageManager.getPlaylistDirectory().getOrThrow()
-        val context = XmpApplication.instance?.applicationContext
-            ?: throw IllegalStateException("Application context is null")
-
+    suspend fun save(): Result<Boolean> = runCatching {
+        val dir = storageManager.getPlaylistDirectory().getOrThrow()
         val fileName = "${playlist.name}${Constants.SUFFIX}"
-        val mimeType = "application/json"
-
-        // Create temp file first
         val tempFileName = ".tmp_${System.currentTimeMillis()}_${playlist.name}.json"
-        val tempFile = dir.createFile(mimeType, tempFileName)
+
+        val tempFile = dir.createFile("application/json", tempFileName)
             ?: throw XmpException("Failed to create temp file")
 
         try {
-            // Write to temp file
-            val jsonString = json.encodeToString(Playlist.serializer(), playlist)
-            context.contentResolver.openOutputStream(tempFile.uri)?.use { outputStream ->
-                outputStream.writer().use { writer ->
-                    writer.write(jsonString)
-                    writer.flush()
-                }
-            } ?: throw XmpException("Failed to open output stream")
+            writePlaylistToFile(tempFile.uri)
+            deleteOldFileIfRenamed(dir, fileName)
+            renameTempFile(tempFile, fileName)
 
-            // Delete old file if renamed
-            if (!oldName.isNullOrEmpty() && oldName != playlist.name) {
-                dir.findFile("$oldName${Constants.SUFFIX}")?.delete()
-            } else {
-                // Delete existing file with same name
-                dir.findFile(fileName)?.delete()
-            }
-
-            // Rename temp to final name
-            if (!tempFile.renameTo(fileName)) {
-                throw XmpException("Failed to rename temp file to $fileName")
-            }
-
-            // Refresh to get updated uri after rename
             val finalFile = dir.findFile(fileName)
                 ?: throw XmpException("File not found after rename: $fileName")
 
-            // Update playlist uri only after successful write and rename
             playlist = playlist.copy(uri = finalFile.uri)
             oldName = null
-
             true
         } catch (e: Exception) {
-            // Clean up temp file on failure
             tempFile.delete()
             throw e
         }
     }
 
-    fun rename(newName: String, newComment: String): Result<Boolean> {
+    private fun writePlaylistToFile(uri: Uri) {
+        val jsonString = json.encodeToString(Playlist.serializer(), playlist)
+        context.contentResolver.openOutputStream(uri)?.use { outputStream ->
+            outputStream.writer().use { writer ->
+                writer.write(jsonString)
+                writer.flush()
+            }
+        } ?: throw XmpException("Failed to open output stream")
+    }
+
+    private fun deleteOldFileIfRenamed(dir: DocumentFileCompat, fileName: String) {
+        when {
+            !oldName.isNullOrEmpty() && oldName != playlist.name -> {
+                dir.findFile("$oldName${Constants.SUFFIX}")?.delete()
+            }
+
+            else -> dir.findFile(fileName)?.delete()
+        }
+    }
+
+    private fun renameTempFile(tempFile: DocumentFileCompat, fileName: String) {
+        if (!tempFile.renameTo(fileName)) {
+            throw XmpException("Failed to rename temp file to $fileName")
+        }
+    }
+
+    suspend fun rename(newName: String, newComment: String): Result<Boolean> {
         if (newName.trim() != playlist.name) {
             oldName = playlist.name
         }
@@ -117,11 +107,12 @@ class PlaylistManager {
         return save()
     }
 
-    fun add(items: List<PlaylistItem>): Result<Boolean> {
+    suspend fun add(items: List<PlaylistItem>): Result<Boolean> {
         if (items.isEmpty()) return Result.success(true)
 
-        val newList = (playlist.list + items).toPersistentList()
-        playlist = playlist.withList(newList)
+        playlist = playlist.withList(
+            (playlist.list + items).toPersistentList()
+        )
 
         return save()
     }
@@ -138,48 +129,46 @@ class PlaylistManager {
         playlist = playlist.withList(list)
     }
 
-    companion object {
-        fun listPlaylistsDF(): List<DocumentFileCompat> =
-            StorageManager.getPlaylistDirectory().mapCatching { dir ->
-                if (dir.isFile()) {
-                    throw XmpException("Playlist directory is a file")
-                }
-                dir.listFiles()
-            }.getOrElse {
-                Timber.e(it, "Unable to query playlist directory")
-                emptyList()
+    suspend fun listPlaylists(): Result<List<Playlist>> = runCatching {
+        val dir = storageManager.getPlaylistDirectory().getOrThrow()
+
+        require(!dir.isFile()) { "Playlist directory is a file" }
+
+        dir.listFiles()
+            .filter { it.extension == "json" }
+            .mapNotNull { dfc ->
+                loadPlaylistFromFile(dfc)
             }
+    }.onFailure {
+        Timber.e(it, "Unable to query playlist directory")
+    }
 
-        fun listPlaylists(): List<Playlist> =
-            StorageManager.getPlaylistDirectory().mapCatching { dir ->
-                if (dir.isFile()) {
-                    throw XmpException("Playlist directory is a file")
-                }
+    private fun loadPlaylistFromFile(dfc: DocumentFileCompat): Playlist? = runCatching {
+        context.contentResolver.openInputStream(dfc.uri)?.use { inputStream ->
+            val jsonString = inputStream.bufferedReader().use { it.readText() }
+            json.decodeFromString<Playlist>(jsonString)
+        }
+    }.onFailure {
+        Timber.e(it, "Failed to load playlist: ${dfc.name}")
+    }.getOrNull()
 
-                dir.listFiles()
-                    .filter { it.extension == "json" }
-                    .mapNotNull { dfc ->
-                        try {
-                            PlaylistManager().apply { load(dfc.uri) }.playlist
-                        } catch (e: Exception) {
-                            Timber.e(e, "Failed to load playlist: ${dfc.name}")
-                            null
-                        }
-                    }
-            }.getOrElse {
-                Timber.e(it, "Unable to query playlist directory")
-                emptyList()
-            }
+    suspend fun delete(name: String): Result<Boolean> = runCatching {
+        val dir = storageManager.getPlaylistDirectory().getOrThrow()
+        val playlistFile = dir.findFile("$name${Constants.SUFFIX}")
+            ?: throw XmpException("Playlist not found: $name")
 
-        fun delete(name: String): Boolean =
-            StorageManager.getPlaylistDirectory().mapCatching { dir ->
-                val playlist = dir.findFile("$name${Constants.SUFFIX}")
-                    ?: throw XmpException("Playlist not found: $name")
+        playlistFile.delete()
+    }.onFailure {
+        Timber.e(it, "Failed to delete playlist: $name")
+    }
 
-                playlist.delete()
-            }.getOrElse {
-                Timber.e(it, "Failed to delete playlist: $name")
-                false
-            }
+    suspend fun listPlaylistFiles(): Result<List<DocumentFileCompat>> = runCatching {
+        val dir = storageManager.getPlaylistDirectory().getOrThrow()
+
+        require(!dir.isFile()) { "Playlist directory is a file" }
+
+        dir.listFiles().filter { it.extension == "json" }
+    }.onFailure {
+        Timber.e(it, "Unable to query playlist directory")
     }
 }

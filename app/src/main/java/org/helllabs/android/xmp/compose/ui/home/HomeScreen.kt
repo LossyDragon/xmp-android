@@ -18,22 +18,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.*
-import androidx.compose.ui.text.*
-import androidx.compose.ui.text.font.*
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
 import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.materialkolor.ktx.darken
-import kotlin.time.Duration.Companion.seconds
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.launch
-import kotlinx.serialization.Serializable
-import me.saket.extendedspans.ExtendedSpans
-import me.saket.extendedspans.SquigglyUnderlineSpanPainter
-import me.saket.extendedspans.drawBehind
-import me.saket.extendedspans.rememberSquigglyUnderlineAnimator
 import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.compose.components.EditPlaylistDialog
@@ -41,34 +33,33 @@ import org.helllabs.android.xmp.compose.components.ErrorScreen
 import org.helllabs.android.xmp.compose.components.MessageDialog
 import org.helllabs.android.xmp.compose.components.NewPlaylistDialog
 import org.helllabs.android.xmp.compose.components.ProgressbarIndicator
-import org.helllabs.android.xmp.compose.components.themedText
 import org.helllabs.android.xmp.compose.theme.XmpTheme
-import org.helllabs.android.xmp.compose.theme.michromaFontFamily
-import org.helllabs.android.xmp.compose.ui.player.PlayerActivity
 import org.helllabs.android.xmp.core.PlaylistManager
 import org.helllabs.android.xmp.core.PrefManager
 import org.helllabs.android.xmp.core.StorageManager
+import org.helllabs.android.xmp.di.appModule
+import org.helllabs.android.xmp.di.playlistModule
 import org.helllabs.android.xmp.model.FileItem
-import org.helllabs.android.xmp.service.PlayerService
+import org.koin.compose.KoinApplication
+import org.koin.compose.koinInject
+import org.koin.dsl.koinConfiguration
 import timber.log.Timber
 
-@Serializable
-object NavigationHome
-
 @Composable
-fun HomeScreenImpl(
+fun HomeScreen(
+    modifier: Modifier,
     viewModel: PlaylistMenuViewModel,
     snackBarHostState: SnackbarHostState,
     onNavFileList: () -> Unit,
-    onNavPlaylist: (String) -> Unit,
-    onNavPreferences: () -> Unit,
-    onNavSearch: () -> Unit
+    onNavPlaylist: (String) -> Unit
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val isPlayerAlive by PlayerService.isAlive.collectAsStateWithLifecycle()
-    val isPlayerPlaying by PlayerService.isPlaying.collectAsStateWithLifecycle()
+
+    val prefManager = koinInject<PrefManager>()
+    val storageManager = koinInject<StorageManager>()
+    val playlistManager = koinInject<PlaylistManager>()
 
     val appSettings = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -79,10 +70,12 @@ fun HomeScreenImpl(
     val documentTreeResult = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocumentTree()
     ) { uri ->
-        StorageManager.setPlaylistDirectory(uri).onSuccess {
-            viewModel.setDefaultPath()
-        }.onFailure {
-            viewModel.showError(message = it.message ?: context.getString(R.string.error))
+        scope.launch {
+            storageManager.setPlaylistDirectory(uri).onSuccess {
+                viewModel.setDefaultPath()
+            }.onFailure {
+                viewModel.showError(message = it.message ?: context.getString(R.string.error))
+            }
         }
     }
 
@@ -104,7 +97,7 @@ fun HomeScreenImpl(
 
     // Ask for Permissions
     LaunchedEffect(Unit) {
-        val savedUri = PrefManager.safStoragePath.toUri()
+        val savedUri = prefManager.getSafStoragePath().toUri()
         val persistedUris = context.contentResolver.persistedUriPermissions
         val hasAccess = persistedUris.any {
             it.uri == savedUri && it.isWritePermission
@@ -117,9 +110,7 @@ fun HomeScreenImpl(
         }
     }
 
-    /**
-     * Prompt and Explain Storage
-     */
+    // Prompt and Explain Storage
     MessageDialog(
         isShowing = state.askForStorage,
         title = "Storage Request",
@@ -137,9 +128,7 @@ fun HomeScreenImpl(
         }
     )
 
-    /**
-     * Error message Dialog
-     */
+    // Error message Dialog
     MenuErrorDialog(
         state = state,
         onConfirm = {
@@ -148,9 +137,7 @@ fun HomeScreenImpl(
         }
     )
 
-    /**
-     * Edit playlist dialog
-     */
+    // Edit playlist dialog
     MenuEditDialog(
         state = state,
         onConfirm = { res ->
@@ -164,15 +151,15 @@ fun HomeScreenImpl(
             viewModel.editPlaylist(null)
         },
         onDelete = { item ->
-            PlaylistManager.delete(item.name)
-            viewModel.editPlaylist(null)
+            scope.launch {
+                playlistManager.delete(item.name)
+                viewModel.editPlaylist(null)
+            }
         },
         onDismiss = { viewModel.editPlaylist(null) },
     )
 
-    /**
-     * New playlist dialog
-     */
+    // New playlist dialog
     MenuNewPlaylist(
         state = state,
         onConfirm = { res ->
@@ -203,20 +190,20 @@ fun HomeScreenImpl(
     }
 
     LifecycleResumeEffect(Lifecycle.Event.ON_RESUME) {
-        Timber.d("Lifecycle onResume")
-        if (PrefManager.safStoragePath.isNotEmpty()) {
-            viewModel.updateList()
+        scope.launch {
+            Timber.d("Lifecycle onResume")
+            if (prefManager.getSafStoragePath().isNotEmpty()) {
+                viewModel.updateList()
+            }
         }
         onPauseOrDispose {
             Timber.d("Lifecycle onPause")
         }
     }
 
-    HomeScreen(
+    HomeScreenContent(
+        modifier = modifier,
         state = state,
-        snackBarHostState = snackBarHostState,
-        serviceAlive = isPlayerAlive,
-        servicePlaying = isPlayerPlaying,
         onItemClick = { item ->
             if (item.isSpecial) {
                 onNavFileList()
@@ -233,13 +220,11 @@ fun HomeScreenImpl(
         },
         onRefresh = viewModel::updateList,
         onNewPlaylist = { viewModel.newPlaylist(true) },
-        onTitleClicked = {
-            if (PlayerService.isAlive.value) {
-                Intent(context, PlayerActivity::class.java).also(playerResult::launch)
-            }
-        },
-        onDownload = onNavSearch,
-        onSettings = onNavPreferences,
+        // onTitleClicked = {
+        //     if (PlayerService.isAlive.value) {
+        //         Intent(context, PlayerActivity::class.java).also(playerResult::launch)
+        //     }
+        // },
         onRequestSettings = {
             Intent().apply {
                 action = ACTION_APPLICATION_DETAILS_SETTINGS
@@ -260,32 +245,17 @@ fun HomeScreenImpl(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun HomeScreen(
+private fun HomeScreenContent(
+    modifier: Modifier = Modifier,
     state: PlaylistMenuState,
-    snackBarHostState: SnackbarHostState,
-    serviceAlive: Boolean,
-    servicePlaying: Boolean,
-    onDownload: () -> Unit,
     onItemClick: (item: FileItem) -> Unit,
     onItemLongClick: (item: FileItem) -> Unit,
     onNewPlaylist: () -> Unit,
     onRefresh: () -> Unit,
     onRequestSettings: () -> Unit,
-    onRequestStorage: () -> Unit,
-    onSettings: () -> Unit,
-    onTitleClicked: () -> Unit
+    onRequestStorage: () -> Unit
 ) {
-    val underlineAnimator = rememberSquigglyUnderlineAnimator(2.seconds)
-    val extendedSpans = remember {
-        ExtendedSpans(
-            SquigglyUnderlineSpanPainter(
-                wavelength = 32.sp,
-                amplitude = 2.sp,
-                bottomOffset = 4.sp,
-                animator = underlineAnimator
-            )
-        )
-    }
+    val storageManager = koinInject<StorageManager>()
 
     val scrollState = rememberLazyListState()
     val isScrolled by remember {
@@ -295,80 +265,16 @@ private fun HomeScreen(
     }
 
     val view = LocalView.current
-    val hasStorage = remember(state) {
-        if (view.isInEditMode) {
+    val hasStorage by produceState(initialValue = false, state) {
+        value = if (view.isInEditMode) {
             true
         } else {
-            StorageManager.checkPermissions()
+            storageManager.checkPermissions()
         }
     }
 
     Scaffold(
-        modifier = Modifier,
-        snackbarHost = { SnackbarHost(hostState = snackBarHostState) },
-        topBar = {
-            val topBarContainerColor = if (isScrolled) {
-                MaterialTheme.colorScheme.surfaceVariant.darken(1.45f)
-            } else {
-                MaterialTheme.colorScheme.surface
-            }
-
-            CenterAlignedTopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = topBarContainerColor,
-                ),
-                actions = {
-                    IconButton(
-                        enabled = hasStorage,
-                        onClick = onDownload,
-                        content = {
-                            Icon(imageVector = Icons.Default.Download, contentDescription = null)
-                        }
-                    )
-                    IconButton(
-                        enabled = hasStorage,
-                        onClick = onSettings,
-                        content = {
-                            Icon(imageVector = Icons.Default.Settings, contentDescription = null)
-                        }
-                    )
-                },
-                title = {
-                    TextButton(
-                        enabled = hasStorage,
-                        onClick = onTitleClicked
-                    ) {
-                        ProvideTextStyle(
-                            LocalTextStyle.current.merge(
-                                TextStyle(
-                                    platformStyle = PlatformTextStyle(includeFontPadding = false)
-                                )
-                            )
-                        ) {
-                            val text = themedText(
-                                text = stringResource(id = R.string.app_name),
-                                isAlive = serviceAlive,
-                                isPlaying = servicePlaying
-
-                            )
-
-                            Text(
-                                modifier = Modifier.drawBehind(extendedSpans),
-                                text = remember(text, serviceAlive, servicePlaying) {
-                                    extendedSpans.extend(text)
-                                },
-                                onTextLayout = { result ->
-                                    extendedSpans.onTextLayout(result)
-                                },
-                                fontFamily = michromaFontFamily,
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-                }
-            )
-        },
+        modifier = modifier,
         floatingActionButton = {
             if (hasStorage) {
                 ExtendedFloatingActionButton(
@@ -458,16 +364,21 @@ private fun MenuEditDialog(
     onDismiss: () -> Unit,
     onDelete: (FileItem) -> Unit
 ) {
+    val playlistManager = koinInject<PlaylistManager>()
+    val scope = rememberCoroutineScope()
+
     EditPlaylistDialog(
         isShowing = state.editPlaylist != null,
         fileItem = state.editPlaylist,
         onConfirm = { item, newName, newComment ->
-            val res = PlaylistManager().run {
-                load(item.docFile!!.uri)
-                rename(newName, newComment)
-            }
+            scope.launch {
+                val res = playlistManager.run {
+                    load(item.docFile!!.uri)
+                    rename(newName, newComment)
+                }.isSuccess
 
-            onConfirm(res.isSuccess)
+                onConfirm(res)
+            }
         },
         onDismiss = onDismiss,
         onDelete = onDelete
@@ -480,13 +391,16 @@ private fun MenuNewPlaylist(
     onConfirm: (Boolean) -> Unit,
     onDismiss: () -> Unit
 ) {
+    val playlistManager = koinInject<PlaylistManager>()
+    val scope = rememberCoroutineScope()
+
     NewPlaylistDialog(
         isShowing = state.newPlaylist,
         onConfirm = { name, comment ->
-            val res = PlaylistManager().run {
-                new(name, comment)
+            scope.launch {
+                val res = playlistManager.new(name, comment).isSuccess
+                onConfirm(res)
             }
-            onConfirm(res.isSuccess)
         },
         onDismiss = onDismiss
     )
@@ -552,32 +466,30 @@ private fun Preview_MenuCardItem() {
 @Preview
 @Composable
 private fun Preview_PlaylistMenuScreen() {
-    XmpTheme(useDarkTheme = true) {
-        HomeScreen(
-            state = PlaylistMenuState(
-                mediaPath = "sdcard\\some\\path",
-                isLoading = true,
-                playlistItems = List(15) {
-                    FileItem(
-                        isSpecial = it >= 1,
-                        name = "Name $it",
-                        comment = "Comment $it",
-                        docFile = null
-                    )
-                }
-            ),
-            snackBarHostState = SnackbarHostState(),
-            serviceAlive = true,
-            servicePlaying = false,
-            onItemClick = {},
-            onItemLongClick = {},
-            onRefresh = {},
-            onNewPlaylist = {},
-            onTitleClicked = {},
-            onDownload = {},
-            onSettings = {},
-            onRequestStorage = {},
-            onRequestSettings = {}
-        )
+    KoinApplication(
+        configuration = koinConfiguration { modules(listOf(appModule, playlistModule)) }
+    ) {
+        XmpTheme(useDarkTheme = true) {
+            HomeScreenContent(
+                state = PlaylistMenuState(
+                    mediaPath = "sdcard\\some\\path",
+                    isLoading = true,
+                    playlistItems = List(15) {
+                        FileItem(
+                            isSpecial = it >= 1,
+                            name = "Name $it",
+                            comment = "Comment $it",
+                            docFile = null
+                        )
+                    }.toPersistentList()
+                ),
+                onItemClick = {},
+                onItemLongClick = {},
+                onRefresh = {},
+                onNewPlaylist = {},
+                onRequestStorage = {},
+                onRequestSettings = {}
+            )
+        }
     }
 }

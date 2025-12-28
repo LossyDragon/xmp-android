@@ -5,10 +5,10 @@ import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lazygeniouz.dfc.file.DocumentFileCompat
+import java.text.DateFormat
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
-import java.text.DateFormat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -43,7 +43,11 @@ data class FileListState(
 )
 
 @Stable
-class FileListViewModel : ViewModel() {
+class FileListViewModel(
+    private val playlistManager: PlaylistManager,
+    private val prefManager: PrefManager,
+    private val storageManager: StorageManager
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(FileListState())
     val uiState = _uiState.asStateFlow()
@@ -63,18 +67,20 @@ class FileListViewModel : ViewModel() {
     val deleteFileChoice: MutableStateFlow<DocumentFileCompat?> = MutableStateFlow(null)
 
     init {
-        _uiState.update {
-            it.copy(
-                isShuffle = PrefManager.shuffleMode,
-                isLoop = PrefManager.loopMode
-            )
-        }
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isShuffle = prefManager.getShuffleMode(),
+                    isLoop = prefManager.getLoopMode(),
+                )
+            }
 
-        StorageManager.getModDirectory().onSuccess { dfc ->
-            Timber.d("Initial Path: ${dfc.uri}")
-            onNavigate(dfc)
-        }.onFailure {
-            Timber.e(it)
+            storageManager.getModDirectory().onSuccess { dfc ->
+                Timber.d("Initial Path: ${dfc.uri}")
+                onNavigate(dfc)
+            }.onFailure {
+                Timber.e(it)
+            }
         }
     }
 
@@ -103,8 +109,7 @@ class FileListViewModel : ViewModel() {
     suspend fun onAllFiles(): List<Uri> = withContext(Dispatchers.IO) {
         _uiState.update { it.copy(isLoading = true) }
 
-        val list = StorageManager
-            .walkDownDirectory(currentPath!!.uri, false)
+        val list = storageManager.walkDownDirectory(currentPath!!.uri, false)
         // .filter(Xmp::testFromFd)
 
         _uiState.update { it.copy(isLoading = false) }
@@ -113,13 +118,17 @@ class FileListViewModel : ViewModel() {
     }
 
     fun onLoop(value: Boolean) {
-        PrefManager.loopMode = value
-        _uiState.update { it.copy(isLoop = value) }
+        viewModelScope.launch {
+            prefManager.setLoopMode(value)
+            _uiState.update { it.copy(isLoop = value) }
+        }
     }
 
     fun onShuffle(value: Boolean) {
-        PrefManager.shuffleMode = value
-        _uiState.update { it.copy(isShuffle = value) }
+        viewModelScope.launch {
+            prefManager.setShuffleMode(value)
+            _uiState.update { it.copy(isShuffle = value) }
+        }
     }
 
     fun onRefresh() {
@@ -192,8 +201,7 @@ class FileListViewModel : ViewModel() {
                 return@launch
             }
 
-            val manager = PlaylistManager()
-            if (!manager.load(choice.uri)) {
+            if (!playlistManager.load(choice.uri).isSuccess) {
                 _softError.emit("Playlist manager failed to load playlist")
                 _uiState.update { it.copy(isLoading = false) }
                 playlistChoice.value = null
@@ -202,7 +210,11 @@ class FileListViewModel : ViewModel() {
 
             val modInfo = ModInfo()
             if (playlistChoice.value!!.isFile()) {
-                if (!Xmp.testFromFd(playlistChoice.value!!.uri, modInfo)) {
+                if (!storageManager.testModule(
+                        uri = playlistChoice.value!!.uri,
+                        modInfo = modInfo
+                    )
+                ) {
                     _softError.emit("Failed to validate file")
                     _uiState.update { it.copy(isLoading = false) }
                     playlistChoice.value = null
@@ -215,21 +227,19 @@ class FileListViewModel : ViewModel() {
                     uri = playlistChoice.value!!.uri
                 )
                 val list = listOf(playlist)
-                manager.add(list).onFailure {
+                playlistManager.add(list).onFailure {
                     _softError.emit("Couldn't add module to playlist")
                 }
             } else if (playlistChoice.value!!.isDirectory()) {
                 val list = mutableListOf<PlaylistItem>()
-                StorageManager.walkDownDirectory(playlistChoice.value!!.uri, false).forEach { uri ->
-                    if (!Xmp.testFromFd(uri, modInfo)) {
+                storageManager.walkDownDirectory(playlistChoice.value!!.uri, false).forEach { uri ->
+                    if (!storageManager.testModule(uri, modInfo)) {
                         Timber.w("Invalid playlist item $uri")
                         return@forEach
                     }
 
                     val playlist = PlaylistItem(
-                        name = modInfo.name.ifEmpty {
-                            StorageManager.getFileName(uri)
-                        } ?: "",
+                        name = modInfo.name.ifEmpty { storageManager.getFileName(uri) } ?: "",
                         type = modInfo.type,
                         uri = uri
                     )
@@ -244,7 +254,7 @@ class FileListViewModel : ViewModel() {
                     return@launch
                 }
 
-                manager.add(list).onFailure {
+                playlistManager.add(list).onFailure {
                     _softError.emit("Couldn't add modules to playlist")
                 }
             }
@@ -264,8 +274,10 @@ class FileListViewModel : ViewModel() {
     }
 
     fun dropDownAddToPlaylist(docFile: DocumentFileCompat? = null) {
-        playlistList.value = PlaylistManager.listPlaylists()
-        playlistChoice.value = docFile ?: currentPath
+        viewModelScope.launch {
+            playlistList.value = playlistManager.listPlaylists().getOrDefault(listOf())
+            playlistChoice.value = docFile ?: currentPath
+        }
     }
 
     fun dropDownDelete(item: FileItem) {
@@ -284,13 +296,13 @@ class FileListViewModel : ViewModel() {
         deleteFileChoice.value = null
     }
 
-    fun deleteFile(): Boolean = StorageManager.deleteFileOrDirectory(deleteFileChoice.value?.uri)
+    fun deleteFile(): Boolean = storageManager.deleteFileOrDirectory(deleteFileChoice.value?.uri)
 
-    fun deleteDir(): Boolean = StorageManager.deleteFileOrDirectory(deleteDirChoice.value?.uri)
+    fun deleteDir(): Boolean = storageManager.deleteFileOrDirectory(deleteDirChoice.value?.uri)
 
-    fun getFileName(): String = StorageManager.getFileName(deleteFileChoice.value?.uri).orEmpty()
+    fun getFileName(): String = storageManager.getFileName(deleteFileChoice.value?.uri).orEmpty()
 
-    fun getDirName(): String = StorageManager.getFileName(deleteDirChoice.value?.uri).orEmpty()
+    fun getDirName(): String = storageManager.getFileName(deleteDirChoice.value?.uri).orEmpty()
 
     fun clearPlaylist() {
         playlistChoice.value = null

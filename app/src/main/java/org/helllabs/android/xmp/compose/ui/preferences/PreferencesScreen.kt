@@ -18,16 +18,15 @@ import com.alorma.compose.settings.ui.SettingsGroup
 import com.alorma.compose.settings.ui.SettingsMenuLink
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.compose.components.XmpTopBar
 import org.helllabs.android.xmp.compose.theme.XmpTheme
 import org.helllabs.android.xmp.core.PrefManager
 import org.helllabs.android.xmp.core.StorageManager
+import org.koin.compose.koinInject
 import timber.log.Timber
-
-@Serializable
-object NavPreferences
 
 @Composable
 fun PreferencesScreen(
@@ -36,6 +35,8 @@ fun PreferencesScreen(
     onFormats: () -> Unit,
     onAbout: () -> Unit
 ) {
+    val storageManager: StorageManager = koinInject()
+    val prefManager: PrefManager = koinInject()
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
     val isScrolled = remember {
@@ -48,7 +49,7 @@ fun PreferencesScreen(
         contract = ActivityResultContracts.OpenDocumentTree()
     ) { uri ->
         scope.launch {
-            StorageManager.setPlaylistDirectory(uri = uri).onSuccess {
+            storageManager.setPlaylistDirectory(uri = uri).onSuccess {
                 snackBarHostState.showSnackbar("Default directory changed")
             }.onFailure {
                 snackBarHostState.showSnackbar("Failed to change default directory")
@@ -85,7 +86,7 @@ fun PreferencesScreen(
             SettingsGroupPlaylist(
                 onChangeDir = {
                     scope.launch {
-                        val dir = PrefManager.safStoragePath.toUri()
+                        val dir = prefManager.getSafStoragePath().toUri()
                         documentTreeResult.launch(dir)
                     }
                 }
@@ -121,8 +122,10 @@ fun PreferencesScreen(
                     SettingsMenuLink(
                         title = { Text(text = "Clear Preferences") },
                         onClick = {
-                            PrefManager.clearPreferences()
-                            (context as ComponentActivity).finishAffinity()
+                            scope.launch {
+                                prefManager.clearPreferences()
+                                (context as ComponentActivity).finishAffinity()
+                            }
                         }
                     )
                 }
@@ -133,10 +136,11 @@ fun PreferencesScreen(
 
 @Preview
 @Composable
-private fun Preview_PreferencesScreen() {
+private fun Preview() {
     val context = LocalContext.current
-    PrefManager.init(context)
-    XmpTheme(useDarkTheme = true) {
+    val json = Json { ignoreUnknownKeys = true }
+    PrefManager(context, json)
+    XmpTheme {
         PreferencesScreen(
             snackBarHostState = SnackbarHostState(),
             onBack = {},

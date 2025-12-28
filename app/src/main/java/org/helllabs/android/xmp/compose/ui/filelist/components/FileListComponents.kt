@@ -43,6 +43,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
+import kotlinx.serialization.json.Json
 import me.saket.cascade.CascadeDropdownMenu
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.compose.components.XmpDropdownMenuHeader
@@ -243,7 +244,9 @@ private fun BreadCrumbChip(
 private fun Preview_FileListCard() {
     val view = LocalView.current
     if (!view.isInEditMode) {
-        PrefManager.init(LocalContext.current)
+        val context = LocalContext.current
+        val json = Json { ignoreUnknownKeys = true }
+        val fakePrefManager = PrefManager(context, json)
     }
     XmpTheme(useDarkTheme = true) {
         FileListCard(

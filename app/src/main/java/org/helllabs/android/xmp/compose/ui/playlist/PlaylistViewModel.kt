@@ -2,29 +2,45 @@ package org.helllabs.android.xmp.compose.ui.playlist
 
 import android.net.Uri
 import androidx.compose.runtime.*
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.core.PlaylistManager
+import org.helllabs.android.xmp.core.PrefManager
 import org.helllabs.android.xmp.model.Playlist
 import timber.log.Timber
 
 @Stable
-class PlaylistViewModel : ViewModel() {
-
-    private val manager: MutableStateFlow<PlaylistManager> = MutableStateFlow(PlaylistManager())
+class PlaylistViewModel(
+    private val playlistManager: PlaylistManager,
+    val prefManager: PrefManager
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(Playlist())
     val uiState = _uiState.asStateFlow()
 
+    val fileName = prefManager.useFileNameFlow()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = false
+        )
+
     fun save() {
-        with(manager.value) {
-            setLoop(_uiState.value.isLoop)
-            setShuffle(_uiState.value.isShuffle)
-            setList(_uiState.value.list)
-            save()
+        viewModelScope.launch {
+            with(playlistManager) {
+                setLoop(_uiState.value.isLoop)
+                setShuffle(_uiState.value.isShuffle)
+                setList(_uiState.value.list)
+                save()
+            }
         }
     }
 
@@ -52,23 +68,24 @@ class PlaylistViewModel : ViewModel() {
     fun getUriItems(): List<Uri> = _uiState.value.list.map { it.uri }
 
     fun onRefresh(name: String) {
-        manager.value = PlaylistManager()
-        with(manager.value) {
-            load(Uri.parse(name))
+        viewModelScope.launch {
+            with(playlistManager) {
+                load(name.toUri())
 
-            val listWithIds = playlist.list.mapIndexed { index, playlistItem ->
-                playlistItem.copy(id = index)
-            }.toPersistentList()
+                val listWithIds = playlist.list.mapIndexed { index, playlistItem ->
+                    playlistItem.copy(id = index)
+                }.toPersistentList()
 
-            _uiState.update {
-                it.copy(
-                    comment = playlist.comment,
-                    isLoop = playlist.isLoop,
-                    isShuffle = playlist.isShuffle,
-                    list = listWithIds,
-                    name = playlist.name,
-                    uri = playlist.uri
-                )
+                _uiState.update {
+                    it.copy(
+                        comment = playlist.comment,
+                        isLoop = playlist.isLoop,
+                        isShuffle = playlist.isShuffle,
+                        list = listWithIds,
+                        name = playlist.name,
+                        uri = playlist.uri
+                    )
+                }
             }
         }
     }
@@ -82,9 +99,11 @@ class PlaylistViewModel : ViewModel() {
         save() // Save just in-case
     }
 
-    fun useFileName(useFileName: Boolean) {
-        _uiState.update {
-            it.copy(useFileName = useFileName)
+    fun useFileName() {
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(useFileName = fileName.value)
+            }
         }
     }
 }

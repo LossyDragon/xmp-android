@@ -53,9 +53,9 @@ object Util {
     /**
      * Updates the Player Info text either by Hex or Numerical Value
      */
-    fun updateFrameInfo(value: Int): String {
+    fun updateFrameInfo(showHex: Boolean, value: Int): String {
         s.delete(0, s.length)
-        if (PrefManager.showHex) {
+        if (showHex) {
             to02X(c, value)
             s.append(c)
         } else {

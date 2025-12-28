@@ -22,7 +22,7 @@
 
         <!-- Playlist and File browser -->
         <activity
-            android:name=".compose.MainActivity"
+            android:name=".MainActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:exported="true"
             android:windowSoftInputMode="adjustResize">

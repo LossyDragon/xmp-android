@@ -6,7 +6,8 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
-import org.helllabs.android.xmp.core.UriSerializer
+import org.helllabs.android.xmp.serializers.ImmutableListSerializer
+import org.helllabs.android.xmp.serializers.UriSerializer
 
 @Immutable
 @Serializable
@@ -14,6 +15,7 @@ data class Playlist(
     val comment: String = "",
     val isLoop: Boolean = false,
     val isShuffle: Boolean = false,
+    @Serializable(with = ImmutableListSerializer::class)
     val list: ImmutableList<PlaylistItem> = persistentListOf(),
     val name: String = "",
     @Serializable(with = UriSerializer::class)
@@ -36,5 +38,5 @@ data class PlaylistItem(
     @Serializable(with = UriSerializer::class)
     val uri: Uri,
     @Transient
-    val id: Int = 0  // Can now be copied/modified
+    val id: Int = 0 // Can now be copied/modified
 )

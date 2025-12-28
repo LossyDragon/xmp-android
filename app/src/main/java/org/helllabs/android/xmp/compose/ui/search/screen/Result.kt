@@ -1,4 +1,4 @@
-package org.helllabs.android.xmp.compose.ui.search.result
+package org.helllabs.android.xmp.compose.ui.search.screen
 
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -17,7 +17,6 @@ import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
-import kotlinx.serialization.Serializable
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.compose.components.ErrorScreen
@@ -27,6 +26,8 @@ import org.helllabs.android.xmp.compose.components.XmpTopBar
 import org.helllabs.android.xmp.compose.theme.XmpTheme
 import org.helllabs.android.xmp.compose.ui.player.PlayerActivity
 import org.helllabs.android.xmp.compose.ui.search.components.ModuleLayout
+import org.helllabs.android.xmp.compose.ui.search.viewmodel.ModuleResultState
+import org.helllabs.android.xmp.compose.ui.search.viewmodel.ResultViewModel
 import org.helllabs.android.xmp.core.Constants
 import org.helllabs.android.xmp.core.StorageManager
 import org.helllabs.android.xmp.model.Artist
@@ -36,10 +37,9 @@ import org.helllabs.android.xmp.model.Module
 import org.helllabs.android.xmp.model.ModuleResult
 import org.helllabs.android.xmp.model.Sponsor
 import org.helllabs.android.xmp.model.SponsorDetails
+import org.helllabs.android.xmp.service.PlayerService
+import org.koin.compose.getKoin
 import timber.log.Timber
-
-@Serializable
-data class NavSearchResult(val moduleID: Int) // -1 will random result.
 
 @Composable
 fun ModuleResultScreenImpl(
@@ -53,6 +53,7 @@ fun ModuleResultScreenImpl(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val storageManager = getKoin().get<StorageManager>()
 
     val playerResult = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -89,23 +90,25 @@ fun ModuleResultScreenImpl(
         onShare = { onShare(it) },
         onDeleteModule = viewModel::deleteModule,
         onPlay = { module ->
-            StorageManager.doesModuleExist(module = module)
-                .onSuccess { dfc ->
-                    if (dfc.isFile()) {
-                        val modListUri = arrayListOf(dfc.uri)
+            scope.launch {
+                storageManager.doesModuleExist(module = module)
+                    .onSuccess { dfc ->
+                        if (dfc.isFile()) {
+                            val modListUri = arrayListOf(dfc.uri)
 
-                        XmpApplication.instance?.fileListUri = modListUri
+                            PlayerService.fileListUri.addAll(modListUri)
 
-                        Timber.i("Play ${dfc.uri.path}")
-                        Intent(context, PlayerActivity::class.java).apply {
-                            putExtra(Constants.PARM_START, 0)
-                        }.also(playerResult::launch)
-                    } else {
-                        viewModel.downloadModule(module, dfc)
+                            Timber.i("Play ${dfc.uri.path}")
+                            Intent(context, PlayerActivity::class.java).apply {
+                                putExtra(Constants.PARM_START, 0)
+                            }.also(playerResult::launch)
+                        } else {
+                            viewModel.downloadModule(module, dfc)
+                        }
+                    }.onFailure {
+                        viewModel.showSoftError(it.message ?: context.getString(R.string.error))
                     }
-                }.onFailure {
-                    viewModel.showSoftError(it.message ?: context.getString(R.string.error))
-                }
+            }
         }
     )
 }
