@@ -47,6 +47,7 @@ fun FormatsScreen(
     ) { paddingValues ->
         val clip = LocalClipboard.current
         val context = LocalContext.current
+        val resources = LocalResources.current
         val haptic = LocalHapticFeedback.current
         val scope = rememberCoroutineScope()
         val configuration = LocalConfiguration.current
@@ -72,7 +73,7 @@ fun FormatsScreen(
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             scope.launch {
                                 snackBarHostState.showSnackbar(
-                                    message = context.getString(R.string.copied)
+                                    message = resources.getString(R.string.copied)
                                 )
 
                                 val entry = ClipData.newPlainText(item, item)

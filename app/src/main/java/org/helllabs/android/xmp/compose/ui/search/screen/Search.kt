@@ -5,8 +5,10 @@ import androidx.annotation.StringRes
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.*
-import androidx.compose.material.icons.*
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.*
@@ -15,39 +17,56 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.*
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.*
-import androidx.compose.ui.text.*
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.compose.components.annotatedLinkString
 import org.helllabs.android.xmp.compose.theme.XmpTheme
+import org.helllabs.android.xmp.compose.ui.search.components.DownloadsText
+import org.helllabs.android.xmp.compose.ui.search.components.SearchButtons
+import org.helllabs.android.xmp.compose.ui.search.components.SegmentedButtons
 
-@Stable
-data class SearchSegmentedButton(val type: SearchType, @StringRes val string: Int)
-
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SearchScreen(
     modifier: Modifier,
-    onBack: () -> Unit,
     onSearch: (String, SearchType) -> Unit,
     onRandom: () -> Unit,
     onHistory: () -> Unit
 ) {
+    val configuration = LocalConfiguration.current
     val focusManager = LocalFocusManager.current
     val focusRequester = remember { FocusRequester() }
     var searchText by rememberSaveable { mutableStateOf("") }
-    var currentSelection by rememberSaveable { mutableStateOf(SearchType.TITLE) }
+    var searchType by rememberSaveable { mutableStateOf(SearchType.TITLE) }
 
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
     }
 
+    val orientationModifier = if (configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
+        Modifier.imePadding()
+    } else {
+        Modifier
+    }
+
     Scaffold(
-        modifier = modifier.imePadding(),
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        modifier = modifier
+            .fillMaxSize()
+            .then(orientationModifier),
+        bottomBar = {
+            NavigationBar {
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    DownloadsText(
+                        modifier = Modifier
+                            .padding(vertical = 8.dp)
+                            .align(Alignment.BottomCenter)
+                    )
+                }
+            }
+        },
     ) { paddingValues ->
-        val configuration = LocalConfiguration.current
+
         val modifier = remember(configuration.orientation) {
             if (configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
                 Modifier
@@ -56,8 +75,6 @@ fun SearchScreen(
             }
         }
 
-        // (Not present anymore, but bug still opened) Weird bottom padding workaround:
-        // https://issuetracker.google.com/issues/249727298
         Box(
             modifier = modifier
                 .padding(paddingValues)
@@ -82,7 +99,7 @@ fun SearchScreen(
                     keyboardActions = KeyboardActions(
                         onSearch = {
                             if (searchText.isNotEmpty()) {
-                                onSearch(searchText, currentSelection)
+                                onSearch(searchText, searchType)
                             }
 
                             focusManager.clearFocus()
@@ -99,106 +116,67 @@ fun SearchScreen(
                 Spacer(modifier = Modifier.height(32.dp))
 
                 SegmentedButtons(
-                    onSearchType = { currentSelection = it },
-                    searchType = currentSelection,
+                    modifier = Modifier
+                        .padding(horizontal = 32.dp)
+                        .fillMaxWidth(),
+                    searchType = searchType,
+                    onSearchType = { searchType = it },
                 )
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                SearchButtons(
-                    searchText = searchText,
-                    onSearch = { onSearch(it, currentSelection) },
-                    onRandom = onRandom
+//                SearchButtons(
+//                    searchText = searchText,
+//                    onSearch = { onSearch(it, searchType) },
+//                    onRandom = onRandom
+//                )
+
+                ButtonGroup(
+                    modifier = Modifier,
+                    overflowIndicator = { menuState ->
+                        ButtonGroupDefaults.OverflowIndicator(menuState = menuState)
+                    },
+                    content = {
+                        clickableItem(
+                            onClick = {
+                            },
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription = null
+                                )
+                            },
+                            label = "Search"
+                        )
+                        clickableItem(
+                            onClick = {
+                            },
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Default.Shuffle,
+                                    contentDescription = null
+                                )
+                            },
+                            label = "Random"
+                        )
+                        clickableItem(
+                            onClick = {
+                            },
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Default.History,
+                                    contentDescription = null
+                                )
+                            },
+                            label = "History"
+                        )
+                    }
                 )
 
                 Spacer(modifier = Modifier.height(64.dp))
             }
-
-            DownloadsText(
-                modifier = Modifier
-                    .padding(vertical = 8.dp)
-                    .align(Alignment.BottomCenter)
-            )
         }
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun SegmentedButtons(onSearchType: (SearchType) -> Unit, searchType: SearchType) {
-    val buttonOptions = remember {
-        listOf(
-            SearchSegmentedButton(SearchType.TITLE, R.string.title_or_filename),
-            SearchSegmentedButton(SearchType.ARTIST, R.string.artist)
-        )
-    }
-
-    SingleChoiceSegmentedButtonRow(
-        modifier = Modifier
-            .padding(horizontal = 32.dp)
-            .fillMaxWidth()
-    ) {
-        val activeColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = .75f)
-        buttonOptions.forEachIndexed { idx, item ->
-            SegmentedButton(
-                colors = SegmentedButtonDefaults.colors(
-                    activeContainerColor = activeColor
-                ),
-                shape = SegmentedButtonDefaults.itemShape(
-                    index = idx,
-                    count = buttonOptions.size
-                ),
-                onClick = { onSearchType(item.type) },
-                selected = searchType == item.type,
-                label = { Text(text = stringResource(id = item.string)) }
-            )
-        }
-    }
-}
-
-@Composable
-private fun SearchButtons(
-    searchText: String,
-    onSearch: (String) -> Unit,
-    onRandom: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 32.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly
-    ) {
-        Button(
-            modifier = Modifier
-                .weight(.75f),
-            enabled = searchText.isNotEmpty(),
-            onClick = { onSearch(searchText) }
-        ) {
-            Text(text = stringResource(id = R.string.search))
-        }
-        Spacer(modifier = Modifier.width(16.dp))
-        OutlinedButton(
-            modifier = Modifier
-                .weight(.75f),
-            onClick = onRandom
-        ) {
-            Text(text = stringResource(id = R.string.random))
-        }
-    }
-}
-
-@Composable
-private fun DownloadsText(
-    modifier: Modifier = Modifier
-) {
-    Text(
-        modifier = modifier,
-        text = annotatedLinkString(
-            text = stringResource(id = R.string.search_provided_by),
-            url = "modarchive.org"
-        ),
-        style = TextStyle(color = MaterialTheme.colorScheme.onBackground)
-    )
 }
 
 @Preview
@@ -207,7 +185,6 @@ private fun Preview_SearchScreen() {
     XmpTheme(useDarkTheme = true) {
         SearchScreen(
             modifier = Modifier,
-            onBack = {},
             onSearch = { _, _ -> },
             onRandom = {},
             onHistory = {}

@@ -31,7 +31,7 @@ import org.helllabs.android.xmp.compose.theme.michromaFontFamily
 @Composable
 fun XmpCenterTopBar(
     onSettings: () -> Unit,
-    onTextClick: () -> Unit,
+    onTitle: () -> Unit,
     isAlive: Boolean = false,
     isPlaying: Boolean = false
 ) {
@@ -62,7 +62,7 @@ fun XmpCenterTopBar(
         },
         title = {
             TextButton(
-                onClick = onTextClick,
+                onClick = onTitle,
                 content = {
                     ProvideTextStyle(
                         LocalTextStyle.current.merge(

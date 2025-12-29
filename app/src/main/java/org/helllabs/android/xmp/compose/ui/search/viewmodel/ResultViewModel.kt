@@ -1,7 +1,5 @@
 package org.helllabs.android.xmp.compose.ui.search.viewmodel
 
-import android.content.Context
-import android.os.Build
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -21,7 +19,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import okio.buffer
 import okio.sink
-import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.api.Repository
 import org.helllabs.android.xmp.core.Constants.isSupported
 import org.helllabs.android.xmp.core.FileManager

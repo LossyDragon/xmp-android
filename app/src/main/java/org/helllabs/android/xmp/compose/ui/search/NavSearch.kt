@@ -40,7 +40,6 @@ fun NavSearch(
             entry<NavKeySearch.Search> {
                 SearchScreen(
                     modifier = modifier,
-                    onBack = { searchBackStack.removeLastOrNull() },
                     onSearch = { query, type ->
                         val screen = NavKeySearch.SearchResult(query, type)
                         searchBackStack.add(screen)

@@ -51,6 +51,7 @@ fun ModuleResultScreenImpl(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     val scope = rememberCoroutineScope()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val storageManager = getKoin().get<StorageManager>()
@@ -106,7 +107,7 @@ fun ModuleResultScreenImpl(
                             viewModel.downloadModule(module, dfc)
                         }
                     }.onFailure {
-                        viewModel.showSoftError(it.message ?: context.getString(R.string.error))
+                        viewModel.showSoftError(it.message ?: resources.getString(R.string.error))
                     }
             }
         }

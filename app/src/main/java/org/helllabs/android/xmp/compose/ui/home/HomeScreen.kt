@@ -34,6 +34,7 @@ import org.helllabs.android.xmp.compose.components.MessageDialog
 import org.helllabs.android.xmp.compose.components.NewPlaylistDialog
 import org.helllabs.android.xmp.compose.components.ProgressbarIndicator
 import org.helllabs.android.xmp.compose.theme.XmpTheme
+import org.helllabs.android.xmp.compose.ui.home.components.MenuCardItem
 import org.helllabs.android.xmp.core.PlaylistManager
 import org.helllabs.android.xmp.core.PrefManager
 import org.helllabs.android.xmp.core.StorageManager
@@ -54,6 +55,7 @@ fun HomeScreen(
     onNavPlaylist: (String) -> Unit
 ) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     val scope = rememberCoroutineScope()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -74,24 +76,8 @@ fun HomeScreen(
             storageManager.setPlaylistDirectory(uri).onSuccess {
                 viewModel.setDefaultPath()
             }.onFailure {
-                viewModel.showError(message = it.message ?: context.getString(R.string.error))
+                viewModel.showError(message = it.message ?: resources.getString(R.string.error))
             }
-        }
-    }
-
-    val playerResult = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == 1) {
-            result.data?.getStringExtra("error")?.let {
-                Timber.w("Result with error: $it")
-                scope.launch {
-                    snackBarHostState.showSnackbar(message = it)
-                }
-            }
-        }
-        if (result.resultCode == 2) {
-            viewModel.updateList()
         }
     }
 
@@ -167,7 +153,7 @@ fun HomeScreen(
                 viewModel.updateList()
             } else {
                 viewModel.showError(
-                    message = context.getString(R.string.dialog_message_error_create_playlist)
+                    message = resources.getString(R.string.dialog_message_error_create_playlist)
                 )
             }
 
@@ -179,12 +165,12 @@ fun HomeScreen(
     LaunchedEffect(state.mediaPath) {
         if (state.mediaPath.isNotEmpty()) {
             viewModel.setupDataDir(
-                name = context.getString(R.string.error_empty_playlist),
-                comment = context.getString(R.string.error_empty_comment),
+                name = resources.getString(R.string.error_empty_playlist),
+                comment = resources.getString(R.string.error_empty_comment),
             ).onSuccess {
                 viewModel.updateList()
             }.onFailure {
-                viewModel.showError(it.message ?: context.getString(R.string.error))
+                viewModel.showError(it.message ?: resources.getString(R.string.error))
             }
         }
     }
@@ -220,11 +206,6 @@ fun HomeScreen(
         },
         onRefresh = viewModel::updateList,
         onNewPlaylist = { viewModel.newPlaylist(true) },
-        // onTitleClicked = {
-        //     if (PlayerService.isAlive.value) {
-        //         Intent(context, PlayerActivity::class.java).also(playerResult::launch)
-        //     }
-        // },
         onRequestSettings = {
             Intent().apply {
                 action = ACTION_APPLICATION_DETAILS_SETTINGS
@@ -243,7 +224,7 @@ fun HomeScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun HomeScreenContent(
     modifier: Modifier = Modifier,
@@ -281,10 +262,12 @@ private fun HomeScreenContent(
                     text = { Text(text = stringResource(id = R.string.menu_new_playlist)) },
                     icon = { Icon(imageVector = Icons.Default.Add, contentDescription = null) },
                     expanded = !isScrolled,
-                    onClick = onNewPlaylist
+                    onClick = onNewPlaylist,
+                    shape = MaterialTheme.shapes.extraLarge
                 )
             }
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.surface
     ) { paddingValues ->
         val configuration = LocalConfiguration.current
         val modifier = remember(configuration.orientation) {
@@ -307,13 +290,13 @@ private fun HomeScreenContent(
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(
-                        top = 8.dp,
+                        top = 12.dp,
                         bottom = 96.dp,
                         start = 16.dp,
                         end = 16.dp
                     ),
                     state = scrollState,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(state.playlistItems) { item ->
                         MenuCardItem(
@@ -329,16 +312,16 @@ private fun HomeScreenContent(
                 ErrorScreen(text = "Unable to access files for playlist or file browser") {
                     Button(
                         onClick = onRequestStorage,
+                        shape = MaterialTheme.shapes.extraLarge,
                         content = { Text(text = "Set Directory") }
                     )
                     OutlinedButton(
                         onClick = onRequestSettings,
+                        shape = MaterialTheme.shapes.extraLarge,
                         content = { Text(text = "Goto Settings") }
                     )
                 }
             }
-
-            ProgressbarIndicator(isLoading = state.isLoading)
         }
     }
 }
@@ -404,63 +387,6 @@ private fun MenuNewPlaylist(
         },
         onDismiss = onDismiss
     )
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun MenuCardItem(
-    item: FileItem,
-    onClick: () -> Unit,
-    onLongClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .combinedClickable(
-                onClick = onClick,
-                onLongClick = onLongClick
-            )
-    ) {
-        ListItem(
-            colors = ListItemDefaults.colors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
-            ),
-            leadingContent = {
-                Icon(
-                    imageVector = if (item.isSpecial) {
-                        Icons.Default.Folder
-                    } else {
-                        Icons.AutoMirrored.Filled.List
-                    },
-                    contentDescription = null
-                )
-            },
-            headlineContent = { Text(text = item.name) },
-            supportingContent = {
-                Text(
-                    text = item.comment.ifEmpty {
-                        stringResource(id = R.string.error_no_comment)
-                    }
-                )
-            }
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun Preview_MenuCardItem() {
-    XmpTheme(useDarkTheme = true) {
-        MenuCardItem(
-            item = FileItem(
-                name = "Menu Card Item",
-                comment = "Menu Card Comment",
-                docFile = null
-            ),
-            onClick = { },
-            onLongClick = { }
-        )
-    }
 }
 
 @Preview

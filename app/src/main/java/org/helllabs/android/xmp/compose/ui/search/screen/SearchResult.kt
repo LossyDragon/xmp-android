@@ -42,14 +42,15 @@ fun TitleResultScreenImpl(
     onError: (String?) -> Unit
 ) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         if (searchType == SearchType.ARTIST) {
-            val title = context.getString(R.string.screen_title_artist)
+            val title = resources.getString(R.string.screen_title_artist)
             viewModel.getArtists(title, searchQuery)
         } else {
-            val title = context.getString(R.string.screen_title_search)
+            val title = resources.getString(R.string.screen_title_search)
             viewModel.getFileOrTitle(title, searchQuery)
         }
     }

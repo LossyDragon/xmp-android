@@ -34,29 +34,29 @@ fun ErrorScreen(
     }
 
     Surface(
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant,
-        shadowElevation = 8.dp
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+        tonalElevation = 3.dp, // Use tonal elevation
+        shadowElevation = 0.dp
     ) {
         Column(
-            modifier = modifier.padding(16.dp),
-            verticalArrangement = Arrangement.Center,
+            modifier = modifier.padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                fontSize = 32.sp,
-                textAlign = TextAlign.Center,
-                text = stringResource(id = R.string.frowny_face)
+                text = stringResource(id = R.string.frowny_face),
+                style = MaterialTheme.typography.displayMedium,
+                textAlign = TextAlign.Center
             )
-            Spacer(modifier = Modifier.height(16.dp))
             Text(
-                modifier = Modifier.fillMaxWidth(.5f),
-                fontSize = 18.sp,
+                modifier = Modifier.fillMaxWidth(.75f),
+                text = text,
+                style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center,
-                text = text
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             action?.let {
-                Spacer(modifier = Modifier.height(16.dp))
                 it()
             }
         }

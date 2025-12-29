@@ -54,7 +54,7 @@ fun FileListScreenImpl(
     onPlayModule: (List<Uri>, Int, Boolean, Boolean, Boolean) -> Unit,
     onItemClick: (List<Uri>, Int, Boolean, Boolean) -> Unit
 ) {
-    val context = LocalContext.current
+    val resources = LocalResources.current
     val scope = rememberCoroutineScope()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val storageManager = koinInject<StorageManager>()
@@ -116,7 +116,7 @@ fun FileListScreenImpl(
         onEmpty = {
             scope.launch {
                 snackBarHostState.showSnackbar(
-                    message = context.getString(R.string.error_snack_no_playlists)
+                    message = resources.getString(R.string.error_snack_no_playlists)
                 )
                 viewModel.clearPlaylist()
             }

@@ -37,9 +37,6 @@ fun RootNavigation() {
                         val screen = NavKeyRoot.Settings
                         rootBackStack.add(screen)
                     },
-                    onTextClick = {
-                        TODO()
-                    }
                 )
             }
 
