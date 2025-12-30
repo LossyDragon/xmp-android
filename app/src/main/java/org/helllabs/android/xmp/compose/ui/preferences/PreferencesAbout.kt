@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.*
 import androidx.compose.ui.text.*
@@ -71,40 +72,52 @@ fun AboutScreen(
                 text = themedText(text = stringResource(id = R.string.app_name)),
                 textAlign = TextAlign.Center,
                 fontFamily = michromaFontFamily,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                style = TextStyle(baselineShift = BaselineShift(.3f))
+                style = MaterialTheme.typography.headlineSmall.copy(
+                    fontFamily = michromaFontFamily,
+                    baselineShift = BaselineShift(.3f)
+                )
             )
             AboutText(
                 string = stringResource(id = R.string.about_version, buildVersionName),
                 bottomPadding = 0.dp,
-                fontSize = 18.sp
+                style = MaterialTheme.typography.titleMedium
             )
             AboutText(
                 string = stringResource(id = R.string.about_version_code, buildVersionCode),
                 topPadding = 0.dp,
-                fontSize = 12.sp
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            AboutText(string = stringResource(id = R.string.about_author))
-            AboutText(string = stringResource(id = R.string.about_xmp, libVersion))
-            Spacer(modifier = Modifier.height(8.dp))
+            AboutText(
+                string = stringResource(id = R.string.about_author),
+                style = MaterialTheme.typography.bodyLarge
+            )
+            AboutText(
+                string = stringResource(id = R.string.about_xmp, libVersion),
+                style = MaterialTheme.typography.bodyLarge
+            )
+            Spacer(modifier = Modifier.height(16.dp))
             HorizontalDivider(
                 modifier = Modifier.fillMaxWidth(.85f),
-                color = MaterialTheme.colorScheme.inverseSurface
+                color = MaterialTheme.colorScheme.outlineVariant
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             Text(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 4.dp, bottom = 4.dp),
+                    .padding(vertical = 8.dp),
                 text = stringResource(id = R.string.changelog),
                 fontFamily = michromaFontFamily,
                 textAlign = TextAlign.Center,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                style = TextStyle(baselineShift = BaselineShift(.3f))
+                style = MaterialTheme.typography.headlineSmall.copy(
+                    fontFamily = michromaFontFamily,
+                    baselineShift = BaselineShift(.3f)
+                )
             )
-            AboutText(string = stringResource(id = R.string.changelog_text))
+            AboutText(
+                string = stringResource(id = R.string.changelog_text),
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
     }
 }
@@ -115,7 +128,8 @@ private fun AboutText(
     textAlign: TextAlign = TextAlign.Center,
     topPadding: Dp = 4.dp,
     bottomPadding: Dp = 4.dp,
-    fontSize: TextUnit = TextUnit.Unspecified
+    style: TextStyle = MaterialTheme.typography.bodyLarge,
+    color: Color = Color.Unspecified
 ) {
     Text(
         modifier = Modifier
@@ -123,7 +137,8 @@ private fun AboutText(
             .padding(top = topPadding, bottom = bottomPadding),
         text = string,
         textAlign = textAlign,
-        fontSize = fontSize,
+        style = style,
+        color = color
     )
 }
 

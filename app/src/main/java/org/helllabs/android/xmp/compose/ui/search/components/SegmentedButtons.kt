@@ -1,21 +1,10 @@
 package org.helllabs.android.xmp.compose.ui.search.components
 
 import androidx.annotation.StringRes
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Stable
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
-import kotlinx.collections.immutable.immutableListOf
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.*
+import androidx.compose.ui.res.*
 import kotlinx.collections.immutable.persistentSetOf
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.compose.ui.search.screen.SearchType
@@ -35,8 +24,6 @@ fun SegmentedButtons(
         SearchSegmentedButton(SearchType.ARTIST, R.string.artist)
     )
 
-    //
-    //
     SingleChoiceSegmentedButtonRow(modifier = modifier) {
         buttonOptions.forEachIndexed { idx, item ->
             SegmentedButton(

@@ -1,8 +1,7 @@
-package org.helllabs.android.xmp.compose.ui.playlist
+package org.helllabs.android.xmp.compose.ui.playlist.viewmodel
 
 import android.net.Uri
 import androidx.compose.runtime.*
-import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.collections.immutable.toPersistentList
@@ -18,7 +17,7 @@ import org.helllabs.android.xmp.model.Playlist
 import timber.log.Timber
 
 @Stable
-class PlaylistViewModel(
+class SelectedPlaylistViewModel(
     private val playlistUri: Uri,
     private val playlistManager: PlaylistManager,
     private val prefManager: PrefManager
@@ -36,6 +35,7 @@ class PlaylistViewModel(
 
     init {
         viewModelScope.launch {
+            Timber.d("Loading Playlist: $playlistUri")
             val playlist = playlistManager.loadPlaylist(playlistUri).getOrThrow()
             _uiState.update { playlist }
         }
@@ -70,7 +70,7 @@ class PlaylistViewModel(
 
     fun getUriItems(): List<Uri> = _uiState.value.list.map { it.uri }
 
-    fun onRefresh(name: String) {
+    fun onRefresh() {
         viewModelScope.launch {
             val listWithIds = _uiState.value.list.mapIndexed { index, playlistItem ->
                 playlistItem.copy(id = index)

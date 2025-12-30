@@ -84,6 +84,12 @@ class PlaylistManager(
      */
     suspend fun loadPlaylist(uri: Uri): Result<Playlist> = withContext(Dispatchers.IO) {
         try {
+            if (uri == Uri.EMPTY || uri.toString().isBlank()) {
+                return@withContext Result.failure(
+                    IllegalArgumentException("Invalid URI: URI is empty or null")
+                )
+            }
+
             val content = context.contentResolver.openInputStream(uri)?.use { inputStream ->
                 inputStream.readBytes().toString(StandardCharsets.UTF_8)
             } ?: return@withContext Result.failure(
@@ -93,6 +99,7 @@ class PlaylistManager(
             val playlist = json.decodeFromString(Playlist.serializer(), content)
             Result.success(playlist)
         } catch (e: Exception) {
+            Timber.e(e)
             Result.failure(e)
         }
     }
@@ -227,91 +234,87 @@ class PlaylistManager(
         }
     }
 
-    // Keep all the other methods (setLoop, setShuffle, addItem, etc.) as they were
-    // since they don't interact with files directly
-
-    fun setLoop(playlist: Playlist, isLoop: Boolean): Playlist {
-        return playlist.copy(isLoop = isLoop)
-    }
-
-    fun setShuffle(playlist: Playlist, isShuffle: Boolean): Playlist {
-        return playlist.copy(isShuffle = isShuffle)
-    }
-
-    fun setUseFileName(playlist: Playlist, useFileName: Boolean): Playlist {
-        return playlist.copy(useFileName = useFileName)
-    }
-
-    fun addItem(playlist: Playlist, item: PlaylistItem): Playlist {
-        val newList = playlist.list.toMutableList().apply {
-            add(item.copy(id = size))
-        }.toImmutableList()
-
-        return playlist.copy(list = newList)
-    }
-
-    fun addItems(playlist: Playlist, items: List<PlaylistItem>): Playlist {
-        val currentSize = playlist.list.size
-        val newList = playlist.list.toMutableList().apply {
-            addAll(
-                items.mapIndexed { index, item ->
-                    item.copy(id = currentSize + index)
-                }
-            )
-        }.toImmutableList()
-
-        return playlist.copy(list = newList)
-    }
-
-    fun removeItem(playlist: Playlist, itemId: Int): Playlist {
-        val newList = playlist.list
-            .filterNot { it.id == itemId }
-            .mapIndexed { index, item -> item.copy(id = index) }
-            .toImmutableList()
-
-        return playlist.copy(list = newList)
-    }
-
-    fun removeItemAt(playlist: Playlist, index: Int): Playlist {
-        if (index !in playlist.list.indices) {
-            return playlist
-        }
-
-        val newList = playlist.list.toMutableList().apply {
-            removeAt(index)
-        }.mapIndexed { idx, item -> item.copy(id = idx) }
-            .toImmutableList()
-
-        return playlist.copy(list = newList)
-    }
-
-    fun moveItem(playlist: Playlist, fromIndex: Int, toIndex: Int): Playlist {
-        if (fromIndex !in playlist.list.indices || toIndex !in playlist.list.indices) {
-            return playlist
-        }
-
-        val newList = playlist.list.toMutableList().apply {
-            val item = removeAt(fromIndex)
-            add(toIndex, item)
-        }.mapIndexed { index, item -> item.copy(id = index) }
-            .toImmutableList()
-
-        return playlist.copy(list = newList)
-    }
-
-    fun reorderPlaylist(playlist: Playlist, newOrder: ImmutableList<PlaylistItem>): Playlist {
-        val reindexed = newOrder.mapIndexed { index, item ->
-            item.copy(id = index)
-        }.toImmutableList()
-
-        return playlist.copy(list = reindexed)
-    }
-
-    fun clearPlaylist(playlist: Playlist): Playlist {
-        return playlist.copy(list = persistentListOf())
-    }
-
     private fun sanitizeFileName(name: String): String {
         return name.replace(Regex("[^a-zA-Z0-9._-]"), "_")
+    }
+
+    companion object {
+
+        fun Playlist.clearPlaylist(): Playlist =
+            this.copy(list = persistentListOf())
+
+        fun Playlist.setLoop(isLoop: Boolean): Playlist =
+            this.copy(isLoop = isLoop)
+
+        fun Playlist.setShuffle(isShuffle: Boolean): Playlist =
+            this.copy(isShuffle = isShuffle)
+
+        fun Playlist.setUseFileName(useFileName: Boolean): Playlist =
+            this.copy(useFileName = useFileName)
+
+        fun Playlist.addItem(item: PlaylistItem): Playlist {
+            val newList = this.list.toMutableList().apply {
+                add(item.copy(id = size))
+            }.toImmutableList()
+
+            return this.copy(list = newList)
+        }
+
+        fun Playlist.addItems(items: List<PlaylistItem>): Playlist {
+            val currentSize = this.list.size
+            val newList = this.list.toMutableList().apply {
+                addAll(
+                    items.mapIndexed { index, item ->
+                        item.copy(id = currentSize + index)
+                    }
+                )
+            }.toImmutableList()
+
+            return this.copy(list = newList)
+        }
+
+        fun Playlist.removeItem(itemId: Int): Playlist {
+            val newList = this.list
+                .filterNot { it.id == itemId }
+                .mapIndexed { index, item -> item.copy(id = index) }
+                .toImmutableList()
+
+            return this.copy(list = newList)
+        }
+
+        fun Playlist.removeItemAt(index: Int): Playlist {
+            if (index !in this.list.indices) {
+                return this
+            }
+
+            val newList = this.list.toMutableList().apply {
+                removeAt(index)
+            }.mapIndexed { idx, item -> item.copy(id = idx) }
+                .toImmutableList()
+
+            return this.copy(list = newList)
+        }
+
+        fun Playlist.moveItem(fromIndex: Int, toIndex: Int): Playlist {
+            if (fromIndex !in this.list.indices || toIndex !in this.list.indices) {
+                return this
+            }
+
+            val newList = this.list.toMutableList().apply {
+                val item = removeAt(fromIndex)
+                add(toIndex, item)
+            }.mapIndexed { index, item -> item.copy(id = index) }
+                .toImmutableList()
+
+            return this.copy(list = newList)
+        }
+
+        fun Playlist.reorderPlaylist(newOrder: ImmutableList<PlaylistItem>): Playlist {
+            val reindexed = newOrder.mapIndexed { index, item ->
+                item.copy(id = index)
+            }.toImmutableList()
+
+            return this.copy(list = reindexed)
+        }
     }
 }

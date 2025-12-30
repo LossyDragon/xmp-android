@@ -3,8 +3,13 @@ package org.helllabs.android.xmp.compose.ui.playlist.components
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -25,13 +30,14 @@ import org.helllabs.android.xmp.compose.theme.XmpTheme
 @Composable
 fun PlaylistInfo(
     isScrolled: Boolean,
+    onBack: () -> Unit,
     playlistName: String,
     playlistComment: String
 ) {
     TopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = if (isScrolled) {
-                MaterialTheme.colorScheme.surfaceVariant.darken(1.45f)
+                MaterialTheme.colorScheme.surfaceContainer
             } else {
                 MaterialTheme.colorScheme.surface
             },
@@ -39,26 +45,37 @@ fun PlaylistInfo(
             actionIconContentColor = MaterialTheme.colorScheme.onSurface,
             titleContentColor = MaterialTheme.colorScheme.onSurface
         ),
+        navigationIcon = {
+            IconButton(
+                onClick = onBack,
+                content = {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = null
+                    )
+                }
+            )
+        },
         title = {
             Column {
-                Text(text = playlistName)
                 Text(
-                    fontSize = 12.sp,
+                    text = playlistName,
+                    style = MaterialTheme.typography.titleLarge
+                )
+                Text(
+                    text = playlistComment.ifEmpty {
+                        stringResource(id = R.string.error_no_comment)
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
                     fontStyle = FontStyle.Italic,
-                    lineHeight = 16.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    text = playlistComment.ifEmpty {
-                        stringResource(
-                            id = R.string.error_no_comment
-                        )
-                    }
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         },
         windowInsets = WindowInsets(right = 16.dp)
     )
-    HorizontalDivider(modifier = Modifier.fillMaxWidth())
 }
 
 @Preview
@@ -67,8 +84,9 @@ private fun Preview_PlaylistInfo() {
     XmpTheme(useDarkTheme = true) {
         PlaylistInfo(
             isScrolled = false,
+            onBack = { },
             playlistName = "Playlist Name",
-            playlistComment = "Playlist Comment"
+            playlistComment = "Playlist Comment",
         )
     }
 }

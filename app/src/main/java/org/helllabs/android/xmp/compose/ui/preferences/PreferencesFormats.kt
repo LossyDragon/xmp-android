@@ -13,10 +13,10 @@ import androidx.compose.ui.platform.*
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.res.*
 import androidx.compose.ui.tooling.preview.*
+import androidx.compose.ui.unit.dp
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.launch
-import kotlinx.serialization.Serializable
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.compose.components.XmpTopBar
 import org.helllabs.android.xmp.compose.theme.XmpTheme
@@ -46,7 +46,6 @@ fun FormatsScreen(
         }
     ) { paddingValues ->
         val clip = LocalClipboard.current
-        val context = LocalContext.current
         val resources = LocalResources.current
         val haptic = LocalHapticFeedback.current
         val scope = rememberCoroutineScope()
@@ -63,28 +62,42 @@ fun FormatsScreen(
             modifier = modifier
                 .padding(paddingValues)
                 .fillMaxSize(),
-            state = scrollState
+            state = scrollState,
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             items(formatsList) { item ->
-                ListItem(
-                    modifier = Modifier.combinedClickable(
-                        onClick = { /* Nothing */ },
-                        onLongClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            scope.launch {
-                                snackBarHostState.showSnackbar(
-                                    message = resources.getString(R.string.copied)
-                                )
+                Surface(
+                    shape = MaterialTheme.shapes.medium,
+                    color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    ListItem(
+                        modifier = Modifier.combinedClickable(
+                            onClick = { /* Nothing */ },
+                            onLongClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                scope.launch {
+                                    snackBarHostState.showSnackbar(
+                                        message = resources.getString(R.string.copied)
+                                    )
 
-                                val entry = ClipData.newPlainText(item, item)
-                                clip.setClipEntry(entry.toClipEntry())
+                                    val entry = ClipData.newPlainText(item, item)
+                                    clip.setClipEntry(entry.toClipEntry())
+                                }
                             }
+                        ),
+                        colors = ListItemDefaults.colors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
+                        ),
+                        headlineContent = {
+                            Text(
+                                text = item,
+                                style = MaterialTheme.typography.bodyLarge
+                            )
                         }
-                    ),
-                    headlineContent = {
-                        Text(text = item)
-                    }
-                )
+                    )
+                }
             }
         }
     }

@@ -2,7 +2,9 @@
 
 package org.helllabs.android.xmp.di
 
-import org.helllabs.android.xmp.compose.ui.home.PlaylistMenuViewModel
+import android.net.Uri
+import org.helllabs.android.xmp.compose.ui.playlist.viewmodel.PlaylistsViewModel
+import org.helllabs.android.xmp.compose.ui.playlist.viewmodel.SelectedPlaylistViewModel
 import org.helllabs.android.xmp.compose.ui.search.viewmodel.ResultViewModel
 import org.helllabs.android.xmp.compose.ui.search.viewmodel.SearchResultViewModel
 import org.helllabs.android.xmp.core.FileManager
@@ -20,13 +22,21 @@ val viewModelModule = module {
         )
     }
     viewModel {
-        PlaylistMenuViewModel(
+        PlaylistsViewModel(
             storageManager = get(),
             prefManager = get(),
             playlistManager = get()
         )
     }
     viewModel { SearchResultViewModel(get()) }
+
+    viewModel { (uri: Uri) ->
+        SelectedPlaylistViewModel(
+            playlistUri = uri,
+            playlistManager = get(),
+            prefManager = get()
+        )
+    }
 
     single { FileManager(context = get()) }
 }

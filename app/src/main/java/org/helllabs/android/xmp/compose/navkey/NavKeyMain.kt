@@ -22,16 +22,6 @@ sealed class NavKeyMain(val title: String) : NavKey {
     data object Playlists : NavKeyMain("Playlists") {
         override val selectedIcon: ImageVector = Icons.Filled.LibraryMusic
         override val unSelectedIcon: ImageVector = Icons.Outlined.LibraryMusic
-
-        data class Selected(val fileItem: FileItem?) : NavKeyMain("Selected") {
-            override val selectedIcon: ImageVector? = null
-            override val unSelectedIcon: ImageVector? = null
-        }
-
-        data class Edit(val fileItem: FileItem?) : NavKeyMain("Edit") {
-            override val selectedIcon: ImageVector? = null
-            override val unSelectedIcon: ImageVector? = null
-        }
     }
 
     @Serializable

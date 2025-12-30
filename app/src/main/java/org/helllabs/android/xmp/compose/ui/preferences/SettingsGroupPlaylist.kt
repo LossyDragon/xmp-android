@@ -33,7 +33,6 @@ fun SettingsGroupPlaylist(
     val useFileNameValue by prefManager.useFileNameFlow().collectAsStateWithLifecycle(
         initialValue = false
     )
-    // val backButtonValue by prefManager.backButtonNavigationFlow().collectAsStateWithLifecycle(initialValue = true)
 
     SettingsGroup(
         title = {
@@ -104,21 +103,5 @@ fun SettingsGroupPlaylist(
                 }
             }
         )
-
-        // Back Button Navigation
-        // SettingsSwitch(
-        //     title = {
-        //         Text(text = stringResource(id = R.string.pref_back_button_navigation_title))
-        //     },
-        //     subtitle = {
-        //         Text(text = stringResource(id = R.string.pref_back_button_navigation_summary))
-        //     },
-        //     state = backButtonValue,
-        //     onCheckedChange = {
-        //         scope.launch {
-        //             prefManager.setBackButtonNavigation(it)
-        //         }
-        //     }
-        // )
     }
 }

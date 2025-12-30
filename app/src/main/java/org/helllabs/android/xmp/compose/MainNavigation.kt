@@ -1,25 +1,20 @@
 package org.helllabs.android.xmp.compose
 
-import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.retain.retain
 import androidx.compose.runtime.saveable.*
 import androidx.compose.ui.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.*
 import androidx.compose.ui.graphics.*
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.platform.*
+import androidx.compose.ui.text.font.*
+import androidx.compose.ui.unit.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavKey
@@ -30,14 +25,10 @@ import androidx.navigation3.scene.DialogSceneStrategy
 import androidx.navigation3.ui.NavDisplay
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.launch
-import org.helllabs.android.xmp.compose.components.XmpCenterTopBar
 import org.helllabs.android.xmp.compose.navkey.NavKeyMain
-import org.helllabs.android.xmp.compose.ui.home.HomeScreen
-import org.helllabs.android.xmp.compose.ui.home.PlaylistMenuViewModel
-import org.helllabs.android.xmp.compose.ui.player.PlayerActivity
+import org.helllabs.android.xmp.compose.ui.playlist.NavPlaylists
 import org.helllabs.android.xmp.compose.ui.search.NavSearch
 import org.helllabs.android.xmp.service.PlayerService
-import org.koin.androidx.compose.koinViewModel
 import timber.log.Timber
 
 val bottomBarItems = persistentListOf(
@@ -63,12 +54,6 @@ fun MainNavigation(
     snackBarHostState: SnackbarHostState,
     onSettings: () -> Unit
 ) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-
-    val serviceAlive by PlayerService.isAlive.collectAsStateWithLifecycle()
-    val servicePlaying by PlayerService.isPlaying.collectAsStateWithLifecycle()
-
     val dialogStrategy = remember { DialogSceneStrategy<NavKey>() }
 
     val mainBackStack = rememberNavBackStack(NavKeyMain.Playlists)
@@ -85,39 +70,8 @@ fun MainNavigation(
         currentBottomBarScreen = NavKeyMain.Playlists
     }
 
-    val playerResult = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == 1) {
-            result.data?.getStringExtra("error")?.let {
-                Timber.w("Result with error: $it")
-                scope.launch {
-                    snackBarHostState.showSnackbar(message = it)
-                }
-            }
-        }
-        if (result.resultCode == 2) {
-            Timber.d("Result with 2")
-        }
-    }
-
-    // Long lasting VM instances.
-    val playlistViewModel = koinViewModel<PlaylistMenuViewModel>()
-
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackBarHostState) },
-        topBar = {
-            XmpCenterTopBar(
-                onSettings = onSettings,
-                onTitle = {
-                    if (PlayerService.isAlive.value) {
-                        Intent(context, PlayerActivity::class.java).also(playerResult::launch)
-                    }
-                },
-                isAlive = serviceAlive,
-                isPlaying = servicePlaying,
-            )
-        },
         bottomBar = {
             ShortNavigationBar {
                 bottomBarItems.forEach { destination ->
@@ -166,86 +120,11 @@ fun MainNavigation(
                 ),
                 entryProvider = entryProvider {
                     entry<NavKeyMain.Playlists> {
-                        HomeScreen(
+                        NavPlaylists(
                             modifier = Modifier.consumeWindowInsets(paddingValues),
-                            viewModel = playlistViewModel,
-                            snackBarHostState = snackBarHostState,
-                            onEditPlaylist = { item ->
-                                val screen = NavKeyMain.Playlists.Edit(item)
-                                mainBackStack.add(screen)
-                            },
-                            onNavPlaylist = {
-                            },
+                            snackbarHostState = snackBarHostState,
+                            onSettings = onSettings,
                         )
-                    }
-                    entry<NavKeyMain.Playlists.Edit>(
-                        metadata = DialogSceneStrategy.dialog(
-                            dialogProperties = DialogProperties(
-                                dismissOnClickOutside = false,
-                                dismissOnBackPress = false
-                            )
-                        )
-                    ) { key ->
-                        // TODO clenaup
-                        Column(
-                            modifier = Modifier
-                                .clip(shape = RoundedCornerShape(16.dp))
-                                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                                .padding(24.dp),
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            val item = retain(key.fileItem) { key.fileItem }
-                            var name by retain(item) { mutableStateOf(item?.name) }
-                            var comment by retain(item) { mutableStateOf(item?.comment) }
-
-                            Text(
-                                text = if (item == null) {
-                                    "New Playlist"
-                                } else {
-                                    "Edit Playlist"
-                                }
-                            )
-                            OutlinedTextField(
-                                value = name ?: "",
-                                onValueChange = {
-                                    name = it
-                                }
-                            )
-                            OutlinedTextField(
-                                value = comment ?: "",
-                                onValueChange = {
-                                    comment = it
-                                }
-                            )
-                            Button(
-                                enabled = name.orEmpty().isNotEmpty(),
-                                onClick = {
-                                    playlistViewModel.editPlaylist(
-                                        fileItem = item,
-                                        name = name!!,
-                                        comment = comment.orEmpty()
-                                    )
-                                    mainBackStack.removeLastOrNull()
-                                },
-                                content = { Text(text = "Save") }
-                            )
-                            Button(
-                                onClick = {
-                                    mainBackStack.removeLastOrNull()
-                                },
-                                content = { Text(text = "Cancel") }
-                            )
-                            if (item != null) {
-                                Button(
-                                    onClick = {
-                                        playlistViewModel.deletePlaylist(item)
-                                        mainBackStack.removeLastOrNull()
-                                    },
-                                    content = { Text(text = "Remove") }
-                                )
-                            }
-                        }
                     }
                     entry<NavKeyMain.Explorer> {
                         Column(

@@ -1,7 +1,6 @@
 package org.helllabs.android.xmp.compose.ui.search.screen
 
 import android.content.res.Configuration
-import androidx.annotation.StringRes
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.*
@@ -13,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.*
 import androidx.compose.ui.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.*
 import androidx.compose.ui.platform.*
@@ -21,6 +21,7 @@ import androidx.compose.ui.text.input.*
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
 import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.compose.components.XmpTopBar
 import org.helllabs.android.xmp.compose.theme.XmpTheme
 import org.helllabs.android.xmp.compose.ui.search.components.DownloadsText
 import org.helllabs.android.xmp.compose.ui.search.components.SearchButtons
@@ -30,6 +31,7 @@ import org.helllabs.android.xmp.compose.ui.search.components.SegmentedButtons
 @Composable
 fun SearchScreen(
     modifier: Modifier,
+    onBack: () -> Unit,
     onSearch: (String, SearchType) -> Unit,
     onRandom: () -> Unit,
     onHistory: () -> Unit
@@ -54,20 +56,25 @@ fun SearchScreen(
         modifier = modifier
             .fillMaxSize()
             .then(orientationModifier),
+        topBar = {
+            XmpTopBar(
+                title = "Downloads",
+                onBack = onBack,
+            )
+        },
         bottomBar = {
-            NavigationBar {
+            ShortNavigationBar(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer
+            ) {
                 Box(modifier = Modifier.fillMaxWidth()) {
                     DownloadsText(
-                        modifier = Modifier
-                            .padding(vertical = 8.dp)
-                            .align(Alignment.BottomCenter)
+                        modifier = Modifier.align(Alignment.Center)
                     )
                 }
             }
         },
     ) { paddingValues ->
-
-        val modifier = remember(configuration.orientation) {
+        val contentModifier = remember(configuration.orientation) {
             if (configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
                 Modifier
             } else {
@@ -76,7 +83,7 @@ fun SearchScreen(
         }
 
         Box(
-            modifier = modifier
+            modifier = contentModifier
                 .padding(paddingValues)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
@@ -86,7 +93,7 @@ fun SearchScreen(
                 verticalArrangement = Arrangement.Top,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
                 OutlinedTextField(
                     modifier = Modifier
@@ -110,67 +117,43 @@ fun SearchScreen(
                         keyboardType = KeyboardType.Text
                     ),
                     maxLines = 1,
-                    label = { Text(text = stringResource(id = R.string.search)) }
+                    label = {
+                        Text(
+                            text = stringResource(id = R.string.search),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    },
+                    textStyle = MaterialTheme.typography.bodyLarge,
+                    shape = MaterialTheme.shapes.largeIncreased,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                        errorBorderColor = MaterialTheme.colorScheme.error,
+                        focusedLabelColor = MaterialTheme.colorScheme.primary,
+                        unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 )
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 SegmentedButtons(
                     modifier = Modifier
-                        .padding(horizontal = 32.dp)
+                        .padding(horizontal = 16.dp)
                         .fillMaxWidth(),
                     searchType = searchType,
                     onSearchType = { searchType = it },
                 )
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-//                SearchButtons(
-//                    searchText = searchText,
-//                    onSearch = { onSearch(it, searchType) },
-//                    onRandom = onRandom
-//                )
-
-                ButtonGroup(
-                    modifier = Modifier,
-                    overflowIndicator = { menuState ->
-                        ButtonGroupDefaults.OverflowIndicator(menuState = menuState)
+                SearchButtons(
+                    searchText = searchText,
+                    onSearch = {
+                        onSearch(it, searchType)
+                        focusManager.clearFocus()
                     },
-                    content = {
-                        clickableItem(
-                            onClick = {
-                            },
-                            icon = {
-                                Icon(
-                                    imageVector = Icons.Default.Search,
-                                    contentDescription = null
-                                )
-                            },
-                            label = "Search"
-                        )
-                        clickableItem(
-                            onClick = {
-                            },
-                            icon = {
-                                Icon(
-                                    imageVector = Icons.Default.Shuffle,
-                                    contentDescription = null
-                                )
-                            },
-                            label = "Random"
-                        )
-                        clickableItem(
-                            onClick = {
-                            },
-                            icon = {
-                                Icon(
-                                    imageVector = Icons.Default.History,
-                                    contentDescription = null
-                                )
-                            },
-                            label = "History"
-                        )
-                    }
+                    onRandom = onRandom,
+                    onHistory = onHistory
                 )
 
                 Spacer(modifier = Modifier.height(64.dp))
@@ -185,6 +168,7 @@ private fun Preview_SearchScreen() {
     XmpTheme(useDarkTheme = true) {
         SearchScreen(
             modifier = Modifier,
+            onBack = { },
             onSearch = { _, _ -> },
             onRandom = {},
             onHistory = {}

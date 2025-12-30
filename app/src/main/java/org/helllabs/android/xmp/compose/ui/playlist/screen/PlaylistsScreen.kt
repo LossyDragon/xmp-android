@@ -1,4 +1,4 @@
-package org.helllabs.android.xmp.compose.ui.home
+package org.helllabs.android.xmp.compose.ui.playlist.screen
 
 import android.content.Intent
 import android.content.res.Configuration
@@ -6,11 +6,9 @@ import android.net.Uri
 import android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.material.icons.*
-import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.*
@@ -28,29 +26,32 @@ import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.compose.components.EditPlaylistDialog
 import org.helllabs.android.xmp.compose.components.ErrorScreen
 import org.helllabs.android.xmp.compose.components.MessageDialog
-import org.helllabs.android.xmp.compose.components.NewPlaylistDialog
-import org.helllabs.android.xmp.compose.components.ProgressbarIndicator
+import org.helllabs.android.xmp.compose.components.XmpCenterTopBar
 import org.helllabs.android.xmp.compose.theme.XmpTheme
-import org.helllabs.android.xmp.compose.ui.home.components.MenuCardItem
+import org.helllabs.android.xmp.compose.ui.player.PlayerActivity
+import org.helllabs.android.xmp.compose.ui.playlist.components.MenuCardItem
+import org.helllabs.android.xmp.compose.ui.playlist.viewmodel.PlaylistsUiState
+import org.helllabs.android.xmp.compose.ui.playlist.viewmodel.PlaylistsViewModel
 import org.helllabs.android.xmp.core.PlaylistManager
 import org.helllabs.android.xmp.core.PrefManager
 import org.helllabs.android.xmp.core.StorageManager
 import org.helllabs.android.xmp.di.appModule
 import org.helllabs.android.xmp.di.playlistModule
 import org.helllabs.android.xmp.model.FileItem
+import org.helllabs.android.xmp.service.PlayerService
 import org.koin.compose.KoinApplication
 import org.koin.compose.koinInject
 import org.koin.dsl.koinConfiguration
 import timber.log.Timber
 
 @Composable
-fun HomeScreen(
+fun PlaylistsScreen(
     modifier: Modifier,
-    viewModel: PlaylistMenuViewModel,
+    viewModel: PlaylistsViewModel,
     snackBarHostState: SnackbarHostState,
+    onSettings: () -> Unit,
     onEditPlaylist: (FileItem?) -> Unit,
     onNavPlaylist: (Uri) -> Unit
 ) {
@@ -61,7 +62,34 @@ fun HomeScreen(
 
     val prefManager = koinInject<PrefManager>()
     val storageManager = koinInject<StorageManager>()
-    val playlistManager = koinInject<PlaylistManager>()
+
+    val snackMessage by viewModel.snackMessage.collectAsStateWithLifecycle()
+    LaunchedEffect(snackMessage) {
+        snackMessage?.let { message ->
+            scope.launch {
+                snackBarHostState.showSnackbar(
+                    message = message,
+                    actionLabel = "OK"
+                )
+            }
+        }
+    }
+
+    val playerResult = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == 1) {
+            result.data?.getStringExtra("error")?.let {
+                Timber.w("Result with error: $it")
+                scope.launch {
+                    snackBarHostState.showSnackbar(message = it)
+                }
+            }
+        }
+        if (result.resultCode == 2) {
+            Timber.d("Result with 2")
+        }
+    }
 
     val appSettings = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -76,7 +104,7 @@ fun HomeScreen(
             storageManager.setPlaylistDirectory(uri).onSuccess {
                 viewModel.setDefaultPath()
             }.onFailure {
-                viewModel.showError(message = it.message ?: resources.getString(R.string.error))
+                viewModel.emitError(message = it.message ?: resources.getString(R.string.error))
             }
         }
     }
@@ -109,58 +137,10 @@ fun HomeScreen(
         dismissText = stringResource(id = android.R.string.cancel),
         onDismiss = {
             viewModel.askForStorage(false)
-            viewModel.showError(null)
+            viewModel.clearError()
             viewModel.updateList()
         }
     )
-
-    // Error message Dialog
-    MenuErrorDialog(
-        state = state,
-        onConfirm = {
-            viewModel.showError(null)
-            viewModel.updateList()
-        }
-    )
-
-    // Edit playlist dialog
-//    MenuEditDialog(
-//        state = state,
-//        onConfirm = { res ->
-//            if (!res) {
-//                scope.launch {
-//                    val msg = "Failed to edit playlist"
-//                    snackBarHostState.showSnackbar(msg, "OK")
-//                }
-//            }
-//
-//            viewModel.editPlaylist(null)
-//        },
-//        onDelete = { item ->
-//            scope.launch {
-//                playlistManager.delete(item.name)
-//                viewModel.editPlaylist(null)
-//            }
-//        },
-//        onDismiss = { viewModel.editPlaylist(null) },
-//    )
-
-    // New playlist dialog
-//    MenuNewPlaylist(
-//        state = state,
-//        onConfirm = { res ->
-//            if (res) {
-//                viewModel.updateList()
-//            } else {
-//                viewModel.showError(
-//                    message = resources.getString(R.string.dialog_message_error_create_playlist)
-//                )
-//            }
-//
-//            viewModel.newPlaylist(false)
-//        },
-//        onDismiss = { viewModel.newPlaylist(false) }
-//    )
 
     LaunchedEffect(state.mediaPath) {
         if (state.mediaPath.isNotEmpty()) {
@@ -170,7 +150,7 @@ fun HomeScreen(
             ).onSuccess {
                 viewModel.updateList()
             }.onFailure {
-                viewModel.showError(it.message ?: resources.getString(R.string.error))
+                viewModel.emitError(it.message ?: resources.getString(R.string.error))
             }
         }
     }
@@ -190,6 +170,12 @@ fun HomeScreen(
     HomeScreenContent(
         modifier = modifier,
         state = state,
+        onSettings = onSettings,
+        onTitle = {
+            if (PlayerService.isAlive.value) {
+                Intent(context, PlayerActivity::class.java).also(playerResult::launch)
+            }
+        },
         onItemClick = { item ->
             onNavPlaylist(item.uri)
         },
@@ -220,7 +206,9 @@ fun HomeScreen(
 @Composable
 private fun HomeScreenContent(
     modifier: Modifier = Modifier,
-    state: PlaylistMenuState,
+    state: PlaylistsUiState,
+    onSettings: () -> Unit,
+    onTitle: () -> Unit,
     onItemClick: (item: FileItem) -> Unit,
     onItemLongClick: (item: FileItem) -> Unit,
     onNewPlaylist: () -> Unit,
@@ -228,6 +216,9 @@ private fun HomeScreenContent(
     onRequestSettings: () -> Unit,
     onRequestStorage: () -> Unit
 ) {
+    val serviceAlive by PlayerService.isAlive.collectAsStateWithLifecycle()
+    val servicePlaying by PlayerService.isPlaying.collectAsStateWithLifecycle()
+
     val storageManager = koinInject<StorageManager>()
 
     val scrollState = rememberLazyListState()
@@ -248,6 +239,14 @@ private fun HomeScreenContent(
 
     Scaffold(
         modifier = modifier,
+        topBar = {
+            XmpCenterTopBar(
+                onSettings = onSettings,
+                onTitle = onTitle,
+                isAlive = serviceAlive,
+                isPlaying = servicePlaying,
+            )
+        },
         floatingActionButton = {
             if (hasStorage) {
                 ExtendedFloatingActionButton(
@@ -318,69 +317,6 @@ private fun HomeScreenContent(
     }
 }
 
-@Composable
-private fun MenuErrorDialog(
-    state: PlaylistMenuState,
-    onConfirm: () -> Unit
-) {
-    MessageDialog(
-        isShowing = state.errorText != null,
-        title = stringResource(id = R.string.error),
-        text = state.errorText.orEmpty(),
-        confirmText = stringResource(id = android.R.string.ok),
-        onConfirm = onConfirm
-    )
-}
-
-// @Composable
-// private fun MenuEditDialog(
-//    state: PlaylistMenuState,
-//    onConfirm: (Boolean) -> Unit,
-//    onDismiss: () -> Unit,
-//    onDelete: (FileItem) -> Unit
-// ) {
-//    val playlistManager = koinInject<PlaylistManager>()
-//    val scope = rememberCoroutineScope()
-//
-//    EditPlaylistDialog(
-//        isShowing = state.editPlaylist != null,
-//        fileItem = state.editPlaylist,
-//        onConfirm = { item, newName, newComment ->
-//            scope.launch {
-//                val res = playlistManager.run {
-//                    load(item.docFile!!.uri)
-//                    rename(newName, newComment)
-//                }.isSuccess
-//
-//                onConfirm(res)
-//            }
-//        },
-//        onDismiss = onDismiss,
-//        onDelete = onDelete
-//    )
-// }
-//
-// @Composable
-// private fun MenuNewPlaylist(
-//    state: PlaylistMenuState,
-//    onConfirm: (Boolean) -> Unit,
-//    onDismiss: () -> Unit
-// ) {
-//    val playlistManager = koinInject<PlaylistManager>()
-//    val scope = rememberCoroutineScope()
-//
-//    NewPlaylistDialog(
-//        isShowing = state.newPlaylist,
-//        onConfirm = { name, comment ->
-//            scope.launch {
-//                val res = playlistManager.new(name, comment).isSuccess
-//                onConfirm(res)
-//            }
-//        },
-//        onDismiss = onDismiss
-//    )
-// }
-
 @Preview
 @Composable
 private fun Preview_PlaylistMenuScreen() {
@@ -389,7 +325,7 @@ private fun Preview_PlaylistMenuScreen() {
     ) {
         XmpTheme(useDarkTheme = true) {
             HomeScreenContent(
-                state = PlaylistMenuState(
+                state = PlaylistsUiState(
                     mediaPath = "sdcard\\some\\path",
                     isLoading = true,
                     playlistItems = List(15) {
@@ -400,6 +336,8 @@ private fun Preview_PlaylistMenuScreen() {
                         )
                     }.toPersistentList()
                 ),
+                onSettings = {},
+                onTitle = {},
                 onItemClick = {},
                 onItemLongClick = {},
                 onRefresh = {},

@@ -23,6 +23,7 @@ import org.helllabs.android.xmp.model.Module
 
 @Composable
 fun SearchHistoryScreen(
+    modifier: Modifier = Modifier,
     historyList: ImmutableList<Module>,
     onBack: () -> Unit,
     onClear: () -> Unit,
@@ -52,6 +53,7 @@ fun SearchHistoryScreen(
     )
 
     Scaffold(
+        modifier = modifier,
         topBar = {
             XmpTopBar(
                 isScrolled = isScrolled.value,
@@ -93,7 +95,15 @@ fun SearchHistoryScreen(
             }
 
             if (historyList.isEmpty()) {
-                ErrorScreen(text = "Empty History")
+                ErrorScreen(
+                    text = "Empty History",
+                    action = {
+                        OutlinedButton(
+                            onClick = onBack,
+                            content = { Text(text = "Go Back") }
+                        )
+                    }
+                )
             }
         }
     }

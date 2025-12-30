@@ -13,18 +13,18 @@ import androidx.compose.ui.*
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.*
 import androidx.compose.ui.tooling.preview.*
+import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import com.alorma.compose.settings.ui.SettingsGroup
 import com.alorma.compose.settings.ui.SettingsMenuLink
 import kotlinx.coroutines.launch
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.compose.components.KoinPreview
 import org.helllabs.android.xmp.compose.components.XmpTopBar
-import org.helllabs.android.xmp.compose.theme.XmpTheme
 import org.helllabs.android.xmp.core.PrefManager
 import org.helllabs.android.xmp.core.StorageManager
+import org.helllabs.android.xmp.di.appModule
 import org.koin.compose.koinInject
 import timber.log.Timber
 
@@ -58,7 +58,19 @@ fun PreferencesScreen(
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(hostState = snackBarHostState) },
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackBarHostState,
+                snackbar = { data ->
+                    Snackbar(
+                        snackbarData = data,
+                        shape = MaterialTheme.shapes.extraLarge,
+                        containerColor = MaterialTheme.colorScheme.inverseSurface,
+                        contentColor = MaterialTheme.colorScheme.inverseOnSurface
+                    )
+                }
+            )
+        },
         topBar = {
             XmpTopBar(
                 title = stringResource(id = R.string.screen_title_preferences),
@@ -80,8 +92,11 @@ fun PreferencesScreen(
             modifier = modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .verticalScroll(scrollState)
+                .verticalScroll(scrollState),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            Spacer(modifier = Modifier.height(8.dp))
+
             val context = LocalContext.current
             SettingsGroupPlaylist(
                 onChangeDir = {
@@ -98,10 +113,21 @@ fun PreferencesScreen(
 
             if (BuildConfig.DEBUG) {
                 SettingsGroup(
-                    title = { Text(text = "Debug") }
+                    title = {
+                        Text(
+                            text = "Debug",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 ) {
                     SettingsMenuLink(
-                        title = { Text(text = "Revoke all Uri Permissions") },
+                        title = {
+                            Text(
+                                text = "Revoke all Uri Permissions",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        },
                         onClick = {
                             val uriPermissions = context.contentResolver.persistedUriPermissions
                             for (permission in uriPermissions) {
@@ -120,7 +146,12 @@ fun PreferencesScreen(
                         }
                     )
                     SettingsMenuLink(
-                        title = { Text(text = "Clear Preferences") },
+                        title = {
+                            Text(
+                                text = "Clear Preferences",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        },
                         onClick = {
                             scope.launch {
                                 prefManager.clearPreferences()
@@ -130,6 +161,8 @@ fun PreferencesScreen(
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }
@@ -137,10 +170,7 @@ fun PreferencesScreen(
 @Preview
 @Composable
 private fun Preview() {
-    val context = LocalContext.current
-    val json = Json { ignoreUnknownKeys = true }
-    PrefManager(context, json)
-    XmpTheme {
+    KoinPreview(modules = listOf(appModule)) {
         PreferencesScreen(
             snackBarHostState = SnackbarHostState(),
             onBack = {},

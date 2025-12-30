@@ -373,6 +373,26 @@ fun Preview_NewPlaylistDialog() {
 
 @Preview
 @Composable
+fun Preview_EditPlaylistDialog() {
+    XmpTheme(useDarkTheme = true) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            EditPlaylistDialog(
+                isShowing = true,
+                fileItem = FileItem(
+                    name = "Playlist Name",
+                    comment = "Playlist Comment",
+                    uri = Uri.EMPTY
+                ),
+                onConfirm = { _, _, _ -> },
+                onDismiss = {},
+                onDelete = {}
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
 fun Preview_MessageDialog() {
     XmpTheme(useDarkTheme = true) {
         Box(modifier = Modifier.fillMaxWidth()) {
@@ -401,26 +421,6 @@ fun Preview_LongMessageDialog() {
                 confirmText = stringResource(id = android.R.string.ok),
                 onConfirm = { },
                 onDismiss = { }
-            )
-        }
-    }
-}
-
-@Preview
-@Composable
-fun Preview_EditPlaylistDialog() {
-    XmpTheme(useDarkTheme = true) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            EditPlaylistDialog(
-                isShowing = true,
-                fileItem = FileItem(
-                    name = "Playlist Name",
-                    comment = "Playlist Comment",
-                    uri = Uri.EMPTY
-                ),
-                onConfirm = { _, _, _ -> },
-                onDismiss = {},
-                onDelete = {}
             )
         }
     }

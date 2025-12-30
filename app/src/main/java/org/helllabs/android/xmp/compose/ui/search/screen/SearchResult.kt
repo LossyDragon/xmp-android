@@ -33,7 +33,7 @@ enum class SearchType {
 }
 
 @Composable
-fun TitleResultScreenImpl(
+fun SearchResultScreen(
     viewModel: SearchResultViewModel,
     searchType: SearchType,
     searchQuery: String,
@@ -41,7 +41,6 @@ fun TitleResultScreenImpl(
     onClick: (Int) -> Unit,
     onError: (String?) -> Unit
 ) {
-    val context = LocalContext.current
     val resources = LocalResources.current
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 

@@ -18,7 +18,6 @@ import androidx.compose.ui.unit.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.compose.components.ErrorScreen
 import org.helllabs.android.xmp.compose.components.MessageDialog
 import org.helllabs.android.xmp.compose.components.ProgressbarIndicator
@@ -42,7 +41,8 @@ import org.koin.compose.getKoin
 import timber.log.Timber
 
 @Composable
-fun ModuleResultScreenImpl(
+fun SearchModuleResultScreen(
+    modifier: Modifier,
     viewModel: ResultViewModel,
     snackBarHostState: SnackbarHostState,
     moduleID: Int,
@@ -83,7 +83,8 @@ fun ModuleResultScreenImpl(
         viewModel.getModuleById(moduleID)
     }
 
-    ModuleResultScreen(
+    SearchModuleResultScreenContent(
+        modifier = modifier,
         state = state,
         snackBarHostState = snackBarHostState,
         onBack = onBack,
@@ -115,7 +116,8 @@ fun ModuleResultScreenImpl(
 }
 
 @Composable
-private fun ModuleResultScreen(
+private fun SearchModuleResultScreenContent(
+    modifier: Modifier = Modifier,
     state: ModuleResultState,
     snackBarHostState: SnackbarHostState,
     onBack: () -> Unit,
@@ -149,6 +151,7 @@ private fun ModuleResultScreen(
     )
 
     Scaffold(
+        modifier = modifier,
         snackbarHost = { SnackbarHost(hostState = snackBarHostState) },
         topBar = {
             XmpTopBar(
@@ -239,9 +242,9 @@ private fun ModuleResultScreen(
 
 @Preview
 @Composable
-private fun Preview_ModuleResult() {
+private fun Preview_Search_ModuleResultContent() {
     XmpTheme(useDarkTheme = true) {
-        ModuleResultScreen(
+        SearchModuleResultScreenContent(
             state = ModuleResultState(
                 module = ModuleResult(
                     sponsor = Sponsor(

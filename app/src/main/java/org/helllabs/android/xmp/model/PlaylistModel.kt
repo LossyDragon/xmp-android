@@ -4,9 +4,9 @@ import android.net.Uri
 import androidx.compose.runtime.Immutable
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
-import org.helllabs.android.xmp.serializers.ImmutableListSerializer
 import org.helllabs.android.xmp.serializers.UriSerializer
 
 /**
@@ -28,7 +28,7 @@ data class Playlist(
     val isShuffle: Boolean = false,
     @Serializable(with = UriSerializer::class)
     val uri: Uri = Uri.EMPTY,
-    @Serializable(with = ImmutableListSerializer::class)
+    @Contextual
     val list: ImmutableList<PlaylistItem> = persistentListOf()
 )
 

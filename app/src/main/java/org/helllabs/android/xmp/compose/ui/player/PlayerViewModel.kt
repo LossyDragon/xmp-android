@@ -19,6 +19,8 @@ import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.core.PlaylistManager
+import org.helllabs.android.xmp.core.PlaylistManager.Companion.addItem
+import org.helllabs.android.xmp.core.PlaylistManager.Companion.addItems
 import org.helllabs.android.xmp.core.PrefManager
 import org.helllabs.android.xmp.core.StorageManager
 import org.helllabs.android.xmp.model.ChannelInfo
@@ -482,7 +484,7 @@ class PlayerViewModel(
                             type = modInfo.type,
                             uri = playlistChoice.value!!.uri
                         )
-                        playlist = playlistManager.addItem(playlist, playlistItem)
+                        playlist = playlist.addItem(playlistItem)
                     } else if (playlistChoice.value!!.isDirectory()) {
                         val list = mutableListOf<PlaylistItem>()
                         storageManager.walkDownDirectory(playlistChoice.value!!.uri, false)
@@ -509,7 +511,7 @@ class PlayerViewModel(
                             return@launch
                         }
 
-                        playlist = playlistManager.addItems(playlist, list)
+                        playlist = playlist.addItems(list)
                     }
 
                     playlistManager.savePlaylist(playlist)

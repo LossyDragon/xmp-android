@@ -27,13 +27,19 @@ fun XmpTopBar(
     TopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = if (isScrolled) {
-                MaterialTheme.colorScheme.surfaceVariant.darken(1.45f)
+                MaterialTheme.colorScheme.surfaceContainer
             } else {
                 MaterialTheme.colorScheme.surface
             },
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+            navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
+            actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant
         ),
         title = {
-            Text(text = title)
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge
+            )
         },
         navigationIcon = {
             onBack?.let {

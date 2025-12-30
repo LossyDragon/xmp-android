@@ -1,4 +1,4 @@
-package org.helllabs.android.xmp.compose.ui.home
+package org.helllabs.android.xmp.compose.ui.playlist.viewmodel
 
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
@@ -8,6 +8,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -20,25 +21,33 @@ import org.helllabs.android.xmp.model.FileItem
 import timber.log.Timber
 
 @Stable
-data class PlaylistMenuState(
-    val errorText: String? = null,
+data class PlaylistsUiState(
     val isLoading: Boolean = true,
     val mediaPath: String = "",
     val playlistItems: ImmutableList<FileItem> = persistentListOf(),
     val askForStorage: Boolean = false
 )
 
-class PlaylistMenuViewModel(
+class PlaylistsViewModel(
     private val storageManager: StorageManager,
     private val prefManager: PrefManager,
     private val playlistManager: PlaylistManager
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(PlaylistMenuState())
+    private val _uiState = MutableStateFlow(PlaylistsUiState())
     val uiState = _uiState.asStateFlow()
 
-    fun showError(message: String?) {
-        _uiState.update { it.copy(errorText = message) }
+    private val _snackMessage = MutableStateFlow<String?>(null)
+    val snackMessage: StateFlow<String?> = _snackMessage.asStateFlow()
+
+    fun emitError(message: String?) {
+        viewModelScope.launch {
+            _snackMessage.value = message
+        }
+    }
+
+    fun clearError() {
+        emitError(null)
     }
 
     /**
@@ -82,7 +91,7 @@ class PlaylistMenuViewModel(
             }
             .onFailure { err ->
                 Timber.e(err, "Error setting default path")
-                showError(err.message ?: "Error setting default path")
+                emitError(err.message ?: "Error setting default path")
                 _uiState.update { it.copy(mediaPath = "", askForStorage = false) }
             }
     }
@@ -146,7 +155,7 @@ class PlaylistMenuViewModel(
                 },
                 onFailure = { error ->
                     Timber.e(error, "Failed to edit playlist")
-                    showError(error.message ?: "Failed to edit playlist")
+                    emitError(error.message ?: "Failed to edit playlist")
                 }
             )
         }
@@ -160,7 +169,7 @@ class PlaylistMenuViewModel(
                 },
                 onFailure = { error ->
                     Timber.e(error, "Failed to delete playlist")
-                    showError(error.message ?: "Failed to delete playlist")
+                    emitError(error.message ?: "Failed to delete playlist")
                 }
             )
         }

@@ -1,4 +1,4 @@
-package org.helllabs.android.xmp.compose.ui.playlist
+package org.helllabs.android.xmp.compose.ui.playlist.screen
 
 import android.content.res.Configuration
 import android.net.Uri
@@ -21,25 +21,26 @@ import kotlinx.collections.immutable.toPersistentList
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.compose.components.BottomBarButtons
 import org.helllabs.android.xmp.compose.components.ErrorScreen
+import org.helllabs.android.xmp.compose.components.KoinPreview
 import org.helllabs.android.xmp.compose.components.XmpTopBar
 import org.helllabs.android.xmp.compose.theme.XmpTheme
 import org.helllabs.android.xmp.compose.ui.playlist.components.PlaylistCardItem
 import org.helllabs.android.xmp.compose.ui.playlist.components.PlaylistInfo
-import org.helllabs.android.xmp.core.PrefManager
+import org.helllabs.android.xmp.compose.ui.playlist.viewmodel.SelectedPlaylistViewModel
+import org.helllabs.android.xmp.di.appModule
 import org.helllabs.android.xmp.model.DropDownSelection
 import org.helllabs.android.xmp.model.Playlist
 import org.helllabs.android.xmp.model.PlaylistItem
-import org.koin.compose.koinInject
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import sh.calvin.reorderable.rememberScroller
 import timber.log.Timber
 
 @Composable
-fun PlaylistScreen(
-    viewModel: PlaylistViewModel,
+fun SelectedPlaylistScreen(
+    modifier: Modifier,
+    viewModel: SelectedPlaylistViewModel,
     snackBarHostState: SnackbarHostState,
-    playlist: String,
     onBack: () -> Unit,
     onPlayAll: (List<Uri>, Boolean, Boolean) -> Unit,
     onAddQueue: (List<Uri>, Boolean, Boolean) -> Unit,
@@ -47,11 +48,10 @@ fun PlaylistScreen(
     onItemClick: (List<Uri>, Int, Boolean, Boolean) -> Unit
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val prefManager = koinInject<PrefManager>()
 
     LifecycleResumeEffect(Lifecycle.Event.ON_RESUME) {
         Timber.d("Lifecycle onResume")
-        viewModel.onRefresh(playlist)
+        viewModel.onRefresh()
         viewModel.useFileName()
 
         onPauseOrDispose {
@@ -61,6 +61,7 @@ fun PlaylistScreen(
     }
 
     PlaylistScreenContent(
+        modifier = modifier,
         state = state,
         snackBarHostState = snackBarHostState,
         onBack = onBack,
@@ -76,7 +77,7 @@ fun PlaylistScreen(
             when (selection) {
                 DropDownSelection.DELETE -> {
                     viewModel.removeItem(index)
-                    viewModel.onRefresh(playlist)
+                    viewModel.onRefresh()
                 }
 
                 DropDownSelection.ADD_TO_QUEUE ->
@@ -124,6 +125,7 @@ fun PlaylistScreen(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun PlaylistScreenContent(
+    modifier: Modifier,
     state: Playlist,
     snackBarHostState: SnackbarHostState,
     onBack: () -> Unit,
@@ -143,19 +145,14 @@ private fun PlaylistScreenContent(
     }
 
     Scaffold(
+        modifier = modifier,
         topBar = {
-            Column {
-                XmpTopBar(
-                    title = stringResource(id = R.string.screen_title_playlist),
-                    isScrolled = isScrolled.value,
-                    onBack = onBack
-                )
-                PlaylistInfo(
-                    isScrolled = isScrolled.value,
-                    playlistName = state.name,
-                    playlistComment = state.comment
-                )
-            }
+            PlaylistInfo(
+                isScrolled = isScrolled.value,
+                onBack = onBack,
+                playlistName = state.name,
+                playlistComment = state.comment
+            )
         },
         bottomBar = {
             BottomBarButtons(
@@ -203,18 +200,18 @@ private fun PlaylistScreenContent(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Dummy item. Compose (and libs) cannot handle 1st item animations
-                // https://github.com/Calvin-LL/Reorderable/issues/4
-                item {
-                    ReorderableItem(
-                        state = reorderState,
-                        key = "dummy",
-                        enabled = false,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(.01.dp)
-                    ) {}
-                }
+//                // Dummy item. Compose (and libs) cannot handle 1st item animations
+//                // https://github.com/Calvin-LL/Reorderable/issues/4
+//                item {
+//                    ReorderableItem(
+//                        state = reorderState,
+//                        key = "dummy",
+//                        enabled = false,
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .height(.01.dp)
+//                    ) {}
+//                }
                 itemsIndexed(state.list, key = { _, item -> item.id }) { index, item ->
                     ReorderableItem(
                         state = reorderState,
@@ -251,11 +248,12 @@ private fun PlaylistScreenContent(
     }
 }
 
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL)
+@Preview
 @Composable
 private fun Preview_PlaylistScreenContent() {
-    XmpTheme {
+    KoinPreview(modules = listOf(appModule)) {
         PlaylistScreenContent(
+            modifier = Modifier,
             state = Playlist(
                 comment = stringResource(id = R.string.error_empty_comment),
                 isLoop = true,

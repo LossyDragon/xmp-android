@@ -2,9 +2,12 @@
 
 package org.helllabs.android.xmp.di
 
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.modules.SerializersModule
 import org.helllabs.android.xmp.core.PrefManager
 import org.helllabs.android.xmp.core.StorageManager
+import org.helllabs.android.xmp.serializers.ImmutableListSerializer
 import org.koin.dsl.module
 
 val appModule = module {
@@ -15,6 +18,11 @@ val appModule = module {
             prettyPrint = true
             ignoreUnknownKeys = true
             encodeDefaults = true
+            serializersModule = SerializersModule {
+                contextual(ImmutableList::class) { args ->
+                    ImmutableListSerializer(args[0])
+                }
+            }
         }
     }
 }

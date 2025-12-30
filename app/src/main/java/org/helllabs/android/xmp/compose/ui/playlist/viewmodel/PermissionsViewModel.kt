@@ -1,4 +1,4 @@
-package org.helllabs.android.xmp.compose.ui.home
+package org.helllabs.android.xmp.compose.ui.playlist.viewmodel
 
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
