@@ -18,7 +18,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.collections.immutable.toPersistentList
-import kotlinx.serialization.Serializable
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.compose.components.BottomBarButtons
 import org.helllabs.android.xmp.compose.components.ErrorScreen
@@ -37,7 +36,7 @@ import sh.calvin.reorderable.rememberScroller
 import timber.log.Timber
 
 @Composable
-fun PlaylistScreenImpl(
+fun PlaylistScreen(
     viewModel: PlaylistViewModel,
     snackBarHostState: SnackbarHostState,
     playlist: String,
@@ -61,7 +60,7 @@ fun PlaylistScreenImpl(
         }
     }
 
-    PlaylistScreen(
+    PlaylistScreenContent(
         state = state,
         snackBarHostState = snackBarHostState,
         onBack = onBack,
@@ -124,7 +123,7 @@ fun PlaylistScreenImpl(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun PlaylistScreen(
+private fun PlaylistScreenContent(
     state: Playlist,
     snackBarHostState: SnackbarHostState,
     onBack: () -> Unit,
@@ -254,9 +253,9 @@ private fun PlaylistScreen(
 
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL)
 @Composable
-private fun Preview_PlaylistScreen() {
+private fun Preview_PlaylistScreenContent() {
     XmpTheme {
-        PlaylistScreen(
+        PlaylistScreenContent(
             state = Playlist(
                 comment = stringResource(id = R.string.error_empty_comment),
                 isLoop = true,

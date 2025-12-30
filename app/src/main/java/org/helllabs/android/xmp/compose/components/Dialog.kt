@@ -1,5 +1,6 @@
 package org.helllabs.android.xmp.compose.components
 
+import android.net.Uri
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -415,7 +416,7 @@ fun Preview_EditPlaylistDialog() {
                 fileItem = FileItem(
                     name = "Playlist Name",
                     comment = "Playlist Comment",
-                    docFile = null
+                    uri = Uri.EMPTY
                 ),
                 onConfirm = { _, _, _ -> },
                 onDismiss = {},

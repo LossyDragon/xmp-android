@@ -3,7 +3,6 @@ package org.helllabs.android.xmp.compose.ui.home
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.lazygeniouz.dfc.file.DocumentFileCompat
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
@@ -12,12 +11,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.helllabs.android.xmp.core.PlaylistManager
 import org.helllabs.android.xmp.core.PrefManager
 import org.helllabs.android.xmp.core.StorageManager
 import org.helllabs.android.xmp.core.XmpException
 import org.helllabs.android.xmp.model.FileItem
-import org.helllabs.android.xmp.model.PlaylistItem
 import timber.log.Timber
 
 @Stable
@@ -26,8 +25,6 @@ data class PlaylistMenuState(
     val isLoading: Boolean = true,
     val mediaPath: String = "",
     val playlistItems: ImmutableList<FileItem> = persistentListOf(),
-    val editPlaylist: FileItem? = null,
-    val newPlaylist: Boolean = false,
     val askForStorage: Boolean = false
 )
 
@@ -69,14 +66,12 @@ class PlaylistMenuViewModel(
     }
 
     private suspend fun createExamplePlaylist(name: String, comment: String) {
-        playlistManager.new(name, comment)
-            .onSuccess {
-                prefManager.setInstalledExamplePlaylist(true)
-            }
-            .onFailure {
-                Timber.e(it)
-                throw XmpException("Unable to create Example playlist")
-            }
+        playlistManager.createPlaylist(name, comment).onSuccess {
+            prefManager.setInstalledExamplePlaylist(true)
+        }.onFailure {
+            Timber.e(it)
+            throw XmpException("Unable to create Example playlist")
+        }
     }
 
     suspend fun setDefaultPath() {
@@ -93,52 +88,82 @@ class PlaylistMenuViewModel(
     }
 
     fun updateList() {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
+            refreshPlaylistItems()
+        }
+    }
+
+    private suspend fun refreshPlaylistItems() {
+        withContext(Dispatchers.IO) {
             if (uiState.value.mediaPath.isEmpty()) {
                 _uiState.update { it.copy(isLoading = false, playlistItems = persistentListOf()) }
-                return@launch
+                return@withContext
             }
 
             _uiState.update { it.copy(isLoading = true) }
-            val items = loadPlaylistItems()
+            val items = playlistManager.listAllPlaylists().fold(
+                onSuccess = { playlists ->
+                    playlists.map {
+                        FileItem(name = it.name, comment = it.comment, uri = it.uri)
+                    }.toPersistentList()
+                },
+                onFailure = { error ->
+                    Timber.e(error, "Failed to list playlist files")
+                    persistentListOf()
+                }
+            )
+
             _uiState.update { it.copy(isLoading = false, playlistItems = items) }
         }
     }
 
-    private suspend fun loadPlaylistItems(): ImmutableList<FileItem> {
-        return playlistManager.listPlaylistFiles()
-            .mapCatching { files ->
-                files.mapNotNull { docFile ->
-                    playlistManager.load(docFile.uri)
-                        .map {
-                            FileItem(
-                                name = playlistManager.playlist.name,
-                                comment = playlistManager.playlist.comment,
-                                docFile = docFile
-                            )
-                        }
-                        .onFailure { error ->
-                            Timber.e(error, "Failed to load playlist: ${docFile.name}")
-                        }
-                        .getOrNull()
-                }.toPersistentList()
-            }
-            .onFailure { error ->
-                Timber.e(error, "Failed to list playlist files")
-            }
-            .getOrDefault(persistentListOf())
-    }
+    // null `playlistItem` will be a new playlist
+    fun editPlaylist(
+        fileItem: FileItem?,
+        name: String,
+        comment: String
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val result = fileItem?.let { item ->
+                playlistManager.loadPlaylist(item.uri).mapCatching { playlist ->
+                    val withComment = playlistManager.setComment(playlist, comment)
 
-    fun editPlaylist(item: FileItem?) {
-        _uiState.update { it.copy(editPlaylist = item) }
+                    if (playlist.name != name) {
+                        playlistManager.renamePlaylist(withComment, name).getOrThrow()
+                    } else {
+                        playlistManager.savePlaylist(withComment).getOrThrow()
+                    }
+                }
+            } ?: run {
+                Timber.d("New Playlist: $name")
+                playlistManager.createPlaylist(name, comment).map { }
+            }
 
-        if (item == null) {
-            updateList()
+            result.fold(
+                onSuccess = {
+                    Timber.d("Playlist ${fileItem?.name.orEmpty()} edited")
+                    refreshPlaylistItems()
+                },
+                onFailure = { error ->
+                    Timber.e(error, "Failed to edit playlist")
+                    showError(error.message ?: "Failed to edit playlist")
+                }
+            )
         }
     }
 
-    fun newPlaylist(show: Boolean) {
-        _uiState.update { it.copy(newPlaylist = show) }
+    fun deletePlaylist(playlistItem: FileItem) {
+        viewModelScope.launch(Dispatchers.IO) {
+            playlistManager.deletePlaylist(playlistItem.uri).fold(
+                onSuccess = {
+                    refreshPlaylistItems()
+                },
+                onFailure = { error ->
+                    Timber.e(error, "Failed to delete playlist")
+                    showError(error.message ?: "Failed to delete playlist")
+                }
+            )
+        }
     }
 
     fun askForStorage(value: Boolean) {

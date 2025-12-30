@@ -9,27 +9,35 @@ import kotlinx.serialization.Transient
 import org.helllabs.android.xmp.serializers.ImmutableListSerializer
 import org.helllabs.android.xmp.serializers.UriSerializer
 
+/**
+ * @param name the name of the playlist.
+ * @param comment the description of the playlist
+ * @param useFileName whether to use the module name or filename.
+ * @param isLoop whether to loop the playlist.
+ * @param isShuffle whether to shuffle the playlist.
+ * @param uri the playlist uri.
+ * @param list the list of [PlaylistItem]
+ */
 @Immutable
 @Serializable
 data class Playlist(
+    val name: String = "",
     val comment: String = "",
+    val useFileName: Boolean = false,
     val isLoop: Boolean = false,
     val isShuffle: Boolean = false,
-    @Serializable(with = ImmutableListSerializer::class)
-    val list: ImmutableList<PlaylistItem> = persistentListOf(),
-    val name: String = "",
     @Serializable(with = UriSerializer::class)
     val uri: Uri = Uri.EMPTY,
-    val useFileName: Boolean = false
-) {
-    fun withComment(newComment: String) = copy(comment = newComment)
-    fun withName(newName: String) = copy(name = newName)
-    fun withLoop(value: Boolean) = copy(isLoop = value)
-    fun withShuffle(value: Boolean) = copy(isShuffle = value)
-    fun withList(newList: ImmutableList<PlaylistItem>) = copy(list = newList)
-    fun withUri(newUri: Uri) = copy(uri = newUri)
-}
+    @Serializable(with = ImmutableListSerializer::class)
+    val list: ImmutableList<PlaylistItem> = persistentListOf()
+)
 
+/**
+ * @param name the module tracker name or filename.
+ * @param type the module type (ie: XM, S3M)
+ * @param uri the module uri.
+ * @param id the module id in a list.
+ */
 @Immutable
 @Serializable
 data class PlaylistItem(
@@ -38,5 +46,5 @@ data class PlaylistItem(
     @Serializable(with = UriSerializer::class)
     val uri: Uri,
     @Transient
-    val id: Int = 0 // Can now be copied/modified
+    val id: Int = 0
 )

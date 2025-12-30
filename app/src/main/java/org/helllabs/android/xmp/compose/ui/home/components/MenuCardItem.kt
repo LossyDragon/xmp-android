@@ -1,5 +1,6 @@
 package org.helllabs.android.xmp.compose.ui.home.components
 
+import android.net.Uri
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -52,11 +53,7 @@ fun MenuCardItem(
             ),
             leadingContent = {
                 Icon(
-                    imageVector = if (item.isSpecial) {
-                        Icons.Default.Folder
-                    } else {
-                        Icons.AutoMirrored.Filled.List
-                    },
+                    imageVector = Icons.AutoMirrored.Filled.List,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurface
                 )
@@ -89,7 +86,7 @@ private fun Preview() {
             item = FileItem(
                 name = "Menu Card Item",
                 comment = "Menu Card Comment\nMenu Card Comment\nMenu Card Comment",
-                docFile = null
+                uri = Uri.EMPTY
             ),
             onClick = { },
             onLongClick = { }

@@ -19,28 +19,31 @@ import timber.log.Timber
 
 @Stable
 class PlaylistViewModel(
+    private val playlistUri: Uri,
     private val playlistManager: PlaylistManager,
-    val prefManager: PrefManager
+    private val prefManager: PrefManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(Playlist())
     val uiState = _uiState.asStateFlow()
 
-    val fileName = prefManager.useFileNameFlow()
+    val useFileName = prefManager.useFileNameFlow()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = false
         )
 
+    init {
+        viewModelScope.launch {
+            val playlist = playlistManager.loadPlaylist(playlistUri).getOrThrow()
+            _uiState.update { playlist }
+        }
+    }
+
     fun save() {
         viewModelScope.launch {
-            with(playlistManager) {
-                setLoop(_uiState.value.isLoop)
-                setShuffle(_uiState.value.isShuffle)
-                setList(_uiState.value.list)
-                save()
-            }
+            playlistManager.savePlaylist(_uiState.value)
         }
     }
 
@@ -69,24 +72,11 @@ class PlaylistViewModel(
 
     fun onRefresh(name: String) {
         viewModelScope.launch {
-            with(playlistManager) {
-                load(name.toUri())
+            val listWithIds = _uiState.value.list.mapIndexed { index, playlistItem ->
+                playlistItem.copy(id = index)
+            }.toPersistentList()
 
-                val listWithIds = playlist.list.mapIndexed { index, playlistItem ->
-                    playlistItem.copy(id = index)
-                }.toPersistentList()
-
-                _uiState.update {
-                    it.copy(
-                        comment = playlist.comment,
-                        isLoop = playlist.isLoop,
-                        isShuffle = playlist.isShuffle,
-                        list = listWithIds,
-                        name = playlist.name,
-                        uri = playlist.uri
-                    )
-                }
-            }
+            _uiState.update { it.copy(list = listWithIds) }
         }
     }
 
@@ -102,7 +92,7 @@ class PlaylistViewModel(
     fun useFileName() {
         viewModelScope.launch {
             _uiState.update {
-                it.copy(useFileName = fileName.value)
+                it.copy(useFileName = useFileName.value)
             }
         }
     }

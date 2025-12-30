@@ -112,7 +112,7 @@ data class ChannelMuteState(val isMuted: BooleanArray = BooleanArray(Xmp.MAX_CHA
 class PlayerViewModel(
     private val playlistManager: PlaylistManager,
     private val storageManager: StorageManager,
-    private val prefManager: PrefManager
+    prefManager: PrefManager
 ) : ViewModel() {
 
     private val _activityState = MutableStateFlow(PlayerActivityState())
@@ -443,7 +443,7 @@ class PlayerViewModel(
                 }
 
                 // Update on main thread
-                playlistList.value = playlistManager.listPlaylists().getOrDefault(emptyList())
+                playlistList.value = playlistManager.listAllPlaylists().getOrDefault(emptyList())
                 playlistChoice.value = docFile
             } catch (e: Exception) {
                 Timber.e(e, "Unexpected error in onAddToPlaylist")
@@ -466,60 +466,60 @@ class PlayerViewModel(
                 return@launch
             }
 
-            if (!playlistManager.load(choice.uri).isSuccess) {
-                _softError.emit("Playlist manager failed to load playlist")
-                playlistChoice.value = null
-                return@launch
-            }
+            playlistManager.loadPlaylist(choice.uri).fold(
+                onSuccess = {
+                    var playlist = it
+                    val modInfo = ModInfo()
+                    if (playlistChoice.value!!.isFile()) {
+                        if (!storageManager.testModule(playlistChoice.value!!.uri, modInfo)) {
+                            _softError.emit("Failed to validate file")
+                            playlistChoice.value = null
+                            return@launch
+                        }
 
-            val modInfo = ModInfo()
-            if (playlistChoice.value!!.isFile()) {
-                if (!storageManager.testModule(playlistChoice.value!!.uri, modInfo)) {
-                    _softError.emit("Failed to validate file")
-                    playlistChoice.value = null
-                    return@launch
-                }
+                        val playlistItem = PlaylistItem(
+                            name = modInfo.name,
+                            type = modInfo.type,
+                            uri = playlistChoice.value!!.uri
+                        )
+                        playlist = playlistManager.addItem(playlist, playlistItem)
+                    } else if (playlistChoice.value!!.isDirectory()) {
+                        val list = mutableListOf<PlaylistItem>()
+                        storageManager.walkDownDirectory(playlistChoice.value!!.uri, false)
+                            .forEach { uri ->
+                                if (!storageManager.testModule(uri, modInfo)) {
+                                    Timber.w("Invalid playlist item $uri")
+                                    return@forEach
+                                }
 
-                val playlist = PlaylistItem(
-                    name = modInfo.name,
-                    type = modInfo.type,
-                    uri = playlistChoice.value!!.uri
-                )
-                val list = listOf(playlist)
-                playlistManager.add(list).onFailure {
-                    _softError.emit("Couldn't add module to playlist")
-                }
-            } else if (playlistChoice.value!!.isDirectory()) {
-                val list = mutableListOf<PlaylistItem>()
-                storageManager.walkDownDirectory(playlistChoice.value!!.uri, false).forEach { uri ->
-                    if (!storageManager.testModule(uri, modInfo)) {
-                        Timber.w("Invalid playlist item $uri")
-                        return@forEach
+                                val playlist = PlaylistItem(
+                                    name = modInfo.name.ifEmpty {
+                                        storageManager.getFileName(uri)
+                                    } ?: "",
+                                    type = modInfo.type,
+                                    uri = uri
+                                )
+
+                                list.add(playlist)
+                            }
+
+                        if (list.isEmpty()) {
+                            _softError.emit("Empty directory")
+                            playlistChoice.value = null
+                            return@launch
+                        }
+
+                        playlist = playlistManager.addItems(playlist, list)
                     }
 
-                    val playlist = PlaylistItem(
-                        name = modInfo.name.ifEmpty {
-                            storageManager.getFileName(uri)
-                        } ?: "",
-                        type = modInfo.type,
-                        uri = uri
-                    )
-
-                    list.add(playlist)
-                }
-
-                if (list.isEmpty()) {
-                    _softError.emit("Empty directory")
+                    playlistManager.savePlaylist(playlist)
                     playlistChoice.value = null
-                    return@launch
+                },
+                onFailure = {
+                    _softError.emit("Playlist manager failed to load playlist")
+                    playlistChoice.value = null
                 }
-
-                playlistManager.add(list).onFailure {
-                    _softError.emit("Couldn't add modules to playlist")
-                }
-            }
-
-            playlistChoice.value = null
+            )
         }
     }
 

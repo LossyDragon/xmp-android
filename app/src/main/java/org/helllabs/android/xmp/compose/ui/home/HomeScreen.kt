@@ -51,8 +51,8 @@ fun HomeScreen(
     modifier: Modifier,
     viewModel: PlaylistMenuViewModel,
     snackBarHostState: SnackbarHostState,
-    onNavFileList: () -> Unit,
-    onNavPlaylist: (String) -> Unit
+    onEditPlaylist: (FileItem?) -> Unit,
+    onNavPlaylist: (Uri) -> Unit
 ) {
     val context = LocalContext.current
     val resources = LocalResources.current
@@ -124,43 +124,43 @@ fun HomeScreen(
     )
 
     // Edit playlist dialog
-    MenuEditDialog(
-        state = state,
-        onConfirm = { res ->
-            if (!res) {
-                scope.launch {
-                    val msg = "Failed to edit playlist"
-                    snackBarHostState.showSnackbar(msg, "OK")
-                }
-            }
-
-            viewModel.editPlaylist(null)
-        },
-        onDelete = { item ->
-            scope.launch {
-                playlistManager.delete(item.name)
-                viewModel.editPlaylist(null)
-            }
-        },
-        onDismiss = { viewModel.editPlaylist(null) },
-    )
+//    MenuEditDialog(
+//        state = state,
+//        onConfirm = { res ->
+//            if (!res) {
+//                scope.launch {
+//                    val msg = "Failed to edit playlist"
+//                    snackBarHostState.showSnackbar(msg, "OK")
+//                }
+//            }
+//
+//            viewModel.editPlaylist(null)
+//        },
+//        onDelete = { item ->
+//            scope.launch {
+//                playlistManager.delete(item.name)
+//                viewModel.editPlaylist(null)
+//            }
+//        },
+//        onDismiss = { viewModel.editPlaylist(null) },
+//    )
 
     // New playlist dialog
-    MenuNewPlaylist(
-        state = state,
-        onConfirm = { res ->
-            if (res) {
-                viewModel.updateList()
-            } else {
-                viewModel.showError(
-                    message = resources.getString(R.string.dialog_message_error_create_playlist)
-                )
-            }
-
-            viewModel.newPlaylist(false)
-        },
-        onDismiss = { viewModel.newPlaylist(false) }
-    )
+//    MenuNewPlaylist(
+//        state = state,
+//        onConfirm = { res ->
+//            if (res) {
+//                viewModel.updateList()
+//            } else {
+//                viewModel.showError(
+//                    message = resources.getString(R.string.dialog_message_error_create_playlist)
+//                )
+//            }
+//
+//            viewModel.newPlaylist(false)
+//        },
+//        onDismiss = { viewModel.newPlaylist(false) }
+//    )
 
     LaunchedEffect(state.mediaPath) {
         if (state.mediaPath.isNotEmpty()) {
@@ -191,21 +191,13 @@ fun HomeScreen(
         modifier = modifier,
         state = state,
         onItemClick = { item ->
-            if (item.isSpecial) {
-                onNavFileList()
-            } else {
-                onNavPlaylist(item.docFile!!.uri.toString())
-            }
+            onNavPlaylist(item.uri)
         },
         onItemLongClick = { item ->
-            if (item.isSpecial) {
-                documentTreeResult.launch(null)
-            } else {
-                viewModel.editPlaylist(item)
-            }
+            onEditPlaylist(item)
         },
         onRefresh = viewModel::updateList,
-        onNewPlaylist = { viewModel.newPlaylist(true) },
+        onNewPlaylist = { onEditPlaylist(null) },
         onRequestSettings = {
             Intent().apply {
                 action = ACTION_APPLICATION_DETAILS_SETTINGS
@@ -340,54 +332,54 @@ private fun MenuErrorDialog(
     )
 }
 
-@Composable
-private fun MenuEditDialog(
-    state: PlaylistMenuState,
-    onConfirm: (Boolean) -> Unit,
-    onDismiss: () -> Unit,
-    onDelete: (FileItem) -> Unit
-) {
-    val playlistManager = koinInject<PlaylistManager>()
-    val scope = rememberCoroutineScope()
-
-    EditPlaylistDialog(
-        isShowing = state.editPlaylist != null,
-        fileItem = state.editPlaylist,
-        onConfirm = { item, newName, newComment ->
-            scope.launch {
-                val res = playlistManager.run {
-                    load(item.docFile!!.uri)
-                    rename(newName, newComment)
-                }.isSuccess
-
-                onConfirm(res)
-            }
-        },
-        onDismiss = onDismiss,
-        onDelete = onDelete
-    )
-}
-
-@Composable
-private fun MenuNewPlaylist(
-    state: PlaylistMenuState,
-    onConfirm: (Boolean) -> Unit,
-    onDismiss: () -> Unit
-) {
-    val playlistManager = koinInject<PlaylistManager>()
-    val scope = rememberCoroutineScope()
-
-    NewPlaylistDialog(
-        isShowing = state.newPlaylist,
-        onConfirm = { name, comment ->
-            scope.launch {
-                val res = playlistManager.new(name, comment).isSuccess
-                onConfirm(res)
-            }
-        },
-        onDismiss = onDismiss
-    )
-}
+// @Composable
+// private fun MenuEditDialog(
+//    state: PlaylistMenuState,
+//    onConfirm: (Boolean) -> Unit,
+//    onDismiss: () -> Unit,
+//    onDelete: (FileItem) -> Unit
+// ) {
+//    val playlistManager = koinInject<PlaylistManager>()
+//    val scope = rememberCoroutineScope()
+//
+//    EditPlaylistDialog(
+//        isShowing = state.editPlaylist != null,
+//        fileItem = state.editPlaylist,
+//        onConfirm = { item, newName, newComment ->
+//            scope.launch {
+//                val res = playlistManager.run {
+//                    load(item.docFile!!.uri)
+//                    rename(newName, newComment)
+//                }.isSuccess
+//
+//                onConfirm(res)
+//            }
+//        },
+//        onDismiss = onDismiss,
+//        onDelete = onDelete
+//    )
+// }
+//
+// @Composable
+// private fun MenuNewPlaylist(
+//    state: PlaylistMenuState,
+//    onConfirm: (Boolean) -> Unit,
+//    onDismiss: () -> Unit
+// ) {
+//    val playlistManager = koinInject<PlaylistManager>()
+//    val scope = rememberCoroutineScope()
+//
+//    NewPlaylistDialog(
+//        isShowing = state.newPlaylist,
+//        onConfirm = { name, comment ->
+//            scope.launch {
+//                val res = playlistManager.new(name, comment).isSuccess
+//                onConfirm(res)
+//            }
+//        },
+//        onDismiss = onDismiss
+//    )
+// }
 
 @Preview
 @Composable
@@ -402,10 +394,9 @@ private fun Preview_PlaylistMenuScreen() {
                     isLoading = true,
                     playlistItems = List(15) {
                         FileItem(
-                            isSpecial = it >= 1,
                             name = "Name $it",
                             comment = "Comment $it",
-                            docFile = null
+                            uri = Uri.EMPTY
                         )
                     }.toPersistentList()
                 ),
