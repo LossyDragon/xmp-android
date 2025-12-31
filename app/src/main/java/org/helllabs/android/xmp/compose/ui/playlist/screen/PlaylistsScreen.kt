@@ -26,24 +26,20 @@ import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.compose.components.ErrorScreen
+import org.helllabs.android.xmp.compose.components.KoinPreview
 import org.helllabs.android.xmp.compose.components.MessageDialog
 import org.helllabs.android.xmp.compose.components.XmpCenterTopBar
-import org.helllabs.android.xmp.compose.theme.XmpTheme
 import org.helllabs.android.xmp.compose.ui.player.PlayerActivity
 import org.helllabs.android.xmp.compose.ui.playlist.components.MenuCardItem
 import org.helllabs.android.xmp.compose.ui.playlist.viewmodel.PlaylistsUiState
 import org.helllabs.android.xmp.compose.ui.playlist.viewmodel.PlaylistsViewModel
-import org.helllabs.android.xmp.core.PlaylistManager
+import org.helllabs.android.xmp.compose.ui.search.components.GuruFrame
+import org.helllabs.android.xmp.compose.ui.search.components.GuruTextButton
 import org.helllabs.android.xmp.core.PrefManager
 import org.helllabs.android.xmp.core.StorageManager
-import org.helllabs.android.xmp.di.appModule
-import org.helllabs.android.xmp.di.playlistModule
 import org.helllabs.android.xmp.model.FileItem
 import org.helllabs.android.xmp.service.PlayerService
-import org.koin.compose.KoinApplication
 import org.koin.compose.koinInject
-import org.koin.dsl.koinConfiguration
 import timber.log.Timber
 
 @Composable
@@ -231,7 +227,7 @@ private fun HomeScreenContent(
     val view = LocalView.current
     val hasStorage by produceState(initialValue = false, state) {
         value = if (view.isInEditMode) {
-            true
+            false
         } else {
             storageManager.checkPermissions()
         }
@@ -277,7 +273,7 @@ private fun HomeScreenContent(
             isRefreshing = state.isLoading,
             onRefresh = onRefresh
         ) {
-            if (state.playlistItems.isNotEmpty()) {
+            if (state.playlistItems.isNotEmpty() && hasStorage) {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(
@@ -299,19 +295,22 @@ private fun HomeScreenContent(
                 }
             }
 
+            if (!state.isLoading && state.playlistItems.isEmpty()) {
+                GuruFrame(
+                    modifier = Modifier.padding(horizontal = 32.dp),
+                    message = "No playlists found"
+                )
+            }
+
             if (!state.isLoading && !hasStorage) {
-                ErrorScreen(text = "Unable to access files for playlist or file browser") {
-                    Button(
-                        onClick = onRequestStorage,
-                        shape = MaterialTheme.shapes.extraLarge,
-                        content = { Text(text = "Set Directory") }
-                    )
-                    OutlinedButton(
-                        onClick = onRequestSettings,
-                        shape = MaterialTheme.shapes.extraLarge,
-                        content = { Text(text = "Goto Settings") }
-                    )
-                }
+                GuruFrame(
+                    modifier = Modifier.padding(horizontal = 32.dp),
+                    message = "Unable to access playlists from storage",
+                    action = {
+                        GuruTextButton(text = "Set Directory", onClick = onRequestStorage)
+                        GuruTextButton(text = "Go to Settings", onClick = onRequestSettings)
+                    },
+                )
             }
         }
     }
@@ -320,31 +319,27 @@ private fun HomeScreenContent(
 @Preview
 @Composable
 private fun Preview_PlaylistMenuScreen() {
-    KoinApplication(
-        configuration = koinConfiguration { modules(listOf(appModule, playlistModule)) }
-    ) {
-        XmpTheme(useDarkTheme = true) {
-            HomeScreenContent(
-                state = PlaylistsUiState(
-                    mediaPath = "sdcard\\some\\path",
-                    isLoading = true,
-                    playlistItems = List(15) {
-                        FileItem(
-                            name = "Name $it",
-                            comment = "Comment $it",
-                            uri = Uri.EMPTY
-                        )
-                    }.toPersistentList()
-                ),
-                onSettings = {},
-                onTitle = {},
-                onItemClick = {},
-                onItemLongClick = {},
-                onRefresh = {},
-                onNewPlaylist = {},
-                onRequestStorage = {},
-                onRequestSettings = {}
-            )
-        }
+    KoinPreview {
+        HomeScreenContent(
+            state = PlaylistsUiState(
+                mediaPath = "sdcard\\some\\path",
+                isLoading = true,
+                playlistItems = List(15) {
+                    FileItem(
+                        name = "Name $it",
+                        comment = "Comment $it",
+                        uri = Uri.EMPTY
+                    )
+                }.toPersistentList()
+            ),
+            onSettings = {},
+            onTitle = {},
+            onItemClick = {},
+            onItemLongClick = {},
+            onRefresh = {},
+            onNewPlaylist = {},
+            onRequestStorage = {},
+            onRequestSettings = {}
+        )
     }
 }

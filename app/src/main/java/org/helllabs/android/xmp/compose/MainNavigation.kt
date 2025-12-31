@@ -14,6 +14,7 @@ import androidx.compose.ui.draw.*
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.text.font.*
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -23,9 +24,14 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.scene.DialogSceneStrategy
 import androidx.navigation3.ui.NavDisplay
+import androidx.navigationevent.NavigationEventDispatcher
+import androidx.navigationevent.NavigationEventDispatcherOwner
+import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.launch
+import org.helllabs.android.xmp.compose.components.KoinPreview
 import org.helllabs.android.xmp.compose.navkey.NavKeyMain
+import org.helllabs.android.xmp.compose.theme.XmpTheme
 import org.helllabs.android.xmp.compose.ui.playlist.NavPlaylists
 import org.helllabs.android.xmp.compose.ui.search.NavSearch
 import org.helllabs.android.xmp.service.PlayerService
@@ -94,9 +100,7 @@ fun MainNavigation(
                         onClick = {
                             if (mainBackStack.lastOrNull() != destination) {
                                 if (mainBackStack.lastOrNull() in bottomBarItems) {
-                                    mainBackStack.removeAt(
-                                        mainBackStack.lastIndex
-                                    )
+                                    mainBackStack.removeAt(mainBackStack.lastIndex)
                                 }
                                 mainBackStack.add(destination)
                                 currentBottomBarScreen = destination
@@ -147,11 +151,29 @@ fun MainNavigation(
                     entry<NavKeyMain.Downloads> {
                         NavSearch(
                             modifier = Modifier.consumeWindowInsets(paddingValues),
-                            snackbarHostState = snackBarHostState
+                            snackbarHostState = snackBarHostState,
+                            onBack = {
+                                if (mainBackStack.lastOrNull() in bottomBarItems) {
+                                    mainBackStack.removeAt(mainBackStack.lastIndex)
+                                }
+                                mainBackStack.add(NavKeyMain.Playlists)
+                                currentBottomBarScreen = NavKeyMain.Playlists
+                            }
                         )
                     }
                 }
             )
         }
     )
+}
+
+@Preview
+@Composable
+private fun Preview() {
+    KoinPreview {
+        MainNavigation(
+            snackBarHostState = SnackbarHostState(),
+            onSettings = { },
+        )
+    }
 }

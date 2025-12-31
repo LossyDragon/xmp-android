@@ -181,7 +181,7 @@ class PlaylistManager(
         }
     }
 
-    suspend fun deletePlaylist(file: Uri): Result<Unit> = withContext(Dispatchers.IO) {
+    suspend fun deletePlaylist(file: Uri): Result<Boolean> = withContext(Dispatchers.IO) {
         val playlist = loadPlaylist(file)
         deletePlaylist(playlist.getOrThrow())
     }
@@ -189,12 +189,12 @@ class PlaylistManager(
     /**
      * Deletes a playlist file.
      */
-    suspend fun deletePlaylist(playlist: Playlist): Result<Unit> = withContext(Dispatchers.IO) {
+    suspend fun deletePlaylist(playlist: Playlist): Result<Boolean> = withContext(Dispatchers.IO) {
         try {
             val success = storageManager.deleteFileOrDirectory(playlist.uri)
 
             if (success) {
-                Result.success(Unit)
+                Result.success(true)
             } else {
                 Result.failure(IOException("Failed to delete playlist file"))
             }

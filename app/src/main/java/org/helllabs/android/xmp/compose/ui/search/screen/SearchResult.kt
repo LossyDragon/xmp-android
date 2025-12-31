@@ -1,5 +1,6 @@
 package org.helllabs.android.xmp.compose.ui.search.screen
 
+import android.content.res.Configuration
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
@@ -9,12 +10,14 @@ import androidx.compose.ui.*
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.*
 import androidx.compose.ui.tooling.preview.*
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.compose.components.ErrorScreen
 import org.helllabs.android.xmp.compose.components.ProgressbarIndicator
 import org.helllabs.android.xmp.compose.components.XmpTopBar
 import org.helllabs.android.xmp.compose.theme.XmpTheme
+import org.helllabs.android.xmp.compose.ui.search.components.GuruFrame
+import org.helllabs.android.xmp.compose.ui.search.components.GuruTextButton
 import org.helllabs.android.xmp.compose.ui.search.components.ItemModule
 import org.helllabs.android.xmp.compose.ui.search.viewmodel.SearchResultState
 import org.helllabs.android.xmp.compose.ui.search.viewmodel.SearchResultViewModel
@@ -25,7 +28,6 @@ import org.helllabs.android.xmp.model.Module
 import org.helllabs.android.xmp.model.SearchListResult
 import org.helllabs.android.xmp.model.Sponsor
 import org.helllabs.android.xmp.model.SponsorDetails
-import timber.log.Timber
 
 enum class SearchType {
     ARTIST,
@@ -34,12 +36,12 @@ enum class SearchType {
 
 @Composable
 fun SearchResultScreen(
+    modifier: Modifier = Modifier,
     viewModel: SearchResultViewModel,
     searchType: SearchType,
     searchQuery: String,
     onBack: () -> Unit,
-    onClick: (Int) -> Unit,
-    onError: (String?) -> Unit
+    onClick: (Int) -> Unit
 ) {
     val resources = LocalResources.current
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -54,14 +56,8 @@ fun SearchResultScreen(
         }
     }
 
-    LaunchedEffect(state.hardError) {
-        if (state.hardError != null) {
-            Timber.w("Hard error has occurred")
-            onError(state.hardError)
-        }
-    }
-
     TitleResultScreen(
+        modifier = modifier,
         state = state,
         onBack = onBack,
         onItemId = onClick,
@@ -71,24 +67,18 @@ fun SearchResultScreen(
 
 @Composable
 private fun TitleResultScreen(
+    modifier: Modifier = Modifier,
     state: SearchResultState,
     onBack: () -> Unit,
     onItemId: (id: Int) -> Unit,
     onArtistId: (id: Int) -> Unit
 ) {
-    val listState = rememberLazyListState()
-    val isScrolled = remember {
-        derivedStateOf {
-            listState.firstVisibleItemIndex > 0
-        }
-    }
-
     Scaffold(
+        modifier = modifier,
         topBar = {
             XmpTopBar(
                 title = state.title,
                 onBack = onBack,
-                isScrolled = isScrolled.value
             )
         }
     ) { paddingValues ->
@@ -98,40 +88,56 @@ private fun TitleResultScreen(
                 .fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            ProgressbarIndicator(isLoading = state.isLoading)
+            ProgressbarIndicator(isLoading = state.isLoading && state.softError == null)
 
             if (!state.softError.isNullOrEmpty()) {
-                ErrorScreen(text = state.softError)
+                GuruFrame(
+                    modifier = Modifier.padding(horizontal = 32.dp),
+                    message = state.softError,
+                    action = { GuruTextButton(text = "Go Back", onClick = onBack) },
+                )
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    state = listState,
-                    content = {
-                        when (val items = state.result) {
-                            is SearchListResult -> {
-                                items(items.module) { item ->
-                                    ItemModule(
-                                        item = item,
-                                        onClick = { onItemId(item.id) }
-                                    )
-                                }
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    when (val items = state.result) {
+                        is SearchListResult -> {
+                            items(items.module) { item ->
+                                ItemModule(
+                                    item = item,
+                                    onClick = { onItemId(item.id) }
+                                )
                             }
+                        }
 
-                            is ArtistResult -> {
-                                items(items.listItems) { item ->
+                        is ArtistResult -> {
+                            items(items.listItems) { item ->
+                                Surface(
+                                    shape = MaterialTheme.shapes.medium,
+                                    color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
                                     ListItem(
                                         modifier = Modifier.clickable {
                                             onArtistId(item.id)
                                         },
+                                        colors = ListItemDefaults.colors(
+                                            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
+                                        ),
                                         headlineContent = {
-                                            Text(text = item.alias)
+                                            Text(
+                                                text = item.alias,
+                                                style = MaterialTheme.typography.bodyLarge
+                                            )
                                         }
                                     )
                                 }
                             }
                         }
                     }
-                )
+                }
             }
         }
     }

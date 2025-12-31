@@ -57,7 +57,7 @@
     <string name="search_error">Something wrong happened.</string>
     <string name="search_known_error">%s.\nPress back button to continue.</string>
     <string name="search_provided_by">"Downloads provided by "</string>
-    <string name="search_unknown_error">Software Failure. Press back to continue.\n\nGuru Meditation #35068035.48454C50</string>
+    <string name="search_unknown_error">Software Failure. Press back to continue.</string>
     <string name="song_message">Song Message</string>
 
     <!-- Screen Titles -->
@@ -164,4 +164,5 @@
     <string name="pref_vol_boost_summary">Set output volume amplification factor</string>
     <string name="pref_vol_boost_title">Volume boost</string>
 
+    <string name="guru_meditation">\n\nGuru Meditation #%s</string>
 </resources>

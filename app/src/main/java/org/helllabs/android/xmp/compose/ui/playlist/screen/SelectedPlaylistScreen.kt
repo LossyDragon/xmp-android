@@ -20,13 +20,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.collections.immutable.toPersistentList
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.compose.components.BottomBarButtons
-import org.helllabs.android.xmp.compose.components.ErrorScreen
 import org.helllabs.android.xmp.compose.components.KoinPreview
-import org.helllabs.android.xmp.compose.components.XmpTopBar
-import org.helllabs.android.xmp.compose.theme.XmpTheme
 import org.helllabs.android.xmp.compose.ui.playlist.components.PlaylistCardItem
 import org.helllabs.android.xmp.compose.ui.playlist.components.PlaylistInfo
 import org.helllabs.android.xmp.compose.ui.playlist.viewmodel.SelectedPlaylistViewModel
+import org.helllabs.android.xmp.compose.ui.search.components.GuruFrame
+import org.helllabs.android.xmp.compose.ui.search.components.GuruTextButton
 import org.helllabs.android.xmp.di.appModule
 import org.helllabs.android.xmp.model.DropDownSelection
 import org.helllabs.android.xmp.model.Playlist
@@ -182,17 +181,16 @@ private fun PlaylistScreenContent(
                 derivedStateOf { listState.layoutInfo.viewportSize.height * 0.05f }
             }
             val haptic = LocalHapticFeedback.current
-            val reorderState =
-                rememberReorderableLazyListState(
-                    lazyListState = listState,
-                    scroller = rememberScroller(
-                        scrollableState = listState,
-                        pixelAmount = pixelAmount,
-                    )
-                ) { from, to ->
-                    onMove(from.index - 1, to.index - 1)
-                    haptic.performHapticFeedback(HapticFeedbackType(26))
-                }
+            val reorderState = rememberReorderableLazyListState(
+                lazyListState = listState,
+                scroller = rememberScroller(
+                    scrollableState = listState,
+                    pixelAmount = pixelAmount,
+                )
+            ) { from, to ->
+                onMove(from.index - 1, to.index - 1)
+                haptic.performHapticFeedback(HapticFeedbackType(26))
+            }
 
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
@@ -235,13 +233,10 @@ private fun PlaylistScreenContent(
             }
 
             if (state.list.isEmpty()) {
-                ErrorScreen(
-                    text = stringResource(id = R.string.error_empty_playlist),
-                    action = {
-                        OutlinedButton(onClick = onBack) {
-                            Text(text = stringResource(id = R.string.back))
-                        }
-                    }
+                GuruFrame(
+                    modifier = Modifier.padding(horizontal = 32.dp),
+                    message = stringResource(id = R.string.error_empty_playlist),
+                    action = { GuruTextButton(text = "Go Back", onClick = onBack) },
                 )
             }
         }

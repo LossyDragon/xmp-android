@@ -8,16 +8,19 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.*
 import androidx.compose.ui.tooling.preview.*
+import androidx.compose.ui.unit.dp
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.compose.components.ErrorScreen
 import org.helllabs.android.xmp.compose.components.MessageDialog
 import org.helllabs.android.xmp.compose.components.XmpTopBar
 import org.helllabs.android.xmp.compose.theme.XmpTheme
+import org.helllabs.android.xmp.compose.ui.search.components.GuruFrame
+import org.helllabs.android.xmp.compose.ui.search.components.GuruTextButton
 import org.helllabs.android.xmp.compose.ui.search.components.ItemModule
 import org.helllabs.android.xmp.model.Module
 
@@ -88,6 +91,7 @@ fun SearchHistoryScreen(
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 itemsIndexed(items = historyList.reversed()) { _, item ->
                     ItemModule(
+                        modifier = Modifier.animateItem(),
                         item = item,
                         onClick = { onClicked(item.id) }
                     )
@@ -95,14 +99,10 @@ fun SearchHistoryScreen(
             }
 
             if (historyList.isEmpty()) {
-                ErrorScreen(
-                    text = "Empty History",
-                    action = {
-                        OutlinedButton(
-                            onClick = onBack,
-                            content = { Text(text = "Go Back") }
-                        )
-                    }
+                GuruFrame(
+                    modifier = Modifier.padding(horizontal = 32.dp),
+                    message = "No Items in search history",
+                    action = { GuruTextButton(text = "Go Back", onClick = onBack) },
                 )
             }
         }

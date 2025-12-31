@@ -102,7 +102,8 @@ class PlaylistsViewModel(
         }
     }
 
-    private suspend fun refreshPlaylistItems() {
+    suspend fun refreshPlaylistItems() {
+        Timber.d("Refreshing Playlist Items")
         withContext(Dispatchers.IO) {
             if (uiState.value.mediaPath.isEmpty()) {
                 _uiState.update { it.copy(isLoading = false, playlistItems = persistentListOf()) }

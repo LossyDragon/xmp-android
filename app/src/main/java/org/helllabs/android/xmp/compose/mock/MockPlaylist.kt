@@ -7,7 +7,8 @@ import org.helllabs.android.xmp.model.PlaylistItem
 
 val MockPlaylist = Playlist(
     name = "Retro Gaming Classics",
-    comment = "A collection of classic tracker modules from the golden age of demoscene and video games",
+    comment = "A collection of classic tracker modules from the " +
+        "golden age of demoscene and video games",
     useFileName = false,
     isLoop = true,
     isShuffle = false,

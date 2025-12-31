@@ -26,11 +26,12 @@ import org.helllabs.android.xmp.model.Module
 
 @Composable
 fun ItemModule(
+    modifier: Modifier = Modifier,
     item: Module,
     onClick: () -> Unit
 ) {
     ListItem(
-        modifier = Modifier.clickable { onClick() },
+        modifier = modifier.clickable { onClick() },
         leadingContent = {
             Box(
                 modifier = Modifier

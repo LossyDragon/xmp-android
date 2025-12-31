@@ -5,12 +5,14 @@ package org.helllabs.android.xmp.di
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
+import org.helllabs.android.xmp.core.PlaylistManager
 import org.helllabs.android.xmp.core.PrefManager
 import org.helllabs.android.xmp.core.StorageManager
 import org.helllabs.android.xmp.serializers.ImmutableListSerializer
 import org.koin.dsl.module
 
 val appModule = module {
+    factory { PlaylistManager(context = get(), json = get(), storageManager = get()) }
     single { PrefManager(context = get(), json = get()) }
     single { StorageManager(context = get(), prefManager = get()) }
     single {

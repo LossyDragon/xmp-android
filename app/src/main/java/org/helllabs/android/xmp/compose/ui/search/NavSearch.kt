@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.entryProvider
@@ -12,8 +13,8 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.launch
+import org.helllabs.android.xmp.compose.components.KoinPreview
 import org.helllabs.android.xmp.compose.navkey.NavKeySearch
-import org.helllabs.android.xmp.compose.ui.search.screen.SearchErrorScreen
 import org.helllabs.android.xmp.compose.ui.search.screen.SearchHistoryScreen
 import org.helllabs.android.xmp.compose.ui.search.screen.SearchModuleResultScreen
 import org.helllabs.android.xmp.compose.ui.search.screen.SearchResultScreen
@@ -27,7 +28,8 @@ import org.koin.compose.koinInject
 @Composable
 fun NavSearch(
     modifier: Modifier,
-    snackbarHostState: SnackbarHostState
+    snackbarHostState: SnackbarHostState,
+    onBack: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
     val searchBackStack = rememberNavBackStack(NavKeySearch.Search)
@@ -47,7 +49,7 @@ fun NavSearch(
             entry<NavKeySearch.Search> {
                 SearchScreen(
                     modifier = modifier,
-                    onBack = { searchBackStack.removeLastOrNull() },
+                    onBack = onBack,
                     onSearch = { query, type ->
                         val screen = NavKeySearch.SearchResult(query, type)
                         searchBackStack.add(screen)
@@ -60,13 +62,6 @@ fun NavSearch(
                         val screen = NavKeySearch.SearchHistory
                         searchBackStack.add(screen)
                     },
-                )
-            }
-            entry<NavKeySearch.SearchError> {
-                SearchErrorScreen(
-                    modifier = modifier,
-                    message = it.message,
-                    onBack = { searchBackStack.removeLastOrNull() }
                 )
             }
             entry<NavKeySearch.SearchHistory> {
@@ -92,16 +87,13 @@ fun NavSearch(
             entry<NavKeySearch.SearchResult> {
                 val viewModel = koinViewModel<SearchResultViewModel>()
                 SearchResultScreen(
+                    modifier = modifier,
                     viewModel = viewModel,
                     searchType = it.type,
                     searchQuery = it.query,
                     onBack = { searchBackStack.removeLastOrNull() },
                     onClick = { moduleID ->
                         val screen = NavKeySearch.Result(moduleID = moduleID)
-                        searchBackStack.add(screen)
-                    },
-                    onError = { error ->
-                        val screen = NavKeySearch.SearchError(error)
                         searchBackStack.add(screen)
                     },
                 )
@@ -113,13 +105,21 @@ fun NavSearch(
                     viewModel = viewModel,
                     snackBarHostState = snackbarHostState,
                     moduleID = it.moduleID,
-                    onShare = {
-                    },
-                    onError = {
-                    },
                     onBack = { searchBackStack.removeLastOrNull() },
                 )
             }
         }
     )
+}
+
+@Preview
+@Composable
+private fun Preview() {
+    KoinPreview {
+        NavSearch(
+            modifier = Modifier,
+            snackbarHostState = SnackbarHostState(),
+            onBack = {},
+        )
+    }
 }

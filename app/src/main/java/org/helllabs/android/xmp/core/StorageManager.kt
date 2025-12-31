@@ -14,8 +14,6 @@ import org.helllabs.android.xmp.model.ModInfo
 import org.helllabs.android.xmp.model.Module
 import timber.log.Timber
 
-class XmpException(string: String) : Exception(string)
-
 /**
  * Handles SAF (Storage Access Framework) operations and document tree management
  */

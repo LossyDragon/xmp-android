@@ -1,20 +1,12 @@
 package org.helllabs.android.xmp.compose.ui.playlist
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.safeDrawingPadding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -22,7 +14,11 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.scene.DialogSceneStrategy
 import androidx.navigation3.ui.NavDisplay
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.compose.navkey.NavKeyPlaylists
+import org.helllabs.android.xmp.compose.ui.playlist.screen.PlaylistEditScreen
 import org.helllabs.android.xmp.compose.ui.playlist.screen.PlaylistsScreen
 import org.helllabs.android.xmp.compose.ui.playlist.screen.SelectedPlaylistScreen
 import org.helllabs.android.xmp.compose.ui.playlist.viewmodel.PlaylistsViewModel
@@ -30,6 +26,7 @@ import org.helllabs.android.xmp.compose.ui.playlist.viewmodel.SelectedPlaylistVi
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 import org.koin.core.parameter.parametersOf
+import timber.log.Timber
 
 @Composable
 fun NavPlaylists(
@@ -37,8 +34,11 @@ fun NavPlaylists(
     snackbarHostState: SnackbarHostState,
     onSettings: () -> Unit
 ) {
+    val scope = rememberCoroutineScope()
     val playlistBackStack = rememberNavBackStack(NavKeyPlaylists.Playlists)
     val dialogStrategy = remember { DialogSceneStrategy<NavKey>() }
+
+    val playlistsViewModel = koinInject<PlaylistsViewModel>()
 
     BackHandler(enabled = playlistBackStack.size > 1) {
         playlistBackStack.removeLastOrNull()
@@ -53,11 +53,10 @@ fun NavPlaylists(
             rememberViewModelStoreNavEntryDecorator()
         ),
         entryProvider = entryProvider {
-            val viewmodel = koinInject<PlaylistsViewModel>()
             entry<NavKeyPlaylists.Playlists> {
                 PlaylistsScreen(
                     modifier = modifier,
-                    viewModel = viewmodel,
+                    viewModel = playlistsViewModel,
                     snackBarHostState = snackbarHostState,
                     onSettings = onSettings,
                     onNavPlaylist = {
@@ -96,21 +95,29 @@ fun NavPlaylists(
             entry<NavKeyPlaylists.Edit>(
                 metadata = DialogSceneStrategy.dialog()
             ) {
-                Column(
-                    modifier = modifier
-                        .fillMaxSize()
-                        .safeDrawingPadding()
-                        .clip(RoundedCornerShape(48.dp)),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(text = "Hellooooo!")
-                    TextButton(
-                        onClick = { playlistBackStack.removeLastOrNull() },
-                        content = {
-                            Text(text = "Cancel")
+                PlaylistEditScreen(
+                    uri = it.uri,
+                    onBack = { result ->
+                        Timber.d("Back from Playlist Edit: $result")
+                        playlistBackStack.removeLastOrNull()
+                        if (result) {
+                            scope.launch {
+                                playlistsViewModel.refreshPlaylistItems()
+                            }
                         }
-                    )
-                }
+                    },
+                    onDeleted = { result ->
+                        Timber.d("Deleting Playlist: $result")
+                        playlistBackStack.removeLastOrNull()
+                        scope.launch {
+                            playlistsViewModel.refreshPlaylistItems()
+                            snackbarHostState.showSnackbar(
+                                message = if (result) "Playlist deleted" else "Error deleting playlist",
+                                actionLabel = if (result) null else "Dismiss"
+                            )
+                        }
+                    }
+                )
             }
         }
     )

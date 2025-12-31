@@ -5,6 +5,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material.icons.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -18,12 +19,13 @@ import androidx.compose.ui.unit.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.compose.components.ErrorScreen
 import org.helllabs.android.xmp.compose.components.MessageDialog
 import org.helllabs.android.xmp.compose.components.ProgressbarIndicator
 import org.helllabs.android.xmp.compose.components.XmpTopBar
 import org.helllabs.android.xmp.compose.theme.XmpTheme
 import org.helllabs.android.xmp.compose.ui.player.PlayerActivity
+import org.helllabs.android.xmp.compose.ui.search.components.GuruFrame
+import org.helllabs.android.xmp.compose.ui.search.components.GuruTextButton
 import org.helllabs.android.xmp.compose.ui.search.components.ModuleLayout
 import org.helllabs.android.xmp.compose.ui.search.viewmodel.ModuleResultState
 import org.helllabs.android.xmp.compose.ui.search.viewmodel.ResultViewModel
@@ -46,8 +48,6 @@ fun SearchModuleResultScreen(
     viewModel: ResultViewModel,
     snackBarHostState: SnackbarHostState,
     moduleID: Int,
-    onShare: (String) -> Unit,
-    onError: (String?) -> Unit,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
@@ -74,8 +74,12 @@ fun SearchModuleResultScreen(
 
     LaunchedEffect(state.hardError) {
         if (state.hardError != null) {
-            Timber.w("Hard error has occurred")
-            onError(state.hardError)
+            scope.launch {
+                snackBarHostState.showSnackbar(
+                    message = state.hardError.orEmpty().ifEmpty { "An Error Occurred" },
+                    actionLabel = "OK",
+                )
+            }
         }
     }
 
@@ -89,7 +93,16 @@ fun SearchModuleResultScreen(
         snackBarHostState = snackBarHostState,
         onBack = onBack,
         onRandom = viewModel::getRandomModule,
-        onShare = { onShare(it) },
+        onShare = {
+            val sendIntent: Intent = Intent().apply {
+                action = Intent.ACTION_SEND
+                putExtra(Intent.EXTRA_TEXT, it)
+                type = "text/html"
+            }
+
+            val shareIntent = Intent.createChooser(sendIntent, null)
+            context.startActivity(shareIntent)
+        },
         onDeleteModule = viewModel::deleteModule,
         onPlay = { module ->
             scope.launch {
@@ -115,6 +128,7 @@ fun SearchModuleResultScreen(
     )
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun SearchModuleResultScreenContent(
     modifier: Modifier = Modifier,
@@ -195,14 +209,14 @@ private fun SearchModuleResultScreenContent(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Button(
-                        modifier = Modifier.width(112.dp),
+                        modifier = Modifier.width(128.dp),
                         enabled = !state.isLoading && state.moduleSupported,
                         onClick = { onPlay(state.module!!.module) }
                     ) {
                         Text(text = buttonText)
                     }
                     Button(
-                        modifier = Modifier.width(112.dp),
+                        modifier = Modifier.width(128.dp),
                         enabled = !state.isLoading,
                         onClick = onRandom
                     ) {
@@ -232,7 +246,13 @@ private fun SearchModuleResultScreenContent(
                     moduleResult = state.module
                 )
 
-                ErrorScreen(text = state.softError)
+                if (!state.softError.isNullOrEmpty()) {
+                    GuruFrame(
+                        modifier = Modifier.padding(horizontal = 32.dp),
+                        message = state.softError,
+                        action = { GuruTextButton(text = "Go Back", onClick = onBack) },
+                    )
+                }
 
                 ProgressbarIndicator(isLoading = state.isLoading)
             }

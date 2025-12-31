@@ -13,7 +13,6 @@ import org.helllabs.android.xmp.core.Resource
 
 @Stable
 data class SearchResultState(
-    val hardError: String? = null,
     val isLoading: Boolean = false,
     val softError: String? = null,
     val title: String = "",

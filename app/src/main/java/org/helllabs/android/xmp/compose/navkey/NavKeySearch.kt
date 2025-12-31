@@ -13,9 +13,6 @@ sealed class NavKeySearch : NavKey {
     data object SearchHistory : NavKeySearch()
 
     @Serializable
-    data class SearchError(val message: String?) : NavKeySearch()
-
-    @Serializable
     data class SearchResult(val query: String, val type: SearchType) : NavKeySearch()
 
     @Serializable
