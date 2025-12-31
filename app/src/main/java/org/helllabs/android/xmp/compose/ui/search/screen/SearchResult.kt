@@ -18,12 +18,15 @@ import org.helllabs.android.xmp.compose.components.XmpTopBar
 import org.helllabs.android.xmp.compose.theme.XmpTheme
 import org.helllabs.android.xmp.compose.ui.search.components.GuruFrame
 import org.helllabs.android.xmp.compose.ui.search.components.GuruTextButton
+import org.helllabs.android.xmp.compose.ui.search.components.ItemArtist
 import org.helllabs.android.xmp.compose.ui.search.components.ItemModule
 import org.helllabs.android.xmp.compose.ui.search.viewmodel.SearchResultState
 import org.helllabs.android.xmp.compose.ui.search.viewmodel.SearchResultViewModel
 import org.helllabs.android.xmp.model.Artist
 import org.helllabs.android.xmp.model.ArtistInfo
 import org.helllabs.android.xmp.model.ArtistResult
+import org.helllabs.android.xmp.model.Item
+import org.helllabs.android.xmp.model.Items
 import org.helllabs.android.xmp.model.Module
 import org.helllabs.android.xmp.model.SearchListResult
 import org.helllabs.android.xmp.model.Sponsor
@@ -114,26 +117,10 @@ private fun TitleResultScreen(
 
                         is ArtistResult -> {
                             items(items.listItems) { item ->
-                                Surface(
-                                    shape = MaterialTheme.shapes.medium,
-                                    color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    ListItem(
-                                        modifier = Modifier.clickable {
-                                            onArtistId(item.id)
-                                        },
-                                        colors = ListItemDefaults.colors(
-                                            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
-                                        ),
-                                        headlineContent = {
-                                            Text(
-                                                text = item.alias,
-                                                style = MaterialTheme.typography.bodyLarge
-                                            )
-                                        }
-                                    )
-                                }
+                                ItemArtist(
+                                    alias = item.alias,
+                                    onClick = { onArtistId(item.id) }
+                                )
                             }
                         }
                     }
@@ -149,10 +136,17 @@ private fun Preview_TitleResult() {
     XmpTheme(useDarkTheme = true) {
         TitleResultScreen(
             state = SearchResultState(
-                isLoading = true,
                 title = stringResource(id = R.string.screen_title_artist),
-                result = null,
-                softError = "Soft Error"
+                result = ArtistResult(
+                    items = Items(
+                        item = List(15) {
+                            Item(
+                                id = it,
+                                alias = "Artist $it",
+                            )
+                        }
+                    )
+                ),
             ),
             onBack = {},
             onItemId = {},
@@ -167,20 +161,8 @@ private fun Preview_TitleResult2() {
     XmpTheme(useDarkTheme = true) {
         TitleResultScreen(
             state = SearchResultState(
-                isLoading = false,
-                title = stringResource(id = R.string.screen_title_artist),
+                title = stringResource(id = R.string.screen_title_result),
                 result = SearchListResult(
-                    sponsor = Sponsor(
-                        details = SponsorDetails(
-                            link = "",
-                            image = "",
-                            text = "",
-                            imagehtml = ""
-                        )
-                    ),
-                    error = "",
-                    results = 1,
-                    totalpages = 1,
                     module = List(15) {
                         Module(
                             format = "XM",

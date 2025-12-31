@@ -268,6 +268,56 @@ class StorageManager(private val context: Context, private val prefManager: Pref
     }
 
     /**
+     * List only the immediate children of a directory (non-recursive)
+     *
+     * @param uri the directory URI
+     * @return list of immediate child URIs
+     */
+    fun listDirectoryContents(uri: Uri?): List<Uri> {
+        if (uri == null) return emptyList()
+
+        val docId = DocumentsContract.getDocumentId(uri)
+        val childDocUri = DocumentsContract.buildChildDocumentsUriUsingTree(uri, docId)
+        val projection = arrayOf(
+            DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+            DocumentsContract.Document.COLUMN_MIME_TYPE,
+            DocumentsContract.Document.COLUMN_DISPLAY_NAME
+        )
+
+        val directories = mutableListOf<Uri>()
+        val files = mutableListOf<Uri>()
+
+        context.contentResolver.query(
+            childDocUri,
+            projection,
+            null,
+            null,
+            null
+        )?.use { cursor ->
+            val idCol = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DOCUMENT_ID)
+            val mimeCol = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_MIME_TYPE)
+
+            while (cursor.moveToNext()) {
+                val childDocumentId = cursor.getString(idCol)
+                val mimeType = cursor.getString(mimeCol)
+                val childUri = DocumentsContract.buildDocumentUriUsingTree(uri, childDocumentId)
+
+                if (mimeType == DocumentsContract.Document.MIME_TYPE_DIR) {
+                    directories.add(childUri)
+                } else {
+                    files.add(childUri)
+                }
+            }
+        }
+
+        // Return directories first, then files, sorted alphabetically
+        return (
+            directories.sortedBy { getFileName(it)?.lowercase() } +
+                files.sortedBy { getFileName(it)?.lowercase() }
+            )
+    }
+
+    /**
      * A Top-Down File Walker
      *
      * Will walk down a given uri and collect uris in alphabetical order, folders first

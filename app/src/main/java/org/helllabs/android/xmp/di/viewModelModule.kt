@@ -3,6 +3,7 @@
 package org.helllabs.android.xmp.di
 
 import android.net.Uri
+import org.helllabs.android.xmp.compose.ui.explorer.ExplorerViewModel
 import org.helllabs.android.xmp.compose.ui.playlist.viewmodel.PlaylistsViewModel
 import org.helllabs.android.xmp.compose.ui.playlist.viewmodel.SelectedPlaylistViewModel
 import org.helllabs.android.xmp.compose.ui.search.viewmodel.ResultViewModel
@@ -21,6 +22,7 @@ val viewModelModule = module {
             prefManager = get()
         )
     }
+
     viewModel {
         PlaylistsViewModel(
             storageManager = get(),
@@ -28,6 +30,9 @@ val viewModelModule = module {
             playlistManager = get()
         )
     }
+
+    viewModel { ExplorerViewModel(get(), get(), get()) }
+
     viewModel { SearchResultViewModel(get()) }
 
     viewModel { (uri: Uri) ->

@@ -32,9 +32,12 @@ import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.compose.components.KoinPreview
 import org.helllabs.android.xmp.compose.navkey.NavKeyMain
 import org.helllabs.android.xmp.compose.theme.XmpTheme
+import org.helllabs.android.xmp.compose.ui.explorer.ExplorerScreen
+import org.helllabs.android.xmp.compose.ui.explorer.ExplorerViewModel
 import org.helllabs.android.xmp.compose.ui.playlist.NavPlaylists
 import org.helllabs.android.xmp.compose.ui.search.NavSearch
 import org.helllabs.android.xmp.service.PlayerService
+import org.koin.androidx.compose.koinViewModel
 import timber.log.Timber
 
 val bottomBarItems = persistentListOf(
@@ -131,21 +134,30 @@ fun MainNavigation(
                         )
                     }
                     entry<NavKeyMain.Explorer> {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(Color.Gray)
-                                .clip(RoundedCornerShape(48.dp)),
-                            content = {
-                                Text(
-                                    modifier = Modifier
-                                        .padding(24.dp)
-                                        .align(Alignment.CenterHorizontally),
-                                    fontWeight = FontWeight.Bold,
-                                    text = "Explorer"
-                                )
-                            }
+                        val viewModel = koinViewModel<ExplorerViewModel>()
+                        ExplorerScreen(
+                            modifier = Modifier.consumeWindowInsets(paddingValues),
+                            viewModel = viewModel,
+                            snackBarHostState = snackBarHostState,
+                            onBack = {
+                                if (mainBackStack.lastOrNull() in bottomBarItems) {
+                                    mainBackStack.removeAt(mainBackStack.lastIndex)
+                                }
+                                mainBackStack.add(NavKeyMain.Playlists)
+                                currentBottomBarScreen = NavKeyMain.Playlists
+                            },
+                            onPlayAll = { _, _, _ ->
+                                Timber.d("onPlayAll")
+                            },
+                            onAddQueue = { _, _, _ ->
+                                Timber.d("onAddQueue")
+                            },
+                            onPlayModule = { _, _, _, _, _ ->
+                                Timber.d("onPlayModule")
+                            },
+                            onItemClick = { _, _, _, _ ->
+                                Timber.d("onItemClick")
+                            },
                         )
                     }
                     entry<NavKeyMain.Downloads> {

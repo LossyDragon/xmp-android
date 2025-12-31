@@ -112,7 +112,11 @@ fun NavPlaylists(
                         scope.launch {
                             playlistsViewModel.refreshPlaylistItems()
                             snackbarHostState.showSnackbar(
-                                message = if (result) "Playlist deleted" else "Error deleting playlist",
+                                message = if (result) {
+                                    "Playlist deleted"
+                                } else {
+                                    "Error deleting playlist"
+                                },
                                 actionLabel = if (result) null else "Dismiss"
                             )
                         }
