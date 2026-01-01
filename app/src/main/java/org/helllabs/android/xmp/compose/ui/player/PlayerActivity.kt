@@ -170,112 +170,13 @@ class PlayerActivity : ComponentActivity() {
 
             // Add to playlist
             val scope = rememberCoroutineScope()
-            val context = LocalContext.current
+            val resources = LocalResources.current
             val choice by viewModel.playlistChoice.collectAsStateWithLifecycle()
             val playlists by viewModel.playlistList.collectAsStateWithLifecycle()
 
             LaunchedEffect(Unit) {
                 viewModel.softError.collectLatest {
                     snackBarHostState.showSnackbar(it)
-                }
-            }
-
-            // Stabilize lambdas, this helps reduce useless recompositions.
-            val onChangeViewer: () -> Unit = remember {
-                {
-                    viewModel.changeViewer()
-                }
-            }
-            val showSheet: (Boolean) -> Unit = remember {
-                {
-                    viewModel.showSheet(it)
-                }
-            }
-            val closeMessage: (Boolean) -> Unit = remember {
-                {
-                    viewModel.showMessage(it, "")
-                }
-            }
-            val onSheetEvent: (PlayerSheetEvent) -> Unit = remember {
-                {
-                    when (it) {
-                        PlayerSheetEvent.OnAllSeq -> {
-                            val res = modPlayer!!.toggleAllSequences()
-                            viewModel.onAllSequence(res)
-                        }
-
-                        PlayerSheetEvent.OnMessage -> {
-                            val comment = String(Xmp.getComment(), StandardCharsets.UTF_8)
-                            if (comment.isEmpty()) {
-                                lifecycleScope.launch {
-                                    val msg = "No comment to display"
-                                    snackBarHostState.showSnackbar(msg)
-                                }
-                            } else {
-                                viewModel.showMessage(true, comment.trim())
-                            }
-                            viewModel.showSheet(false)
-                        }
-
-                        PlayerSheetEvent.OnAddToPlaylist -> {
-                            viewModel.onAddToPlaylist(modPlayer!!.currentFileUri)
-                        }
-
-                        is PlayerSheetEvent.OnSequence -> {
-                            Timber.i("Set sequence $it")
-                            val res = modPlayer!!.setSequence(it.seq)
-                            viewModel.onSequence(res)
-                        }
-                    }
-                }
-            }
-            val onControlsEvent: (PlayerControlsEvent) -> Unit = remember {
-                {
-                    Timber.d("onControlsEvent $it")
-                    when (it) {
-                        PlayerControlsEvent.OnNext -> {
-                            controls!!.transportControls.skipToNext()
-                            viewModel.isPlaying(true)
-                        }
-
-                        PlayerControlsEvent.OnPlay -> {
-                            if (PlayerService.isPlaying.value) {
-                                controls!!.transportControls.pause()
-                            } else {
-                                controls!!.transportControls.play()
-                            }
-                            viewModel.isPlaying(PlayerService.isPlaying.value)
-                        }
-
-                        PlayerControlsEvent.OnPrev -> {
-                            controls!!.transportControls.skipToPrevious()
-                            viewModel.isPlaying(PlayerService.isPlaying.value)
-                        }
-
-                        PlayerControlsEvent.OnStop -> {
-                            controls!!.transportControls.stop()
-                        }
-
-                        is PlayerControlsEvent.OnRepeat -> {
-                            modPlayer!!.toggleLoop(it.value)
-                            viewModel.toggleLoop(it.value)
-                        }
-                    }
-                }
-            }
-            val onSeekEvent: (SeekEvent) -> Unit = remember {
-                {
-                    when (it) {
-                        is SeekEvent.OnSeek -> {
-                            if (it.isSeeking) {
-                                viewModel.isSeeking(true)
-                            } else {
-                                controls!!.transportControls.seekTo(it.value.toLong() * 100)
-                                viewModel.isSeeking(false)
-                                viewModel.setPlayTime(Xmp.time().div(100F))
-                            }
-                        }
-                    }
                 }
             }
 
@@ -345,7 +246,7 @@ class PlayerActivity : ComponentActivity() {
                     title = "Comments",
                     text = uiState.currentMessage,
                     confirmText = stringResource(id = android.R.string.ok),
-                    onConfirm = { closeMessage(false) }
+                    onConfirm = viewModel::closeMessage
                 )
 
                 SingleChoiceListDialog(
@@ -361,7 +262,7 @@ class PlayerActivity : ComponentActivity() {
                     onEmpty = {
                         scope.launch {
                             snackBarHostState.showSnackbar(
-                                message = context.getString(R.string.error_snack_no_playlists)
+                                message = resources.getString(R.string.error_snack_no_playlists)
                             )
                             viewModel.clearPlaylist()
                         }
@@ -380,11 +281,84 @@ class PlayerActivity : ComponentActivity() {
                     channelInfo = channelInfo,
                     isMuted = isMuted,
                     infoState = infoState,
-                    onControlsEvent = onControlsEvent,
-                    onSheetEvent = onSheetEvent,
-                    onSeekEvent = onSeekEvent,
-                    onChangeViewer = onChangeViewer,
-                    onSheetVisibleDialog = showSheet,
+                    onControlsEvent = {
+                        Timber.d("onControlsEvent $it")
+                        when (it) {
+                            PlayerControlsEvent.OnNext -> {
+                                controls!!.transportControls.skipToNext()
+                                viewModel.isPlaying(true)
+                            }
+
+                            PlayerControlsEvent.OnPlay -> {
+                                if (PlayerService.isPlaying.value) {
+                                    controls!!.transportControls.pause()
+                                } else {
+                                    controls!!.transportControls.play()
+                                }
+                                viewModel.isPlaying(PlayerService.isPlaying.value)
+                            }
+
+                            PlayerControlsEvent.OnPrev -> {
+                                controls!!.transportControls.skipToPrevious()
+                                viewModel.isPlaying(PlayerService.isPlaying.value)
+                            }
+
+                            PlayerControlsEvent.OnStop -> {
+                                controls!!.transportControls.stop()
+                            }
+
+                            is PlayerControlsEvent.OnRepeat -> {
+                                modPlayer!!.toggleLoop(it.value)
+                                viewModel.toggleLoop(it.value)
+                            }
+                        }
+                    },
+                    onSheetEvent = {
+                        when (it) {
+                            PlayerSheetEvent.OnAllSeq -> {
+                                val res = modPlayer!!.toggleAllSequences()
+                                viewModel.onAllSequence(res)
+                            }
+
+                            PlayerSheetEvent.OnMessage -> {
+                                val comment = String(Xmp.getComment(), StandardCharsets.UTF_8)
+                                if (comment.isEmpty()) {
+                                    lifecycleScope.launch {
+                                        val msg = "No comment to display"
+                                        snackBarHostState.showSnackbar(msg)
+                                    }
+                                } else {
+                                    viewModel.showMessage(true, comment.trim())
+                                }
+                                viewModel.showSheet(false)
+                            }
+
+                            PlayerSheetEvent.OnAddToPlaylist -> {
+                                viewModel.onAddToPlaylist(modPlayer!!.currentFileUri)
+                            }
+
+                            is PlayerSheetEvent.OnSequence -> {
+                                Timber.i("Set sequence $it")
+                                val res = modPlayer!!.setSequence(it.seq)
+                                viewModel.onSequence(res)
+                            }
+                        }
+                    },
+                    onSeekEvent = {
+                        when (it) {
+                            is SeekEvent.OnSeek -> {
+                                if (it.isSeeking) {
+                                    viewModel.isSeeking(true)
+                                } else {
+                                    controls!!.transportControls.seekTo(it.value.toLong() * 100)
+                                    viewModel.isSeeking(false)
+                                    viewModel.setPlayTime(Xmp.time().div(100F))
+                                }
+                            }
+                        }
+                    },
+                    onChangeViewer = viewModel::changeViewer,
+                    onSheetVisibleDialog = viewModel::showSheet,
                 )
             }
         }

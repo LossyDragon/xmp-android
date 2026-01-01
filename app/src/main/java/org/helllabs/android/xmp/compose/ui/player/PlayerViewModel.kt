@@ -345,6 +345,10 @@ class PlayerViewModel(
         }
     }
 
+    fun closeMessage() {
+        showMessage(false, "")
+    }
+
     fun showMessage(value: Boolean, message: String) {
         _uiState.update {
             it.copy(showMessageDialog = value, currentMessage = message)
