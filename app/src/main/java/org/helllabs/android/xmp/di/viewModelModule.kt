@@ -3,7 +3,11 @@
 package org.helllabs.android.xmp.di
 
 import android.net.Uri
+import kotlinx.collections.immutable.ImmutableList
+import org.helllabs.android.xmp.compose.PermissionModel
+import org.helllabs.android.xmp.compose.PermissionViewModel
 import org.helllabs.android.xmp.compose.ui.explorer.ExplorerViewModel
+import org.helllabs.android.xmp.compose.ui.player.PlayerViewModel
 import org.helllabs.android.xmp.compose.ui.playlist.viewmodel.PlaylistsViewModel
 import org.helllabs.android.xmp.compose.ui.playlist.viewmodel.SelectedPlaylistViewModel
 import org.helllabs.android.xmp.compose.ui.search.viewmodel.ResultViewModel
@@ -13,6 +17,30 @@ import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
 val viewModelModule = module {
+    single { FileManager(context = get()) }
+
+    viewModel { (perms: ImmutableList<PermissionModel>) -> PermissionViewModel(perms) }
+
+    viewModel {
+        PlaylistsViewModel(
+            storageManager = get(),
+            prefManager = get(),
+            playlistManager = get()
+        )
+    }
+
+    viewModel { (uri: Uri) ->
+        SelectedPlaylistViewModel(
+            playlistUri = uri,
+            playlistManager = get(),
+            prefManager = get()
+        )
+    }
+
+    viewModel { ExplorerViewModel(get(), get(), get()) }
+
+    viewModel { SearchResultViewModel(get()) }
+
     viewModel {
         ResultViewModel(
             httpClient = get(),
@@ -23,25 +51,5 @@ val viewModelModule = module {
         )
     }
 
-    viewModel {
-        PlaylistsViewModel(
-            storageManager = get(),
-            prefManager = get(),
-            playlistManager = get()
-        )
-    }
-
-    viewModel { ExplorerViewModel(get(), get(), get()) }
-
-    viewModel { SearchResultViewModel(get()) }
-
-    viewModel { (uri: Uri) ->
-        SelectedPlaylistViewModel(
-            playlistUri = uri,
-            playlistManager = get(),
-            prefManager = get()
-        )
-    }
-
-    single { FileManager(context = get()) }
+    viewModel { PlayerViewModel(get(), get(), get()) }
 }

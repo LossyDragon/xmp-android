@@ -16,6 +16,8 @@ import androidx.compose.ui.text.font.*
 import androidx.compose.ui.text.style.*
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.compose.theme.XmpTheme
@@ -61,7 +63,7 @@ fun ComposeChannelViewer(
     onTap: () -> Unit,
     channelInfo: ChannelInfo,
     frameInfo: FrameInfo,
-    insName: Array<String>,
+    insName: ImmutableList<String>,
     isMuted: ChannelMuteState,
     modVars: ModVars
 ) {
@@ -194,7 +196,7 @@ fun ComposeChannelViewer(
 private fun DrawScope.drawChannels(
     channelInfo: ChannelInfo,
     frameInfo: FrameInfo,
-    insName: Array<String>,
+    insName: ImmutableList<String>,
     isChnMuted: BooleanArray,
     modVars: ModVars,
     dimensions: ChannelViewerDimensions,
@@ -498,9 +500,9 @@ private fun Preview_ChannelViewer() {
             frameInfo = composeSampleFrameInfo(),
             isMuted = ChannelMuteState(BooleanArray(modVars.numChannels) { it % 2 == 0 }),
             modVars = modVars,
-            insName = Array(
-                modVars.numInstruments
-            ) { String.format("%02X %s", it + 1, "Instrument Name") }
+            insName = List(modVars.numInstruments) {
+                String.format("%02X %s", it + 1, "Instrument Name")
+            }.toPersistentList()
         )
     }
 }

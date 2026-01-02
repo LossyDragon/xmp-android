@@ -14,7 +14,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.*
 import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
@@ -31,16 +30,17 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import java.nio.charset.StandardCharsets
 import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.helllabs.android.xmp.MainActivity
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
-import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.compose.components.MessageDialog
 import org.helllabs.android.xmp.compose.components.SingleChoiceListDialog
 import org.helllabs.android.xmp.compose.theme.XmpTheme
@@ -60,6 +60,8 @@ import org.helllabs.android.xmp.compose.ui.player.viewer.composeSampleChannelInf
 import org.helllabs.android.xmp.compose.ui.player.viewer.composeSampleFrameInfo
 import org.helllabs.android.xmp.core.Constants
 import org.helllabs.android.xmp.core.PrefManager
+import org.helllabs.android.xmp.di.appModule
+import org.helllabs.android.xmp.di.viewModelModule
 import org.helllabs.android.xmp.model.ChannelInfo
 import org.helllabs.android.xmp.model.FrameInfo
 import org.helllabs.android.xmp.model.ModVars
@@ -68,13 +70,16 @@ import org.helllabs.android.xmp.service.PlayerBinder
 import org.helllabs.android.xmp.service.PlayerEvent
 import org.helllabs.android.xmp.service.PlayerService
 import org.koin.android.ext.android.inject
+import org.koin.android.ext.koin.androidContext
+import org.koin.core.context.GlobalContext.getKoinApplicationOrNull
+import org.koin.core.context.GlobalContext.startKoin
 import timber.log.Timber
 
 class PlayerActivity : ComponentActivity() {
 
-    private val prefManager: PrefManager by inject()
+    private val viewModel by inject<PlayerViewModel>()
 
-    private val viewModel by viewModels<PlayerViewModel>()
+    private val prefManager by inject<PrefManager>()
 
     private val snackBarHostState = SnackbarHostState()
 
@@ -127,6 +132,12 @@ class PlayerActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // defensive initialization, when opened via intents
+        getKoinApplicationOrNull() ?: startKoin {
+            androidContext(this@PlayerActivity)
+            modules(listOf(viewModelModule, appModule))
+        }
+
         Timber.d("onCreate")
 
         handleIntent(intent)
@@ -144,16 +155,6 @@ class PlayerActivity : ComponentActivity() {
 
         // Register ScreenReceiver on/off events
         screenReceiver.register(this)
-
-        // Keep screen on if preference is set.
-        lifecycleScope.launch {
-            val value = prefManager.getKeepScreenOn()
-            if (value) {
-                window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-            } else {
-                window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-            }
-        }
 
         setContent {
             // Collect different states
@@ -173,6 +174,21 @@ class PlayerActivity : ComponentActivity() {
             val resources = LocalResources.current
             val choice by viewModel.playlistChoice.collectAsStateWithLifecycle()
             val playlists by viewModel.playlistList.collectAsStateWithLifecycle()
+
+            // Keep screen on if preference is set.
+            val keepScreenOn by prefManager.keepScreenOnFlow()
+                .collectAsStateWithLifecycle(initialValue = false)
+            DisposableEffect(keepScreenOn) {
+                if (keepScreenOn) {
+                    window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                } else {
+                    window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                }
+
+                onDispose {
+                    window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                }
+            }
 
             LaunchedEffect(Unit) {
                 viewModel.softError.collectLatest {
@@ -437,14 +453,16 @@ class PlayerActivity : ComponentActivity() {
                 return@let
             }
 
-            Timber.i("Player started from intent extras")
+            val fileList = PlayerService.fileListUri.toList()
+            Timber.i("Player started from intent extras. ${fileList.size} items in list")
             viewModel.setActivityState(
-                fileList = PlayerService.fileListUri,
+                fileList = fileList,
                 shuffleMode = extras.getBoolean(Constants.PARM_SHUFFLE),
                 loopListMode = extras.getBoolean(Constants.PARM_LOOP),
                 keepFirst = extras.getBoolean(Constants.PARM_KEEPFIRST),
                 start = extras.getInt(Constants.PARM_START)
             )
+
             PlayerService.fileListUri.clear()
         }
 
@@ -551,7 +569,7 @@ private fun PlayerScreen(
     buttonState: PlayerButtonsState,
     drawerState: PlayerSheetState,
     infoState: PlayerInfoState,
-    instrumentNames: Array<String>,
+    instrumentNames: ImmutableList<String>,
     isMuted: ChannelMuteState,
     modVars: ModVars,
     channelInfo: ChannelInfo,
@@ -723,9 +741,9 @@ private fun Preview_PlayerScreen(
                 numOfSequences = List(12) { it },
                 currentSequence = 2
             ),
-            instrumentNames = Array(modVars.numInstruments) {
+            instrumentNames = List(modVars.numInstruments) {
                 String.format("%02X %s", it + 1, "Instrument Name")
-            },
+            }.toPersistentList(),
             modVars = modVars,
             channelInfo = composeSampleChannelInfo(),
             frameInfo = composeSampleFrameInfo(),

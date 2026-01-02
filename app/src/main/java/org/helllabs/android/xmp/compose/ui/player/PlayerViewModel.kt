@@ -7,6 +7,8 @@ import androidx.lifecycle.viewModelScope
 import com.lazygeniouz.dfc.file.DocumentFileCompat
 import java.util.Collections
 import kotlin.text.ifEmpty
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,7 +19,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.Xmp
-import org.helllabs.android.xmp.XmpApplication
 import org.helllabs.android.xmp.core.PlaylistManager
 import org.helllabs.android.xmp.core.PlaylistManager.Companion.addItem
 import org.helllabs.android.xmp.core.PlaylistManager.Companion.addItems
@@ -110,7 +111,6 @@ data class ChannelMuteState(val isMuted: BooleanArray = BooleanArray(Xmp.MAX_CHA
     override fun hashCode(): Int = isMuted.contentHashCode()
 }
 
-@Stable
 class PlayerViewModel(
     private val playlistManager: PlaylistManager,
     private val storageManager: StorageManager,
@@ -142,7 +142,7 @@ class PlayerViewModel(
     /** Viewer Variables **/
     private val seqVars = MutableStateFlow(SequenceVars())
 
-    val insName = MutableStateFlow(arrayOf(""))
+    val insName = MutableStateFlow(persistentListOf(""))
 
     private val _isMuted = MutableStateFlow(ChannelMuteState())
     val isMuted = _isMuted.asStateFlow()
@@ -298,8 +298,8 @@ class PlayerViewModel(
             Xmp.getSeqVars(seqVars.value)
 
             insName.update {
-                Xmp.getInstruments()
-                    ?: Collections.nCopies(modVars.value.numInstruments, "").toTypedArray()
+                val instruments = Xmp.getInstruments() ?: Array(modVars.value.numInstruments) { "" }
+                instruments.toPersistentList()
             }
 
             val muteArray = BooleanArray(modVars.value.numChannels) { i ->

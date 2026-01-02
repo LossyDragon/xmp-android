@@ -202,22 +202,51 @@ object Xmp {
         storageManager: StorageManager,
         uri: Uri
     ): Int {
-        if (!testFromFd(context = context, storageManager = storageManager, uri = uri)) {
-            Timber.d("Load Module: $uri, Result failed")
+        Timber.d("Loading: ${storageManager.getFileName(uri)}")
+
+        // Open ONCE for both test and load
+        val pfd = context.contentResolver.openFileDescriptor(uri, "r")
+        if (pfd == null) {
+            Timber.e("Failed to open file descriptor for $uri")
             return -1
         }
 
-        val pfd = context.contentResolver.openFileDescriptor(uri, "r")
-        val res = if (pfd != null) {
-            val fd = pfd.detachFd()
+        return try {
+            val testFd = pfd.dup()?.detachFd()
+            if (testFd == null) {
+                Timber.e("Failed to duplicate file descriptor")
+                pfd.close()
+                return -1
+            }
+
+            val modInfo = ModInfo()
+            val testResult = testModuleFd(testFd, modInfo)
+
+            if (!testResult) {
+                Timber.d("Test failed for $uri")
+                pfd.close()
+                return -1
+            }
+
+            Timber.i("Test Success: ${modInfo.name} | ${modInfo.type}")
+
+            val loadFd = pfd.dup()?.detachFd()
+            if (loadFd == null) {
+                Timber.e("Failed to duplicate file descriptor for loading")
+                pfd.close()
+                return -1
+            }
+
+            val result = loadModuleFd(loadFd)
+
             pfd.close()
 
-            loadModuleFd(fd)
-        } else {
+            Timber.d("Load Module from file descriptor, result: $result")
+            result
+        } catch (e: Exception) {
+            Timber.e(e, "Exception loading module")
+            pfd.close()
             -1
         }
-
-        Timber.d("Load Module from file descriptor, result: $res")
-        return res
     }
 }

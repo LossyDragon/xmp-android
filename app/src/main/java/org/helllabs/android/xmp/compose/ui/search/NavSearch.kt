@@ -2,6 +2,7 @@ package org.helllabs.android.xmp.compose.ui.search
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -21,6 +22,7 @@ import org.helllabs.android.xmp.compose.ui.search.screen.SearchResultScreen
 import org.helllabs.android.xmp.compose.ui.search.screen.SearchScreen
 import org.helllabs.android.xmp.compose.ui.search.viewmodel.ResultViewModel
 import org.helllabs.android.xmp.compose.ui.search.viewmodel.SearchResultViewModel
+import org.helllabs.android.xmp.core.Constants
 import org.helllabs.android.xmp.core.PrefManager
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
@@ -38,6 +40,22 @@ fun NavSearch(
         searchBackStack.removeLastOrNull()
     }
 
+    var hasApiKey by remember { mutableStateOf(true) }
+    LaunchedEffect(Unit) {
+        if (Constants.APIKEY.isBlank()) {
+            scope.launch {
+                hasApiKey = false
+                val result = snackbarHostState.showSnackbar(
+                    message = "No API key found to use this feature",
+                    actionLabel = "OK,"
+                )
+                if (result == SnackbarResult.ActionPerformed) {
+                    onBack()
+                }
+            }
+        }
+    }
+
     NavDisplay(
         backStack = searchBackStack,
         onBack = { searchBackStack.removeLastOrNull() },
@@ -49,6 +67,7 @@ fun NavSearch(
             entry<NavKeySearch.Search> {
                 SearchScreen(
                     modifier = modifier,
+                    hasApiKey = hasApiKey,
                     onBack = onBack,
                     onSearch = { query, type ->
                         val screen = NavKeySearch.SearchResult(query, type)

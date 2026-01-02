@@ -16,6 +16,7 @@ data class SearchSegmentedButton(val type: SearchType, @field:StringRes val stri
 @Composable
 fun SegmentedButtons(
     modifier: Modifier = Modifier,
+    enabled: Boolean,
     searchType: SearchType,
     onSearchType: (SearchType) -> Unit
 ) {
@@ -31,6 +32,7 @@ fun SegmentedButtons(
                     index = idx,
                     count = buttonOptions.size
                 ),
+                enabled = enabled,
                 onClick = { onSearchType(item.type) },
                 selected = searchType == item.type,
                 label = { Text(text = stringResource(id = item.string)) }

@@ -25,6 +25,7 @@ import org.helllabs.android.xmp.compose.ui.search.components.SegmentedButtons
 @Composable
 fun SearchScreen(
     modifier: Modifier,
+    hasApiKey: Boolean,
     onBack: () -> Unit,
     onSearch: (String, SearchType) -> Unit,
     onRandom: () -> Unit,
@@ -94,6 +95,7 @@ fun SearchScreen(
                         .focusRequester(focusRequester)
                         .padding(horizontal = 16.dp)
                         .fillMaxWidth(),
+                    enabled = hasApiKey,
                     value = searchText,
                     onValueChange = { searchText = it },
                     isError = searchText.isEmpty(),
@@ -134,6 +136,7 @@ fun SearchScreen(
                     modifier = Modifier
                         .padding(horizontal = 16.dp)
                         .fillMaxWidth(),
+                    enabled = hasApiKey,
                     searchType = searchType,
                     onSearchType = { searchType = it },
                 )
@@ -142,6 +145,7 @@ fun SearchScreen(
 
                 SearchButtons(
                     searchText = searchText,
+                    enabled = hasApiKey,
                     onSearch = {
                         onSearch(it, searchType)
                         focusManager.clearFocus()
@@ -162,6 +166,7 @@ private fun Preview_SearchScreen() {
     XmpTheme(useDarkTheme = true) {
         SearchScreen(
             modifier = Modifier,
+            hasApiKey = true,
             onBack = { },
             onSearch = { _, _ -> },
             onRandom = {},

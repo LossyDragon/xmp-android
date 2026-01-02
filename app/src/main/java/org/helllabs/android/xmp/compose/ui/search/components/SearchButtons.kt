@@ -30,6 +30,7 @@ import org.helllabs.android.xmp.compose.theme.XmpTheme
 @Composable
 fun SearchButtons(
     searchText: String,
+    enabled: Boolean,
     onSearch: (String) -> Unit,
     onRandom: () -> Unit,
     onHistory: () -> Unit
@@ -41,7 +42,7 @@ fun SearchButtons(
     ) {
         Button(
             modifier = Modifier.fillMaxWidth(),
-            enabled = searchText.isNotEmpty(),
+            enabled = searchText.isNotEmpty() && enabled,
             onClick = { onSearch(searchText) },
             shape = MaterialTheme.shapes.extraLarge,
         ) {
@@ -65,6 +66,7 @@ fun SearchButtons(
         ) {
             OutlinedButton(
                 modifier = Modifier.weight(1f),
+                enabled = enabled,
                 onClick = onRandom,
                 shape = MaterialTheme.shapes.extraLarge,
                 // contentPadding = PaddingValues(vertical = 16.dp)
@@ -83,6 +85,7 @@ fun SearchButtons(
 
             OutlinedButton(
                 modifier = Modifier.weight(1f),
+                enabled = enabled,
                 onClick = onHistory,
                 shape = MaterialTheme.shapes.extraLarge,
             ) {
@@ -107,6 +110,7 @@ private fun Preview() {
     XmpTheme {
         SearchButtons(
             searchText = "Xmp Mod Player",
+            enabled = true,
             onSearch = { },
             onRandom = { },
             onHistory = { },

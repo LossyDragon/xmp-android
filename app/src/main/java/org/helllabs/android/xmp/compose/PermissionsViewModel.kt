@@ -1,8 +1,7 @@
-package org.helllabs.android.xmp.compose.ui.playlist.viewmodel
+package org.helllabs.android.xmp.compose
 
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -24,16 +23,6 @@ data class PermissionState(
     val navigateToSetting: Boolean = false
 )
 
-@Stable
-class PermissionViewModelFactory(private val permissions: List<PermissionModel>) :
-    ViewModelProvider.Factory {
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(
-        modelClass: Class<T>
-    ): T = PermissionViewModel(permissions = permissions) as T
-}
-
-@Stable
 class PermissionViewModel(private val permissions: List<PermissionModel>) : ViewModel() {
     private val _state = MutableStateFlow(
         PermissionState(permissions = permissions.map { it.permission }, askPermission = true)
