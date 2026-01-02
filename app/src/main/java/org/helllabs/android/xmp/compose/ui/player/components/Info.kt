@@ -20,24 +20,19 @@ import org.helllabs.android.xmp.compose.ui.player.PlayerInfoState
 
 @Composable
 fun PlayerInfo(state: PlayerInfoState) {
-    val speed = remember(state.infoSpeed) { state.infoSpeed }
-    val bpm = remember(state.infoBpm) { state.infoBpm }
-    val pos = remember(state.infoPos) { state.infoPos }
-    val pat = remember(state.infoPat) { state.infoPat }
-
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Speed
-        SingleLineText(text = stringResource(id = R.string.info_speed, speed))
+        SingleLineText(text = stringResource(id = R.string.info_speed, state.infoSpeed))
         // BPM
-        SingleLineText(text = stringResource(id = R.string.info_bpm, bpm))
+        SingleLineText(text = stringResource(id = R.string.info_bpm, state.infoBpm))
         // Pos
-        SingleLineText(text = stringResource(id = R.string.info_position, pos))
+        SingleLineText(text = stringResource(id = R.string.info_position, state.infoPos))
         // Pat
-        SingleLineText(text = stringResource(id = R.string.info_pattern, pat))
+        SingleLineText(text = stringResource(id = R.string.info_pattern, state.infoPat))
     }
 }
 

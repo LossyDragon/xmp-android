@@ -43,7 +43,7 @@ class PlaylistManager(
 
             val playlistDir = playlistDirResult.getOrThrow()
             val sanitizedName = sanitizeFileName(name)
-            val fileName = "$sanitizedName.json"
+            val fileName = "$sanitizedName${Constants.SUFFIX}"
 
             // Check if file already exists
             if (playlistDir.findFile(fileName) != null) {
@@ -140,7 +140,7 @@ class PlaylistManager(
         try {
             val playlistDir = storageManager.getPlaylistDirectory().getOrThrow()
             val sanitizedName = sanitizeFileName(newName)
-            val newFileName = "$sanitizedName.json"
+            val newFileName = "$sanitizedName${Constants.SUFFIX}"
 
             // Check if a file with the new name already exists
             val existingFile = playlistDir.findFile(newFileName)
@@ -216,7 +216,7 @@ class PlaylistManager(
                 val fileName = storageManager.getFileName(uri) ?: return@mapNotNull null
 
                 // Only process .json files
-                if (!fileName.endsWith(".json", ignoreCase = true)) {
+                if (!fileName.endsWith(Constants.SUFFIX, ignoreCase = true)) {
                     return@mapNotNull null
                 }
 

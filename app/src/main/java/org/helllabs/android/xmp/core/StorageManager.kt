@@ -409,15 +409,7 @@ class StorageManager(private val context: Context, private val prefManager: Pref
      */
     fun getFileName(uri: Uri?): String? {
         if (uri == null) return null
-
-        return context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-            if (!cursor.moveToFirst()) return@use null
-
-            val idx = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-            if (idx < 0) return@use null
-
-            cursor.getString(idx)
-        }
+        return DocumentFileCompat.fromSingleUri(context, uri)!!.name
     }
 
     /**

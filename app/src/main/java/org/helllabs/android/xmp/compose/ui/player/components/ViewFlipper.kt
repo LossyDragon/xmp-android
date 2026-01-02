@@ -26,26 +26,30 @@ fun ViewFlipper(
     skipToPrevious: Boolean,
     info: Pair<String, String>
 ) {
-    val transitionSpec = remember(skipToPrevious) {
-        if (skipToPrevious) {
-            val slideIn = slideInHorizontally(
-                animationSpec = tween(ANIMATION_DURATION)
-            ) { width -> -width } + fadeIn()
-            val slideOut = slideOutHorizontally(
-                animationSpec = tween(ANIMATION_DURATION)
-            ) { width -> width } + fadeOut()
-
-            slideIn.togetherWith(slideOut)
-        } else {
-            val slideIn = slideInHorizontally(
-                animationSpec = tween(ANIMATION_DURATION)
-            ) { width -> width } + fadeIn()
-            val slideOut = slideOutHorizontally(
-                animationSpec = tween(ANIMATION_DURATION)
-            ) { width -> -width } + fadeOut()
-
-            slideIn.togetherWith(slideOut)
-        }
+    val slideInFromLeft = remember {
+        slideInHorizontally(
+            animationSpec = tween(ANIMATION_DURATION)
+        ) { width -> -width } + fadeIn()
+    }
+    val slideOutToRight = remember {
+        slideOutHorizontally(
+            animationSpec = tween(ANIMATION_DURATION)
+        ) { width -> width } + fadeOut()
+    }
+    val slideInFromRight = remember {
+        slideInHorizontally(
+            animationSpec = tween(ANIMATION_DURATION)
+        ) { width -> width } + fadeIn()
+    }
+    val slideOutToLeft = remember {
+        slideOutHorizontally(
+            animationSpec = tween(ANIMATION_DURATION)
+        ) { width -> -width } + fadeOut()
+    }
+    val transitionSpec = if (skipToPrevious) {
+        slideInFromLeft.togetherWith(slideOutToRight)
+    } else {
+        slideInFromRight.togetherWith(slideOutToLeft)
     }
 
     CenterAlignedTopAppBar(
@@ -86,34 +90,30 @@ private fun ViewFlipperItem(
     infoTitle: String,
     infoType: String
 ) {
-    Row {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            ProvideTextStyle(
-                LocalTextStyle.current.merge(
-                    TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false))
-                )
-            ) {
-                Text(
-                    fontFamily = michromaFontFamily,
-                    fontSize = 18.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    text = infoTitle
-                )
-                Text(
-                    fontFamily = michromaFontFamily,
-                    fontSize = 12.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    text = infoType
-                )
-            }
+    val textStyle = remember {
+        TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false))
+    }
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        ProvideTextStyle(LocalTextStyle.current.merge(textStyle)) {
+            Text(
+                fontFamily = michromaFontFamily,
+                fontSize = 18.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                text = infoTitle
+            )
+            Text(
+                fontFamily = michromaFontFamily,
+                fontSize = 12.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                text = infoType
+            )
         }
     }
 }

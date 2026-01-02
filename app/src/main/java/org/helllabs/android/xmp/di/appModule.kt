@@ -9,10 +9,12 @@ import org.helllabs.android.xmp.core.PlaylistManager
 import org.helllabs.android.xmp.core.PrefManager
 import org.helllabs.android.xmp.core.StorageManager
 import org.helllabs.android.xmp.serializers.ImmutableListSerializer
+import org.helllabs.android.xmp.service.PlayerConnection
 import org.koin.dsl.module
 
 val appModule = module {
     factory { PlaylistManager(context = get(), json = get(), storageManager = get()) }
+    single { PlayerConnection(context = get()) }
     single { PrefManager(context = get(), json = get()) }
     single { StorageManager(context = get(), prefManager = get()) }
     single {

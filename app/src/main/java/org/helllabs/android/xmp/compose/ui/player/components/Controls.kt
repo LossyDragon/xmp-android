@@ -82,11 +82,8 @@ fun PlayerControls(
                 modifier = Modifier.scale(1.2f),
                 imageVector = when (state.repeatMode) {
                     RepeatMode.OFF -> Icons.Default.Repeat
-
                     RepeatMode.REPEAT_ALL -> Icons.Default.RepeatOn
-
-                    // TODO terrible button
-                    RepeatMode.REPEAT_ONE -> Icons.Default.RepeatOne
+                    RepeatMode.REPEAT_ONE -> Icons.Default.RepeatOne // TODO terrible button
                 },
                 contentDescription = null
             )
@@ -97,7 +94,7 @@ fun PlayerControls(
 @Preview
 @Composable
 private fun Preview_PlayerButtons() {
-    XmpTheme(useDarkTheme = true) {
+    XmpTheme {
         PlayerBottomAppBar {
             PlayerControls(
                 onEvent = { },
