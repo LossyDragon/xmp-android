@@ -35,7 +35,7 @@ data class BreadCrumb(val name: String, val path: Uri?, val enabled: Boolean = t
 @Stable
 data class ExplorerState(
     val crumbs: ImmutableList<BreadCrumb> = persistentListOf(),
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val isLoop: Boolean = false,
     val isShuffle: Boolean = false,
     val lastScrollPosition: Int = 0,
@@ -67,16 +67,15 @@ class ExplorerViewModel(
 
     init {
         viewModelScope.launch {
-            _uiState.update {
-                it.copy(
-                    isShuffle = prefManager.getShuffleMode(),
-                    isLoop = prefManager.getLoopMode(),
-                )
-            }
-
             storageManager.getModDirectory().onSuccess { dfc ->
                 Timber.d("Initial Path: ${dfc.uri}")
                 onNavigate(dfc.uri)
+                _uiState.update {
+                    it.copy(
+                        isShuffle = prefManager.getShuffleMode(),
+                        isLoop = prefManager.getLoopMode(),
+                    )
+                }
             }.onFailure { error ->
                 Timber.e(error)
                 _softError.emit("Failed to access initial directory: ${error.message}")
