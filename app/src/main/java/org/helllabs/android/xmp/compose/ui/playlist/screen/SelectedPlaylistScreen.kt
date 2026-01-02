@@ -162,7 +162,6 @@ private fun PlaylistScreenContent(
                 onPlayAll = onPlayAll
             )
         },
-        snackbarHost = { SnackbarHost(hostState = snackBarHostState) }
     ) { paddingValues ->
         val configuration = LocalConfiguration.current
         val modifier = remember(configuration.orientation) {

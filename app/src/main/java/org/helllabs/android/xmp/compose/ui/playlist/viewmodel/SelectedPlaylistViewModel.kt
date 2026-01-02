@@ -1,7 +1,6 @@
 package org.helllabs.android.xmp.compose.ui.playlist.viewmodel
 
 import android.net.Uri
-import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.collections.immutable.toPersistentList
@@ -16,11 +15,10 @@ import org.helllabs.android.xmp.core.PrefManager
 import org.helllabs.android.xmp.model.Playlist
 import timber.log.Timber
 
-@Stable
 class SelectedPlaylistViewModel(
     private val playlistUri: Uri,
     private val playlistManager: PlaylistManager,
-    private val prefManager: PrefManager
+    prefManager: PrefManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(Playlist())
@@ -43,7 +41,10 @@ class SelectedPlaylistViewModel(
 
     fun save() {
         viewModelScope.launch {
-            playlistManager.savePlaylist(_uiState.value)
+            playlistManager.savePlaylist(_uiState.value).fold(
+                onSuccess = { Timber.d("Playlist saved") },
+                onFailure = { Timber.e(it, "Error saving playlist") }
+            )
         }
     }
 

@@ -164,7 +164,7 @@ object Xmp {
      * Helper to get formats
      */
     val formats: ImmutableList<String>
-        get() = getFormats().orEmpty().toPersistentList()
+        get() = getFormats().orEmpty().sorted().toPersistentList()
 
     /**
      * Test module from File Descriptor

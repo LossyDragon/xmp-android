@@ -11,12 +11,10 @@ import android.os.IBinder
 import android.support.v4.media.session.MediaControllerCompat
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
-import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.*
-import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -37,7 +35,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.helllabs.android.xmp.MainActivity
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
@@ -60,6 +57,7 @@ import org.helllabs.android.xmp.compose.ui.player.viewer.composeSampleChannelInf
 import org.helllabs.android.xmp.compose.ui.player.viewer.composeSampleFrameInfo
 import org.helllabs.android.xmp.core.Constants
 import org.helllabs.android.xmp.core.PrefManager
+import org.helllabs.android.xmp.core.setEdgeToEdgeConfig
 import org.helllabs.android.xmp.di.appModule
 import org.helllabs.android.xmp.di.viewModelModule
 import org.helllabs.android.xmp.model.ChannelInfo
@@ -130,6 +128,7 @@ class PlayerActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        setEdgeToEdgeConfig()
         super.onCreate(savedInstanceState)
 
         // defensive initialization, when opened via intents
@@ -142,19 +141,11 @@ class PlayerActivity : ComponentActivity() {
 
         handleIntent(intent)
 
-        // Enable Edge-to-Edge coloring
-        enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
-            navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
-        )
-
         // Initialize our ScreenReceiver
-        screenReceiver = ScreenReceiver(
-            onScreenEvent = viewModel::screenOn
-        )
+        screenReceiver = ScreenReceiver(onScreenEvent = viewModel::screenOn)
 
         // Register ScreenReceiver on/off events
-        screenReceiver.register(this)
+        screenReceiver.register(context = this)
 
         setContent {
             // Collect different states

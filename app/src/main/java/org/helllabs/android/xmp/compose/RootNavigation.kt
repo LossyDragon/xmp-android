@@ -3,12 +3,12 @@ package org.helllabs.android.xmp.compose
 import android.Manifest
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.retain.retain
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -17,8 +17,8 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toPersistentList
 import org.helllabs.android.xmp.BuildConfig
+import org.helllabs.android.xmp.PlayerActivityLauncher
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.compose.navkey.NavKeyRoot
 import org.helllabs.android.xmp.compose.ui.preferences.AboutScreen
@@ -29,21 +29,30 @@ import org.koin.core.parameter.parametersOf
 import timber.log.Timber
 
 @Composable
-fun RootNavigation() {
+fun RootNavigation(
+    snackBarHostState: SnackbarHostState,
+    onPlayAll: (List<Uri>, Boolean, Boolean, PlayerActivityLauncher) -> Unit,
+    onAddQueue: (List<Uri>, Boolean, Boolean, PlayerActivityLauncher) -> Unit,
+    onPlayModule: (List<Uri>, Int, Boolean, Boolean, Boolean, PlayerActivityLauncher) -> Unit,
+    onItemClick: (List<Uri>, Int, Boolean, Boolean, PlayerActivityLauncher) -> Unit
+) {
     val context = LocalContext.current
 
     val rootBackStack = rememberNavBackStack(NavKeyRoot.Main)
 
-    val snackBarHostState = retain { SnackbarHostState() }
-
     // region [REGION] Permissions
     val permsViewModel = koinInject<PermissionViewModel> {
-        val perms = persistentListOf(
-            PermissionModel(
-                permission = Manifest.permission.POST_NOTIFICATIONS,
-                rational = "Show notification for media playback"
+        var perms = persistentListOf<PermissionModel>()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            perms = persistentListOf(
+                PermissionModel(
+                    permission = Manifest.permission.POST_NOTIFICATIONS,
+                    rational = "Show notification for media playback"
+                )
             )
-        )
+        }
+
         parametersOf(perms)
     }
     val permsState by permsViewModel.state.collectAsStateWithLifecycle()
@@ -96,6 +105,10 @@ fun RootNavigation() {
                         val screen = NavKeyRoot.Settings
                         rootBackStack.add(screen)
                     },
+                    onPlayAll = onPlayAll,
+                    onAddQueue = onAddQueue,
+                    onPlayModule = onPlayModule,
+                    onItemClick = onItemClick,
                 )
             }
 
@@ -115,9 +128,9 @@ fun RootNavigation() {
                 )
             }
             entry<NavKeyRoot.SettingsAbout> {
-                val versionName by remember { mutableStateOf(BuildConfig.VERSION_NAME) }
-                val versionCode by remember { mutableIntStateOf(BuildConfig.VERSION_CODE) }
-                val xmpVersion by remember { mutableStateOf(Xmp.getVersion()) }
+                val versionName = remember { BuildConfig.VERSION_NAME }
+                val versionCode = remember { BuildConfig.VERSION_CODE }
+                val xmpVersion = remember { Xmp.getVersion() }
                 AboutScreen(
                     buildVersionName = versionName,
                     buildVersionCode = versionCode,
@@ -126,10 +139,7 @@ fun RootNavigation() {
                 )
             }
             entry<NavKeyRoot.SettingsFormats> {
-                val formats by remember {
-                    val list = Xmp.formats.sorted().toPersistentList()
-                    mutableStateOf(list)
-                }
+                val formats = remember { Xmp.formats }
                 FormatsScreen(
                     snackBarHostState = snackBarHostState,
                     formatsList = formats,

@@ -1,42 +1,30 @@
 package org.helllabs.android.xmp.compose
 
+import android.app.Activity.RESULT_OK
+import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.*
 import androidx.compose.ui.*
-import androidx.compose.ui.draw.*
-import androidx.compose.ui.graphics.*
-import androidx.compose.ui.platform.*
-import androidx.compose.ui.text.font.*
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.*
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.tooling.preview.*
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
-import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
-import androidx.navigation3.scene.DialogSceneStrategy
 import androidx.navigation3.ui.NavDisplay
-import androidx.navigationevent.NavigationEventDispatcher
-import androidx.navigationevent.NavigationEventDispatcherOwner
-import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.launch
+import org.helllabs.android.xmp.PlayerActivityLauncher
 import org.helllabs.android.xmp.compose.components.KoinPreview
 import org.helllabs.android.xmp.compose.navkey.NavKeyMain
-import org.helllabs.android.xmp.compose.theme.XmpTheme
 import org.helllabs.android.xmp.compose.ui.explorer.ExplorerScreen
 import org.helllabs.android.xmp.compose.ui.explorer.ExplorerViewModel
 import org.helllabs.android.xmp.compose.ui.playlist.NavPlaylists
 import org.helllabs.android.xmp.compose.ui.search.NavSearch
-import org.helllabs.android.xmp.service.PlayerService
 import org.koin.androidx.compose.koinViewModel
 import timber.log.Timber
 
@@ -61,10 +49,13 @@ val BottomBarScreenSaver = Saver<NavKeyMain, String>(
 @Composable
 fun MainNavigation(
     snackBarHostState: SnackbarHostState,
-    onSettings: () -> Unit
+    onSettings: () -> Unit,
+    onPlayAll: (List<Uri>, Boolean, Boolean, PlayerActivityLauncher) -> Unit,
+    onAddQueue: (List<Uri>, Boolean, Boolean, PlayerActivityLauncher) -> Unit,
+    onPlayModule: (List<Uri>, Int, Boolean, Boolean, Boolean, PlayerActivityLauncher) -> Unit,
+    onItemClick: (List<Uri>, Int, Boolean, Boolean, PlayerActivityLauncher) -> Unit
 ) {
-    val dialogStrategy = remember { DialogSceneStrategy<NavKey>() }
-
+    val scope = rememberCoroutineScope()
     val mainBackStack = rememberNavBackStack(NavKeyMain.Playlists)
     var currentBottomBarScreen by rememberSaveable(
         stateSaver = BottomBarScreenSaver,
@@ -120,7 +111,6 @@ fun MainNavigation(
                     .fillMaxSize(),
                 backStack = mainBackStack,
                 onBack = { mainBackStack.removeLastOrNull() },
-                sceneStrategy = dialogStrategy,
                 entryDecorators = listOf(
                     rememberSaveableStateHolderNavEntryDecorator(),
                     rememberViewModelStoreNavEntryDecorator()
@@ -131,10 +121,32 @@ fun MainNavigation(
                             modifier = Modifier.consumeWindowInsets(paddingValues),
                             snackbarHostState = snackBarHostState,
                             onSettings = onSettings,
+                            onPlayAll = onPlayAll,
+                            onAddQueue = onAddQueue,
+                            onPlayModule = onPlayModule,
+                            onItemClick = onItemClick,
                         )
                     }
                     entry<NavKeyMain.Explorer> {
                         val viewModel = koinViewModel<ExplorerViewModel>()
+                        val result = rememberLauncherForActivityResult(
+                            contract = ActivityResultContracts.StartActivityForResult()
+                        ) { result ->
+                            when (result.resultCode) {
+                                RESULT_OK -> result.data?.getStringExtra("message")?.let { msg ->
+                                    if (msg.isBlank()) {
+                                        return@let
+                                    }
+                                    Timber.w("Result with error: $msg")
+                                    scope.launch {
+                                        snackBarHostState.showSnackbar(msg)
+                                    }
+                                }
+
+                                2 -> viewModel.onRefresh()
+                            }
+                        }
+
                         ExplorerScreen(
                             modifier = Modifier.consumeWindowInsets(paddingValues),
                             viewModel = viewModel,
@@ -146,18 +158,18 @@ fun MainNavigation(
                                 mainBackStack.add(NavKeyMain.Playlists)
                                 currentBottomBarScreen = NavKeyMain.Playlists
                             },
-                            onPlayAll = { _, _, _ ->
-                                Timber.d("onPlayAll")
+                            onPlayAll = { modList, isShuffle, isLoop ->
+                                onPlayAll(modList, isShuffle, isLoop, result)
                             },
-                            onAddQueue = { _, _, _ ->
-                                Timber.d("onAddQueue")
+                            onAddQueue = { list, isShuffle, isLoop ->
+                                onAddQueue(list, isShuffle, isLoop, result)
                             },
-                            onPlayModule = { _, _, _, _, _ ->
-                                Timber.d("onPlayModule")
+                            onPlayModule = { modList, start, keepFirst, isShuffle, isLoop ->
+                                onPlayModule(modList, start, keepFirst, isShuffle, isLoop, result)
                             },
-                            onItemClick = { _, _, _, _ ->
-                                Timber.d("onItemClick")
-                            },
+                            onItemClick = { items, position, isShuffle, isLoop ->
+                                onItemClick(items, position, isShuffle, isLoop, result)
+                            }
                         )
                     }
                     entry<NavKeyMain.Downloads> {
@@ -186,6 +198,10 @@ private fun Preview() {
         MainNavigation(
             snackBarHostState = SnackbarHostState(),
             onSettings = { },
+            onPlayAll = { _, _, _, _ -> },
+            onAddQueue = { _, _, _, _ -> },
+            onPlayModule = { _, _, _, _, _, _ -> },
+            onItemClick = { _, _, _, _, _ -> },
         )
     }
 }
