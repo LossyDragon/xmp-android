@@ -21,7 +21,7 @@ lifecycleViewmodel = "2.10.0" # https://mvnrepository.com/artifact/androidx.life
 materialKolor = "5.0.0-alpha04" # https://mvnrepository.com/artifact/com.materialkolor/material-kolor
 media = "1.7.1" # https://mvnrepository.com/artifact/androidx.media/media
 reorderable = "3.0.0" # https://mvnrepository.com/artifact/sh.calvin.reorderable/reorderable
-settings = "2.21.0" # https://github.com/alorma/Compose-Settings/releases
+settings = "2.23.0" # https://github.com/alorma/Compose-Settings/releases
 timber = "5.0.1" # https://mvnrepository.com/artifact/com.jakewharton.timber/timber
 koin-bom = "4.1.1" # https://mvnrepository.com/artifact/io.insert-koin/koin-core
 navigation3 = "1.1.0-alpha01" # https://mvnrepository.com/artifact/androidx.navigation3/navigation3-runtime
@@ -122,4 +122,4 @@ android-kotlin = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 gradle-kotlinter = { id = "org.jmailen.kotlinter", version.ref = "kotlinterGradle" }
 kotlin-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-stability-analyzer = { id = "com.github.skydoves.compose.stability.analyzer", version = "0.6.0" }
+stability-analyzer = { id = "com.github.skydoves.compose.stability.analyzer", version = "0.6.6" }

@@ -14,6 +14,8 @@ import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.*
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.compose.theme.XmpTheme
 import org.helllabs.android.xmp.compose.theme.seed
@@ -39,7 +41,7 @@ private val instrumentTextStyle = TextStyle(
 internal fun InstrumentViewer(
     onTap: () -> Unit,
     channelInfo: ChannelInfo,
-    insName: Array<String>,
+    insName: ImmutableList<String>,
     isMuted: ChannelMuteState,
     modVars: ModVars
 ) {
@@ -180,9 +182,9 @@ private fun Preview_InstrumentViewer() {
             channelInfo = composeSampleChannelInfo(),
             isMuted = ChannelMuteState(isMuted = BooleanArray(modVars.numChannels) { false }),
             modVars = modVars,
-            insName = Array(modVars.numInstruments) {
+            insName = List(modVars.numInstruments) {
                 String.format("%02X %s", it + 1, "Instrument Name")
-            }
+            }.toPersistentList()
         )
     }
 }

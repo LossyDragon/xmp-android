@@ -26,6 +26,28 @@ fun ViewFlipper(
     skipToPrevious: Boolean,
     info: Pair<String, String>
 ) {
+    val transitionSpec = remember(skipToPrevious) {
+        if (skipToPrevious) {
+            val slideIn = slideInHorizontally(
+                animationSpec = tween(ANIMATION_DURATION)
+            ) { width -> -width } + fadeIn()
+            val slideOut = slideOutHorizontally(
+                animationSpec = tween(ANIMATION_DURATION)
+            ) { width -> width } + fadeOut()
+
+            slideIn.togetherWith(slideOut)
+        } else {
+            val slideIn = slideInHorizontally(
+                animationSpec = tween(ANIMATION_DURATION)
+            ) { width -> width } + fadeIn()
+            val slideOut = slideOutHorizontally(
+                animationSpec = tween(ANIMATION_DURATION)
+            ) { width -> -width } + fadeOut()
+
+            slideIn.togetherWith(slideOut)
+        }
+    }
+
     CenterAlignedTopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
@@ -47,29 +69,7 @@ fun ViewFlipper(
         title = {
             AnimatedContent(
                 targetState = info,
-                transitionSpec = {
-                    if (skipToPrevious) {
-                        val slideIn = slideInHorizontally(
-                            animationSpec = tween(ANIMATION_DURATION)
-                        ) { width -> -width } + fadeIn()
-                        val slideOut = slideOutHorizontally(
-                            animationSpec = tween(ANIMATION_DURATION)
-                        ) { width -> width } + fadeOut()
-
-                        slideIn.togetherWith(slideOut)
-                    } else {
-                        val slideIn = slideInHorizontally(
-                            animationSpec = tween(ANIMATION_DURATION)
-                        ) { width -> width } + fadeIn()
-                        val slideOut = slideOutHorizontally(
-                            animationSpec = tween(ANIMATION_DURATION)
-                        ) { width -> -width } + fadeOut()
-
-                        slideIn.togetherWith(slideOut)
-                    }.using(
-                        SizeTransform(clip = false)
-                    )
-                },
+                transitionSpec = { transitionSpec.using(SizeTransform(clip = false)) },
                 label = "XMP ViewFlipper"
             ) {
                 ViewFlipperItem(

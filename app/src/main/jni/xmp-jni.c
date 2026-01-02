@@ -16,6 +16,7 @@
 #include <sys/stat.h>
 #include <sys/syscall.h>
 #include <unistd.h>
+#include <errno.h>
 
 #define MAX_BUFFER_SIZE 256
 #define PERIOD_BASE 13696
@@ -214,16 +215,19 @@ JNI_FUNCTION(deinit)(JNIEnv *env, jobject obj) {
 
 JNIEXPORT jint JNICALL
 JNI_FUNCTION(loadModuleFd)(JNIEnv *env, jobject obj, jint fd) {
+    LOGI("loadModuleFd() called - fd: %d, tid: %ld", fd, (long) gettid());
     (void) env;
     (void) obj;
 
     FILE *file = fdopen(fd, "r");
     if (file == NULL) {
+        LOGE("loadModuleFd() - fdopen failed for fd %d: %s", fd, strerror(errno));
         return -1;
     }
 
     struct stat statbuf;
     if (fstat(fd, &statbuf) != 0) {
+        LOGE("loadModuleFd() - fstat failed for fd %d: %s", fd, strerror(errno));
         fclose(file);
         return -1;
     }
@@ -231,11 +235,19 @@ JNI_FUNCTION(loadModuleFd)(JNIEnv *env, jobject obj, jint fd) {
 
     int res = xmp_load_module_from_file(ctx, file, size);
 
-    xmp_get_module_info(ctx, &mi);
+    if (res == 0) {
+        xmp_get_module_info(ctx, &mi);
 
-    memset(g_pos, 0, XMP_MAX_CHANNELS * sizeof(int));
-    g_sequence = 0;
-    g_mod_is_loaded = 1;
+        LOGI("loadModuleFd() - module loaded successfully: %s (type: %s)",
+             mi.mod->name, mi.mod->type);
+
+        memset(g_pos, 0, XMP_MAX_CHANNELS * sizeof(int));
+        g_sequence = 0;
+        g_mod_is_loaded = 1;
+    } else {
+        LOGE("loadModuleFd() - failed to load module, error: %d", res);
+        g_mod_is_loaded = 0;
+    }
 
     fclose(file);
 
@@ -244,10 +256,12 @@ JNI_FUNCTION(loadModuleFd)(JNIEnv *env, jobject obj, jint fd) {
 
 JNIEXPORT jboolean JNICALL
 JNI_FUNCTION(testModuleFd)(JNIEnv *env, jobject obj, jint fd, jobject modInfo) {
+    LOGI("testModuleFd() called - fd: %d, tid: %ld", fd, (long) gettid());
     (void) obj;
 
     FILE *file = fdopen(fd, "rb");
     if (file == NULL) {
+        LOGE("testModuleFd() - fdopen failed for fd %d: %s", fd, strerror(errno));
         return JNI_FALSE;
     }
 
@@ -255,14 +269,26 @@ JNI_FUNCTION(testModuleFd)(JNIEnv *env, jobject obj, jint fd, jobject modInfo) {
     int res = xmp_test_module_from_file(file, &ti);
     fclose(file);
 
+    LOGD("testModuleFd() - test result: %d", res);
+
     // Sanity
     if (modInfoIDs.name == NULL || modInfoIDs.type == NULL) {
+        LOGW("testModuleFd() - field IDs not cached, caching now");
         cacheModInfoIDs(env);
     }
 
     if (res == 0) {
+        LOGI("testModuleFd() - valid module found: '%s' (type: %s)", ti.name, ti.type);
+
         jstring name = (*env)->NewStringUTF(env, ti.name);
         jstring type = (*env)->NewStringUTF(env, ti.type);
+
+        if (name == NULL || type == NULL) {
+            LOGE("testModuleFd() - failed to create Java strings");
+            if (name) (*env)->DeleteLocalRef(env, name);
+            if (type) (*env)->DeleteLocalRef(env, type);
+            return JNI_FALSE;
+        }
 
         (*env)->SetObjectField(env, modInfo, modInfoIDs.name, name);
         (*env)->SetObjectField(env, modInfo, modInfoIDs.type, type);
@@ -270,7 +296,13 @@ JNI_FUNCTION(testModuleFd)(JNIEnv *env, jobject obj, jint fd, jobject modInfo) {
         // Clean up local references
         (*env)->DeleteLocalRef(env, name);
         (*env)->DeleteLocalRef(env, type);
+
+        LOGD("testModuleFd() - successfully populated modInfo");
+    } else {
+        LOGW("testModuleFd() - not a valid module, error code: %d", res);
     }
+
+    LOGD("testModuleFd() completed - fd: %d, result: %s", fd, res == 0 ? "TRUE" : "FALSE");
 
     return res == 0 ? JNI_TRUE : JNI_FALSE;
 }

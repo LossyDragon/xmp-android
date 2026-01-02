@@ -1,9 +1,12 @@
 package org.helllabs.android.xmp.compose.ui.playlist
 
+import android.app.Activity.RESULT_OK
+import android.net.Uri
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -14,9 +17,8 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.scene.DialogSceneStrategy
 import androidx.navigation3.ui.NavDisplay
-import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.helllabs.android.xmp.PlayerActivityLauncher
 import org.helllabs.android.xmp.compose.navkey.NavKeyPlaylists
 import org.helllabs.android.xmp.compose.ui.playlist.screen.PlaylistEditScreen
 import org.helllabs.android.xmp.compose.ui.playlist.screen.PlaylistsScreen
@@ -32,7 +34,11 @@ import timber.log.Timber
 fun NavPlaylists(
     modifier: Modifier,
     snackbarHostState: SnackbarHostState,
-    onSettings: () -> Unit
+    onSettings: () -> Unit,
+    onPlayAll: (List<Uri>, Boolean, Boolean, PlayerActivityLauncher) -> Unit,
+    onAddQueue: (List<Uri>, Boolean, Boolean, PlayerActivityLauncher) -> Unit,
+    onPlayModule: (List<Uri>, Int, Boolean, Boolean, Boolean, PlayerActivityLauncher) -> Unit,
+    onItemClick: (List<Uri>, Int, Boolean, Boolean, PlayerActivityLauncher) -> Unit
 ) {
     val scope = rememberCoroutineScope()
     val playlistBackStack = rememberNavBackStack(NavKeyPlaylists.Playlists)
@@ -73,22 +79,40 @@ fun NavPlaylists(
                 val viewModel = koinViewModel<SelectedPlaylistViewModel>(
                     parameters = { parametersOf(it.uri) }
                 )
+                val result = rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.StartActivityForResult()
+                ) { result ->
+                    when (result.resultCode) {
+                        RESULT_OK -> result.data?.getStringExtra("message")?.let { msg ->
+                            if (msg.isBlank()) {
+                                return@let
+                            }
+                            Timber.w("Result with error: $msg")
+                            scope.launch {
+                                snackbarHostState.showSnackbar(msg)
+                            }
+                        }
+
+                        2 -> viewModel.onRefresh()
+                    }
+                }
+
                 SelectedPlaylistScreen(
                     modifier = modifier,
                     viewModel = viewModel,
                     snackBarHostState = snackbarHostState,
                     onBack = { playlistBackStack.removeLastOrNull() },
-                    onPlayAll = { _, _, _ ->
-                        // TODO
+                    onPlayAll = { modList, isShuffle, isLoop ->
+                        onPlayAll(modList, isShuffle, isLoop, result)
                     },
-                    onAddQueue = { _, _, _ ->
-                        // TODO
+                    onAddQueue = { list, isShuffleMode, isLoopMode ->
+                        onAddQueue(list, isShuffleMode, isLoopMode, result)
                     },
-                    onPlayModule = { _, _, _, _, _ ->
-                        // TODO
+                    onPlayModule = { modList, start, keepFirst, isShuffle, isLoop ->
+                        onPlayModule(modList, start, keepFirst, isShuffle, isLoop, result)
                     },
-                    onItemClick = { _, _, _, _ ->
-                        // TODO
+                    onItemClick = { items, position, isShuffle, isLoop ->
+                        onItemClick(items, position, isShuffle, isLoop, result)
                     },
                 )
             }

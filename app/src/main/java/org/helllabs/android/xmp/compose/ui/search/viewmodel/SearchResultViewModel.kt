@@ -19,7 +19,6 @@ data class SearchResultState(
     val result: Any? = null
 )
 
-@Stable
 class SearchResultViewModel(private val repository: Repository) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SearchResultState())
