@@ -43,12 +43,6 @@ import org.helllabs.android.xmp.model.FileItem
 import org.koin.compose.koinInject
 import timber.log.Timber
 
-private object ExplorerConstants {
-    const val SCROLL_DEBOUNCE_SECONDS = 1L
-    val CARD_SPACING = 16.dp
-    val CONTENT_PADDING = 16.dp
-}
-
 @Composable
 fun ExplorerScreen(
     modifier: Modifier = Modifier,
@@ -288,7 +282,7 @@ private fun ExplorerScreenContent(
     LaunchedEffect(scrollState) {
         var lastPosition = -1
         snapshotFlow { scrollState.firstVisibleItemIndex }
-            .debounce(ExplorerConstants.SCROLL_DEBOUNCE_SECONDS.seconds)
+            .debounce(1.seconds)
             .collectLatest { position ->
                 if (position != lastPosition) {
                     lastPosition = position
@@ -350,8 +344,8 @@ private fun ExplorerScreenContent(
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 state = scrollState,
-                contentPadding = PaddingValues(ExplorerConstants.CONTENT_PADDING),
-                verticalArrangement = Arrangement.spacedBy(ExplorerConstants.CARD_SPACING)
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 itemsIndexed(state.list) { index, item ->
                     ExplorerListCard(

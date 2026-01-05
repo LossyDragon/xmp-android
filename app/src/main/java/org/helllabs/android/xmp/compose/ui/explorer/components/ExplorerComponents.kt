@@ -79,7 +79,14 @@ fun ExplorerListCard(
                     Icons.Default.Folder
                 }
 
-                Icon(imageVector = icon, contentDescription = null)
+                Icon(
+                    imageVector = icon,
+                    contentDescription = if (item.isDirectory) {
+                        "Folder: ${item.name}"
+                    } else {
+                        "File: ${item.name}"
+                    }
+                )
             },
             headlineContent = {
                 Text(text = item.name)

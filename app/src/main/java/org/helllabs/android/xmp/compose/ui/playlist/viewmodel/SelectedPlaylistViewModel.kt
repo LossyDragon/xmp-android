@@ -59,6 +59,8 @@ class SelectedPlaylistViewModel(
     fun onMove(from: Int, to: Int) {
         val list = _uiState.value.list.toMutableList().apply {
             add(to, removeAt(from))
+        }.mapIndexed { index, playlistItem ->
+            playlistItem.copy(id = index)
         }.toPersistentList()
 
         _uiState.update { it.copy(list = list) }

@@ -276,45 +276,48 @@ class StorageManager(private val context: Context, private val prefManager: Pref
     fun listDirectoryContents(uri: Uri?): List<Uri> {
         if (uri == null) return emptyList()
 
-        val docId = DocumentsContract.getDocumentId(uri)
-        val childDocUri = DocumentsContract.buildChildDocumentsUriUsingTree(uri, docId)
-        val projection = arrayOf(
-            DocumentsContract.Document.COLUMN_DOCUMENT_ID,
-            DocumentsContract.Document.COLUMN_MIME_TYPE,
-            DocumentsContract.Document.COLUMN_DISPLAY_NAME
-        )
+        return try {
+            val docId = DocumentsContract.getDocumentId(uri)
+            val childDocUri = DocumentsContract.buildChildDocumentsUriUsingTree(uri, docId)
+            val projection = arrayOf(
+                DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+                DocumentsContract.Document.COLUMN_MIME_TYPE,
+                DocumentsContract.Document.COLUMN_DISPLAY_NAME
+            )
 
-        val directories = mutableListOf<Uri>()
-        val files = mutableListOf<Uri>()
+            val directories = mutableListOf<Uri>()
+            val files = mutableListOf<Uri>()
 
-        context.contentResolver.query(
-            childDocUri,
-            projection,
-            null,
-            null,
-            null
-        )?.use { cursor ->
-            val idCol = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DOCUMENT_ID)
-            val mimeCol = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_MIME_TYPE)
+            context.contentResolver.query(
+                childDocUri,
+                projection,
+                null,
+                null,
+                null
+            )?.use { cursor ->
+                val idCol = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DOCUMENT_ID)
+                val mimeCol = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_MIME_TYPE)
 
-            while (cursor.moveToNext()) {
-                val childDocumentId = cursor.getString(idCol)
-                val mimeType = cursor.getString(mimeCol)
-                val childUri = DocumentsContract.buildDocumentUriUsingTree(uri, childDocumentId)
+                while (cursor.moveToNext()) {
+                    val childDocumentId = cursor.getString(idCol)
+                    val mimeType = cursor.getString(mimeCol)
+                    val childUri = DocumentsContract.buildDocumentUriUsingTree(uri, childDocumentId)
 
-                if (mimeType == DocumentsContract.Document.MIME_TYPE_DIR) {
-                    directories.add(childUri)
-                } else {
-                    files.add(childUri)
+                    if (mimeType == DocumentsContract.Document.MIME_TYPE_DIR) {
+                        directories.add(childUri)
+                    } else {
+                        files.add(childUri)
+                    }
                 }
             }
-        }
 
-        // Return directories first, then files, sorted alphabetically
-        return (
+            // Return directories first, then files, sorted alphabetically
             directories.sortedBy { getFileName(it)?.lowercase() } +
                 files.sortedBy { getFileName(it)?.lowercase() }
-            )
+        } catch (e: Exception) {
+            Timber.e(e, "Error listing directory: $uri")
+            emptyList()
+        }
     }
 
     /**
@@ -330,16 +333,26 @@ class StorageManager(private val context: Context, private val prefManager: Pref
     fun walkDownDirectory(uri: Uri?, includeDirectories: Boolean = true): List<Uri> {
         if (uri == null) return emptyList()
 
-        val docId = DocumentsContract.getDocumentId(uri)
-        val childDocUri = DocumentsContract.buildChildDocumentsUriUsingTree(uri, docId)
-        val projection = arrayOf(
-            DocumentsContract.Document.COLUMN_DOCUMENT_ID,
-            DocumentsContract.Document.COLUMN_MIME_TYPE,
-        )
+        return try {
+            val docId = DocumentsContract.getDocumentId(uri)
+            val childDocUri = DocumentsContract.buildChildDocumentsUriUsingTree(uri, docId)
+            val projection = arrayOf(
+                DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+                DocumentsContract.Document.COLUMN_MIME_TYPE,
+            )
 
-        val (directories, files) = collectDirectoriesAndFiles(childDocUri, uri, projection)
-
-        return buildSortedUriList(directories, files, includeDirectories)
+            val (directories, files) = collectDirectoriesAndFiles(childDocUri, uri, projection)
+            buildSortedUriList(directories, files, includeDirectories)
+        } catch (e: SecurityException) {
+            Timber.e(e, "Permission denied accessing: $uri")
+            emptyList()
+        } catch (e: IllegalArgumentException) {
+            Timber.e(e, "Invalid URI: $uri")
+            emptyList()
+        } catch (e: Exception) {
+            Timber.e(e, "Error walking directory: $uri")
+            emptyList()
+        }
     }
 
     private fun collectDirectoriesAndFiles(

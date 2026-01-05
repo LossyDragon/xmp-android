@@ -97,7 +97,14 @@ class PlaylistManager(
             )
 
             val playlist = json.decodeFromString(Playlist.serializer(), content)
-            Result.success(playlist)
+
+            val indexedPlaylist = playlist.copy(
+                list = playlist.list.mapIndexed { index, item ->
+                    item.copy(id = index)
+                }.toImmutableList()
+            )
+
+            Result.success(indexedPlaylist)
         } catch (e: Exception) {
             Timber.e(e)
             Result.failure(e)

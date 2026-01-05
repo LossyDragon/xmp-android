@@ -4,11 +4,13 @@ import android.content.res.Configuration
 import android.net.Uri
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.*
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.*
@@ -30,6 +32,7 @@ import org.helllabs.android.xmp.di.appModule
 import org.helllabs.android.xmp.model.DropDownSelection
 import org.helllabs.android.xmp.model.Playlist
 import org.helllabs.android.xmp.model.PlaylistItem
+import sh.calvin.reorderable.ReorderableColumn
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import sh.calvin.reorderable.rememberScroller
@@ -180,56 +183,43 @@ private fun PlaylistScreenContent(
                 derivedStateOf { listState.layoutInfo.viewportSize.height * 0.05f }
             }
             val haptic = LocalHapticFeedback.current
-            val reorderState = rememberReorderableLazyListState(
-                lazyListState = listState,
-                scroller = rememberScroller(
-                    scrollableState = listState,
-                    pixelAmount = pixelAmount,
-                )
-            ) { from, to ->
-                onMove(from.index - 1, to.index - 1)
-                haptic.performHapticFeedback(HapticFeedbackType(26))
-            }
 
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                state = listState,
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-//                // Dummy item. Compose (and libs) cannot handle 1st item animations
-//                // https://github.com/Calvin-LL/Reorderable/issues/4
-//                item {
-//                    ReorderableItem(
-//                        state = reorderState,
-//                        key = "dummy",
-//                        enabled = false,
-//                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .height(.01.dp)
-//                    ) {}
-//                }
-                itemsIndexed(state.list, key = { _, item -> item.id }) { index, item ->
-                    ReorderableItem(
-                        state = reorderState,
-                        key = item.id
-                    ) { isDragging ->
-                        val elevation by animateDpAsState(
-                            if (isDragging) 4.dp else 0.dp,
-                            label = ""
-                        )
-                        PlaylistCardItem(
-                            scope = this,
-                            elevation = elevation,
-                            item = item,
-                            useFileName = state.useFileName,
-                            onItemClick = { onItemClick(index) },
-                            onMenuClick = { onMenuClick(item, index, it) },
-                            onDragStopped = onDragStopped
-                        )
+            ReorderableColumn(
+                modifier = Modifier.fillMaxSize().padding(8.dp),
+                list = state.list,
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                onSettle = { fromIndex, toIndex ->
+                    onMove(fromIndex, toIndex)
+                },
+                onMove = {
+                    haptic.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
+                },
+                content = { index, item, isDragging ->
+                    key(item.id) {
+                        ReorderableItem {
+                            val interactionSource = remember { MutableInteractionSource() }
+
+                            PlaylistCardItem(
+                                iconModifier = Modifier.draggableHandle(
+                                    onDragStarted = {
+                                        haptic.performHapticFeedback(
+                                            HapticFeedbackType.GestureThresholdActivate
+                                        )
+                                    },
+                                    onDragStopped = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                                        onDragStopped()
+                                    }
+                                ),
+                                interactionSource = interactionSource,
+                                item = item,
+                                isDragging = isDragging,
+                                useFileName = state.useFileName,
+                            )
+                        }
                     }
                 }
-            }
+            )
 
             if (state.list.isEmpty()) {
                 GuruFrame(

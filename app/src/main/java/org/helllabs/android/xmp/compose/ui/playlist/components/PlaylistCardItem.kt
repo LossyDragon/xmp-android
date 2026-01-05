@@ -1,8 +1,10 @@
 package org.helllabs.android.xmp.compose.ui.playlist.components
 
+import android.annotation.SuppressLint
 import android.net.Uri
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
+import androidx.compose.foundation.interaction.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.material.icons.*
@@ -17,17 +19,16 @@ import androidx.compose.ui.hapticfeedback.*
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
+import kotlinx.collections.immutable.persistentListOf
 import me.saket.cascade.CascadeDropdownMenu
 import org.helllabs.android.xmp.compose.components.KoinPreview
 import org.helllabs.android.xmp.compose.components.XmpDropdownMenuHeader
 import org.helllabs.android.xmp.core.StorageManager
-import org.helllabs.android.xmp.di.appModule
 import org.helllabs.android.xmp.model.DropDownItem
 import org.helllabs.android.xmp.model.DropDownSelection
 import org.helllabs.android.xmp.model.PlaylistItem
 import org.koin.compose.koinInject
-import sh.calvin.reorderable.ReorderableCollectionItemScope
-import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.ReorderableColumn
 import sh.calvin.reorderable.rememberReorderableLazyListState
 
 private val playlistItemDropDownItems: List<DropDownItem> = listOf(
@@ -39,112 +40,101 @@ private val playlistItemDropDownItems: List<DropDownItem> = listOf(
 
 @Composable
 fun PlaylistCardItem(
-    scope: ReorderableCollectionItemScope,
-    elevation: Dp,
+    @SuppressLint("ModifierParameter") iconModifier: Modifier = Modifier,
+    interactionSource: MutableInteractionSource,
     item: PlaylistItem,
-    useFileName: Boolean,
-    onItemClick: () -> Unit,
-    onMenuClick: (DropDownSelection) -> Unit,
-    onDragStopped: () -> Unit
+    isDragging: Boolean,
+    useFileName: Boolean
 ) {
     var isContextMenuVisible by rememberSaveable { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
+    val elevation by animateDpAsState(if (isDragging) 4.dp else 0.dp)
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.extraLarge,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = elevation
-        )
-    ) {
-        ListItem(
-            modifier = Modifier
-                .clickable { onItemClick() }
-                .padding(6.dp),
-            colors = ListItemDefaults.colors(
-                containerColor = Color.Transparent
+    Surface(shadowElevation = elevation, color = Color.Transparent) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            interactionSource = interactionSource,
+            shape = MaterialTheme.shapes.extraLarge,
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
             ),
-            leadingContent = {
-                Icon(
-                    modifier = with(scope) {
-                        Modifier.draggableHandle(
-                            onDragStarted = {
-                                haptic.performHapticFeedback(HapticFeedbackType(25))
-                            },
-                            onDragStopped = {
-                                haptic.performHapticFeedback(HapticFeedbackType(13))
-                                onDragStopped()
-                            }
-                        )
-                    },
-                    imageVector = Icons.Rounded.DragHandle,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            },
-            headlineContent = {
-                val storageManager = koinInject<StorageManager>()
-                val text = if (useFileName) {
-                    storageManager.getFileName(item.uri) ?: item.name
-                } else {
-                    item.name
-                }
-                Text(
-                    text = text,
-                    style = MaterialTheme.typography.bodyLarge
-                )
-            },
-            supportingContent = {
-                Text(
-                    text = item.type,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            },
-            trailingContent = {
-                IconButton(
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        isContextMenuVisible = true
-                    },
-                    content = {
-                        Icon(
-                            imageVector = Icons.Default.MoreVert,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+            onClick = {}
+        ) {
+            ListItem(
+                colors = ListItemDefaults.colors(
+                    containerColor = Color.Transparent
+                ),
+                leadingContent = {
+                    IconButton(
+                        modifier = iconModifier,
+                        interactionSource = interactionSource,
+                        onClick = {},
+                        content = {
+                            Icon(Icons.Rounded.DragHandle, contentDescription = "Reorder")
+                        }
+                    )
+                },
+                headlineContent = {
+                    val storageManager = koinInject<StorageManager>()
+                    val text = if (useFileName) {
+                        storageManager.getFileName(item.uri) ?: item.name
+                    } else {
+                        item.name
                     }
-                )
+                    Text(
+                        text = text,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                },
+                supportingContent = {
+                    Text(
+                        text = item.type,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
+                trailingContent = {
+                    IconButton(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            isContextMenuVisible = true
+                        },
+                        content = {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    )
 
-                CascadeDropdownMenu(
-                    expanded = isContextMenuVisible,
-                    onDismissRequest = { isContextMenuVisible = false }
-                ) {
-                    XmpDropdownMenuHeader(text = "Edit Playlist")
+                    CascadeDropdownMenu(
+                        expanded = isContextMenuVisible,
+                        onDismissRequest = { isContextMenuVisible = false }
+                    ) {
+                        XmpDropdownMenuHeader(text = "Edit Playlist")
 
-                    playlistItemDropDownItems.forEach {
-                        DropdownMenuItem(
-                            text = {
-                                Text(
-                                    text = it.text,
-                                    style = MaterialTheme.typography.bodyLarge
-                                )
-                            },
-                            onClick = {
-                                haptic.performHapticFeedback(
-                                    HapticFeedbackType.LongPress
-                                )
-                                onMenuClick(it.selection)
-                                isContextMenuVisible = false
-                            }
-                        )
+                        playlistItemDropDownItems.forEach {
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = it.text,
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
+                                },
+                                onClick = {
+                                    haptic.performHapticFeedback(
+                                        HapticFeedbackType.LongPress
+                                    )
+                                    // onMenuClick(it.selection)
+                                    isContextMenuVisible = false
+                                }
+                            )
+                        }
                     }
                 }
-            }
-        )
+            )
+        }
     }
 }
 
@@ -152,35 +142,27 @@ fun PlaylistCardItem(
 @Preview
 @Composable
 private fun Preview_PlaylistCardItem() {
-    KoinPreview(modules = listOf(appModule)) {
-        val isDragging by remember {
-            mutableStateOf(false)
-        }
-        val elevation by animateDpAsState(
-            targetValue = if (isDragging) 4.dp else 1.dp,
-            label = "isDragging dp"
-        )
-
-        val lazyListState = rememberLazyListState()
-        val reorderableState = rememberReorderableLazyListState(lazyListState) { _, _ ->
-        }
-
+    KoinPreview {
         Surface {
-            LazyColumn {
-                item {
-                    ReorderableItem(reorderableState, key = {}) {
+            ReorderableColumn(
+                list = persistentListOf(
+                    PlaylistItem(
+                        name = "Playlist title",
+                        type = "Playlist comment",
+                        uri = Uri.EMPTY
+                    )
+                ),
+                onSettle = { _, _ -> }
+            ) { index, item, isDragging ->
+                key(item.id) {
+                    ReorderableItem {
+                        val interactionSource = remember { MutableInteractionSource() }
                         PlaylistCardItem(
-                            scope = this,
-                            elevation = elevation,
-                            item = PlaylistItem(
-                                name = "Playlist title",
-                                type = "Playlist comment",
-                                uri = Uri.EMPTY
-                            ),
+                            iconModifier = Modifier,
+                            interactionSource = interactionSource,
+                            item = item,
+                            isDragging = isDragging,
                             useFileName = false,
-                            onItemClick = { },
-                            onMenuClick = { },
-                            onDragStopped = { }
                         )
                     }
                 }

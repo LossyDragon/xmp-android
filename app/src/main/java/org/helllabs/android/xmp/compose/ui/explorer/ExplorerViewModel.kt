@@ -11,6 +11,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -62,8 +63,20 @@ class ExplorerViewModel(
     val deleteDirChoice = MutableStateFlow<Uri?>(null)
     val deleteFileChoice = MutableStateFlow<Uri?>(null)
 
+    private var navigationJob: Job? = null
+
     // Cache directory contents to improve performance on back navigation
-    private val directoryCache = mutableMapOf<String, List<FileItem>>()
+    private val directoryCache = object : LinkedHashMap<String, List<FileItem>>(
+        /* initialCapacity = */ 16,
+        /* loadFactor = */ 0.75f,
+        /* accessOrder = */ true
+    ) {
+        override fun removeEldestEntry(
+            eldest: MutableMap.MutableEntry<String, List<FileItem>>?
+        ): Boolean {
+            return size > 50
+        }
+    }
 
     init {
         viewModelScope.launch {
@@ -81,6 +94,12 @@ class ExplorerViewModel(
                 _softError.emit("Failed to access initial directory: ${error.message}")
             }
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        Timber.d("onCleared")
+        directoryCache.clear()
     }
 
     fun setScrollPosition(value: Int) {
@@ -141,7 +160,8 @@ class ExplorerViewModel(
     fun onNavigate(uri: Uri?) {
         if (uri == null) return
 
-        viewModelScope.launch(Dispatchers.IO) {
+        navigationJob?.cancel()
+        navigationJob = viewModelScope.launch(Dispatchers.IO) {
             withContext(Dispatchers.Main) {
                 _uiState.update { it.copy(isLoading = true) }
             }
