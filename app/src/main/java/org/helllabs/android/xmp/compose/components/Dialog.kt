@@ -178,6 +178,31 @@ fun TextInputDialog(
     )
 }
 
+@Composable
+fun PermissionsRationaleDialog(
+    description: String,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = { Icon(imageVector = Icons.Default.Warning, contentDescription = null) },
+        confirmButton = {
+            TextButton(
+                onClick = onConfirm,
+                content = { Text(text = stringResource(id = android.R.string.ok)) }
+            )
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = stringResource(id = android.R.string.cancel))
+            }
+        },
+        title = { Text(text = "Permissions Needed") },
+        text = { Text(text = description) }
+    )
+}
+
 /**
  * Previews
  */
@@ -256,5 +281,17 @@ fun Preview_TextInputDialog() {
                 onDismiss = {}
             )
         }
+    }
+}
+
+@Preview
+@Composable
+fun Preview_PermissionsRationaleDialog() {
+    XmpTheme {
+        PermissionsRationaleDialog(
+            description = "Dialog Dialog Dialog",
+            onDismiss = { },
+            onConfirm = { },
+        )
     }
 }

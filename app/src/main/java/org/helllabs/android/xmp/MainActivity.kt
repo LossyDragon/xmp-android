@@ -13,9 +13,11 @@ import androidx.activity.result.ActivityResult
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.retain.retain
 import androidx.lifecycle.lifecycleScope
+import com.meticha.permissions_compose.PermissionManagerConfig
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.helllabs.android.xmp.compose.RootNavigation
+import org.helllabs.android.xmp.compose.components.PermissionsRationaleDialog
 import org.helllabs.android.xmp.compose.theme.XmpTheme
 import org.helllabs.android.xmp.compose.ui.player.PlayerActivity
 import org.helllabs.android.xmp.core.Constants
@@ -55,6 +57,15 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         setEdgeToEdgeConfig()
         super.onCreate(savedInstanceState)
+
+        // Permissions
+        PermissionManagerConfig.setCustomRationaleUI { permission, onDismiss, onConfirm ->
+            PermissionsRationaleDialog(
+                description = permission.description,
+                onDismiss = onDismiss,
+                onConfirm = onConfirm
+            )
+        }
 
         setContent {
             val snackBarHostState = retain { SnackbarHostState() }

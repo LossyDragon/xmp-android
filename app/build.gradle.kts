@@ -32,10 +32,10 @@ android {
         /*
          * https://apilevels.com/
          */
-        minSdk = 23 // Android 6 - Marshmallow
+        minSdk = 24 // Android 7 - Nougat
         targetSdk = 36 // Android 15 Vanilla Ice Cream
 
-        versionCode = 118
+        versionCode = 119
         versionName = "5.0-SNAPSHOT"
 
         ndk.abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")

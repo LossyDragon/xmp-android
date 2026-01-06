@@ -3,9 +3,6 @@
 package org.helllabs.android.xmp.di
 
 import android.net.Uri
-import kotlinx.collections.immutable.ImmutableList
-import org.helllabs.android.xmp.compose.PermissionModel
-import org.helllabs.android.xmp.compose.PermissionViewModel
 import org.helllabs.android.xmp.compose.ui.explorer.ExplorerViewModel
 import org.helllabs.android.xmp.compose.ui.player.PlayerViewModel
 import org.helllabs.android.xmp.compose.ui.playlist.viewmodel.PlaylistsViewModel
@@ -18,8 +15,6 @@ import org.koin.dsl.module
 
 val viewModelModule = module {
     single { FileManager(context = get()) }
-
-    viewModel { (perms: ImmutableList<PermissionModel>) -> PermissionViewModel(perms) }
 
     viewModel {
         PlaylistsViewModel(
