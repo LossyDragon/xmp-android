@@ -18,7 +18,6 @@ import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.*
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
-import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -35,11 +34,8 @@ import org.helllabs.android.xmp.compose.ui.playlist.viewmodel.PlaylistsUiState
 import org.helllabs.android.xmp.compose.ui.playlist.viewmodel.PlaylistsViewModel
 import org.helllabs.android.xmp.compose.ui.search.components.GuruFrame
 import org.helllabs.android.xmp.compose.ui.search.components.GuruTextButton
-import org.helllabs.android.xmp.core.PrefManager
-import org.helllabs.android.xmp.core.StorageManager
 import org.helllabs.android.xmp.model.FileItem
 import org.helllabs.android.xmp.service.PlayerService
-import org.koin.compose.koinInject
 import timber.log.Timber
 
 @Composable
@@ -56,9 +52,6 @@ fun PlaylistsScreen(
     val scope = rememberCoroutineScope()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
-    val prefManager = koinInject<PrefManager>()
-    val storageManager = koinInject<StorageManager>()
-
     val snackMessage by viewModel.snackMessage.collectAsStateWithLifecycle()
     LaunchedEffect(snackMessage) {
         snackMessage?.let { message ->
@@ -74,51 +67,27 @@ fun PlaylistsScreen(
     val playerResult = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode == 1) {
-            result.data?.getStringExtra("error")?.let {
+        when (result.resultCode) {
+            1 -> result.data?.getStringExtra("error")?.let {
                 Timber.w("Result with error: $it")
                 scope.launch {
                     snackBarHostState.showSnackbar(message = it)
                 }
             }
-        }
-        if (result.resultCode == 2) {
-            Timber.d("Result with 2")
+
+            else -> Timber.w("Unknown handled result code ${result.resultCode}")
         }
     }
 
     val appSettings = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) {
-        viewModel.updateList()
-    }
+        contract = ActivityResultContracts.StartActivityForResult(),
+        onResult = { viewModel.refreshAll() }
+    )
 
     val documentTreeResult = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocumentTree()
-    ) { uri ->
-        scope.launch {
-            storageManager.setPlaylistDirectory(uri).onSuccess {
-                viewModel.setDefaultPath()
-            }.onFailure {
-                viewModel.emitError(message = it.message ?: resources.getString(R.string.error))
-            }
-        }
-    }
-
-    // Ask for Permissions
-    LaunchedEffect(Unit) {
-        val savedUri = prefManager.getSafStoragePath().toUri()
-        val persistedUris = context.contentResolver.persistedUriPermissions
-        val hasAccess = persistedUris.any {
-            it.uri == savedUri && it.isWritePermission
-        }
-
-        if (!hasAccess) {
-            viewModel.askForStorage(true)
-        } else {
-            viewModel.setDefaultPath()
-        }
-    }
+        contract = ActivityResultContracts.OpenDocumentTree(),
+        onResult = { viewModel.handleStorageDirectorySelected(it) }
+    )
 
     // Prompt and Explain Storage
     MessageDialog(
@@ -132,38 +101,32 @@ fun PlaylistsScreen(
         },
         dismissText = stringResource(id = android.R.string.cancel),
         onDismiss = {
-            viewModel.askForStorage(false)
+            viewModel.showStorageRequest(false)
             viewModel.clearError()
-            viewModel.updateList()
         }
     )
 
     LaunchedEffect(state.mediaPath) {
         if (state.mediaPath.isNotEmpty()) {
-            viewModel.setupDataDir(
+            viewModel.initializeDataDirectory(
                 name = resources.getString(R.string.error_empty_playlist),
                 comment = resources.getString(R.string.error_empty_comment),
-            ).onSuccess {
-                viewModel.updateList()
-            }.onFailure {
-                viewModel.emitError(it.message ?: resources.getString(R.string.error))
-            }
+            )
         }
     }
 
+    // Check storage on initial composition and lifecycle resume
     LifecycleResumeEffect(Lifecycle.Event.ON_RESUME) {
-        scope.launch {
-            Timber.d("Lifecycle onResume")
-            if (prefManager.getSafStoragePath().isNotEmpty()) {
-                viewModel.updateList()
-            }
+        Timber.d("Lifecycle onResume")
+        if (state.hasStorageAccess && state.mediaPath.isNotEmpty()) {
+            viewModel.loadPlaylistItems()
         }
         onPauseOrDispose {
             Timber.d("Lifecycle onPause")
         }
     }
 
-    HomeScreenContent(
+    PlaylistsScreenContent(
         modifier = modifier,
         state = state,
         onSettings = onSettings,
@@ -178,7 +141,7 @@ fun PlaylistsScreen(
         onItemLongClick = { item ->
             onEditPlaylist(item)
         },
-        onRefresh = viewModel::updateList,
+        onRefresh = viewModel::loadPlaylistItems,
         onNewPlaylist = { onEditPlaylist(null) },
         onRequestSettings = {
             Intent().apply {
@@ -200,7 +163,7 @@ fun PlaylistsScreen(
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun HomeScreenContent(
+private fun PlaylistsScreenContent(
     modifier: Modifier = Modifier,
     state: PlaylistsUiState,
     onSettings: () -> Unit,
@@ -215,21 +178,10 @@ private fun HomeScreenContent(
     val serviceAlive by PlayerService.isAlive.collectAsStateWithLifecycle()
     val servicePlaying by PlayerService.isPlaying.collectAsStateWithLifecycle()
 
-    val storageManager = koinInject<StorageManager>()
-
     val scrollState = rememberLazyListState()
     val isScrolled by remember {
         derivedStateOf {
             scrollState.firstVisibleItemIndex > 0
-        }
-    }
-
-    val view = LocalView.current
-    val hasStorage by produceState(initialValue = false, state) {
-        value = if (view.isInEditMode) {
-            false
-        } else {
-            storageManager.checkPermissions()
         }
     }
 
@@ -244,7 +196,7 @@ private fun HomeScreenContent(
             )
         },
         floatingActionButton = {
-            if (hasStorage) {
+            if (state.hasStorageAccess) {
                 ExtendedFloatingActionButton(
                     text = { Text(text = stringResource(id = R.string.menu_new_playlist)) },
                     icon = { Icon(imageVector = Icons.Default.Add, contentDescription = null) },
@@ -273,7 +225,7 @@ private fun HomeScreenContent(
             isRefreshing = state.isLoading,
             onRefresh = onRefresh
         ) {
-            if (state.playlistItems.isNotEmpty() && hasStorage) {
+            if (state.playlistItems.isNotEmpty() && state.hasStorageAccess) {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(
@@ -295,35 +247,44 @@ private fun HomeScreenContent(
                 }
             }
 
-            if (!state.isLoading && state.playlistItems.isEmpty()) {
-                GuruFrame(
-                    modifier = Modifier.padding(horizontal = 32.dp),
-                    message = "No playlists found"
-                )
-            }
-
-            if (!state.isLoading && !hasStorage) {
-                GuruFrame(
-                    modifier = Modifier.padding(horizontal = 32.dp),
-                    message = "Unable to access playlists from storage",
-                    action = {
-                        GuruTextButton(text = "Set Directory", onClick = onRequestStorage)
-                        GuruTextButton(text = "Go to Settings", onClick = onRequestSettings)
-                    },
-                )
+            if (!state.isLoading) {
+                if (state.playlistItems.isEmpty() && state.hasStorageAccess) {
+                    GuruFrame(
+                        modifier = Modifier.padding(horizontal = 32.dp),
+                        message = "No playlists found"
+                    )
+                } else if (!state.hasStorageAccess) {
+                    GuruFrame(
+                        modifier = Modifier.padding(horizontal = 32.dp),
+                        message = "Unable to access playlists from storage",
+                        action = {
+                            GuruTextButton(text = "Set Directory", onClick = onRequestStorage)
+                            GuruTextButton(text = "Go to Settings", onClick = onRequestSettings)
+                        },
+                    )
+                }
             }
         }
     }
 }
 
-@Preview
-@Composable
-private fun Preview_PlaylistMenuScreen() {
-    KoinPreview {
-        HomeScreenContent(
-            state = PlaylistsUiState(
+private class PlaylistPreview : PreviewParameterProvider<PlaylistsUiState> {
+    override fun getDisplayName(index: Int): String? {
+        return when (index) {
+            0 -> "Loaded with Playlists"
+            1 -> "Loading"
+            2 -> "No Storage"
+            3 -> "Empty Playlists"
+            else -> "Unknown"
+        }
+    }
+
+    override val values: Sequence<PlaylistsUiState>
+        get() = sequenceOf(
+            PlaylistsUiState(
                 mediaPath = "sdcard\\some\\path",
-                isLoading = true,
+                isLoading = false,
+                hasStorageAccess = true,
                 playlistItems = List(15) {
                     FileItem(
                         name = "Name $it",
@@ -332,6 +293,35 @@ private fun Preview_PlaylistMenuScreen() {
                     )
                 }.toPersistentList()
             ),
+            PlaylistsUiState(
+                mediaPath = "sdcard\\some\\path",
+                isLoading = true,
+                hasStorageAccess = true,
+                playlistItems = List(15) {
+                    FileItem(
+                        name = "Name $it",
+                        comment = "Comment $it",
+                        uri = Uri.EMPTY
+                    )
+                }.toPersistentList()
+            ),
+            PlaylistsUiState(
+                isLoading = false,
+            ),
+            PlaylistsUiState(
+                mediaPath = "sdcard\\some\\path",
+                isLoading = false,
+                hasStorageAccess = true,
+            )
+        )
+}
+
+@Preview
+@Composable
+private fun Preview(@PreviewParameter(PlaylistPreview::class) state: PlaylistsUiState) {
+    KoinPreview {
+        PlaylistsScreenContent(
+            state = state,
             onSettings = {},
             onTitle = {},
             onItemClick = {},

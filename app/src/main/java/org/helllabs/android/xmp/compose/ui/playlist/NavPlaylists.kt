@@ -125,16 +125,14 @@ fun NavPlaylists(
                         Timber.d("Back from Playlist Edit: $result")
                         playlistBackStack.removeLastOrNull()
                         if (result) {
-                            scope.launch {
-                                playlistsViewModel.refreshPlaylistItems()
-                            }
+                            playlistsViewModel.refreshAll()
                         }
                     },
                     onDeleted = { result ->
                         Timber.d("Deleting Playlist: $result")
                         playlistBackStack.removeLastOrNull()
                         scope.launch {
-                            playlistsViewModel.refreshPlaylistItems()
+                            playlistsViewModel.refreshAll()
                             snackbarHostState.showSnackbar(
                                 message = if (result) {
                                     "Playlist deleted"

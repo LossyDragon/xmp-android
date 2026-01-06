@@ -1,5 +1,6 @@
 package org.helllabs.android.xmp.compose.ui.playlist.viewmodel
 
+import android.net.Uri
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -25,7 +26,8 @@ data class PlaylistsUiState(
     val isLoading: Boolean = true,
     val mediaPath: String = "",
     val playlistItems: ImmutableList<FileItem> = persistentListOf(),
-    val askForStorage: Boolean = false
+    val askForStorage: Boolean = false,
+    val hasStorageAccess: Boolean = false
 )
 
 class PlaylistsViewModel(
@@ -40,77 +42,49 @@ class PlaylistsViewModel(
     private val _snackMessage = MutableStateFlow<String?>(null)
     val snackMessage: StateFlow<String?> = _snackMessage.asStateFlow()
 
-    fun emitError(message: String?) {
+    init {
+        initializeStorage()
+    }
+
+    /** Initialize storage access and load playlists if available. */
+    fun initializeStorage() {
         viewModelScope.launch {
-            _snackMessage.value = message
+            val hasAccess = checkStoragePermissions()
+            _uiState.update { it.copy(hasStorageAccess = hasAccess) }
+
+            if (hasAccess) {
+                loadDefaultPath()
+            } else {
+                showStorageRequest()
+                _uiState.update { it.copy(isLoading = false) }
+            }
         }
     }
 
-    fun clearError() {
-        emitError(null)
-    }
-
-    /**
-     * Create application directory and populate with empty playlist
-     */
-    suspend fun setupDataDir(name: String, comment: String): Result<Unit> {
-        return runCatching {
-            val dir = storageManager.getPlaylistDirectory().getOrThrow()
-
-            require(!dir.isFile()) {
-                "Playlist Directory returned null or is file!"
-            }
-
-            if (prefManager.getInstalledExamplePlaylist()) {
-                return@runCatching
-            }
-
-            val isPlaylistEmpty = dir.listFiles().isEmpty()
-            if (isPlaylistEmpty) {
-                createExamplePlaylist(name, comment)
-            }
-        }.onFailure { error ->
-            Timber.e(error, "Failed to setup data directory")
-        }
-    }
-
-    private suspend fun createExamplePlaylist(name: String, comment: String) {
-        playlistManager.createPlaylist(name, comment).onSuccess {
-            prefManager.setInstalledExamplePlaylist(true)
-        }.onFailure {
-            Timber.e(it)
-            throw XmpException("Unable to create Example playlist")
-        }
-    }
-
-    suspend fun setDefaultPath() {
-        storageManager.getDefaultPathName()
-            .onSuccess { name ->
-                _uiState.update { it.copy(mediaPath = name, askForStorage = false) }
-                updateList()
-            }
-            .onFailure { err ->
-                Timber.e(err, "Error setting default path")
-                emitError(err.message ?: "Error setting default path")
-                _uiState.update { it.copy(mediaPath = "", askForStorage = false) }
-            }
-    }
-
-    fun updateList() {
+    /** Refresh storage access and reload playlist list. */
+    fun refreshAll() {
         viewModelScope.launch {
-            refreshPlaylistItems()
+            val hasAccess = checkStoragePermissions()
+            _uiState.update { it.copy(hasStorageAccess = hasAccess) }
+
+            if (hasAccess) {
+                loadPlaylistItems()
+            } else {
+                showStorageRequest()
+            }
         }
     }
 
-    suspend fun refreshPlaylistItems() {
-        Timber.d("Refreshing Playlist Items")
-        withContext(Dispatchers.IO) {
+    /** Load or refresh the list of playlists. */
+    fun loadPlaylistItems() {
+        viewModelScope.launch {
             if (uiState.value.mediaPath.isEmpty()) {
                 _uiState.update { it.copy(isLoading = false, playlistItems = persistentListOf()) }
-                return@withContext
+                return@launch
             }
 
             _uiState.update { it.copy(isLoading = true) }
+
             val items = playlistManager.listAllPlaylists().fold(
                 onSuccess = { playlists ->
                     playlists.map {
@@ -127,56 +101,100 @@ class PlaylistsViewModel(
         }
     }
 
-    // null `playlistItem` will be a new playlist
-    fun editPlaylist(
-        fileItem: FileItem?,
-        name: String,
-        comment: String
-    ) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val result = fileItem?.let { item ->
-                playlistManager.loadPlaylist(item.uri).mapCatching { playlist ->
-                    val withComment = playlistManager.setComment(playlist, comment)
-
-                    if (playlist.name != name) {
-                        playlistManager.renamePlaylist(withComment, name).getOrThrow()
-                    } else {
-                        playlistManager.savePlaylist(withComment).getOrThrow()
-                    }
-                }
-            } ?: run {
-                Timber.d("New Playlist: $name")
-                playlistManager.createPlaylist(name, comment).map { }
+    /** Handle user selecting a storage directory via SAF. */
+    fun handleStorageDirectorySelected(uri: Uri?) {
+        viewModelScope.launch {
+            if (uri == null) {
+                showError("No directory selected")
+                return@launch
             }
 
-            result.fold(
-                onSuccess = {
-                    Timber.d("Playlist ${fileItem?.name.orEmpty()} edited")
-                    refreshPlaylistItems()
-                },
-                onFailure = { error ->
-                    Timber.e(error, "Failed to edit playlist")
-                    emitError(error.message ?: "Failed to edit playlist")
+            storageManager.setPlaylistDirectory(uri)
+                .onSuccess {
+                    loadDefaultPath()
+                    val hasAccess = checkStoragePermissions()
+                    _uiState.update { it.copy(hasStorageAccess = hasAccess) }
                 }
-            )
+                .onFailure { error ->
+                    Timber.e(error, "Failed to set playlist directory")
+                    showError(error.message ?: "Failed to set directory")
+                }
         }
     }
 
-    fun deletePlaylist(playlistItem: FileItem) {
-        viewModelScope.launch(Dispatchers.IO) {
-            playlistManager.deletePlaylist(playlistItem.uri).fold(
-                onSuccess = {
-                    refreshPlaylistItems()
-                },
-                onFailure = { error ->
-                    Timber.e(error, "Failed to delete playlist")
-                    emitError(error.message ?: "Failed to delete playlist")
+    /** Initialize data directory with example playlist if needed. */
+    fun initializeDataDirectory(name: String, comment: String) {
+        viewModelScope.launch {
+            if (uiState.value.mediaPath.isEmpty()) return@launch
+
+            setupDataDirectory(name, comment)
+                .onSuccess { loadPlaylistItems() }
+                .onFailure { error ->
+                    Timber.e(error, "Failed to setup data directory")
+                    showError(error.message ?: "Failed to initialize directory")
                 }
-            )
         }
     }
 
-    fun askForStorage(value: Boolean) {
-        _uiState.update { it.copy(askForStorage = value) }
+    /** Show or hide the storage request dialog. */
+    fun showStorageRequest(show: Boolean = true) {
+        _uiState.update { it.copy(askForStorage = show) }
+    }
+
+    /** Display an error message to the user. */
+    fun showError(message: String?) {
+        _snackMessage.value = message
+    }
+
+    /** Clear the current error message. */
+    fun clearError() {
+        _snackMessage.value = null
+    }
+
+    private suspend fun checkStoragePermissions(): Boolean {
+        return withContext(Dispatchers.IO) {
+            storageManager.checkPermissions()
+        }
+    }
+
+    private suspend fun loadDefaultPath() {
+        storageManager.getDefaultPathName()
+            .onSuccess { name ->
+                _uiState.update { it.copy(mediaPath = name, askForStorage = false) }
+                loadPlaylistItems()
+            }
+            .onFailure { error ->
+                Timber.e(error, "Error setting default path")
+                showError(error.message ?: "Error setting default path")
+                _uiState.update { it.copy(mediaPath = "", askForStorage = false) }
+            }
+    }
+
+    private suspend fun setupDataDirectory(name: String, comment: String): Result<Unit> {
+        return runCatching {
+            val dir = storageManager.getPlaylistDirectory().getOrThrow()
+
+            require(dir.isDirectory()) {
+                "Playlist directory is not a valid directory"
+            }
+
+            if (prefManager.getInstalledExamplePlaylist()) {
+                return@runCatching
+            }
+
+            if (dir.listFiles().isEmpty()) {
+                createExamplePlaylist(name, comment)
+            }
+        }
+    }
+
+    private suspend fun createExamplePlaylist(name: String, comment: String) {
+        playlistManager.createPlaylist(name, comment)
+            .onSuccess {
+                prefManager.setInstalledExamplePlaylist(true)
+            }
+            .onFailure {
+                throw XmpException("Unable to create example playlist")
+            }
     }
 }

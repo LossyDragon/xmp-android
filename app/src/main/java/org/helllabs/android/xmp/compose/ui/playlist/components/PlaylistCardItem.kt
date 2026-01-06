@@ -29,7 +29,6 @@ import org.helllabs.android.xmp.model.DropDownSelection
 import org.helllabs.android.xmp.model.PlaylistItem
 import org.koin.compose.koinInject
 import sh.calvin.reorderable.ReorderableColumn
-import sh.calvin.reorderable.rememberReorderableLazyListState
 
 private val playlistItemDropDownItems: List<DropDownItem> = listOf(
     DropDownItem("Add to play queue", DropDownSelection.ADD_TO_QUEUE),
