@@ -37,7 +37,8 @@ fun RootNavigation(
             persistentListOf(
                 AppPermission(
                     permission = Manifest.permission.POST_NOTIFICATIONS,
-                    description = "Post Notifications access is needed to display the foreground service icon",
+                    description = "Post Notifications access is needed to " +
+                        "display the foreground service icon",
                     isRequired = true,
                 ),
             )

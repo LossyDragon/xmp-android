@@ -1,10 +1,7 @@
 [versions]
 activityCompose = "1.12.2" # https://mvnrepository.com/artifact/androidx.activity/activity-compose
 androidGradlePlugin = "8.13.2" # https://mvnrepository.com/artifact/com.android.application/com.android.application.gradle.plugin
-cascadeCompose = "2.3.0" # https://mvnrepository.com/artifact/me.saket.cascade/cascade-compose
 composeBom = "2025.12.01" # https://mvnrepository.com/artifact/androidx.compose/compose-bom
-composeNavigation = "2.9.6" # https://mvnrepository.com/artifact/androidx.navigation/navigation-compose
-coreKtx = "1.17.0" # https://mvnrepository.com/artifact/androidx.core/core-ktx
 dataStore = "1.2.0" # https://mvnrepository.com/artifact/androidx.datastore/datastore-preferences
 dfc = "1.2" # https://mvnrepository.com/artifact/com.lazygeniouz/dfc
 extendedSpans = "1.4.0" # https://mvnrepository.com/artifact/me.saket.extendedspans/extendedspans
@@ -15,13 +12,9 @@ kotlinterGradle = "5.3.0" # // https://github.com/jeremymailen/kotlinter-gradle
 kotlinxSerialization = "1.9.0" # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-serialization-json
 ktor = "3.3.3" # https://mvnrepository.com/artifact/io.ktor/ktor-client-core
 leakcanaryAndroid = "2.14" # https://mvnrepository.com/artifact/com.squareup.leakcanary/leakcanary-android
-lifecycleRuntimeCompose = "2.10.0" # https://mvnrepository.com/artifact/androidx.lifecycle/lifecycle-runtime-compose
-lifecycleRuntimeKtx = "2.10.0" # https://mvnrepository.com/artifact/androidx.lifecycle/lifecycle-runtime-ktx
-lifecycleViewModelCompose = "2.10.0" # https://mvnrepository.com/artifact/androidx.lifecycle/lifecycle-viewmodel-compose
 lifecycleViewmodel = "2.10.0" # https://mvnrepository.com/artifact/androidx.lifecycle/lifecycle-viewmodel-navigation3
 materialKolor = "5.0.0-alpha04" # https://mvnrepository.com/artifact/com.materialkolor/material-kolor
 media = "1.7.1" # https://mvnrepository.com/artifact/androidx.media/media
-nav3Material = "1.3.0-alpha05" # https://mvnrepository.com/artifact/androidx.compose.material3.adaptive/adaptive-navigation3
 navigation3 = "1.1.0-alpha01" # https://mvnrepository.com/artifact/androidx.navigation3/navigation3-runtime
 permissionsCompose = "1.0.5" # https://mvnrepository.com/artifact/com.meticha/permissions_compose
 reorderable = "3.0.0" # https://mvnrepository.com/artifact/sh.calvin.reorderable/reorderable
@@ -44,33 +37,21 @@ compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 compose-ui-ui = { module = "androidx.compose.ui:ui" }
 
-ktor-client-android = { module = "io.ktor:ktor-client-android", version.ref = "ktor" }
-ktor-client-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
-ktor-serialization-xml = { module = "io.ktor:ktor-serialization-kotlinx-xml", version.ref = "ktor" }
-
-koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin-bom" }
-koin-android = { module = "io.insert-koin:koin-android" }
-koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose" }
-
 androidx-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "lifecycleViewmodel" }
-androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "navigation3" }
 androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "navigation3" }
-androidx-material3-navigation3 = { group = "androidx.compose.material3.adaptive", name = "adaptive-navigation3", version.ref = "nav3Material" }
-koin-navigation3 = {group = "io.insert-koin", name = "koin-compose-navigation3", version = "4.2.0-beta2"}
-
-cascade-compose = { module = "me.saket.cascade:cascade-compose", version.ref = "cascadeCompose" }
 compose-extended-spans = { module = "me.saket.extendedspans:extendedspans", version.ref = "extendedSpans" }
-compose-navigation = { module = "androidx.navigation:navigation-compose", version.ref = "composeNavigation" }
-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
 datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "dataStore" }
 dfc = { module = "com.lazygeniouz:dfc", version.ref = "dfc" }
+koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose" }
+koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin-bom" }
+koin-navigation3 = {group = "io.insert-koin", name = "koin-compose-navigation3", version = "4.2.0-beta2"}
 kotlinx-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinXImmutable" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 kotlinx-serialization-xml = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinxSerialization" }
+ktor-client-android = { module = "io.ktor:ktor-client-android", version.ref = "ktor" }
+ktor-client-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+ktor-serialization-xml = { module = "io.ktor:ktor-serialization-kotlinx-xml", version.ref = "ktor" }
 leakcanary-android = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanaryAndroid" }
-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycleRuntimeCompose" }
-lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleViewModelCompose" }
 materialKolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
 media = { module = "androidx.media:media", version.ref = "media" }
 permissions-compose = { group = "com.meticha", name = "permissions_compose", version.ref = "permissionsCompose" }
@@ -91,14 +72,11 @@ compose = [
     "compose-settings-ui-extended",
     "compose-ui-tooling",
     "compose-ui-ui",
-    "compose-navigation",
-    "permissions-compose"
 ]
 compose-utils = [
-    "cascade-compose",
     "compose-extended-spans",
-    "lifecycle-runtime-compose",
     "materialKolor",
+    "permissions-compose"
 ]
 ktor = [
     "kotlinx-serialization-xml",
@@ -107,14 +85,11 @@ ktor = [
     "ktor-serialization-xml",
 ]
 koin = [
-    "koin-android",
     "koin-androidx-compose",
 ]
 nav3 = [
     "androidx-lifecycle-viewmodel-navigation3",
-    "androidx-navigation3-runtime",
     "androidx-navigation3-ui",
-    "androidx-material3-navigation3",
     "koin-navigation3",
 ]
 

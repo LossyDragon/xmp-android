@@ -6,7 +6,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.shape.*
 import androidx.compose.material.icons.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.rounded.*
@@ -20,9 +20,7 @@ import androidx.compose.ui.platform.*
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
 import kotlinx.collections.immutable.persistentListOf
-import me.saket.cascade.CascadeDropdownMenu
 import org.helllabs.android.xmp.compose.components.KoinPreview
-import org.helllabs.android.xmp.compose.components.XmpDropdownMenuHeader
 import org.helllabs.android.xmp.core.StorageManager
 import org.helllabs.android.xmp.model.DropDownItem
 import org.helllabs.android.xmp.model.DropDownSelection
@@ -37,6 +35,7 @@ private val playlistItemDropDownItems: List<DropDownItem> = listOf(
     DropDownItem("Remove from playlist", DropDownSelection.DELETE)
 )
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun PlaylistCardItem(
     @SuppressLint("ModifierParameter") iconModifier: Modifier = Modifier,
@@ -107,29 +106,44 @@ fun PlaylistCardItem(
                         }
                     )
 
-                    CascadeDropdownMenu(
-                        expanded = isContextMenuVisible,
-                        onDismissRequest = { isContextMenuVisible = false }
+                    Box(
+                        modifier = Modifier
+                            .wrapContentSize()
                     ) {
-                        XmpDropdownMenuHeader(text = "Edit Playlist")
-
-                        playlistItemDropDownItems.forEach {
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        text = it.text,
-                                        style = MaterialTheme.typography.bodyLarge
-                                    )
-                                },
-                                onClick = {
-                                    haptic.performHapticFeedback(
-                                        HapticFeedbackType.LongPress
-                                    )
-                                    // onMenuClick(it.selection)
-                                    isContextMenuVisible = false
-                                }
-                            )
-                        }
+                        DropdownMenu(
+                            expanded = isContextMenuVisible,
+                            onDismissRequest = { isContextMenuVisible = false },
+                            shape = RoundedCornerShape(16.dp),
+                            content = {
+                                DropdownMenuGroup(
+                                    shapes = MenuDefaults.groupShape(0, 1),
+                                    content = {
+                                        DropdownMenuItem(
+                                            enabled = false,
+                                            text = { Text(text = "Edit Playlist") },
+                                            onClick = { }
+                                        )
+                                        playlistItemDropDownItems.forEach {
+                                            DropdownMenuItem(
+                                                text = {
+                                                    Text(
+                                                        text = it.text,
+                                                        style = MaterialTheme.typography.bodyLarge
+                                                    )
+                                                },
+                                                onClick = {
+                                                    haptic.performHapticFeedback(
+                                                        HapticFeedbackType.LongPress
+                                                    )
+                                                    // onMenuClick(it.selection) // TODO
+                                                    isContextMenuVisible = false
+                                                }
+                                            )
+                                        }
+                                    }
+                                )
+                            }
+                        )
                     }
                 }
             )

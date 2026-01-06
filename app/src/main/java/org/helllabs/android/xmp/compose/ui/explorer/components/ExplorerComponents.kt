@@ -21,10 +21,8 @@ import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
-import me.saket.cascade.CascadeDropdownMenu
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.compose.components.KoinPreview
-import org.helllabs.android.xmp.compose.components.XmpDropdownMenuHeader
 import org.helllabs.android.xmp.compose.theme.XmpTheme
 import org.helllabs.android.xmp.compose.ui.explorer.BreadCrumb
 import org.helllabs.android.xmp.model.DropDownItem
@@ -52,6 +50,7 @@ private val fileDropDownItems: List<DropDownItem> = listOf(
     DropDownItem("Delete file", DropDownSelection.DELETE),
 )
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ExplorerListCard(
     item: FileItem,
@@ -105,24 +104,51 @@ fun ExplorerListCard(
                 }
 
                 val list = if (!item.isDirectory) fileDropDownItems else directoryDropDownItems
-                CascadeDropdownMenu(
-                    expanded = isContextMenuVisible,
-                    onDismissRequest = { isContextMenuVisible = false }
+                Box(
+                    modifier = Modifier
+                        .wrapContentSize()
                 ) {
-                    XmpDropdownMenuHeader(
-                        text = if (!item.isDirectory) "This File" else "This Directory"
+                    DropdownMenu(
+                        expanded = isContextMenuVisible,
+                        onDismissRequest = { isContextMenuVisible = false },
+                        shape = RoundedCornerShape(16.dp),
+                        content = {
+                            DropdownMenuGroup(
+                                shapes = MenuDefaults.groupShape(0, 1),
+                                content = {
+                                    DropdownMenuItem(
+                                        enabled = false,
+                                        text = {
+                                            val text = if (!item.isDirectory) {
+                                                "This File"
+                                            } else {
+                                                "This Directory"
+                                            }
+                                            Text(text = text)
+                                        },
+                                        onClick = { }
+                                    )
+                                    list.forEach {
+                                        DropdownMenuItem(
+                                            text = {
+                                                Text(
+                                                    text = it.text,
+                                                    style = MaterialTheme.typography.bodyLarge
+                                                )
+                                            },
+                                            onClick = {
+                                                haptic.performHapticFeedback(
+                                                    HapticFeedbackType.LongPress
+                                                )
+                                                onItemLongClick(it.selection)
+                                                isContextMenuVisible = false
+                                            }
+                                        )
+                                    }
+                                }
+                            )
+                        }
                     )
-
-                    list.forEach {
-                        DropdownMenuItem(
-                            text = { Text(text = it.text) },
-                            onClick = {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                onItemLongClick(it.selection)
-                                isContextMenuVisible = false
-                            }
-                        )
-                    }
                 }
             },
             supportingContent = {
@@ -139,7 +165,7 @@ fun ExplorerListCard(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun BreadCrumbs(
     modifier: Modifier = Modifier,
@@ -173,21 +199,44 @@ fun BreadCrumbs(
                     ) {
                         Icon(imageVector = Icons.Default.MoreHoriz, contentDescription = null)
 
-                        CascadeDropdownMenu(
-                            expanded = isContextMenuVisible,
-                            onDismissRequest = { isContextMenuVisible = false }
+                        Box(
+                            modifier = Modifier
+                                .wrapContentSize()
                         ) {
-                            XmpDropdownMenuHeader(text = "All Files")
-                            crumbDropDownItems.forEach {
-                                DropdownMenuItem(
-                                    text = { Text(text = it.text) },
-                                    onClick = {
-                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        onCrumbMenu(it.selection)
-                                        isContextMenuVisible = false
-                                    }
-                                )
-                            }
+                            DropdownMenu(
+                                expanded = isContextMenuVisible,
+                                onDismissRequest = { isContextMenuVisible = false },
+                                shape = RoundedCornerShape(16.dp),
+                                content = {
+                                    DropdownMenuGroup(
+                                        shapes = MenuDefaults.groupShape(0, 1),
+                                        content = {
+                                            DropdownMenuItem(
+                                                enabled = false,
+                                                text = { Text(text = "All Files") },
+                                                onClick = { }
+                                            )
+                                            crumbDropDownItems.forEach {
+                                                DropdownMenuItem(
+                                                    text = {
+                                                        Text(
+                                                            text = it.text,
+                                                            style = MaterialTheme.typography.bodyLarge
+                                                        )
+                                                    },
+                                                    onClick = {
+                                                        haptic.performHapticFeedback(
+                                                            HapticFeedbackType.LongPress
+                                                        )
+                                                        onCrumbMenu(it.selection)
+                                                        isContextMenuVisible = false
+                                                    }
+                                                )
+                                            }
+                                        }
+                                    )
+                                }
+                            )
                         }
                     }
                 }
