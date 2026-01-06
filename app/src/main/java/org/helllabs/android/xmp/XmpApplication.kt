@@ -20,6 +20,8 @@ class XmpApplication : Application() {
             modules(listOf(viewModelModule, modArchiveModule, appModule))
         }
 
+        CrashHandler.initialize(this)
+
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
         } else {
