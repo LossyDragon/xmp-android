@@ -76,7 +76,7 @@ fun SettingsGroupPlaylist(
             icon = Icons.Filled.CheckCircle,
             title = stringResource(id = R.string.pref_playlist_mode_title),
             selectedIndex = playlistMode,
-            list = stringArrayResource(id = R.array.playlist_mode_array).toPersistentList(),
+            textList = stringArrayResource(id = R.array.playlist_mode_array).toPersistentList(),
             onConfirm = {
                 scope.launch {
                     prefManager.setPlaylistMode(playlistModeValues[it].toInt())
