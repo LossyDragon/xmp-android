@@ -102,23 +102,23 @@ class PlaylistsViewModel(
     }
 
     /** Handle user selecting a storage directory via SAF. */
-    fun handleStorageDirectorySelected(uri: Uri?) {
+    fun setExplorerRootDirectory(uri: Uri?) {
+        if (uri == null) {
+            showError("No directory selected")
+            return
+        }
+
         viewModelScope.launch {
-            if (uri == null) {
-                showError("No directory selected")
+            if (!storageManager.takePersistablePerms(uri)) {
+                showError("Failed to persist directory access")
                 return@launch
             }
+            prefManager.setExplorerRootPath(uri.toString())
 
-            storageManager.setPlaylistDirectory(uri)
-                .onSuccess {
-                    loadDefaultPath()
-                    val hasAccess = checkStoragePermissions()
-                    _uiState.update { it.copy(hasStorageAccess = hasAccess) }
-                }
-                .onFailure { error ->
-                    Timber.e(error, "Failed to set playlist directory")
-                    showError(error.message ?: "Failed to set directory")
-                }
+            val hasAccess = checkStoragePermissions()
+            _uiState.update { it.copy(hasStorageAccess = hasAccess) }
+
+            loadDefaultPath()
         }
     }
 
@@ -152,15 +152,17 @@ class PlaylistsViewModel(
     }
 
     private suspend fun checkStoragePermissions(): Boolean {
-        return withContext(Dispatchers.IO) {
+        val result = withContext(Dispatchers.IO) {
             storageManager.checkPermissions()
         }
+        Timber.d("Storage permissions: $result")
+        return result
     }
 
     private suspend fun loadDefaultPath() {
-        storageManager.getDefaultPathName()
+        storageManager.getPlaylistsRootDirectory()
             .onSuccess { name ->
-                _uiState.update { it.copy(mediaPath = name, askForStorage = false) }
+                _uiState.update { it.copy(mediaPath = name.path.toString(), askForStorage = false) }
                 loadPlaylistItems()
             }
             .onFailure { error ->
@@ -172,29 +174,23 @@ class PlaylistsViewModel(
 
     private suspend fun setupDataDirectory(name: String, comment: String): Result<Unit> {
         return runCatching {
-            val dir = storageManager.getPlaylistDirectory().getOrThrow()
+            val dir = storageManager.getPlaylistsRootDirectory().getOrThrow()
 
-            require(dir.isDirectory()) {
-                "Playlist directory is not a valid directory"
-            }
+            require(dir.isDirectory()) { "Playlist directory is not a valid directory" }
 
             if (prefManager.getInstalledExamplePlaylist()) {
                 return@runCatching
             }
 
             if (dir.listFiles().isEmpty()) {
-                createExamplePlaylist(name, comment)
+                playlistManager.createPlaylist(name, comment)
+                    .onSuccess {
+                        prefManager.setInstalledExamplePlaylist(true)
+                    }
+                    .onFailure {
+                        throw XmpException("Unable to create example playlist")
+                    }
             }
         }
-    }
-
-    private suspend fun createExamplePlaylist(name: String, comment: String) {
-        playlistManager.createPlaylist(name, comment)
-            .onSuccess {
-                prefManager.setInstalledExamplePlaylist(true)
-            }
-            .onFailure {
-                throw XmpException("Unable to create example playlist")
-            }
     }
 }

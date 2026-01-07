@@ -29,6 +29,7 @@ import androidx.lifecycle.lifecycleScope
 import java.nio.charset.StandardCharsets
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -256,12 +257,13 @@ class PlayerActivity : ComponentActivity() {
                     onConfirm = viewModel::closeMessage
                 )
 
+                // TODO
                 SingleChoiceListDialog(
                     isShowing = choice != null,
                     icon = Icons.AutoMirrored.Filled.PlaylistAdd,
                     title = stringResource(id = R.string.dialog_title_select_playlist),
                     selectedIndex = -1,
-                    textList = playlists.map { it.name }.toPersistentList(),
+                    textList = persistentListOf(), // playlists.map { it.name }.toPersistentList(),
                     onConfirm = viewModel::addToPlaylist,
                     onDismiss = {
                         viewModel.clearPlaylist()
@@ -269,7 +271,8 @@ class PlayerActivity : ComponentActivity() {
                     onEmpty = {
                         scope.launch {
                             snackBarHostState.showSnackbar(
-                                message = resources.getString(R.string.error_snack_no_playlists)
+                                // message = resources.getString(R.string.error_snack_no_playlists)
+                                message = "Not Implemented"
                             )
                             viewModel.clearPlaylist()
                         }

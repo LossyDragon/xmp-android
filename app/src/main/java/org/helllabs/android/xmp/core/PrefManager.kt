@@ -10,6 +10,7 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import java.io.File
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
@@ -31,18 +32,20 @@ private val Context.dataStore by preferencesDataStore(
 class PrefManager(context: Context, private val json: Json) {
     private val dataStore: DataStore<Preferences> = context.dataStore
 
-    // Preference Keys
     private object Keys {
-        val SAF_PATH = stringPreferencesKey("saf_storage_path")
+        val INITIAL_START_DESTINATION = stringPreferencesKey("initial_start_destination")
+
+        val EXPLORER_ROOT_PATH = stringPreferencesKey("explorer_root_path")
+        val PLAYLIST_ROOT_PATH = stringPreferencesKey("playlist_root_path")
+
+        val INSTALL_EXAMPLE_PLAYLIST = booleanPreferencesKey("example_playlist_created")
+
         val PLAYLIST_MODE = intPreferencesKey("playlist_mode")
         val ALL_SEQUENCES = booleanPreferencesKey("all_sequences")
         val SCREEN_ON = booleanPreferencesKey("keep_screen_on")
         val SHOW_INFO_LINE = booleanPreferencesKey("show_info_line")
         val USE_FILENAME = booleanPreferencesKey("use_filename")
-        val INSTALL_EXAMPLE_PLAYLIST = booleanPreferencesKey("example_playlist_created")
-        val INSTALL_EXAMPLES = booleanPreferencesKey("examples")
 
-        // val BACK_BUTTON = booleanPreferencesKey("back_button_navigation")
         val SHUFFLE_MODE = booleanPreferencesKey("options_shuffleMode")
         val LOOP_MODE = booleanPreferencesKey("options_loopMode")
         val MODARCHIVE_FOLDER = booleanPreferencesKey("modarchive_folder")
@@ -80,10 +83,18 @@ class PrefManager(context: Context, private val json: Json) {
         dataStore.edit { it.clear() }
     }
 
-    // String preferences
-    suspend fun getSafStoragePath(): String = get(Keys.SAF_PATH, "")
-    suspend fun setSafStoragePath(value: String) = set(Keys.SAF_PATH, value)
-    fun safStoragePathFlow(): Flow<String> = getFlow(Keys.SAF_PATH, "")
+    suspend fun getInitialStart(): String = get(Keys.INITIAL_START_DESTINATION, "Playlists")
+    fun initialStartFlow(): Flow<String> = getFlow(Keys.INITIAL_START_DESTINATION, "Playlists")
+    suspend fun setInitialStart(value: String) = set(Keys.INITIAL_START_DESTINATION, value)
+
+    suspend fun getExplorerRootPath(): String = get(Keys.EXPLORER_ROOT_PATH, "")
+    suspend fun setExplorerRootPath(value: String) = set(Keys.EXPLORER_ROOT_PATH, value)
+
+    val playlistsDir = File(context.getExternalFilesDir(null), "playlists")
+    suspend fun getPlaylistRootPath(): String =
+        get(Keys.PLAYLIST_ROOT_PATH, playlistsDir.toString())
+    suspend fun setPlaylistRootPath(value: String) =
+        set(Keys.PLAYLIST_ROOT_PATH, value)
 
     /**
      * 1: Start playing at selection
@@ -94,7 +105,6 @@ class PrefManager(context: Context, private val json: Json) {
     suspend fun setPlaylistMode(value: Int) = set(Keys.PLAYLIST_MODE, value)
     fun playlistModeFlow(): Flow<Int> = getFlow(Keys.PLAYLIST_MODE, 1)
 
-    // Boolean preferences
     suspend fun getAllSequences(): Boolean = get(Keys.ALL_SEQUENCES, false)
     suspend fun setAllSequences(value: Boolean) = set(Keys.ALL_SEQUENCES, value)
     fun allSequencesFlow(): Flow<Boolean> = getFlow(Keys.ALL_SEQUENCES, false)
@@ -114,18 +124,11 @@ class PrefManager(context: Context, private val json: Json) {
     suspend fun getInstalledExamplePlaylist(): Boolean = get(Keys.INSTALL_EXAMPLE_PLAYLIST, false)
     suspend fun setInstalledExamplePlaylist(value: Boolean) =
         set(Keys.INSTALL_EXAMPLE_PLAYLIST, value)
+
     fun installedExamplePlaylistFlow(): Flow<Boolean> = getFlow(
         Keys.INSTALL_EXAMPLE_PLAYLIST,
         false
     )
-
-    suspend fun getExamples(): Boolean = get(Keys.INSTALL_EXAMPLES, true)
-    suspend fun setExamples(value: Boolean) = set(Keys.INSTALL_EXAMPLES, value)
-    fun examplesFlow(): Flow<Boolean> = getFlow(Keys.INSTALL_EXAMPLES, true)
-
-    // suspend fun getBackButtonNavigation(): Boolean = get(Keys.BACK_BUTTON, true)
-    // suspend fun setBackButtonNavigation(value: Boolean) = set(Keys.BACK_BUTTON, value)
-    // fun backButtonNavigationFlow(): Flow<Boolean> = getFlow(Keys.BACK_BUTTON, true)
 
     suspend fun getShuffleMode(): Boolean = get(Keys.SHUFFLE_MODE, true)
     suspend fun setShuffleMode(value: Boolean) = set(Keys.SHUFFLE_MODE, value)

@@ -2,6 +2,7 @@ package org.helllabs.android.xmp.compose.ui.preferences
 
 import android.content.Intent
 import android.content.res.Configuration
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -14,7 +15,6 @@ import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.*
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
 import com.alorma.compose.settings.ui.SettingsGroup
 import com.alorma.compose.settings.ui.SettingsMenuLink
 import kotlinx.coroutines.launch
@@ -35,8 +35,8 @@ fun PreferencesScreen(
     onFormats: () -> Unit,
     onAbout: () -> Unit
 ) {
-    val storageManager: StorageManager = koinInject()
     val prefManager: PrefManager = koinInject()
+    val storageManager: StorageManager = koinInject()
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
     val isScrolled = remember {
@@ -45,15 +45,18 @@ fun PreferencesScreen(
         }
     }
 
-    val documentTreeResult = rememberLauncherForActivityResult(
+    val setExplorerResult = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocumentTree()
     ) { uri ->
         scope.launch {
-            storageManager.setPlaylistDirectory(uri = uri).onSuccess {
-                snackBarHostState.showSnackbar("Default directory changed")
-            }.onFailure {
+            if (uri == null) {
+                Timber.w("Failed to get uri changing ")
                 snackBarHostState.showSnackbar("Failed to change default directory")
+                return@launch
             }
+            storageManager.takePersistablePerms(uri)
+            prefManager.setExplorerRootPath(uri.toString())
+            snackBarHostState.showSnackbar("Default directory changed")
         }
     }
 
@@ -99,11 +102,11 @@ fun PreferencesScreen(
 
             val context = LocalContext.current
             SettingsGroupPlaylist(
-                onChangeDir = {
-                    scope.launch {
-                        val dir = prefManager.getSafStoragePath().toUri()
-                        documentTreeResult.launch(dir)
-                    }
+                onChangeExplorerDir = { setExplorerResult.launch(null) },
+                onChangePlaylistDir = {
+                    // TODO
+                    Timber.w("Not implemented")
+                    Toast.makeText(context, "Not implemented", Toast.LENGTH_SHORT).show()
                 }
             )
             SettingsGroupSound()

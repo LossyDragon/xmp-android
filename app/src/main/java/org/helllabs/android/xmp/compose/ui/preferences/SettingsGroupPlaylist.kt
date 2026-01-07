@@ -20,13 +20,14 @@ import timber.log.Timber
 
 @Composable
 fun SettingsGroupPlaylist(
-    onChangeDir: () -> Unit
+    onChangeExplorerDir: () -> Unit,
+    onChangePlaylistDir: () -> Unit
 ) {
     val prefManager: PrefManager = koinInject()
     val scope = rememberCoroutineScope()
 
     // Collect preferences as state
-    val examplesValue by prefManager.examplesFlow().collectAsStateWithLifecycle(initialValue = true)
+    // val examplesValue by prefManager.examplesFlow().collectAsStateWithLifecycle(initialValue = true)
     val playlistModeValue by prefManager.playlistModeFlow().collectAsStateWithLifecycle(
         initialValue = 1
     )
@@ -40,21 +41,15 @@ fun SettingsGroupPlaylist(
         }
     ) {
         SettingsMenuLink(
-            title = { Text(text = stringResource(id = R.string.pref_media_path_title)) },
+            title = { Text(text = "Explorer default path") },
             subtitle = { Text(text = stringResource(id = R.string.pref_media_path_summary)) },
-            onClick = onChangeDir
+            onClick = onChangeExplorerDir
         )
 
-        // Install Modules
-        SettingsSwitch(
-            title = { Text(text = stringResource(id = R.string.pref_examples_title)) },
-            subtitle = { Text(text = stringResource(id = R.string.pref_examples_summary)) },
-            state = examplesValue,
-            onCheckedChange = {
-                scope.launch {
-                    prefManager.setExamples(it)
-                }
-            }
+        SettingsMenuLink(
+            title = { Text(text = "Playlists default path") },
+            subtitle = { Text(text = "The directory where playlist files are located") },
+            onClick = onChangePlaylistDir
         )
 
         // Playlist Mode

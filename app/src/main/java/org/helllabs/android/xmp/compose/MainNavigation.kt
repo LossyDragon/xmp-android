@@ -25,7 +25,9 @@ import org.helllabs.android.xmp.compose.ui.explorer.ExplorerScreen
 import org.helllabs.android.xmp.compose.ui.explorer.ExplorerViewModel
 import org.helllabs.android.xmp.compose.ui.playlist.NavPlaylists
 import org.helllabs.android.xmp.compose.ui.search.NavSearch
+import org.helllabs.android.xmp.core.PrefManager
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 import timber.log.Timber
 
 val bottomBarItems = persistentListOf(
@@ -55,12 +57,29 @@ fun MainNavigation(
     onPlayModule: (List<Uri>, Int, Boolean, Boolean, Boolean, PlayerActivityLauncher) -> Unit,
     onItemClick: (List<Uri>, Int, Boolean, Boolean, PlayerActivityLauncher) -> Unit
 ) {
+    val prefManager = koinInject<PrefManager>()
+    val initialStartDestination by produceState<NavKeyMain>(initialValue = NavKeyMain.Playlists) {
+        value = NavKeyMain.findScreen(prefManager.getInitialStart())
+    }
+    Timber.d("Initial Start: $initialStartDestination")
+
     val scope = rememberCoroutineScope()
-    val mainBackStack = rememberNavBackStack(NavKeyMain.Playlists)
-    var currentBottomBarScreen by rememberSaveable(
-        stateSaver = BottomBarScreenSaver,
-        init = { mutableStateOf(NavKeyMain.Playlists) }
-    )
+    val mainBackStack = rememberNavBackStack(initialStartDestination)
+    var currentBottomBarScreen by remember {
+        mutableStateOf(initialStartDestination)
+    }
+
+    LaunchedEffect(initialStartDestination) {
+        if (currentBottomBarScreen != initialStartDestination) {
+            currentBottomBarScreen = initialStartDestination
+            if (mainBackStack.lastOrNull() != initialStartDestination) {
+                if (mainBackStack.lastOrNull() in bottomBarItems) {
+                    mainBackStack.removeAt(mainBackStack.lastIndex)
+                }
+                mainBackStack.add(initialStartDestination)
+            }
+        }
+    }
 
     BackHandler(enabled = currentBottomBarScreen != NavKeyMain.Playlists) {
         if (mainBackStack.lastOrNull() in bottomBarItems) {

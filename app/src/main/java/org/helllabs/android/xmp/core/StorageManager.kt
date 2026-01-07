@@ -4,9 +4,9 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.DocumentsContract
-import android.provider.OpenableColumns
 import androidx.core.net.toUri
 import com.lazygeniouz.dfc.file.DocumentFileCompat
+import java.io.File
 import java.util.Locale
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.core.Constants.DEFAULT_DOWNLOAD_DIR
@@ -36,136 +36,46 @@ class StorageManager(private val context: Context, private val prefManager: Pref
      * Checks if we have a URI in preferences, then checks to see if we have R/W access
      */
     suspend fun checkPermissions(): Boolean {
-        val safPath = prefManager.getSafStoragePath()
-        if (safPath.isBlank()) {
+        val explorerPath = prefManager.getExplorerRootPath()
+        val playlistsPath = prefManager.getPlaylistRootPath()
+
+        Timber.d("Explorer Path: $explorerPath")
+        Timber.d("Playlist Path: $playlistsPath")
+
+        if (explorerPath.isBlank() || playlistsPath.isBlank()) {
             return false
         }
 
-        val preference = safPath.toUri()
+        val explorerPathUri = explorerPath.toUri()
         val persistedUriPermissions = context.contentResolver.persistedUriPermissions
 
         return persistedUriPermissions.any {
-            it.uri == preference && it.isReadPermission && it.isWritePermission
+            it.uri == explorerPathUri && it.isReadPermission && it.isWritePermission
         }
     }
 
     /**
-     * Get our parent/root directory
+     * Gets the top level path for explorer
      */
-    private suspend fun getParentDirectory(): Result<DocumentFileCompat> = runCatching {
-        val prefUri = prefManager.getSafStoragePath().toUri()
+    suspend fun getExplorerRootDirectory(): Result<DocumentFileCompat> = runCatching {
+        val prefUri = prefManager.getExplorerRootPath().toUri()
 
         DocumentFileCompat.fromTreeUri(context, prefUri)
             ?: throw XmpException("Getting parent directory returned null")
     }
 
     /**
-     * Get the playlist directory that was set
+     * Gets the top level path for playlists
      */
-    suspend fun getPlaylistDirectory(): Result<DocumentFileCompat> =
-        getParentDirectory().mapCatching { parent ->
-            parent.findFile("playlists")
-                ?: throw XmpException("Playlist directory not found")
+    suspend fun getPlaylistsRootDirectory(): Result<File> = runCatching {
+        val playlistsDir = File(prefManager.getPlaylistRootPath())
+
+        if (!playlistsDir.exists()) {
+            playlistsDir.mkdirs()
         }
 
-    /**
-     * Get the mod directory
-     * This will be where modules are downloaded,
-     * and where File Explorer should start
-     */
-    suspend fun getModDirectory(): Result<DocumentFileCompat> =
-        getParentDirectory().mapCatching { parent ->
-            parent.findFile("mods")
-                ?: throw XmpException("Mods directory not found")
-        }
-
-    /**
-     * Set the playlist directory to the specified [Uri]
-     * Create `playlist` and `mod` folders respectively.
-     */
-    suspend fun setPlaylistDirectory(uri: Uri?): Result<Unit> = runCatching {
-        requireNotNull(uri) { "Unable to set default Playlist directory" }
-
-        prefManager.setSafStoragePath(uri.toString())
-
-        val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
-            Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-
-        context.contentResolver.takePersistableUriPermission(uri, flags)
-
-        val parentDocument = getParentDirectory().getOrThrow()
-
-        createRequiredDirectories(parentDocument)
-    }
-
-    private suspend fun createRequiredDirectories(parentDocument: DocumentFileCompat) {
-        listOf("mods", "playlists").forEach { directoryName ->
-            val exists = parentDocument.findFile(directoryName) != null
-            if (!exists) {
-                parentDocument.createDirectory(directoryName)
-
-                if (directoryName == "mods") {
-                    val modDir = parentDocument.findFile("mods")
-                    installExampleMod(modDir)
-                }
-            }
-        }
-    }
-
-    /**
-     * Get the name of the default path we're allowed to work in.
-     */
-    suspend fun getDefaultPathName(): Result<String> =
-        getParentDirectory().mapCatching { parent ->
-            parent.name.ifEmpty {
-                throw XmpException("Couldn't get default path name")
-            }
-        }
-
-    /**
-     * Attempt to install sample modules in our assets folder. Skip if it exists
-     */
-    private suspend fun installExampleMod(modPath: DocumentFileCompat?): Boolean {
-        if (!prefManager.getExamples()) return true
-
-        if (modPath == null) {
-            Timber.w("modDir is null")
-            return false
-        }
-
-        return runCatching {
-            val assets = context.resources.assets
-            assets.list("mod")?.forEach { asset ->
-                if (shouldSkipAsset(modPath, asset)) {
-                    Timber.i("Skipping $asset")
-                    return@forEach
-                }
-
-                copyAssetToModPath(assets, asset, modPath)
-            }
-        }.onFailure { exception ->
-            Timber.e(exception, "Failed to install example mod")
-        }.isSuccess
-    }
-
-    private fun shouldSkipAsset(modPath: DocumentFileCompat, asset: String): Boolean {
-        val mod = modPath.findFile(asset) ?: return false
-        return mod.exists()
-    }
-
-    private fun copyAssetToModPath(
-        assets: android.content.res.AssetManager,
-        asset: String,
-        modPath: DocumentFileCompat
-    ) {
-        assets.open("mod/$asset").use { inStream ->
-            val file = modPath.createFile("application/octet-stream", asset)
-                ?: return
-
-            context.contentResolver.openOutputStream(file.uri)?.use { outStream ->
-                inStream.copyTo(outStream)
-            }
-        }
+        Timber.d("Playlist Dir is $playlistsDir")
+        playlistsDir
     }
 
     /**
@@ -175,7 +85,7 @@ class StorageManager(private val context: Context, private val prefManager: Pref
      * @see [PrefManager.getArtistFolder]
      */
     private suspend fun getDownloadPath(module: Module): Result<DocumentFileCompat> =
-        getModDirectory().mapCatching { modDir ->
+        getExplorerRootDirectory().mapCatching { modDir ->
             require(modDir.isDirectory()) {
                 "Unable to access the mod directory."
             }
@@ -435,8 +345,6 @@ class StorageManager(private val context: Context, private val prefManager: Pref
      *            content providers, file system, or other sources.
      * @return A DocumentFileCompat instance if successful, null if the URI is invalid,
      *         permissions are denied, or any other error occurs during creation.
-     *
-     * @throws None - All exceptions are caught and logged, returning null instead.
      */
     fun getDocumentFileFromUri(uri: Uri): DocumentFileCompat? = try {
         DocumentFileCompat.fromSingleUri(context, uri)
@@ -446,5 +354,27 @@ class StorageManager(private val context: Context, private val prefManager: Pref
     } catch (e: SecurityException) {
         Timber.e(e, "Permission denied for URI: $uri")
         null
+    }
+
+    /**
+     * Takes persistable URI permissions for the given URI.
+     *
+     * This must be called after receiving a URI from Storage Access Framework (SAF)
+     * via OpenDocumentTree to ensure the permissions persist across app restarts.
+     * Without this, the URI permissions are temporary and will be lost.
+     *
+     * @param uri The URI to take persistable permissions for, typically from SAF
+     * @return true if permissions were successfully persisted, false if SecurityException occurred
+     */
+    fun takePersistablePerms(uri: Uri): Boolean {
+        return try {
+            val takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            context.contentResolver.takePersistableUriPermission(uri, takeFlags)
+            true
+        } catch (e: SecurityException) {
+            Timber.e(e, "Failed to take persistable permission")
+            false
+        }
     }
 }

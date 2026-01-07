@@ -7,6 +7,7 @@ import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lazygeniouz.dfc.file.DocumentFileCompat
+import java.text.DateFormat
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
@@ -29,7 +30,6 @@ import org.helllabs.android.xmp.model.ModInfo
 import org.helllabs.android.xmp.model.Playlist
 import org.helllabs.android.xmp.model.PlaylistItem
 import timber.log.Timber
-import java.text.DateFormat
 
 @Immutable
 data class BreadCrumb(
@@ -89,7 +89,7 @@ class ExplorerViewModel(
 
     init {
         viewModelScope.launch {
-            storageManager.getModDirectory().onSuccess { dfc ->
+            storageManager.getExplorerRootDirectory().onSuccess { dfc ->
                 Timber.d("Initial Path: ${dfc.uri}")
                 onNavigate(dfc.uri)
                 _uiState.update {

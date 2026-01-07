@@ -9,8 +9,9 @@ import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.LibraryMusic
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation3.runtime.NavKey
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.serialization.Serializable
-import org.helllabs.android.xmp.model.FileItem
 
 @Serializable
 sealed class NavKeyMain(val title: String) : NavKey {
@@ -34,5 +35,17 @@ sealed class NavKeyMain(val title: String) : NavKey {
     data object Downloads : NavKeyMain("Downloads") {
         override val selectedIcon: ImageVector = Icons.Filled.Download
         override val unSelectedIcon: ImageVector = Icons.Outlined.Download
+    }
+
+    companion object {
+        fun findScreen(value: String): NavKeyMain = when (value) {
+            "Playlists" -> Playlists
+            "Explorer" -> Explorer
+            "Downloads" -> Downloads
+            else -> Playlists
+        }
+
+        fun getAllScreens(): ImmutableList<String> =
+            persistentListOf(Playlists.title, Explorer.title, Downloads.title)
     }
 }

@@ -2,6 +2,7 @@ package org.helllabs.android.xmp.core
 
 import android.content.Context
 import android.net.Uri
+import java.io.File
 import java.io.IOException
 import java.nio.charset.StandardCharsets
 import kotlinx.collections.immutable.ImmutableList
@@ -20,12 +21,6 @@ class PlaylistManager(
     private val storageManager: StorageManager
 ) {
     /**
-     * Gets the playlists directory URI
-     */
-    private suspend fun getPlaylistsDir(): Result<Uri> =
-        storageManager.getPlaylistDirectory().map { it.uri }
-
-    /**
      * Creates a new playlist with the given name and comment.
      */
     suspend fun createPlaylist(
@@ -33,7 +28,7 @@ class PlaylistManager(
         comment: String = ""
     ): Result<Playlist> = withContext(Dispatchers.IO) {
         try {
-            val playlistDirResult = storageManager.getPlaylistDirectory()
+            val playlistDirResult = storageManager.getPlaylistsRootDirectory()
             if (playlistDirResult.isFailure) {
                 return@withContext Result.failure(
                     playlistDirResult.exceptionOrNull()
@@ -46,31 +41,25 @@ class PlaylistManager(
             val fileName = "$sanitizedName${Constants.SUFFIX}"
 
             // Check if file already exists
-            if (playlistDir.findFile(fileName) != null) {
+            val existingFile = File(playlistDir, fileName)
+            if (existingFile.exists()) {
                 return@withContext Result.failure(
                     IllegalArgumentException("Playlist with name '$name' already exists")
                 )
             }
 
             // Create the file
-            val newFile = playlistDir.createFile("application/json", fileName)
-                ?: return@withContext Result.failure(
-                    IOException("Failed to create playlist file")
-                )
+            val newFile = File(playlistDir, fileName)
 
             val playlist = Playlist(
                 name = name,
                 comment = comment,
-                uri = newFile.uri
+                uri = Uri.fromFile(newFile)
             )
 
-            // Write to file using ContentResolver
-            context.contentResolver.openOutputStream(newFile.uri)?.use { outputStream ->
-                outputStream.write(
-                    json.encodeToString(Playlist.serializer(), playlist).toByteArray()
-                )
-            } ?: return@withContext Result.failure(
-                IOException("Failed to open output stream")
+            // Write to file
+            newFile.writeText(
+                json.encodeToString(Playlist.serializer(), playlist)
             )
 
             Result.success(playlist)
@@ -145,52 +134,52 @@ class PlaylistManager(
         newName: String
     ): Result<Playlist> = withContext(Dispatchers.IO) {
         try {
-            val playlistDir = storageManager.getPlaylistDirectory().getOrThrow()
+            val playlistDir = storageManager.getPlaylistsRootDirectory().getOrThrow()
             val sanitizedName = sanitizeFileName(newName)
             val newFileName = "$sanitizedName${Constants.SUFFIX}"
 
-            // Check if a file with the new name already exists
-            val existingFile = playlistDir.findFile(newFileName)
-            val currentFile = storageManager.getDocumentFileFromUri(playlist.uri)
+            // Get current file from URI
+            val currentFile = File(
+                playlist.uri.path ?: return@withContext Result.failure(
+                    IOException("Invalid playlist URI")
+                )
+            )
 
-            if (existingFile != null && existingFile.uri != playlist.uri) {
+            if (!currentFile.exists()) {
+                return@withContext Result.failure(
+                    IOException("Current playlist file not found")
+                )
+            }
+
+            // Check if a file with the new name already exists
+            val newFile = File(playlistDir, newFileName)
+            if (newFile.exists() && newFile.absolutePath != currentFile.absolutePath) {
                 return@withContext Result.failure(
                     IllegalArgumentException("Playlist with name '$newName' already exists")
                 )
             }
 
-            // Create new file
-            val newFile = playlistDir.createFile("application/json", newFileName)
-                ?: return@withContext Result.failure(
-                    IOException("Failed to create new playlist file")
+            // Try to rename the file
+            if (currentFile.renameTo(newFile)) {
+                val updatedPlaylist = playlist.copy(
+                    name = newName,
+                    uri = Uri.fromFile(newFile)
                 )
 
-            val updatedPlaylist = playlist.copy(
-                name = newName,
-                uri = newFile.uri
-            )
+                // Update the file content with new name
+                newFile.writeText(
+                    json.encodeToString(Playlist.serializer(), updatedPlaylist)
+                )
 
-            // Write to new file
-            context.contentResolver.openOutputStream(newFile.uri)?.use { outputStream ->
-                outputStream.write(
-                    json.encodeToString(Playlist.serializer(), updatedPlaylist).toByteArray()
+                Result.success(updatedPlaylist)
+            } else {
+                return@withContext Result.failure(
+                    IOException("Failed to rename playlist file")
                 )
             }
-
-            // Delete old file if different
-            if (currentFile != null && currentFile.uri != newFile.uri) {
-                currentFile.delete()
-            }
-
-            Result.success(updatedPlaylist)
         } catch (e: Exception) {
             Result.failure(e)
         }
-    }
-
-    suspend fun deletePlaylist(file: Uri): Result<Boolean> = withContext(Dispatchers.IO) {
-        val playlist = loadPlaylist(file)
-        deletePlaylist(playlist.getOrThrow())
     }
 
     /**
@@ -198,13 +187,8 @@ class PlaylistManager(
      */
     suspend fun deletePlaylist(playlist: Playlist): Result<Boolean> = withContext(Dispatchers.IO) {
         try {
-            val success = storageManager.deleteFileOrDirectory(playlist.uri)
-
-            if (success) {
-                Result.success(true)
-            } else {
-                Result.failure(IOException("Failed to delete playlist file"))
-            }
+            val file = File(playlist.uri.path ?: throw IOException("Invalid playlist URI"))
+            Result.success(file.delete())
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -215,22 +199,18 @@ class PlaylistManager(
      */
     suspend fun listAllPlaylists(): Result<List<Playlist>> = withContext(Dispatchers.IO) {
         try {
-            val playlistDir = storageManager.getPlaylistDirectory().getOrThrow()
-            val playlistUris =
-                storageManager.walkDownDirectory(playlistDir.uri, includeDirectories = false)
+            val playlistDir = storageManager.getPlaylistsRootDirectory().getOrThrow()
 
-            val playlists = playlistUris.mapNotNull { uri ->
-                val fileName = storageManager.getFileName(uri) ?: return@mapNotNull null
+            // List all files in the directory
+            val playlistFiles = playlistDir.listFiles()?.filter { file ->
+                file.isFile && file.name.endsWith(Constants.SUFFIX, ignoreCase = true)
+            } ?: emptyList()
 
-                // Only process .json files
-                if (!fileName.endsWith(Constants.SUFFIX, ignoreCase = true)) {
-                    return@mapNotNull null
-                }
-
+            val playlists = playlistFiles.mapNotNull { file ->
                 try {
-                    loadPlaylist(uri).getOrNull()
+                    loadPlaylist(Uri.fromFile(file)).getOrNull()
                 } catch (e: Exception) {
-                    Timber.e(e, "Failed to load playlist: $fileName")
+                    Timber.e(e, "Failed to load playlist: ${file.name}")
                     null
                 }
             }

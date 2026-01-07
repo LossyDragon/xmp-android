@@ -1,13 +1,18 @@
 package org.helllabs.android.xmp.compose.ui.preferences
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alorma.compose.settings.ui.SettingsGroup
+import com.alorma.compose.settings.ui.SettingsMenuLink
 import com.alorma.compose.settings.ui.SettingsSwitch
 import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.R
+import org.helllabs.android.xmp.compose.components.SingleChoiceListDialog
+import org.helllabs.android.xmp.compose.navkey.NavKeyMain
 import org.helllabs.android.xmp.core.PrefManager
 import org.koin.compose.koinInject
 
@@ -25,9 +30,37 @@ fun SettingsGroupInterface() {
     )
     val showHexValue by prefManager.showHexFlow().collectAsStateWithLifecycle(initialValue = false)
 
+    val initialScreenList = remember { NavKeyMain.getAllScreens() }
+    val initialScreen by prefManager.initialStartFlow().collectAsStateWithLifecycle("Playlists")
+    var initialScreenDialog by remember { mutableStateOf(false) }
+    SingleChoiceListDialog(
+        isShowing = initialScreenDialog,
+        onDismiss = { initialScreenDialog = false },
+        onEmpty = { initialScreenDialog = false },
+        icon = Icons.Filled.Map,
+        title = "Start Navigation",
+        selectedIndex = initialScreenList.indexOf(initialScreen),
+        textList = initialScreenList,
+        onConfirm = {
+            scope.launch {
+                prefManager.setInitialStart(initialScreenList[it])
+            }
+            initialScreenDialog = false
+        },
+    )
+
     SettingsGroup(
         title = { Text(text = stringResource(id = R.string.pref_category_interface)) }
     ) {
+        // Initial Start Tab
+        SettingsMenuLink(
+            title = { Text(text = "Initial Start Navigation") },
+            subtitle = {
+                Text(text = "Have the app start either on Playlists, Explorer, or Downloads")
+            },
+            onClick = { initialScreenDialog = true }
+        )
+
         // Show Info Line
         SettingsSwitch(
             title = { Text(text = stringResource(id = R.string.pref_show_info_line_title)) },

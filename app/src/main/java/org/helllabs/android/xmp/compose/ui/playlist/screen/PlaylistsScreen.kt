@@ -86,16 +86,17 @@ fun PlaylistsScreen(
 
     val documentTreeResult = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocumentTree(),
-        onResult = { viewModel.handleStorageDirectorySelected(it) }
+        onResult = { viewModel.setExplorerRootDirectory(it) }
     )
 
     // Prompt and Explain Storage
     MessageDialog(
         isShowing = state.askForStorage,
         title = "Storage Request",
-        text = "Xmp needs access to its own directory via Storage Access Framework.\n" +
-            "Create or reuse an existing directory for 'mods' and 'playlists'.",
-        confirmText = "Create",
+        text = "Xmp Mod Player needs a default directory to browse modules.\n" +
+            "Press OK to choose an initial path. Downloads will be stored in here too.\n" +
+            "This can be changed at any time within settings.",
+        confirmText = "OK",
         onConfirm = {
             documentTreeResult.launch(null)
         },
@@ -258,7 +259,10 @@ private fun PlaylistsScreenContent(
                         modifier = Modifier.padding(horizontal = 32.dp),
                         message = "Unable to access playlists from storage",
                         action = {
-                            GuruTextButton(text = "Set Directory", onClick = onRequestStorage)
+                            GuruTextButton(
+                                text = "Set Playlist Directory",
+                                onClick = onRequestStorage
+                            )
                             GuruTextButton(text = "Go to Settings", onClick = onRequestSettings)
                         },
                     )

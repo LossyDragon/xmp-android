@@ -5,10 +5,8 @@ import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lazygeniouz.dfc.file.DocumentFileCompat
-import kotlin.text.ifEmpty
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -16,19 +14,14 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.core.PlaylistManager
-import org.helllabs.android.xmp.core.PlaylistManager.Companion.addItem
-import org.helllabs.android.xmp.core.PlaylistManager.Companion.addItems
 import org.helllabs.android.xmp.core.PrefManager
 import org.helllabs.android.xmp.core.StorageManager
 import org.helllabs.android.xmp.model.ChannelInfo
 import org.helllabs.android.xmp.model.FrameInfo
-import org.helllabs.android.xmp.model.ModInfo
 import org.helllabs.android.xmp.model.ModVars
 import org.helllabs.android.xmp.model.Playlist
-import org.helllabs.android.xmp.model.PlaylistItem
 import org.helllabs.android.xmp.model.SequenceVars
 import org.helllabs.android.xmp.service.PlayerService
 import timber.log.Timber
@@ -410,51 +403,9 @@ class PlayerViewModel(
         }
     }
 
-    // TODO this is duplicated in FileListViewModel, maybe its time to unify it?
-
     fun onAddToPlaylist(uri: Uri) {
-        if (uri == Uri.EMPTY) {
-            Timber.e("Uri was empty adding to playlist.")
-            viewModelScope.launch {
-                _softError.emit("Unable to add, uri empty.")
-            }
-            return
-        }
-
-        Timber.i("Preparing to save $uri to a playlist.")
-
-        if (uri.scheme != "content" && uri.scheme != "file") {
-            Timber.e("Unsupported URI scheme: ${uri.scheme}")
-            viewModelScope.launch {
-                _softError.emit("Unsupported file type")
-            }
-            return
-        }
-
-        // TODO heavy IO, show some loading indicator.
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val finalUri = transformToManagedUri(uri) ?: uri
-
-                if (finalUri != uri) {
-                    Timber.i("Transformed external URI to managed URI")
-                }
-
-                val docFile = storageManager.getDocumentFileFromUri(finalUri)
-                if (docFile == null) {
-                    Timber.e("$finalUri could not be made into a Document File")
-                    _softError.emit("Unable to create Document File")
-                    return@launch
-                }
-
-                // Update on main thread
-                playlistList.value = playlistManager.listAllPlaylists().getOrDefault(emptyList())
-                playlistChoice.value = docFile
-            } catch (e: Exception) {
-                Timber.e(e, "Unexpected error in onAddToPlaylist")
-                _softError.emit("Failed to prepare file for playlist: ${e.message}")
-            }
-        }
+        // TODO
+        Timber.w("TODO")
     }
 
     fun clearPlaylist() {
@@ -462,95 +413,7 @@ class PlayerViewModel(
     }
 
     fun addToPlaylist(index: Int) {
-        val choice = playlistList.value[index]
-
-        viewModelScope.launch(Dispatchers.IO) {
-            if (playlistChoice.value == null) {
-                _softError.emit("Playlist choice is null")
-                playlistChoice.value = null
-                return@launch
-            }
-
-            playlistManager.loadPlaylist(choice.uri).fold(
-                onSuccess = {
-                    var playlist = it
-                    val modInfo = ModInfo()
-                    if (playlistChoice.value!!.isFile()) {
-                        if (!storageManager.testModule(playlistChoice.value!!.uri, modInfo)) {
-                            _softError.emit("Failed to validate file")
-                            playlistChoice.value = null
-                            return@launch
-                        }
-
-                        val playlistItem = PlaylistItem(
-                            name = modInfo.name,
-                            type = modInfo.type,
-                            uri = playlistChoice.value!!.uri
-                        )
-                        playlist = playlist.addItem(playlistItem)
-                    } else if (playlistChoice.value!!.isDirectory()) {
-                        val list = mutableListOf<PlaylistItem>()
-                        storageManager.walkDownDirectory(playlistChoice.value!!.uri, false)
-                            .forEach { uri ->
-                                if (!storageManager.testModule(uri, modInfo)) {
-                                    Timber.w("Invalid playlist item $uri")
-                                    return@forEach
-                                }
-
-                                val playlist = PlaylistItem(
-                                    name = modInfo.name.ifEmpty {
-                                        storageManager.getFileName(uri)
-                                    } ?: "",
-                                    type = modInfo.type,
-                                    uri = uri
-                                )
-
-                                list.add(playlist)
-                            }
-
-                        if (list.isEmpty()) {
-                            _softError.emit("Empty directory")
-                            playlistChoice.value = null
-                            return@launch
-                        }
-
-                        playlist = playlist.addItems(list)
-                    }
-
-                    playlistManager.savePlaylist(playlist)
-                    playlistChoice.value = null
-                },
-                onFailure = {
-                    _softError.emit("Playlist manager failed to load playlist")
-                    playlistChoice.value = null
-                }
-            )
-        }
-    }
-
-    private suspend fun transformToManagedUri(uri: Uri): Uri? {
-        if (uri.authority == "com.android.externalstorage.documents") {
-            return uri
-        }
-
-        val fileName = storageManager.getFileName(uri)
-        if (fileName.isNullOrBlank()) {
-            Timber.w("Could not determine filename from URI: $uri")
-            return null
-        }
-
-        return try {
-            val modsUri = storageManager.getModDirectory().getOrNull()?.uri ?: return null
-            val allFiles = storageManager.walkDownDirectory(modsUri, includeDirectories = false)
-
-            allFiles.firstOrNull { fileUri ->
-                storageManager.getFileName(fileUri) == fileName
-            }?.also {
-                Timber.i("Successfully found file in managed storage: $it")
-            }
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to transform URI")
-            null
-        }
+        // TODO
+        Timber.w("TODO")
     }
 }
