@@ -2,7 +2,6 @@ package org.helllabs.android.xmp.compose.ui.preferences
 
 import android.content.Intent
 import android.content.res.Configuration
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -103,11 +102,6 @@ fun PreferencesScreen(
             val context = LocalContext.current
             SettingsGroupPlaylist(
                 onChangeExplorerDir = { setExplorerResult.launch(null) },
-                onChangePlaylistDir = {
-                    // TODO
-                    Timber.w("Not implemented")
-                    Toast.makeText(context, "Not implemented", Toast.LENGTH_SHORT).show()
-                }
             )
             SettingsGroupSound()
             SettingsGroupInterface()

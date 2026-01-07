@@ -16,13 +16,7 @@ import org.koin.dsl.module
 val viewModelModule = module {
     single { FileManager(context = get()) }
 
-    viewModel {
-        PlaylistsViewModel(
-            storageManager = get(),
-            prefManager = get(),
-            playlistManager = get()
-        )
-    }
+    viewModel { PlaylistsViewModel(playlistManager = get(), storageManager = get()) }
 
     viewModel { (uri: Uri) ->
         SelectedPlaylistViewModel(

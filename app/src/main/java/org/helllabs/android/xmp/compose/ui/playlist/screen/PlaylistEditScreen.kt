@@ -73,7 +73,7 @@ fun PlaylistEditScreen(
                 isPendingDelete = false
                 isPendingDeleteLoading = true
                 scope.launch {
-                    playlistManager.deletePlaylist(playlist).fold(
+                    playlistManager.deletePlaylist(uri!!).fold(
                         onSuccess = { result ->
                             isPendingDeleteLoading = false
                             onDeleted(result)
@@ -199,9 +199,9 @@ fun PlaylistEditScreen(
                                 playlist = playlistManager
                                     .setComment(playlist, description)
                                 playlist = playlistManager
-                                    .renamePlaylist(playlist, title)
+                                    .renamePlaylist(uri, playlist, title)
                                     .getOrThrow()
-                                playlistManager.savePlaylist(playlist)
+                                playlistManager.savePlaylist(uri, playlist)
                             }
                             onBack(true)
                         }

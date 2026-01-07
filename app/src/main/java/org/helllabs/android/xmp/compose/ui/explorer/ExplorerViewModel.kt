@@ -65,7 +65,7 @@ class ExplorerViewModel(
     private val currentPath: Uri?
         get() = uiState.value.crumbs.lastOrNull()?.path
 
-    val playlistList = MutableStateFlow<List<Playlist>>(emptyList())
+    val playlistList = MutableStateFlow<List<Pair<Playlist, Uri>>>(emptyList())
     val playlistChoice = MutableStateFlow<Uri?>(null)
     val deleteDirChoice = MutableStateFlow<Uri?>(null)
     val deleteFileChoice = MutableStateFlow<Uri?>(null)
@@ -100,7 +100,8 @@ class ExplorerViewModel(
                 }
             }.onFailure { error ->
                 Timber.e(error)
-                _softError.emit("Failed to access initial directory: ${error.message}")
+                _softError.emit("Failed to access initial directory:\n${error.message}")
+                _uiState.update { it.copy(isLoading = false) }
             }
         }
     }
@@ -336,7 +337,7 @@ class ExplorerViewModel(
             }
 
             try {
-                var playlist = playlistManager.loadPlaylist(choice.uri).getOrNull()
+                var playlist = playlistManager.loadPlaylist(choice.second).getOrNull()
 
                 if (playlist == null) {
                     _softError.emit("Failed to load playlist")
@@ -395,7 +396,7 @@ class ExplorerViewModel(
                     playlist = playlist.addItems(items)
                 }
 
-                playlistManager.savePlaylist(playlist)
+                playlistManager.savePlaylist(choice.second, playlist)
             } catch (e: Exception) {
                 Timber.e(e, "Error adding to playlist")
                 _softError.emit("Error: ${e.message}")

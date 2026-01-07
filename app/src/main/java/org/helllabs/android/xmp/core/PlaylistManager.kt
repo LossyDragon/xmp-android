@@ -54,7 +54,6 @@ class PlaylistManager(
             val playlist = Playlist(
                 name = name,
                 comment = comment,
-                uri = Uri.fromFile(newFile)
             )
 
             // Write to file
@@ -103,21 +102,22 @@ class PlaylistManager(
     /**
      * Saves the playlist to its URI location.
      */
-    suspend fun savePlaylist(playlist: Playlist): Result<Unit> = withContext(Dispatchers.IO) {
-        try {
-            context.contentResolver.openOutputStream(playlist.uri, "wt")?.use { outputStream ->
-                outputStream.write(
-                    json.encodeToString(Playlist.serializer(), playlist).toByteArray()
+    suspend fun savePlaylist(uri: Uri, playlist: Playlist): Result<Unit> =
+        withContext(Dispatchers.IO) {
+            try {
+                context.contentResolver.openOutputStream(uri, "wt")?.use { outputStream ->
+                    outputStream.write(
+                        json.encodeToString(Playlist.serializer(), playlist).toByteArray()
+                    )
+                } ?: return@withContext Result.failure(
+                    IOException("Failed to open output stream")
                 )
-            } ?: return@withContext Result.failure(
-                IOException("Failed to open output stream")
-            )
 
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
+                Result.success(Unit)
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
         }
-    }
 
     /**
      * Updates the comment/description of a playlist.
@@ -130,6 +130,7 @@ class PlaylistManager(
      * Renames a playlist and its corresponding file.
      */
     suspend fun renamePlaylist(
+        uri: Uri,
         playlist: Playlist,
         newName: String
     ): Result<Playlist> = withContext(Dispatchers.IO) {
@@ -140,7 +141,7 @@ class PlaylistManager(
 
             // Get current file from URI
             val currentFile = File(
-                playlist.uri.path ?: return@withContext Result.failure(
+                uri.path ?: return@withContext Result.failure(
                     IOException("Invalid playlist URI")
                 )
             )
@@ -161,10 +162,7 @@ class PlaylistManager(
 
             // Try to rename the file
             if (currentFile.renameTo(newFile)) {
-                val updatedPlaylist = playlist.copy(
-                    name = newName,
-                    uri = Uri.fromFile(newFile)
-                )
+                val updatedPlaylist = playlist.copy(name = newName)
 
                 // Update the file content with new name
                 newFile.writeText(
@@ -185,9 +183,9 @@ class PlaylistManager(
     /**
      * Deletes a playlist file.
      */
-    suspend fun deletePlaylist(playlist: Playlist): Result<Boolean> = withContext(Dispatchers.IO) {
+    suspend fun deletePlaylist(uri: Uri): Result<Boolean> = withContext(Dispatchers.IO) {
         try {
-            val file = File(playlist.uri.path ?: throw IOException("Invalid playlist URI"))
+            val file = File(uri.path ?: throw IOException("Invalid playlist URI"))
             Result.success(file.delete())
         } catch (e: Exception) {
             Result.failure(e)
@@ -197,7 +195,9 @@ class PlaylistManager(
     /**
      * Lists all available playlists.
      */
-    suspend fun listAllPlaylists(): Result<List<Playlist>> = withContext(Dispatchers.IO) {
+    suspend fun listAllPlaylists(): Result<List<Pair<Playlist, Uri>>> = withContext(
+        Dispatchers.IO
+    ) {
         try {
             val playlistDir = storageManager.getPlaylistsRootDirectory().getOrThrow()
 
@@ -208,7 +208,10 @@ class PlaylistManager(
 
             val playlists = playlistFiles.mapNotNull { file ->
                 try {
-                    loadPlaylist(Uri.fromFile(file)).getOrNull()
+                    val uri = Uri.fromFile(file)
+                    loadPlaylist(uri).getOrNull()?.let { playlist ->
+                        Pair(playlist, uri)
+                    }
                 } catch (e: Exception) {
                     Timber.e(e, "Failed to load playlist: ${file.name}")
                     null

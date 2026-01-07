@@ -1,22 +1,35 @@
 package org.helllabs.android.xmp
 
+import android.Manifest
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.ManagedActivityResultLauncher
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.retain.retain
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.lifecycleScope
+import com.meticha.permissions_compose.AppPermission
 import com.meticha.permissions_compose.PermissionManagerConfig
+import com.meticha.permissions_compose.rememberAppPermissionState
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.helllabs.android.xmp.compose.RootNavigation
+import org.helllabs.android.xmp.compose.components.MessageDialog
 import org.helllabs.android.xmp.compose.components.PermissionsRationaleDialog
 import org.helllabs.android.xmp.compose.theme.XmpTheme
 import org.helllabs.android.xmp.compose.ui.player.PlayerActivity
@@ -69,10 +82,66 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val snackBarHostState = retain { SnackbarHostState() }
-
             val onSnackMessage: (String) -> Unit = {
                 lifecycleScope.launch {
                     snackBarHostState.showSnackbar(message = it)
+                }
+            }
+
+            // region [REGION] Permissions
+            val permissionsList = remember {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    persistentListOf(
+                        AppPermission(
+                            permission = Manifest.permission.POST_NOTIFICATIONS,
+                            description = "Post Notifications access is needed to " +
+                                "display the foreground service icon",
+                            isRequired = true,
+                        ),
+                    )
+                } else {
+                    persistentListOf()
+                }
+            }
+            val permissions = rememberAppPermissionState(permissions = permissionsList)
+            LaunchedEffect(Unit) {
+                permissions.requestPermission()
+            }
+            // endregion
+
+            // region [REGION] Initial SAF path, for explorer.
+            var hasExplorerPath by remember { mutableStateOf(false) }
+            val documentTreeResult = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.OpenDocumentTree(),
+                onResult = { uri ->
+                    if (uri == null) {
+                        Timber.w("uri was null setting explorer default path")
+                        return@rememberLauncherForActivityResult
+                    }
+                    lifecycleScope.launch {
+                        storageManager.takePersistablePerms(uri)
+                        prefManager.setExplorerRootPath(uri.toString())
+                    }
+                }
+            )
+            MessageDialog(
+                isShowing = hasExplorerPath,
+                title = "Storage Request",
+                text = "Xmp Mod Player needs a default directory to browse modules.\n" +
+                    "Press OK to choose an initial path. Downloads will be stored in here too.\n" +
+                    "This can be changed at any time within settings.",
+                confirmText = "OK",
+                onConfirm = {
+                    documentTreeResult.launch(null)
+                    hasExplorerPath = false
+                },
+                onDismiss = {
+                    hasExplorerPath = false
+                }
+            )
+            LaunchedEffect(Unit) {
+                if (prefManager.getExplorerRootPath().isBlank()) {
+                    hasExplorerPath = true
                 }
             }
 

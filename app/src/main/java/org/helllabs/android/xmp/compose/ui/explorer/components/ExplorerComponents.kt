@@ -12,7 +12,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.*
 import androidx.compose.ui.*
-import androidx.compose.ui.graphics.*
 import androidx.compose.ui.hapticfeedback.*
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.*
@@ -23,6 +22,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.compose.components.KoinPreview
+import org.helllabs.android.xmp.compose.theme.XmpRoundedCorner
 import org.helllabs.android.xmp.compose.theme.XmpTheme
 import org.helllabs.android.xmp.compose.ui.explorer.BreadCrumb
 import org.helllabs.android.xmp.model.DropDownItem
@@ -60,109 +60,105 @@ fun ExplorerListCard(
     var isContextMenuVisible by rememberSaveable { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
 
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+    ListItem(
+        shapes = ListItemDefaults.shapes().copy(
+            shape = XmpRoundedCorner
         ),
-        onClick = onItemClick
-    ) {
-        ListItem(
-            colors = ListItemDefaults.colors(
-                containerColor = Color.Transparent
-            ),
-            modifier = Modifier.fillMaxWidth(),
-            leadingContent = {
-                val icon = if (!item.isDirectory) {
-                    Icons.AutoMirrored.Filled.InsertDriveFile
+        onClick = onItemClick,
+        colors = ListItemDefaults.colors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+        ),
+        leadingContent = {
+            val icon = if (!item.isDirectory) {
+                Icons.AutoMirrored.Filled.InsertDriveFile
+            } else {
+                Icons.Default.Folder
+            }
+
+            Icon(
+                imageVector = icon,
+                contentDescription = if (item.isDirectory) {
+                    "Folder: ${item.name}"
                 } else {
-                    Icons.Default.Folder
+                    "File: ${item.name}"
                 }
-
+            )
+        },
+        content = {
+            Text(text = item.name)
+        },
+        trailingContent = {
+            IconButton(
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    isContextMenuVisible = true
+                }
+            ) {
                 Icon(
-                    imageVector = icon,
-                    contentDescription = if (item.isDirectory) {
-                        "Folder: ${item.name}"
-                    } else {
-                        "File: ${item.name}"
-                    }
-                )
-            },
-            headlineContent = {
-                Text(text = item.name)
-            },
-            trailingContent = {
-                IconButton(
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        isContextMenuVisible = true
-                    }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.MoreVert,
-                        contentDescription = null
-                    )
-                }
-
-                val list = if (!item.isDirectory) fileDropDownItems else directoryDropDownItems
-                Box(
-                    modifier = Modifier
-                        .wrapContentSize()
-                ) {
-                    DropdownMenu(
-                        expanded = isContextMenuVisible,
-                        onDismissRequest = { isContextMenuVisible = false },
-                        shape = RoundedCornerShape(16.dp),
-                        content = {
-                            DropdownMenuGroup(
-                                shapes = MenuDefaults.groupShape(0, 1),
-                                content = {
-                                    DropdownMenuItem(
-                                        enabled = false,
-                                        text = {
-                                            val text = if (!item.isDirectory) {
-                                                "This File"
-                                            } else {
-                                                "This Directory"
-                                            }
-                                            Text(text = text)
-                                        },
-                                        onClick = { }
-                                    )
-                                    list.forEach {
-                                        DropdownMenuItem(
-                                            text = {
-                                                Text(
-                                                    text = it.text,
-                                                    style = MaterialTheme.typography.bodyLarge
-                                                )
-                                            },
-                                            onClick = {
-                                                haptic.performHapticFeedback(
-                                                    HapticFeedbackType.LongPress
-                                                )
-                                                onItemLongClick(it.selection)
-                                                isContextMenuVisible = false
-                                            }
-                                        )
-                                    }
-                                }
-                            )
-                        }
-                    )
-                }
-            },
-            supportingContent = {
-                Text(
-                    text = if (item.isDirectory) {
-                        stringResource(id = R.string.directory)
-                    } else {
-                        item.comment
-                    },
-                    fontStyle = FontStyle.Italic
+                    imageVector = Icons.Default.MoreVert,
+                    contentDescription = null
                 )
             }
-        )
-    }
+
+            val list = if (!item.isDirectory) fileDropDownItems else directoryDropDownItems
+            Box(
+                modifier = Modifier
+                    .wrapContentSize()
+            ) {
+                DropdownMenu(
+                    expanded = isContextMenuVisible,
+                    onDismissRequest = { isContextMenuVisible = false },
+                    shape = RoundedCornerShape(16.dp),
+                    content = {
+                        DropdownMenuGroup(
+                            shapes = MenuDefaults.groupShape(0, 1),
+                            content = {
+                                DropdownMenuItem(
+                                    enabled = false,
+                                    text = {
+                                        val text = if (!item.isDirectory) {
+                                            "This File"
+                                        } else {
+                                            "This Directory"
+                                        }
+                                        Text(text = text)
+                                    },
+                                    onClick = { }
+                                )
+                                list.forEach {
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text(
+                                                text = it.text,
+                                                style = MaterialTheme.typography.bodyLarge
+                                            )
+                                        },
+                                        onClick = {
+                                            haptic.performHapticFeedback(
+                                                HapticFeedbackType.LongPress
+                                            )
+                                            onItemLongClick(it.selection)
+                                            isContextMenuVisible = false
+                                        }
+                                    )
+                                }
+                            }
+                        )
+                    }
+                )
+            }
+        },
+        supportingContent = {
+            Text(
+                text = if (item.isDirectory) {
+                    stringResource(id = R.string.directory)
+                } else {
+                    item.comment
+                },
+                fontStyle = FontStyle.Italic
+            )
+        }
+    )
 }
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class)

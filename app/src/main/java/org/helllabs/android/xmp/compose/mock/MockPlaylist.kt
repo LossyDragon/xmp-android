@@ -12,7 +12,6 @@ val MockPlaylist = Playlist(
     useFileName = false,
     isLoop = true,
     isShuffle = false,
-    uri = "content://playlists/1".toUri(),
     list = persistentListOf(
         PlaylistItem(
             name = "Space Debris",

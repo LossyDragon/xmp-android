@@ -26,8 +26,6 @@ data class Playlist(
     val useFileName: Boolean = false,
     val isLoop: Boolean = false,
     val isShuffle: Boolean = false,
-    @Serializable(with = UriSerializer::class)
-    val uri: Uri = Uri.EMPTY,
     @Contextual
     val list: ImmutableList<PlaylistItem> = persistentListOf()
 )

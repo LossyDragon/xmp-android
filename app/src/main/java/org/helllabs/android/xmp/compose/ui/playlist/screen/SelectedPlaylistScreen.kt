@@ -2,9 +2,8 @@ package org.helllabs.android.xmp.compose.ui.playlist.screen
 
 import android.content.res.Configuration
 import android.net.Uri
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
-import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.material3.*
@@ -19,6 +18,7 @@ import androidx.compose.ui.unit.*
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.compose.components.BottomBarButtons
@@ -33,16 +33,12 @@ import org.helllabs.android.xmp.model.DropDownSelection
 import org.helllabs.android.xmp.model.Playlist
 import org.helllabs.android.xmp.model.PlaylistItem
 import sh.calvin.reorderable.ReorderableColumn
-import sh.calvin.reorderable.ReorderableItem
-import sh.calvin.reorderable.rememberReorderableLazyListState
-import sh.calvin.reorderable.rememberScroller
 import timber.log.Timber
 
 @Composable
 fun SelectedPlaylistScreen(
     modifier: Modifier,
     viewModel: SelectedPlaylistViewModel,
-    snackBarHostState: SnackbarHostState,
     onBack: () -> Unit,
     onPlayAll: (List<Uri>, Boolean, Boolean) -> Unit,
     onAddQueue: (List<Uri>, Boolean, Boolean) -> Unit,
@@ -65,7 +61,6 @@ fun SelectedPlaylistScreen(
     PlaylistScreenContent(
         modifier = modifier,
         state = state,
-        snackBarHostState = snackBarHostState,
         onBack = onBack,
         onItemClick = { index ->
             onItemClick(
@@ -129,7 +124,6 @@ fun SelectedPlaylistScreen(
 private fun PlaylistScreenContent(
     modifier: Modifier,
     state: Playlist,
-    snackBarHostState: SnackbarHostState,
     onBack: () -> Unit,
     onItemClick: (index: Int) -> Unit,
     onMenuClick: (item: PlaylistItem, index: Int, sel: DropDownSelection) -> Unit,
@@ -179,13 +173,13 @@ private fun PlaylistScreenContent(
             modifier = modifier.padding(paddingValues),
             contentAlignment = Alignment.Center
         ) {
-            val pixelAmount by remember {
-                derivedStateOf { listState.layoutInfo.viewportSize.height * 0.05f }
-            }
             val haptic = LocalHapticFeedback.current
 
             ReorderableColumn(
-                modifier = Modifier.fillMaxSize().padding(8.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(8.dp),
                 list = state.list,
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 onSettle = { fromIndex, toIndex ->
@@ -237,7 +231,7 @@ private fun PlaylistScreenContent(
 @Preview
 @Composable
 private fun Preview_PlaylistScreenContent() {
-    KoinPreview(modules = listOf(appModule)) {
+    KoinPreview(modules = persistentListOf(appModule)) {
         PlaylistScreenContent(
             modifier = Modifier,
             state = Playlist(
@@ -254,7 +248,6 @@ private fun Preview_PlaylistScreenContent() {
                     )
                 }.toPersistentList()
             ),
-            snackBarHostState = SnackbarHostState(),
             onItemClick = { _ -> },
             onMenuClick = { _, _, _ -> },
             onBack = {},

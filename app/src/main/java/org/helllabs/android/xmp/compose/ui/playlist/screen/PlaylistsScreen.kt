@@ -3,9 +3,11 @@ package org.helllabs.android.xmp.compose.ui.playlist.screen
 import android.content.Intent
 import android.content.res.Configuration
 import android.net.Uri
-import android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.material.icons.*
@@ -13,27 +15,23 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.*
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.launch
-import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.compose.components.KoinPreview
-import org.helllabs.android.xmp.compose.components.MessageDialog
 import org.helllabs.android.xmp.compose.components.XmpCenterTopBar
 import org.helllabs.android.xmp.compose.ui.player.PlayerActivity
 import org.helllabs.android.xmp.compose.ui.playlist.components.MenuCardItem
 import org.helllabs.android.xmp.compose.ui.playlist.viewmodel.PlaylistsUiState
 import org.helllabs.android.xmp.compose.ui.playlist.viewmodel.PlaylistsViewModel
 import org.helllabs.android.xmp.compose.ui.search.components.GuruFrame
-import org.helllabs.android.xmp.compose.ui.search.components.GuruTextButton
 import org.helllabs.android.xmp.model.FileItem
 import org.helllabs.android.xmp.service.PlayerService
 import timber.log.Timber
@@ -45,10 +43,9 @@ fun PlaylistsScreen(
     snackBarHostState: SnackbarHostState,
     onSettings: () -> Unit,
     onEditPlaylist: (FileItem?) -> Unit,
-    onNavPlaylist: (Uri) -> Unit
+    onNavPlaylist: (FileItem) -> Unit
 ) {
     val context = LocalContext.current
-    val resources = LocalResources.current
     val scope = rememberCoroutineScope()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -79,54 +76,6 @@ fun PlaylistsScreen(
         }
     }
 
-    val appSettings = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult(),
-        onResult = { viewModel.refreshAll() }
-    )
-
-    val documentTreeResult = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocumentTree(),
-        onResult = { viewModel.setExplorerRootDirectory(it) }
-    )
-
-    // Prompt and Explain Storage
-    MessageDialog(
-        isShowing = state.askForStorage,
-        title = "Storage Request",
-        text = "Xmp Mod Player needs a default directory to browse modules.\n" +
-            "Press OK to choose an initial path. Downloads will be stored in here too.\n" +
-            "This can be changed at any time within settings.",
-        confirmText = "OK",
-        onConfirm = {
-            documentTreeResult.launch(null)
-        },
-        dismissText = stringResource(id = android.R.string.cancel),
-        onDismiss = {
-            viewModel.showStorageRequest(false)
-            viewModel.clearError()
-        }
-    )
-
-    LaunchedEffect(state.mediaPath) {
-        if (state.mediaPath.isNotEmpty()) {
-            viewModel.initializeDataDirectory(
-                name = resources.getString(R.string.error_empty_playlist),
-                comment = resources.getString(R.string.error_empty_comment),
-            )
-        }
-    }
-
-    // Check storage on initial composition and lifecycle resume
-    LifecycleResumeEffect(Lifecycle.Event.ON_RESUME) {
-        Timber.d("Lifecycle onResume")
-        if (state.hasStorageAccess && state.mediaPath.isNotEmpty()) {
-            viewModel.loadPlaylistItems()
-        }
-        onPauseOrDispose {
-            Timber.d("Lifecycle onPause")
-        }
-    }
-
     PlaylistsScreenContent(
         modifier = modifier,
         state = state,
@@ -136,33 +85,13 @@ fun PlaylistsScreen(
                 Intent(context, PlayerActivity::class.java).also(playerResult::launch)
             }
         },
-        onItemClick = { item ->
-            onNavPlaylist(item.uri)
-        },
-        onItemLongClick = { item ->
-            onEditPlaylist(item)
-        },
-        onRefresh = viewModel::loadPlaylistItems,
+        onItemClick = onNavPlaylist,
+        onItemLongClick = onEditPlaylist,
+        onRefresh = viewModel::refreshPlaylists,
         onNewPlaylist = { onEditPlaylist(null) },
-        onRequestSettings = {
-            Intent().apply {
-                action = ACTION_APPLICATION_DETAILS_SETTINGS
-                data = Uri.fromParts(
-                    "package",
-                    BuildConfig.APPLICATION_ID,
-                    null
-                )
-                addCategory(Intent.CATEGORY_DEFAULT)
-                addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS)
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
-            }.also(appSettings::launch)
-        },
-        onRequestStorage = { documentTreeResult.launch(null) }
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun PlaylistsScreenContent(
     modifier: Modifier = Modifier,
@@ -172,9 +101,7 @@ private fun PlaylistsScreenContent(
     onItemClick: (item: FileItem) -> Unit,
     onItemLongClick: (item: FileItem) -> Unit,
     onNewPlaylist: () -> Unit,
-    onRefresh: () -> Unit,
-    onRequestSettings: () -> Unit,
-    onRequestStorage: () -> Unit
+    onRefresh: () -> Unit
 ) {
     val serviceAlive by PlayerService.isAlive.collectAsStateWithLifecycle()
     val servicePlaying by PlayerService.isPlaying.collectAsStateWithLifecycle()
@@ -183,6 +110,15 @@ private fun PlaylistsScreenContent(
     val isScrolled by remember {
         derivedStateOf {
             scrollState.firstVisibleItemIndex > 0
+        }
+    }
+    val isLastItemVisible by remember {
+        derivedStateOf {
+            val lastVisibleItemIndex = scrollState.layoutInfo.visibleItemsInfo.lastOrNull()?.index
+            val totalItemsCount = scrollState.layoutInfo.totalItemsCount
+            lastVisibleItemIndex != null &&
+                lastVisibleItemIndex >= totalItemsCount - 1 &&
+                totalItemsCount > 0
         }
     }
 
@@ -197,15 +133,12 @@ private fun PlaylistsScreenContent(
             )
         },
         floatingActionButton = {
-            if (state.hasStorageAccess) {
-                ExtendedFloatingActionButton(
-                    text = { Text(text = stringResource(id = R.string.menu_new_playlist)) },
-                    icon = { Icon(imageVector = Icons.Default.Add, contentDescription = null) },
-                    expanded = !isScrolled,
-                    onClick = onNewPlaylist,
-                    shape = MaterialTheme.shapes.extraLarge
-                )
-            }
+            ExtendedFloatingActionButton(
+                text = { Text(text = stringResource(id = R.string.menu_new_playlist)) },
+                icon = { Icon(imageVector = Icons.Default.Add, contentDescription = null) },
+                expanded = !isScrolled,
+                onClick = onNewPlaylist,
+            )
         },
         containerColor = MaterialTheme.colorScheme.surface
     ) { paddingValues ->
@@ -218,53 +151,60 @@ private fun PlaylistsScreenContent(
             }
         }
 
-        PullToRefreshBox(
-            modifier = modifier
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
                 .padding(paddingValues)
-                .fillMaxSize(),
-            contentAlignment = Alignment.Center,
-            isRefreshing = state.isLoading,
-            onRefresh = onRefresh
         ) {
-            if (state.playlistItems.isNotEmpty() && state.hasStorageAccess) {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(
-                        top = 12.dp,
-                        bottom = 96.dp,
-                        start = 16.dp,
-                        end = 16.dp
-                    ),
-                    state = scrollState,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(state.playlistItems) { item ->
-                        MenuCardItem(
-                            item = item,
-                            onClick = { onItemClick(item) },
-                            onLongClick = { onItemLongClick(item) }
-                        )
+            AnimatedVisibility(
+                modifier = Modifier.align(Alignment.BottomCenter),
+                visible = isLastItemVisible,
+                enter = fadeIn(),
+                exit = fadeOut(),
+                content = {
+                    Text(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 0.dp, bottom = 80.dp, start = 16.dp, end = 16.dp),
+                        text = "Playlists location:\n${state.playlistLocation}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primaryFixedDim.copy(alpha = .25f)
+                    )
+                }
+            )
+
+            PullToRefreshBox(
+                modifier = modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+                isRefreshing = state.isLoading,
+                onRefresh = onRefresh
+            ) {
+                if (state.playlists.isNotEmpty()) {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(
+                            top = 12.dp,
+                            bottom = 136.dp,
+                            start = 16.dp,
+                            end = 16.dp
+                        ),
+                        state = scrollState,
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(state.playlists) { item ->
+                            MenuCardItem(
+                                item = item,
+                                onClick = { onItemClick(item) },
+                                onLongClick = { onItemLongClick(item) }
+                            )
+                        }
                     }
                 }
-            }
 
-            if (!state.isLoading) {
-                if (state.playlistItems.isEmpty() && state.hasStorageAccess) {
+                if (!state.isLoading && state.playlists.isEmpty()) {
                     GuruFrame(
                         modifier = Modifier.padding(horizontal = 32.dp),
                         message = "No playlists found"
-                    )
-                } else if (!state.hasStorageAccess) {
-                    GuruFrame(
-                        modifier = Modifier.padding(horizontal = 32.dp),
-                        message = "Unable to access playlists from storage",
-                        action = {
-                            GuruTextButton(
-                                text = "Set Playlist Directory",
-                                onClick = onRequestStorage
-                            )
-                            GuruTextButton(text = "Go to Settings", onClick = onRequestSettings)
-                        },
                     )
                 }
             }
@@ -277,7 +217,6 @@ private class PlaylistPreview : PreviewParameterProvider<PlaylistsUiState> {
         return when (index) {
             0 -> "Loaded with Playlists"
             1 -> "Loading"
-            2 -> "No Storage"
             3 -> "Empty Playlists"
             else -> "Unknown"
         }
@@ -286,10 +225,9 @@ private class PlaylistPreview : PreviewParameterProvider<PlaylistsUiState> {
     override val values: Sequence<PlaylistsUiState>
         get() = sequenceOf(
             PlaylistsUiState(
-                mediaPath = "sdcard\\some\\path",
                 isLoading = false,
-                hasStorageAccess = true,
-                playlistItems = List(15) {
+                playlistLocation = "file://Android/data/org.helllabs.android.xmp/files/playlists",
+                playlists = List(15) {
                     FileItem(
                         name = "Name $it",
                         comment = "Comment $it",
@@ -298,10 +236,9 @@ private class PlaylistPreview : PreviewParameterProvider<PlaylistsUiState> {
                 }.toPersistentList()
             ),
             PlaylistsUiState(
-                mediaPath = "sdcard\\some\\path",
                 isLoading = true,
-                hasStorageAccess = true,
-                playlistItems = List(15) {
+                playlistLocation = "file://Android/data/org.helllabs.android.xmp/files/playlists",
+                playlists = List(1) {
                     FileItem(
                         name = "Name $it",
                         comment = "Comment $it",
@@ -311,12 +248,8 @@ private class PlaylistPreview : PreviewParameterProvider<PlaylistsUiState> {
             ),
             PlaylistsUiState(
                 isLoading = false,
+                playlistLocation = "file://Android/data/org.helllabs.android.xmp/files/playlists",
             ),
-            PlaylistsUiState(
-                mediaPath = "sdcard\\some\\path",
-                isLoading = false,
-                hasStorageAccess = true,
-            )
         )
 }
 
@@ -332,8 +265,6 @@ private fun Preview(@PreviewParameter(PlaylistPreview::class) state: PlaylistsUi
             onItemLongClick = {},
             onRefresh = {},
             onNewPlaylist = {},
-            onRequestStorage = {},
-            onRequestSettings = {}
         )
     }
 }

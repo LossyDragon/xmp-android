@@ -66,7 +66,7 @@ fun NavPlaylists(
                     snackBarHostState = snackbarHostState,
                     onSettings = onSettings,
                     onNavPlaylist = {
-                        val screen = NavKeyPlaylists.Selected(uri = it)
+                        val screen = NavKeyPlaylists.Selected(uri = it.uri)
                         playlistBackStack.add(screen)
                     },
                     onEditPlaylist = {
@@ -100,7 +100,6 @@ fun NavPlaylists(
                 SelectedPlaylistScreen(
                     modifier = modifier,
                     viewModel = viewModel,
-                    snackBarHostState = snackbarHostState,
                     onBack = { playlistBackStack.removeLastOrNull() },
                     onPlayAll = { modList, isShuffle, isLoop ->
                         onPlayAll(modList, isShuffle, isLoop, result)
@@ -125,14 +124,14 @@ fun NavPlaylists(
                         Timber.d("Back from Playlist Edit: $result")
                         playlistBackStack.removeLastOrNull()
                         if (result) {
-                            playlistsViewModel.refreshAll()
+                            playlistsViewModel.refreshPlaylists()
                         }
                     },
                     onDeleted = { result ->
                         Timber.d("Deleting Playlist: $result")
                         playlistBackStack.removeLastOrNull()
                         scope.launch {
-                            playlistsViewModel.refreshAll()
+                            playlistsViewModel.refreshPlaylists()
                             snackbarHostState.showSnackbar(
                                 message = if (result) {
                                     "Playlist deleted"

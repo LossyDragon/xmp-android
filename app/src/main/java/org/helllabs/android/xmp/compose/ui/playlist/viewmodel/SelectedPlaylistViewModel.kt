@@ -41,7 +41,7 @@ class SelectedPlaylistViewModel(
 
     fun save() {
         viewModelScope.launch {
-            playlistManager.savePlaylist(_uiState.value).fold(
+            playlistManager.savePlaylist(playlistUri, _uiState.value).fold(
                 onSuccess = { Timber.d("Playlist saved") },
                 onFailure = { Timber.e(it, "Error saving playlist") }
             )

@@ -20,8 +20,7 @@ import timber.log.Timber
 
 @Composable
 fun SettingsGroupPlaylist(
-    onChangeExplorerDir: () -> Unit,
-    onChangePlaylistDir: () -> Unit
+    onChangeExplorerDir: () -> Unit
 ) {
     val prefManager: PrefManager = koinInject()
     val scope = rememberCoroutineScope()
@@ -46,11 +45,11 @@ fun SettingsGroupPlaylist(
             onClick = onChangeExplorerDir
         )
 
-        SettingsMenuLink(
-            title = { Text(text = "Playlists default path") },
-            subtitle = { Text(text = "The directory where playlist files are located") },
-            onClick = onChangePlaylistDir
-        )
+        // SettingsMenuLink(
+        //     title = { Text(text = "Playlists default path") },
+        //     subtitle = { Text(text = "The directory where playlist files are located") },
+        //     onClick = onChangePlaylistDir
+        // )
 
         // Playlist Mode
         var playlistModeDialog by remember { mutableStateOf(false) }

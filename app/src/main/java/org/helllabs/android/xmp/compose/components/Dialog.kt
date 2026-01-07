@@ -288,10 +288,12 @@ fun Preview_TextInputDialog() {
 @Composable
 fun Preview_PermissionsRationaleDialog() {
     XmpTheme {
-        PermissionsRationaleDialog(
-            description = "Dialog Dialog Dialog",
-            onDismiss = { },
-            onConfirm = { },
-        )
+        Box(modifier = Modifier.fillMaxWidth()) {
+            PermissionsRationaleDialog(
+                description = "Dialog Dialog Dialog",
+                onDismiss = { },
+                onConfirm = { },
+            )
+        }
     }
 }

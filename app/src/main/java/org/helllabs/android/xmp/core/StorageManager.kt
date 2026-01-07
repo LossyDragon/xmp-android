@@ -33,34 +33,14 @@ class StorageManager(private val context: Context, private val prefManager: Pref
     )
 
     /**
-     * Checks if we have a URI in preferences, then checks to see if we have R/W access
-     */
-    suspend fun checkPermissions(): Boolean {
-        val explorerPath = prefManager.getExplorerRootPath()
-        val playlistsPath = prefManager.getPlaylistRootPath()
-
-        Timber.d("Explorer Path: $explorerPath")
-        Timber.d("Playlist Path: $playlistsPath")
-
-        if (explorerPath.isBlank() || playlistsPath.isBlank()) {
-            return false
-        }
-
-        val explorerPathUri = explorerPath.toUri()
-        val persistedUriPermissions = context.contentResolver.persistedUriPermissions
-
-        return persistedUriPermissions.any {
-            it.uri == explorerPathUri && it.isReadPermission && it.isWritePermission
-        }
-    }
-
-    /**
      * Gets the top level path for explorer
      */
     suspend fun getExplorerRootDirectory(): Result<DocumentFileCompat> = runCatching {
-        val prefUri = prefManager.getExplorerRootPath().toUri()
+        val prefUri = prefManager.getExplorerRootPath()
 
-        DocumentFileCompat.fromTreeUri(context, prefUri)
+        Timber.d("Loading root path: $prefUri")
+
+        DocumentFileCompat.fromTreeUri(context, prefUri.toUri())
             ?: throw XmpException("Getting parent directory returned null")
     }
 
@@ -332,7 +312,7 @@ class StorageManager(private val context: Context, private val prefManager: Pref
      */
     fun getFileName(uri: Uri?): String? {
         if (uri == null) return null
-        return DocumentFileCompat.fromSingleUri(context, uri)!!.name
+        return DocumentFileCompat.fromSingleUri(context, uri)?.name
     }
 
     /**

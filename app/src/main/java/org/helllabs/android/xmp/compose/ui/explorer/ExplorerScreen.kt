@@ -77,7 +77,7 @@ fun ExplorerScreen(
 
     LaunchedEffect(Unit) {
         viewModel.softError.collectLatest {
-            snackBarHostState.showSnackbar(it)
+            snackBarHostState.showSnackbar(it, actionLabel = "OK")
         }
     }
 
@@ -95,7 +95,7 @@ fun ExplorerScreen(
         icon = Icons.AutoMirrored.Filled.PlaylistAdd,
         title = stringResource(id = R.string.dialog_title_select_playlist),
         selectedIndex = -1,
-        textList = playlists.map { it.name }.toPersistentList(),
+        textList = playlists.map { (playlist, _) -> playlist.name }.toPersistentList(),
         onConfirm = viewModel::addToPlaylist,
         onDismiss = viewModel::clearPlaylist,
         onEmpty = {

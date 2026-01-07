@@ -1,8 +1,6 @@
 package org.helllabs.android.xmp.compose
 
-import android.Manifest
 import android.net.Uri
-import android.os.Build
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -10,9 +8,6 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import com.meticha.permissions_compose.AppPermission
-import com.meticha.permissions_compose.rememberAppPermissionState
-import kotlinx.collections.immutable.persistentListOf
 import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.PlayerActivityLauncher
 import org.helllabs.android.xmp.Xmp
@@ -30,27 +25,6 @@ fun RootNavigation(
     onItemClick: (List<Uri>, Int, Boolean, Boolean, PlayerActivityLauncher) -> Unit
 ) {
     val rootBackStack = rememberNavBackStack(NavKeyRoot.Main)
-
-    // region [REGION] Permissions
-    val permissionsList = remember {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            persistentListOf(
-                AppPermission(
-                    permission = Manifest.permission.POST_NOTIFICATIONS,
-                    description = "Post Notifications access is needed to " +
-                        "display the foreground service icon",
-                    isRequired = true,
-                ),
-            )
-        } else {
-            persistentListOf()
-        }
-    }
-    val permissions = rememberAppPermissionState(permissions = permissionsList)
-    LaunchedEffect(Unit) {
-        permissions.requestPermission()
-    }
-    // endregion
 
     NavDisplay(
         backStack = rootBackStack,
