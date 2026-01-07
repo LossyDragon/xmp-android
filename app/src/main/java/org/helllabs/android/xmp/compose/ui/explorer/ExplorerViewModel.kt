@@ -2,11 +2,11 @@ package org.helllabs.android.xmp.compose.ui.explorer
 
 import android.net.Uri
 import android.provider.DocumentsContract
-import androidx.compose.runtime.Stable
+import androidx.compose.foundation.lazy.*
+import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lazygeniouz.dfc.file.DocumentFileCompat
-import java.text.DateFormat
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
@@ -29,17 +29,22 @@ import org.helllabs.android.xmp.model.ModInfo
 import org.helllabs.android.xmp.model.Playlist
 import org.helllabs.android.xmp.model.PlaylistItem
 import timber.log.Timber
+import java.text.DateFormat
 
-@Stable
-data class BreadCrumb(val name: String, val path: Uri?, val enabled: Boolean = true)
+@Immutable
+data class BreadCrumb(
+    val name: String,
+    val path: Uri?,
+    val enabled: Boolean = true,
+    val scrollPosition: Int = 0
+)
 
-@Stable
+@Immutable
 data class ExplorerState(
     val crumbs: ImmutableList<BreadCrumb> = persistentListOf(),
     val isLoading: Boolean = true,
     val isLoop: Boolean = false,
     val isShuffle: Boolean = false,
-    val lastScrollPosition: Int = 0,
     val list: List<FileItem> = emptyList()
 )
 
@@ -48,6 +53,8 @@ class ExplorerViewModel(
     private val prefManager: PrefManager,
     private val storageManager: StorageManager
 ) : ViewModel() {
+
+    val listState: LazyListState by mutableStateOf(LazyListState(0, 0))
 
     private val _uiState = MutableStateFlow(ExplorerState())
     val uiState = _uiState.asStateFlow()
@@ -78,6 +85,8 @@ class ExplorerViewModel(
         }
     }
 
+    private val scrollPositionCache = mutableMapOf<String, Int>()
+
     init {
         viewModelScope.launch {
             storageManager.getModDirectory().onSuccess { dfc ->
@@ -100,10 +109,14 @@ class ExplorerViewModel(
         super.onCleared()
         Timber.d("onCleared")
         directoryCache.clear()
+        scrollPositionCache.clear()
     }
 
-    fun setScrollPosition(value: Int) {
-        _uiState.update { it.copy(lastScrollPosition = value) }
+    private fun saveScrollPosition() {
+        val currentIndex = listState.firstVisibleItemIndex
+        currentPath?.toString()?.let { path ->
+            scrollPositionCache[path] = currentIndex
+        }
     }
 
     /**
@@ -160,13 +173,13 @@ class ExplorerViewModel(
     fun onNavigate(uri: Uri?) {
         if (uri == null) return
 
+        saveScrollPosition()
+
         navigationJob?.cancel()
         navigationJob = viewModelScope.launch(Dispatchers.IO) {
             withContext(Dispatchers.Main) {
                 _uiState.update { it.copy(isLoading = true) }
             }
-
-            // Timber.d("Path: $uri")
 
             try {
                 val targetDir = storageManager.getDocumentFileFromUri(uri)
@@ -187,8 +200,12 @@ class ExplorerViewModel(
                     return@launch
                 }
 
-                // Check cache first
+                // Get saved scroll position for this directory (0 if not visited before)
                 val cacheKey = uri.toString()
+                val savedScrollPosition = scrollPositionCache[cacheKey] ?: 0
+
+                Timber.d("Navigating to $cacheKey, scroll position: $savedScrollPosition")
+
                 val cachedList = directoryCache[cacheKey]
 
                 if (cachedList != null) {
@@ -199,17 +216,14 @@ class ExplorerViewModel(
                                 crumbs = crumbs,
                                 list = cachedList,
                                 isLoading = false,
-                                lastScrollPosition = 0
                             )
                         }
                     }
                     return@launch
                 }
 
-                // Build breadcrumbs
                 val crumbs = buildBreadcrumbsFromUri(targetDir)
 
-                // Get immediate children only
                 val childUris = storageManager.listDirectoryContents(uri)
 
                 val list = childUris.mapNotNull { childUri ->
@@ -237,7 +251,6 @@ class ExplorerViewModel(
                     }
                 }
 
-                // Cache the result
                 directoryCache[cacheKey] = list
 
                 withContext(Dispatchers.Main) {
@@ -246,7 +259,6 @@ class ExplorerViewModel(
                             crumbs = crumbs,
                             list = list,
                             isLoading = false,
-                            lastScrollPosition = 0
                         )
                     }
                 }
@@ -452,5 +464,10 @@ class ExplorerViewModel(
 
     fun clearCache() {
         directoryCache.clear()
+        scrollPositionCache.clear()
+    }
+
+    fun getScrollPosition(path: String): Int {
+        return scrollPositionCache[path] ?: 0
     }
 }

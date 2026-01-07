@@ -3,29 +3,26 @@ package org.helllabs.android.xmp.compose.ui.explorer
 import android.content.res.Configuration
 import android.net.Uri
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.background
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
-import androidx.compose.material.icons.filled.QuestionMark
+import androidx.compose.material.icons.*
+import androidx.compose.material.icons.automirrored.filled.*
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import androidx.compose.ui.*
 import androidx.compose.ui.platform.*
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.*
+import androidx.compose.ui.tooling.preview.*
+import androidx.compose.ui.unit.*
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.compose.components.BottomBarButtons
@@ -58,6 +55,16 @@ fun ExplorerScreen(
     val scope = rememberCoroutineScope()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val storageManager = koinInject<StorageManager>()
+
+    LaunchedEffect(state.crumbs.lastOrNull()?.path) {
+        val currentPath = state.crumbs.lastOrNull()?.path?.toString()
+        if (currentPath != null) {
+            val savedPosition = viewModel.getScrollPosition(currentPath)
+            if (savedPosition > 0) {
+                viewModel.listState.animateScrollToItem(savedPosition)
+            }
+        }
+    }
 
     LifecycleResumeEffect(Lifecycle.Event.ON_RESUME) {
         Timber.d("Lifecycle onResume")
@@ -152,8 +159,8 @@ fun ExplorerScreen(
     ExplorerScreenContent(
         modifier = modifier,
         state = state,
+        listState = viewModel.listState,
         onBack = onBack,
-        onScrollPosition = viewModel::setScrollPosition,
         onRefresh = viewModel::onRefresh,
         onRestore = viewModel::onRestore,
         onShuffle = viewModel::onShuffle,
@@ -261,8 +268,8 @@ fun ExplorerScreen(
 private fun ExplorerScreenContent(
     modifier: Modifier,
     state: ExplorerState,
+    listState: LazyListState,
     onBack: () -> Unit,
-    onScrollPosition: (Int) -> Unit,
     onRefresh: () -> Unit,
     onRestore: () -> Unit,
     onShuffle: (Boolean) -> Unit,
@@ -273,28 +280,11 @@ private fun ExplorerScreenContent(
     onItemClick: (FileItem, Int) -> Unit,
     onItemLongClick: (FileItem, Int, DropDownSelection) -> Unit
 ) {
-    val scrollState = rememberLazyListState(
-        initialFirstVisibleItemIndex = state.lastScrollPosition
-    )
     val crumbScrollState = rememberLazyListState()
-
-    // Save scroll position
-    LaunchedEffect(scrollState) {
-        var lastPosition = -1
-        snapshotFlow { scrollState.firstVisibleItemIndex }
-            .debounce(1.seconds)
-            .collectLatest { position ->
-                if (position != lastPosition) {
-                    lastPosition = position
-                    onScrollPosition(position)
-                }
-            }
-    }
 
     // Auto-scroll breadcrumbs when navigation changes
     LaunchedEffect(state.crumbs) {
         if (state.crumbs.isNotEmpty()) {
-            scrollState.animateScrollToItem(state.lastScrollPosition)
             crumbScrollState.animateScrollToItem(state.crumbs.lastIndex)
         }
     }
@@ -343,7 +333,7 @@ private fun ExplorerScreenContent(
         ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                state = scrollState,
+                state = listState,
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -395,8 +385,8 @@ private fun Preview_ExplorerScreenContent() {
                 isLoop = true,
                 isShuffle = false
             ),
+            listState = rememberLazyListState(),
             onBack = {},
-            onScrollPosition = {},
             onRefresh = {},
             onRestore = {},
             onLoop = {},
