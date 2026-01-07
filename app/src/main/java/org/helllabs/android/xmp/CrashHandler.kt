@@ -64,6 +64,7 @@ class CrashHandler(
 
     override fun uncaughtException(thread: Thread, throwable: Throwable) {
         saveCrashToFile(throwable)
+        defaultHandler?.uncaughtException(thread, throwable)
     }
 
     private fun saveCrashToFile(throwable: Throwable) {
@@ -100,7 +101,7 @@ class CrashHandler(
 
             cleanupOldCrashFiles()
         } catch (_: Exception) {
-            // Just give up.
+            defaultHandler?.uncaughtException(Thread.currentThread(), throwable)
         }
     }
 }
