@@ -215,6 +215,8 @@ private fun PlaylistScreenContent(
                                 item = item,
                                 isDragging = isDragging,
                                 useFileName = state.useFileName,
+                                onItemClick = { onItemClick(index) },
+                                onMenuClick = { onMenuClick(item, index, it) },
                             )
                         }
                     }

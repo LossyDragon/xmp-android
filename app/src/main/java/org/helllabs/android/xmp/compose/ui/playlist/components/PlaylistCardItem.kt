@@ -42,7 +42,9 @@ fun PlaylistCardItem(
     interactionSource: MutableInteractionSource,
     item: PlaylistItem,
     isDragging: Boolean,
-    useFileName: Boolean
+    useFileName: Boolean,
+    onItemClick: () -> Unit,
+    onMenuClick: (DropDownSelection) -> Unit
 ) {
     var isContextMenuVisible by rememberSaveable { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
@@ -56,7 +58,7 @@ fun PlaylistCardItem(
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
             ),
-            onClick = {}
+            onClick = onItemClick,
         ) {
             ListItem(
                 colors = ListItemDefaults.colors(
@@ -135,7 +137,7 @@ fun PlaylistCardItem(
                                                     haptic.performHapticFeedback(
                                                         HapticFeedbackType.LongPress
                                                     )
-                                                    // onMenuClick(it.selection) // TODO
+                                                    onMenuClick(it.selection)
                                                     isContextMenuVisible = false
                                                 }
                                             )
@@ -176,6 +178,8 @@ private fun Preview_PlaylistCardItem() {
                             item = item,
                             isDragging = isDragging,
                             useFileName = false,
+                            onItemClick = { },
+                            onMenuClick = { },
                         )
                     }
                 }
