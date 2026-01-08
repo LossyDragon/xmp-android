@@ -19,9 +19,7 @@ import org.koin.compose.koinInject
 import timber.log.Timber
 
 @Composable
-fun SettingsGroupPlaylist(
-    onChangeExplorerDir: () -> Unit
-) {
+fun SettingsGroupPlaylist() {
     val prefManager: PrefManager = koinInject()
     val scope = rememberCoroutineScope()
 
@@ -39,18 +37,6 @@ fun SettingsGroupPlaylist(
             Text(text = stringResource(id = R.string.pref_category_files))
         }
     ) {
-        SettingsMenuLink(
-            title = { Text(text = "Explorer default path") },
-            subtitle = { Text(text = stringResource(id = R.string.pref_media_path_summary)) },
-            onClick = onChangeExplorerDir
-        )
-
-        // SettingsMenuLink(
-        //     title = { Text(text = "Playlists default path") },
-        //     subtitle = { Text(text = "The directory where playlist files are located") },
-        //     onClick = onChangePlaylistDir
-        // )
-
         // Playlist Mode
         var playlistModeDialog by remember { mutableStateOf(false) }
         val playlistModeValues = stringArrayResource(id = R.array.playlist_mode_values)

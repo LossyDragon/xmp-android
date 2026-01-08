@@ -44,6 +44,10 @@ fun PreferencesScreen(
         }
     }
 
+    val playlistsDir by produceState("") {
+        value = storageManager.getPlaylistsRootDirectory().getOrThrow().path
+    }
+
     val setExplorerResult = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocumentTree()
     ) { uri ->
@@ -100,24 +104,18 @@ fun PreferencesScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             val context = LocalContext.current
-            SettingsGroupPlaylist(
-                onChangeExplorerDir = { setExplorerResult.launch(null) },
-            )
+            SettingsGroupPlaylist()
             SettingsGroupSound()
-            SettingsGroupInterface()
+            SettingsGroupInterface(onChangeExplorerDir = { setExplorerResult.launch(null) })
             SettingsGroupDownload()
-            SettingsGroupInformation(onFormats = onFormats, onAbout = onAbout)
+            SettingsGroupInformation(
+                playlistsDir = playlistsDir,
+                onFormats = onFormats,
+                onAbout = onAbout
+            )
 
             if (BuildConfig.DEBUG) {
-                SettingsGroup(
-                    title = {
-                        Text(
-                            text = "Debug",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                ) {
+                SettingsGroup(title = { Text(text = "Debug") }) {
                     SettingsMenuLink(
                         title = {
                             Text(

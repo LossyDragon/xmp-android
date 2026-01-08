@@ -17,7 +17,9 @@ import org.helllabs.android.xmp.core.PrefManager
 import org.koin.compose.koinInject
 
 @Composable
-fun SettingsGroupInterface() {
+fun SettingsGroupInterface(
+    onChangeExplorerDir: () -> Unit,
+) {
     val prefManager: PrefManager = koinInject()
     val scope = rememberCoroutineScope()
 
@@ -60,6 +62,19 @@ fun SettingsGroupInterface() {
             },
             onClick = { initialScreenDialog = true }
         )
+
+        SettingsMenuLink(
+            title = { Text(text = "Explorer default path") },
+            subtitle = { Text(text = stringResource(id = R.string.pref_media_path_summary)) },
+            onClick = onChangeExplorerDir
+        )
+
+        // SettingsMenuLink(
+        //     title = { Text(text = "Playlists default path") },
+        //     subtitle = { Text(text = "The directory where playlist files are located") },
+        //     onClick = onChangePlaylistDir
+        // )
+
 
         // Show Info Line
         SettingsSwitch(

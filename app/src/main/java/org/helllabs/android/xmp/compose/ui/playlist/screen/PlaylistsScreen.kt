@@ -5,9 +5,6 @@ import android.content.res.Configuration
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.material.icons.*
@@ -15,8 +12,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import androidx.compose.ui.*
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.*
 import androidx.compose.ui.tooling.preview.*
@@ -112,15 +108,6 @@ private fun PlaylistsScreenContent(
             scrollState.firstVisibleItemIndex > 0
         }
     }
-    val isLastItemVisible by remember {
-        derivedStateOf {
-            val lastVisibleItemIndex = scrollState.layoutInfo.visibleItemsInfo.lastOrNull()?.index
-            val totalItemsCount = scrollState.layoutInfo.totalItemsCount
-            lastVisibleItemIndex != null &&
-                lastVisibleItemIndex >= totalItemsCount - 1 &&
-                totalItemsCount > 0
-        }
-    }
 
     Scaffold(
         modifier = modifier,
@@ -151,62 +138,41 @@ private fun PlaylistsScreenContent(
             }
         }
 
-        Box(
-            modifier = Modifier
+        PullToRefreshBox(
+            modifier = modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(paddingValues),
+            contentAlignment = Alignment.Center,
+            isRefreshing = state.isLoading,
+            onRefresh = onRefresh
         ) {
-            AnimatedVisibility(
-                modifier = Modifier.align(Alignment.BottomCenter),
-                visible = isLastItemVisible,
-                enter = fadeIn(),
-                exit = fadeOut(),
-                content = {
-                    Text(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 0.dp, bottom = 80.dp, start = 16.dp, end = 16.dp),
-                        text = "Playlists location:\n${state.playlistLocation}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primaryFixedDim.copy(alpha = .25f)
-                    )
-                }
-            )
-
-            PullToRefreshBox(
-                modifier = modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center,
-                isRefreshing = state.isLoading,
-                onRefresh = onRefresh
-            ) {
-                if (state.playlists.isNotEmpty()) {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(
-                            top = 12.dp,
-                            bottom = 136.dp,
-                            start = 16.dp,
-                            end = 16.dp
-                        ),
-                        state = scrollState,
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(state.playlists) { item ->
-                            MenuCardItem(
-                                item = item,
-                                onClick = { onItemClick(item) },
-                                onLongClick = { onItemLongClick(item) }
-                            )
-                        }
+            if (state.playlists.isNotEmpty()) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(
+                        top = 12.dp,
+                        bottom = 136.dp,
+                        start = 16.dp,
+                        end = 16.dp
+                    ),
+                    state = scrollState,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(state.playlists) { item ->
+                        MenuCardItem(
+                            item = item,
+                            onClick = { onItemClick(item) },
+                            onLongClick = { onItemLongClick(item) }
+                        )
                     }
                 }
+            }
 
-                if (!state.isLoading && state.playlists.isEmpty()) {
-                    GuruFrame(
-                        modifier = Modifier.padding(horizontal = 32.dp),
-                        message = "No playlists found"
-                    )
-                }
+            if (!state.isLoading && state.playlists.isEmpty()) {
+                GuruFrame(
+                    modifier = Modifier.padding(horizontal = 32.dp),
+                    message = "No playlists found"
+                )
             }
         }
     }

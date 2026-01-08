@@ -9,6 +9,7 @@ import org.helllabs.android.xmp.R
 
 @Composable
 fun SettingsGroupInformation(
+    playlistsDir: String,
     onFormats: () -> Unit,
     onAbout: () -> Unit
 ) {
@@ -24,6 +25,11 @@ fun SettingsGroupInformation(
             title = { Text(text = stringResource(R.string.pref_about_title)) },
             subtitle = { Text(text = stringResource(id = R.string.pref_about_summary)) },
             onClick = onAbout
+        )
+        SettingsMenuLink(
+            title = { Text(text = "Playlists Location") },
+            subtitle = { Text(text = playlistsDir) },
+            onClick = { }
         )
     }
 }
