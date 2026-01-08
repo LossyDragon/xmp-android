@@ -16,9 +16,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import org.helllabs.android.xmp.Xmp
-import org.helllabs.android.xmp.core.PlaylistManager
 import org.helllabs.android.xmp.core.PrefManager
-import org.helllabs.android.xmp.core.StorageManager
 import org.helllabs.android.xmp.model.ChannelInfo
 import org.helllabs.android.xmp.model.FrameInfo
 import org.helllabs.android.xmp.model.ModVars
@@ -96,11 +94,7 @@ data class ChannelMuteState(val isMuted: ImmutableList<Boolean> = persistentList
     fun count(predicate: (Boolean) -> Boolean) = isMuted.count(predicate)
 }
 
-class PlayerViewModel(
-    private val playlistManager: PlaylistManager,
-    private val storageManager: StorageManager,
-    prefManager: PrefManager
-) : ViewModel() {
+class PlayerViewModel(prefManager: PrefManager) : ViewModel() {
 
     private val _activityState = MutableStateFlow(PlayerActivityState())
     val activityState = _activityState.asStateFlow()
@@ -127,22 +121,29 @@ class PlayerViewModel(
     /** Viewer Variables **/
     private val seqVars = MutableStateFlow(SequenceVars())
 
-    val insName = MutableStateFlow(persistentListOf(""))
+    private val _insName = MutableStateFlow(persistentListOf(""))
+    val insName = _insName.asStateFlow()
+
+    private val _modVars = MutableStateFlow(ModVars())
+    val modVars = _modVars.asStateFlow()
+
+    private val _frameInfo = MutableStateFlow(FrameInfo())
+    val frameInfo = _frameInfo.asStateFlow()
+
+    private val _channelInfo = MutableStateFlow(ChannelInfo())
+    val channelInfo = _channelInfo.asStateFlow()
+
+    private val _playlistList = MutableStateFlow<List<Playlist>>(listOf())
+    val playlistList = _playlistList.asStateFlow()
+
+    private val _playlistChoice = MutableStateFlow<DocumentFileCompat?>(null)
+    val playlistChoice = _playlistChoice.asStateFlow()
 
     private val _isMuted = MutableStateFlow(ChannelMuteState())
     val isMuted = _isMuted.asStateFlow()
 
-    val modVars = MutableStateFlow(ModVars())
-
-    val frameInfo = MutableStateFlow(FrameInfo())
-
-    val channelInfo = MutableStateFlow(ChannelInfo())
-
     private val _softError = MutableSharedFlow<String>()
     val softError = _softError.asSharedFlow()
-
-    val playlistList: MutableStateFlow<List<Playlist>> = MutableStateFlow(listOf())
-    val playlistChoice: MutableStateFlow<DocumentFileCompat?> = MutableStateFlow(null)
 
     private val showHex = prefManager.showHexFlow()
         .stateIn(
@@ -224,7 +225,7 @@ class PlayerViewModel(
 
         val mVars = ModVars()
         Xmp.getModVars(mVars)
-        modVars.update { mVars }
+        _modVars.update { mVars }
 
         val sVars = SequenceVars()
         Xmp.getSeqVars(sVars)
@@ -282,7 +283,7 @@ class PlayerViewModel(
             Xmp.getModVars(modVars.value)
             Xmp.getSeqVars(seqVars.value)
 
-            insName.update {
+            _insName.update {
                 val instruments = Xmp.getInstruments() ?: Array(modVars.value.numInstruments) { "" }
                 instruments.toPersistentList()
             }
@@ -355,53 +356,38 @@ class PlayerViewModel(
     }
 
     fun updateInfoState() {
+        val fi = frameInfo.value
         _infoState.update {
             it.copy(
-                infoPat = Util.updateFrameInfo(
-                    showHex = showHex.value,
-                    value = frameInfo.value.pattern
-                ),
-                infoPos = Util.updateFrameInfo(
-                    showHex = showHex.value,
-                    value = frameInfo.value.pos
-                ),
-                infoBpm = Util.updateFrameInfo(
-                    showHex = showHex.value,
-                    value = frameInfo.value.bpm
-                ),
-                infoSpeed = Util.updateFrameInfo(
-                    showHex = showHex.value,
-                    value = frameInfo.value.speed
-                ),
+                infoPat = Util.updateFrameInfo(showHex.value, fi.pattern),
+                infoPos = Util.updateFrameInfo(showHex.value, fi.pos),
+                infoBpm = Util.updateFrameInfo(showHex.value, fi.bpm),
+                infoSpeed = Util.updateFrameInfo(showHex.value, fi.speed)
             )
         }
     }
 
-    private val lock = Any() // Meh
+    fun updateModVars() {
+        val modVars = ModVars()
+        Xmp.getModVars(modVars)
+        _modVars.update { modVars }
+    }
+
     fun updateViewInfo() {
-        synchronized(lock) {
-            val ci = ChannelInfo()
-            Xmp.getChannelData(ci)
-            channelInfo.update {
-                ci
-            }
+        val ci = ChannelInfo()
+        Xmp.getChannelData(ci)
+        _channelInfo.update { ci }
 
-            val fi = FrameInfo()
-            Xmp.getInfo(fi)
-            frameInfo.update {
-                fi
-            }
+        val fi = FrameInfo()
+        Xmp.getInfo(fi)
+        _frameInfo.update { fi }
 
-            val muteArray = BooleanArray(modVars.value.numChannels) {
-                Xmp.mute(it, -1) == 1
-            }
-            _isMuted.update {
-                ChannelMuteState(
-                    isMuted = List(modVars.value.numChannels) { i ->
-                        Xmp.mute(i, -1) == 1
-                    }.toPersistentList()
-                )
-            }
+        _isMuted.update {
+            ChannelMuteState(
+                isMuted = List(modVars.value.numChannels) { i ->
+                    Xmp.mute(i, -1) == 1
+                }.toPersistentList()
+            )
         }
     }
 
@@ -411,7 +397,7 @@ class PlayerViewModel(
     }
 
     fun clearPlaylist() {
-        playlistChoice.value = null
+        _playlistChoice.value = null
     }
 
     fun addToPlaylist(index: Int) {

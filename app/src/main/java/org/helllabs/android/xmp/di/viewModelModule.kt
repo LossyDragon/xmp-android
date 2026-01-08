@@ -40,5 +40,5 @@ val viewModelModule = module {
         )
     }
 
-    viewModel { PlayerViewModel(get(), get(), get()) }
+    viewModel { PlayerViewModel(get()) }
 }

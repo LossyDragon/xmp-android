@@ -1,5 +1,8 @@
 package org.helllabs.android.xmp.compose.ui.player.viewer
 
+import kotlinx.collections.immutable.ImmutableMap
+import kotlinx.collections.immutable.persistentMapOf
+
 /*
  * An attempt to make sense of Effect Types. libxmp doesn't have an official way
  *
@@ -12,7 +15,7 @@ package org.helllabs.android.xmp.compose.ui.player.viewer
 
 object Effects {
     // https://github.com/libxmp/libxmp/blob/master/docs/formats/669.txt
-    private val effects669 = mapOf(
+    private val effects669 = persistentMapOf(
         0x00.toByte() to "-", // NO FX
         0x60.toByte() to "a", // FX_669_PORTA_UP,
         0x61.toByte() to "b", // FX_669_PORTA_DN,
@@ -25,7 +28,7 @@ object Effects {
     )
 
     // https://github.com/libxmp/libxmp/blob/master/docs/formats/far100.doc
-    private val effectsFarandole = mapOf(
+    private val effectsFarandole = persistentMapOf(
         0x00.toByte() to "-", // NO FX
         0x65.toByte() to "1", // FX_FAR_PORTA_UP
         0x66.toByte() to "2", // FX_FAR_PORTA_DN
@@ -44,7 +47,7 @@ object Effects {
     )
 
     // https://github.com/libxmp/libxmp/blob/master/docs/formats/s3m-effects.txt
-    private val effectsScream3 = mapOf(
+    private val effectsScream3 = persistentMapOf(
         0x00.toByte() to "-", // NO FX
         0xa3.toByte() to "A", // FX_S3M_SPEED
         0x0b.toByte() to "B", // FX_JUMP
@@ -69,7 +72,7 @@ object Effects {
     )
 
     // https://github.com/libxmp/libxmp/blob/master/docs/formats/xm.txt
-    private val effectsXM = mapOf(
+    private val effectsXM = persistentMapOf(
         0x00.toByte() to "0", // 0  Appregio
         0x01.toByte() to "1", // 1  Porta up
         0x02.toByte() to "2", // 2  Porta down
@@ -110,7 +113,7 @@ object Effects {
     )
 
     // https://github.com/libxmp/libxmp/blob/master/docs/formats/it-effects.txt
-    private val effectsIT = mapOf(
+    private val effectsIT = persistentMapOf(
         0xff.toByte() to "-", // NO FX
         0xa3.toByte() to "A", // FX_S3M_SPEED,
         0x0b.toByte() to "B", // FX_JUMP,
@@ -144,11 +147,11 @@ object Effects {
 
     // TODO
     // Using 4.00 https://github.com/libxmp/libxmp/blob/master/docs/formats/octamed4.00-effects.txt
-    private val effectsOctaMed = mapOf(
+    private val effectsOctaMed = persistentMapOf(
         0x0c.toByte() to "C" // SET VOLUME 0C
     )
 
-    data class EffectsTable(val name: String, val table: Map<Byte, String>)
+    data class EffectsTable(val name: String, val table: ImmutableMap<Byte, String>)
 
     fun getEffectList(type: String): EffectsTable {
         val xm = "(xm|fast|protracker|m\\.k\\.)".toRegex(RegexOption.IGNORE_CASE)
@@ -162,7 +165,7 @@ object Effects {
             type.contains(xm) -> EffectsTable("XM", effectsXM)
             type.contains(impulse) -> EffectsTable("IT", effectsIT)
             type.contains("octa", true) -> EffectsTable("OctaMED", effectsOctaMed)
-            else -> EffectsTable("Unknown", mapOf())
+            else -> EffectsTable("Unknown", persistentMapOf())
         }
     }
 }

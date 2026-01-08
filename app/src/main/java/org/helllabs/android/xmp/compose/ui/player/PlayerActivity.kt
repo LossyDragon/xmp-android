@@ -34,8 +34,9 @@ import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.helllabs.android.xmp.MainActivity
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
@@ -163,9 +164,9 @@ class PlayerActivity : ComponentActivity() {
 
             // Add to playlist
             val scope = rememberCoroutineScope()
-            val resources = LocalResources.current
+            // val resources = LocalResources.current
             val choice by viewModel.playlistChoice.collectAsStateWithLifecycle()
-            val playlists by viewModel.playlistList.collectAsStateWithLifecycle()
+            // val playlists by viewModel.playlistList.collectAsStateWithLifecycle()
 
             // Keep screen on if preference is set.
             val keepScreenOn by prefManager.keepScreenOnFlow()
@@ -190,35 +191,30 @@ class PlayerActivity : ComponentActivity() {
 
             // Restart the loop on info change
             LaunchedEffect(uiState.infoTitle, uiState.infoType, uiState.serviceConnected) {
-                if (!uiState.serviceConnected) {
-                    Timber.d("Service not connected, skipping update loop")
-                    return@LaunchedEffect
-                }
-
-                launch(Dispatchers.Default) {
+                withContext(Dispatchers.IO) {
                     Timber.d("Start LaunchedEffect Loop")
 
                     viewModel.resetPlayTime()
 
-                    while (true) {
-                        if (!viewModel.uiState.value.serviceConnected) {
+                    while (isActive && uiState.serviceConnected) {
+                        val currentState = viewModel.uiState.value
+                        val activityState = viewModel.activityState.value
+
+                        if (!currentState.serviceConnected) {
                             Timber.i("Service disconnected, stopping update loop")
                             break
                         }
 
-                        if (viewModel.activityState.value.playTime < 0) {
+                        if (activityState.playTime < 0) {
                             Timber.i("Stop update")
                             break
                         }
 
-                        if ((!viewModel.uiState.value.screenOn || !viewModel.isPlaying) ||
-                            modPlayer == null
-                        ) {
+                        if (!currentState.screenOn || !viewModel.isPlaying || modPlayer == null) {
                             Timber.d(
-                                "Waiting - " +
-                                    "Screen On: ${viewModel.uiState.value.screenOn}, " +
+                                "Waiting - Screen On: ${currentState.screenOn}, " +
                                     "isPlaying: ${viewModel.isPlaying}, " +
-                                    "modPlayer null: ${(modPlayer == null)}"
+                                    "modPlayer null: ${modPlayer == null}"
                             )
                             delay(500.milliseconds)
                             continue
@@ -228,7 +224,8 @@ class PlayerActivity : ComponentActivity() {
                         viewModel.updateViewInfo()
 
                         // Get the current playback time
-                        viewModel.setPlayTime(Xmp.time().div(100F))
+                        val time = Xmp.time().div(100F)
+                        viewModel.setPlayTime(time)
 
                         // Update the seekbar for the current time
                         viewModel.updateSeekBar()
@@ -467,7 +464,7 @@ class PlayerActivity : ComponentActivity() {
             startService(service)
         }
 
-        if (!bindService(service, connection, Context.BIND_AUTO_CREATE)) {
+        if (!bindService(service, connection, BIND_AUTO_CREATE)) {
             Timber.e("Can't bind to service")
             setResult(RESULT_OK)
             finish()
@@ -491,9 +488,7 @@ class PlayerActivity : ComponentActivity() {
                     return
                 }
 
-                val modVars = ModVars()
-                Xmp.getModVars(modVars)
-                viewModel.modVars.update { modVars }
+                viewModel.updateModVars()
 
                 viewModel.showNewSequence { time ->
                     val minutes = time / 60000

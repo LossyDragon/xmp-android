@@ -231,6 +231,10 @@ private fun DrawScope.drawChannels(
     val barWidth = dimensions.barWidth
 
     for (chn in visibleChannelRange) {
+        if (chn >= isChnMuted.size) {
+            continue // Skip this channel if mute state hasn't caught up yet
+        }
+
         val ins = channelInfo.instruments[chn]
         val pan = channelInfo.pans[chn]
         val period = channelInfo.periods[chn]
