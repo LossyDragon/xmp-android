@@ -54,6 +54,7 @@ data class ChannelInfo(
 /**
  * @see [org.helllabs.android.xmp.Xmp.getModVars]
  */
+@Immutable
 data class ModVars(
     val seqDuration: Int = 0,
     val lengthInPatterns: Int = 0,
@@ -68,7 +69,7 @@ data class ModVars(
 /**
  * @see [org.helllabs.android.xmp.Xmp.getInfo]
  */
-@Stable
+@Immutable
 data class FrameInfo(
     val pos: Int = 0,
     val pattern: Int = 0,

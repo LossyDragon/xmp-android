@@ -5,6 +5,7 @@ import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lazygeniouz.dfc.file.DocumentFileCompat
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -90,17 +91,9 @@ data class PlayerActivityState(
 )
 
 @Stable
-data class ChannelMuteState(val isMuted: BooleanArray = BooleanArray(Xmp.MAX_CHANNELS)) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as ChannelMuteState
-
-        return isMuted.contentEquals(other.isMuted)
-    }
-
-    override fun hashCode(): Int = isMuted.contentHashCode()
+data class ChannelMuteState(val isMuted: ImmutableList<Boolean> = persistentListOf()) {
+    operator fun get(index: Int) = isMuted[index]
+    fun count(predicate: (Boolean) -> Boolean) = isMuted.count(predicate)
 }
 
 class PlayerViewModel(
@@ -294,10 +287,13 @@ class PlayerViewModel(
                 instruments.toPersistentList()
             }
 
-            val muteArray = BooleanArray(modVars.value.numChannels) { i ->
-                Xmp.mute(i, -1) == 1
+            _isMuted.update {
+                ChannelMuteState(
+                    isMuted = List(modVars.value.numChannels) { i ->
+                        Xmp.mute(i, -1) == 1
+                    }.toPersistentList()
+                )
             }
-            _isMuted.update { it.copy(isMuted = muteArray) }
         }
     }
 
@@ -399,7 +395,13 @@ class PlayerViewModel(
             val muteArray = BooleanArray(modVars.value.numChannels) {
                 Xmp.mute(it, -1) == 1
             }
-            _isMuted.update { it.copy(isMuted = muteArray) }
+            _isMuted.update {
+                ChannelMuteState(
+                    isMuted = List(modVars.value.numChannels) { i ->
+                        Xmp.mute(i, -1) == 1
+                    }.toPersistentList()
+                )
+            }
         }
     }
 

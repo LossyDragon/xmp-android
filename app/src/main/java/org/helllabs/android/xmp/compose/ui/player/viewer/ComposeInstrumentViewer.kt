@@ -25,12 +25,13 @@ import org.helllabs.android.xmp.model.ModVars
 
 private const val VOLUME_STEPS = 32
 private val barShape = CornerRadius(8f, 8f)
-private val textColor = buildList {
-    for (i in 0..VOLUME_STEPS) {
-        val fraction = i.coerceIn(0, VOLUME_STEPS) / VOLUME_STEPS.toFloat()
-        add(lerp(Color.Gray, Color.White, fraction))
-    }
+
+// O(1) lookup based on volume
+private val textColor = Array(VOLUME_STEPS + 1) { i ->
+    val fraction = i.coerceIn(0, VOLUME_STEPS) / VOLUME_STEPS.toFloat()
+    lerp(Color.Gray, Color.White, fraction)
 }
+
 private val instrumentTextStyle = TextStyle(
     fontSize = 18.sp,
     fontFamily = FontFamily.Monospace,
@@ -50,9 +51,12 @@ internal fun InstrumentViewer(
     val textMeasurer = rememberTextMeasurer()
     val view = LocalView.current
 
+    // Layout dimensions cached per density
     val dimensions = remember(density) {
         InstrumentDimensions(density)
     }
+
+    // Pre-measured text for all instruments - only recalculates on instrument list change
     val measuredText = remember(modVars.numInstruments, insName) {
         (0 until modVars.numInstruments).map {
             textMeasurer.measure(
@@ -61,18 +65,22 @@ internal fun InstrumentViewer(
             )
         }
     }
+
+    // Vertical scroll offset (negative values = scrolled down)
     val yOffset = remember {
         Animatable(0f)
     }
+
+    // Canvas dimensions for scroll bounds calculation
     var canvasSize by remember {
         mutableStateOf(Size.Zero)
     }
-    val channelMuteState = remember(isMuted) {
-        isMuted.isMuted
-    }
+
     val scrollState = rememberScrollableState { delta ->
         scope.launch {
+            // Total height of all instrument rows
             val totalContentHeight = dimensions.rowHeight * modVars.numInstruments
+            // Maximum negative offset (how far we can scroll down)
             val maxOffset = (totalContentHeight - canvasSize.height).coerceAtLeast(0f)
             val newOffset = (yOffset.value + delta).coerceIn(-maxOffset, 0f)
             yOffset.snapTo(newOffset)
@@ -80,8 +88,8 @@ internal fun InstrumentViewer(
         delta
     }
 
+    // Reset scroll position when song changes
     LaunchedEffect(modVars.numInstruments, insName) {
-        // Scroll to the top on song change
         scope.launch {
             yOffset.animateTo(
                 targetValue = 0f,
@@ -93,6 +101,9 @@ internal fun InstrumentViewer(
     Canvas(
         modifier = Modifier
             .fillMaxSize()
+            .graphicsLayer {
+                translationY = yOffset.value
+            }
             .scrollable(
                 orientation = Orientation.Vertical,
                 state = scrollState
@@ -105,46 +116,60 @@ internal fun InstrumentViewer(
             canvasSize = size
         }
 
-        // Pre-calculate fixed layout values
+        // Calculate channel box layout (distributed evenly across width)
         val totalPadding = (modVars.numChannels - 1) * dimensions.padding
         val availableWidth = size.width - totalPadding
         val boxWidth = availableWidth / modVars.numChannels
 
-        // Get visible range for culling
-        val firstVisibleRow = (-yOffset.value / dimensions.rowHeight).toInt().coerceAtLeast(0)
-        val lastVisibleRow = ((-yOffset.value + size.height) / dimensions.rowHeight).toInt()
+        // Reusable size object for all volume bars
+        val barSize = Size(boxWidth, dimensions.rowHeight)
+
+        // Pre-calculate horizontal positions for each channel box
+        val boxPositions = FloatArray(modVars.numChannels) { j ->
+            j * (boxWidth + dimensions.padding)
+        }
+
+        // Calculate visible row range for culling
+        val rowHeightInv = 1f / dimensions.rowHeight
+        val firstVisibleRow = (-yOffset.value * rowHeightInv).toInt().coerceAtLeast(0)
+        val lastVisibleRow = ((-yOffset.value + size.height) * rowHeightInv).toInt()
             .coerceAtMost(modVars.numInstruments - 1)
 
-        // Only draw visible instruments
+        // Draw only visible instruments
         for (i in firstVisibleRow..lastVisibleRow) {
-            var maxVol = 0
-            val yPos = yOffset.value + (dimensions.rowHeight * i)
+            var maxVol = 0 // Track loudest channel for text brightness
+            val yPos = dimensions.rowHeight * i // Y position of this instrument row
 
-            // Active channel volume boxes
+            // Draw active channel volume boxes for this instrument
             for (j in 0 until modVars.numChannels) {
-                if (channelMuteState[j] || i != channelInfo.instruments[j]) {
+                // Skip muted channels or channels not playing this instrument
+                if (isMuted.isMuted[j] || i != channelInfo.instruments[j]) {
                     continue
                 }
 
+                // Scale volume from 0-64 to 0-32 range
                 val vol = (channelInfo.volumes[j] / 2).coerceAtMost(VOLUME_STEPS)
-                if (vol > 0) {
-                    val start = j * (boxWidth + dimensions.padding)
 
+                if (vol > 0) {
+                    // Track the loudest channel to determine text brightness
                     if (vol > maxVol) {
                         maxVol = vol
                     }
 
+                    // Alpha calculation
+                    val alpha = vol / VOLUME_STEPS.toFloat()
+
                     drawRoundRect(
                         color = seed,
                         cornerRadius = barShape,
-                        alpha = vol / VOLUME_STEPS.toFloat(),
-                        topLeft = Offset(start, yPos),
-                        size = Size(boxWidth, dimensions.rowHeight)
+                        alpha = alpha,
+                        topLeft = Offset(boxPositions[j], yPos),
+                        size = barSize
                     )
                 }
             }
 
-            // Instrument name with appropriate color
+            // Draw instrument name with brightness based on max volume
             drawText(
                 color = textColor[maxVol],
                 textLayoutResult = measuredText[i],
@@ -152,6 +177,7 @@ internal fun InstrumentViewer(
             )
         }
 
+        // Debug overlay
         if (view.isInEditMode) {
             debugScreen(textMeasurer = textMeasurer)
         }
@@ -159,9 +185,9 @@ internal fun InstrumentViewer(
 }
 
 /** Helpers **/
-private class InstrumentDimensions(val density: Density) {
-    val rowHeight: Float
-    val padding: Float
+private class InstrumentDimensions(density: Density) {
+    val rowHeight: Float // Height of each instrument row
+    val padding: Float // Horizontal padding between channel boxes
 
     init {
         with(density) {
@@ -180,7 +206,11 @@ private fun Preview_InstrumentViewer() {
         InstrumentViewer(
             onTap = {},
             channelInfo = composeSampleChannelInfo(),
-            isMuted = ChannelMuteState(isMuted = BooleanArray(modVars.numChannels) { false }),
+            isMuted = ChannelMuteState(
+                isMuted = List(modVars.numChannels) {
+                    false
+                }.toPersistentList()
+            ),
             modVars = modVars,
             insName = List(modVars.numInstruments) {
                 String.format("%02X %s", it + 1, "Instrument Name")

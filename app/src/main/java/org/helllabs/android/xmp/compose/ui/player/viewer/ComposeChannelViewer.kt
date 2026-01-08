@@ -101,12 +101,28 @@ fun ComposeChannelViewer(
         }
         delta
     }
-    val waveformPath = remember {
-        Path()
+    val waveformPaths = remember(modVars.numChannels) {
+        Array(modVars.numChannels) { Path() }
     }
-    val isChnMuted = remember(isMuted) {
+    val isChnMuted by remember(isMuted) {
         // Need this to keep pointerInput updated for any changes.
-        isMuted.isMuted
+        derivedStateOf { isMuted.isMuted }
+    }
+    val visibleChannelRange by remember {
+        derivedStateOf {
+            val numChannels = modVars.numChannels
+            if (canvasSize.height == 0f || numChannels == 0) {
+                IntRange.EMPTY
+            } else {
+                val start = ((-yOffset.value) / dimensions.yMultiplier).toInt()
+                    .coerceIn(0, numChannels - 1)
+
+                val end = (((-yOffset.value) + canvasSize.height) / dimensions.yMultiplier).toInt()
+                    .coerceIn(start, numChannels - 1)
+
+                start..end
+            }
+        }
     }
 
     LaunchedEffect(modVars.numInstruments, modVars.numChannels) {
@@ -167,6 +183,7 @@ fun ComposeChannelViewer(
         }
 
         drawChannels(
+            visibleChannelRange = visibleChannelRange,
             channelInfo = channelInfo,
             frameInfo = frameInfo,
             insName = insName,
@@ -177,7 +194,7 @@ fun ComposeChannelViewer(
             channelNumber = channelNumber,
             yOffset = yOffset.value,
             buffer = buffer,
-            waveformPath = waveformPath,
+            waveformPaths = waveformPaths,
             textMeasurer = textMeasurer
         )
 
@@ -194,17 +211,18 @@ fun ComposeChannelViewer(
 /** Helpers **/
 
 private fun DrawScope.drawChannels(
+    visibleChannelRange: IntRange,
     channelInfo: ChannelInfo,
     frameInfo: FrameInfo,
     insName: ImmutableList<String>,
-    isChnMuted: BooleanArray,
+    isChnMuted: ImmutableList<Boolean>,
     modVars: ModVars,
     dimensions: ChannelViewerDimensions,
     channelData: ChannelViewerData,
     channelNumber: List<String>,
     yOffset: Float,
     buffer: ByteArray,
-    waveformPath: Path,
+    waveformPaths: Array<Path>,
     textMeasurer: TextMeasurer
 ) {
     val xMult = dimensions.xMultiplier
@@ -212,7 +230,7 @@ private fun DrawScope.drawChannels(
     val scopeWidth = dimensions.scopeWidth
     val barWidth = dimensions.barWidth
 
-    for (chn in 0 until modVars.numChannels) {
+    for (chn in visibleChannelRange) {
         val ins = channelInfo.instruments[chn]
         val pan = channelInfo.pans[chn]
         val period = channelInfo.periods[chn]
@@ -393,7 +411,8 @@ private fun DrawScope.drawChannels(
                 if (hasNonZeroValue && maxVal > minVal) {
                     val range = maxVal - minVal
 
-                    waveformPath.reset()
+                    val currentPath = waveformPaths[chn]
+                    currentPath.reset()
 
                     var index = 0
                     while (index < buffer.size && buffer[index].toInt() == 0) {
@@ -405,7 +424,7 @@ private fun DrawScope.drawChannels(
                         val normalizedValue = ((byteValue - minVal) / range - 0.5f) * 2f
                         val x = scopeXOffset + widthScale * index
                         val y = centerY - (normalizedValue * halfHeight * volumeScale)
-                        waveformPath.moveTo(x, y)
+                        currentPath.moveTo(x, y)
 
                         for (i in index + 1 until buffer.size) {
                             val nextValue = buffer[i].toInt().toFloat()
@@ -413,12 +432,12 @@ private fun DrawScope.drawChannels(
                                 val nextNormalized = ((nextValue - minVal) / range - 0.5f) * 2f
                                 val nextX = scopeXOffset + widthScale * i
                                 val nextY = centerY - (nextNormalized * halfHeight * volumeScale)
-                                waveformPath.lineTo(nextX, nextY)
+                                currentPath.lineTo(nextX, nextY)
                             }
                         }
 
                         drawPath(
-                            path = waveformPath,
+                            path = currentPath,
                             color = waveformColor,
                             style = waveformStroke
                         )
@@ -498,7 +517,11 @@ private fun Preview_ChannelViewer() {
             onTap = {},
             channelInfo = composeSampleChannelInfo(),
             frameInfo = composeSampleFrameInfo(),
-            isMuted = ChannelMuteState(BooleanArray(modVars.numChannels) { it % 2 == 0 }),
+            isMuted = ChannelMuteState(
+                isMuted = List(modVars.numChannels) {
+                    it % 2 == 0
+                }.toPersistentList()
+            ),
             modVars = modVars,
             insName = List(modVars.numInstruments) {
                 String.format("%02X %s", it + 1, "Instrument Name")

@@ -18,7 +18,7 @@ import org.koin.compose.koinInject
 
 @Composable
 fun SettingsGroupInterface(
-    onChangeExplorerDir: () -> Unit,
+    onChangeExplorerDir: () -> Unit
 ) {
     val prefManager: PrefManager = koinInject()
     val scope = rememberCoroutineScope()
@@ -74,7 +74,6 @@ fun SettingsGroupInterface(
         //     subtitle = { Text(text = "The directory where playlist files are located") },
         //     onClick = onChangePlaylistDir
         // )
-
 
         // Show Info Line
         SettingsSwitch(

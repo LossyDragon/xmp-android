@@ -1,31 +1,20 @@
 package org.helllabs.android.xmp.compose.ui.player.viewer
 
-import androidx.compose.animation.core.Animatable
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.rememberScrollableState
-import androidx.compose.foundation.gestures.scrollable
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalView
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.*
+import androidx.compose.foundation.gestures.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.*
+import androidx.compose.ui.geometry.*
+import androidx.compose.ui.graphics.*
+import androidx.compose.ui.input.pointer.*
+import androidx.compose.ui.platform.*
 import androidx.compose.ui.text.*
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.*
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.compose.theme.XmpTheme
@@ -41,7 +30,6 @@ import timber.log.Timber
 
 // TODO
 //  1. I broke preview
-//  2. Overscrolling issues
 //  3. New song render issues (first few channels don't render if scrolled)
 
 private val headerTextStyle = TextStyle(
@@ -151,24 +139,24 @@ internal fun ComposePatternViewer(
     }
 
     val visibleRowRange = remember(canvasSize, rowYOffset, yAxisMultiplier) {
-        val firstVisible = ((yAxisMultiplier - rowYOffset) / yAxisMultiplier).toInt().coerceAtLeast(
-            0
-        )
-        val lastVisible = ((canvasSize.height - rowYOffset) / yAxisMultiplier).toInt().coerceAtMost(
-            fi.numRows - 1
-        )
+        val firstVisible = ((yAxisMultiplier - rowYOffset) / yAxisMultiplier).toInt()
+            .coerceAtLeast(0)
+        val lastVisible = ((canvasSize.height - rowYOffset) / yAxisMultiplier).toInt()
+            .coerceAtMost(fi.numRows - 1)
+
         firstVisible..lastVisible
     }
 
-    val visibleChannelRange = remember(canvasSize, offsetX, modVars.numChannels, xAxisMultiplier) {
-        val firstVisible = ((-offsetX.value - xAxisMultiplier) / (3 * xAxisMultiplier)).toInt()
-            .coerceAtLeast(0)
-        val lastVisible = (
-            (canvasSize.width - offsetX.value + xAxisMultiplier) / (3 * xAxisMultiplier)
-            ).toInt()
-            .coerceAtMost(modVars.numChannels - 1)
-            .coerceAtLeast(0)
-        firstVisible..lastVisible
+    // Dynamically calculate visible channels based on scroll position
+    val visibleChannelRange by remember(canvasSize, modVars.numChannels, xAxisMultiplier) {
+        derivedStateOf {
+            val padding = 2
+            val first = ((-offsetX.value) / (xAxisMultiplier * 3)).toInt() - padding
+            val last =
+                ((canvasSize.width - offsetX.value) / (xAxisMultiplier * 3)).toInt() + padding
+
+            first.coerceAtLeast(0)..last.coerceAtMost(modVars.numChannels - 1)
+        }
     }
 
     val scrollState = rememberScrollableState { delta ->
@@ -186,7 +174,7 @@ internal fun ComposePatternViewer(
     }
 
     // Reset scroll position
-    LaunchedEffect(modVars.numChannels, canvasSize, fi.pattern) {
+    LaunchedEffect(modVars.numChannels, canvasSize /*, fi.pattern */) {
         Timber.d("Resetting scroll position")
         scope.launch {
             offsetX.snapTo(0f)
@@ -446,7 +434,11 @@ private fun Preview_PatternViewer() {
             onTap = { },
             modType = "FastTracker v2.00 XM 1.04",
             fi = composeSampleFrameInfo(),
-            isMuted = ChannelMuteState(isMuted = BooleanArray(modVars.numChannels) { false }),
+            isMuted = ChannelMuteState(
+                isMuted = List(modVars.numChannels) {
+                    false
+                }.toPersistentList()
+            ),
             modVars = modVars,
         )
     }

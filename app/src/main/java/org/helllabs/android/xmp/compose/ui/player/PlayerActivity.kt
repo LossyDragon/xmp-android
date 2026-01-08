@@ -741,7 +741,11 @@ private fun Preview_PlayerScreen(
             modVars = modVars,
             channelInfo = composeSampleChannelInfo(),
             frameInfo = composeSampleFrameInfo(),
-            isMuted = ChannelMuteState(BooleanArray(modVars.numChannels) { false }),
+            isMuted = ChannelMuteState(
+                isMuted = List(modVars.numChannels) {
+                    false
+                }.toPersistentList()
+            ),
             onControlsEvent = { },
             onSeekEvent = { },
             onSheetEvent = { },
