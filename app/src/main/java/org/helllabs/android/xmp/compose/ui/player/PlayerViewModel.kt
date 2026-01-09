@@ -31,7 +31,7 @@ enum class RepeatMode {
     REPEAT_ONE
 }
 
-@Stable
+@Immutable
 data class PlayerState(
     val currentMessage: String = "",
     val currentViewer: Int = 0,
@@ -44,7 +44,7 @@ data class PlayerState(
     val skipToPrevious: Boolean = false
 )
 
-@Stable
+@Immutable
 data class PlayerInfoState(
     val infoSpeed: String = "00",
     val infoBpm: String = "00",
@@ -53,13 +53,13 @@ data class PlayerInfoState(
     val isVisible: Boolean = true
 )
 
-@Stable
+@Immutable
 data class PlayerButtonsState(
     val isPlaying: Boolean = false,
     val repeatMode: RepeatMode = RepeatMode.OFF
 )
 
-@Stable
+@Immutable
 data class PlayerTimeState(
     val timeNow: String = "-:--",
     val timeTotal: String = "-:--",
@@ -69,7 +69,7 @@ data class PlayerTimeState(
     val isSeeking: Boolean = false
 )
 
-@Stable
+@Immutable
 data class PlayerSheetState(
     val moduleInfo: List<Int> = listOf(0, 0, 0, 0, 0),
     val isPlayAllSequences: Boolean = false,
@@ -77,7 +77,7 @@ data class PlayerSheetState(
     val currentSequence: Int = 0
 )
 
-@Stable
+@Immutable
 data class PlayerActivityState(
     val fileList: List<Uri> = listOf(),
     val keepFirst: Boolean = false,
@@ -88,7 +88,7 @@ data class PlayerActivityState(
     val totalTime: Int = 0
 )
 
-@Stable
+@Immutable
 data class ChannelMuteState(val isMuted: ImmutableList<Boolean> = persistentListOf()) {
     operator fun get(index: Int) = isMuted[index]
     fun count(predicate: (Boolean) -> Boolean) = isMuted.count(predicate)
@@ -132,9 +132,6 @@ class PlayerViewModel(prefManager: PrefManager) : ViewModel() {
 
     private val _channelInfo = MutableStateFlow(ChannelInfo())
     val channelInfo = _channelInfo.asStateFlow()
-
-    private val _playlistList = MutableStateFlow<List<Playlist>>(listOf())
-    val playlistList = _playlistList.asStateFlow()
 
     private val _playlistChoice = MutableStateFlow<DocumentFileCompat?>(null)
     val playlistChoice = _playlistChoice.asStateFlow()

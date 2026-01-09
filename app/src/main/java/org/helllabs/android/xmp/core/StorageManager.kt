@@ -295,12 +295,11 @@ class StorageManager(private val context: Context, private val prefManager: Pref
             if (includeDirectories) {
                 sortedUris.add(dirUri)
             }
-            sortedUris.addAll(walkDownDirectory(dirUri, includeDirectories))
+
+            walkDownDirectory(dirUri, includeDirectories).also(sortedUris::addAll)
         }
 
-        sortedUris.addAll(
-            files.sortedBy { it.toString().lowercase(Locale.getDefault()) }
-        )
+        files.sortedBy { it.toString().lowercase(Locale.getDefault()) }.also(sortedUris::addAll)
 
         return sortedUris
     }
