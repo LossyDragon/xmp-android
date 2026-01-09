@@ -388,6 +388,8 @@ namespace {
 
 }
 
+extern "C" {
+
 int play_buffer(void* buffer, int size, int looped) {
   XmpPlayerState& state = XmpPlayerState::instance();
   std::unique_lock<std::mutex> lock = state.lock();
@@ -408,8 +410,6 @@ int play_buffer(void* buffer, int size, int looped) {
 
   return ret;
 }
-
-extern "C" {
 
 JNIEXPORT jboolean JNICALL JNI_FUNCTION(init)(JNIEnv* env, jobject obj, jint rate, jint ms) {
   LOGI("init() called - rate: %d, ms: %d, tid: %d", rate, ms, get_thread_id());

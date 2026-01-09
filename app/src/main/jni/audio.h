@@ -1,21 +1,11 @@
 #ifndef XMP_JNI_AUDIO_H
 #define XMP_JNI_AUDIO_H
 
-#include <stdint.h>
+#include <cstdint>
 
-#define INC(x, max)       \
-  do {                    \
-    if (++(x) >= (max)) { \
-      (x) = 0;            \
-    }                     \
-  } while (0)
-
-#define DEC(x, max)    \
-  do {                 \
-    if (--(x) < 0) {   \
-      (x) = (max) - 1; \
-    }                  \
-  } while (0)
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 void drop_audio(void);
 
@@ -50,5 +40,9 @@ struct AudioStats {
   const char* sharing_mode;
 };
 int get_audio_stats(struct AudioStats* stats);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
