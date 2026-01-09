@@ -1,0 +1,24 @@
+---
+BasedOnStyle: Google
+UseTab: Never
+TabWidth: 2
+IndentWidth: 2
+ContinuationIndentWidth: 2
+BracedInitializerIndentWidth: 2
+ConstructorInitializerIndentWidth: 2
+ObjCBlockIndentWidth: 2
+PPIndentWidth: 2
+ColumnLimit: 200
+NamespaceIndentation: All
+AccessModifierOffset: -2
+SortIncludes: Never
+FixNamespaceComments: false
+SpacesBeforeTrailingComments: 1
+DerivePointerAlignment: false
+PointerAlignment: Left
+BreakInheritanceList: AfterComma
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortBlocksOnASingleLine: Empty
+BinPackArguments: false
+BinPackParameters: false
+AlignAfterOpenBracket: DontAlign

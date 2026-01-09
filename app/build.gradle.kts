@@ -35,15 +35,19 @@ android {
         minSdk = 24 // Android 7 - Nougat
         targetSdk = 36 // Android 15 Vanilla Ice Cream
 
-        versionCode = 120
+        versionCode = 121
         versionName = "5.0-SNAPSHOT"
 
         ndk.abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
-        externalNativeBuild.cmake.arguments += listOf(
-            "-DCMAKE_BUILD_TYPE=Release", // DEBUG
-            "-DBUILD_SHARED=OFF",
-            "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
-        )
+        externalNativeBuild.cmake {
+            cppFlags += listOf("-std=c++17")
+            arguments += listOf(
+                "-DCMAKE_BUILD_TYPE=Release", // DEBUG
+                "-DBUILD_SHARED=OFF",
+                "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",
+                "-DANDROID_STL=c++_shared"
+            )
+        }
 
         // ModArchive API Key
         // Must be in your global gradle.properties. ex: C:\Users\<name>\.gradle
@@ -54,6 +58,7 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+        prefab = true
     }
 
     signingConfigs {
@@ -141,6 +146,7 @@ dependencies {
     implementation(libs.kotlinx.immutable)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.media)
+    implementation(libs.oboe)
     implementation(libs.reorderable)
     implementation(libs.timber)
 }

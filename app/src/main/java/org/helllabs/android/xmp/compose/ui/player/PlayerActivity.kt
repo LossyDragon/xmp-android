@@ -16,8 +16,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.*
 import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.retain.retain
 import androidx.compose.ui.*
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.*
@@ -28,6 +30,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import java.nio.charset.StandardCharsets
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
@@ -607,6 +610,45 @@ private fun PlayerScreen(
         }
     }
 
+    var showOboeStats by retain { mutableStateOf(false) }
+    var oboeStats by remember { mutableStateOf("") }
+
+    LaunchedEffect(showOboeStats) {
+        while (isActive && showOboeStats) {
+            val stats = Xmp.getAudioStats()
+
+            if (stats == null) {
+                delay(1.seconds)
+                continue
+            }
+
+            Timber.d("Fetching Audio Stats")
+            oboeStats = """
+                xRun Count: ${stats.xrunCount}
+                Underrun Count: ${stats.underrunCount}
+                Frames Per Burst: ${stats.framesPerBurst}
+                Buffer Capacity: ${stats.bufferCapacity}
+                Buffer Size: ${stats.bufferSize}
+                Sample Rate: ${stats.sampleRate}
+                Audio Api: ${stats.audioApi}
+                Sharing Mode: ${stats.sharingMode}
+            """.trimIndent()
+
+            delay(3.seconds)
+        }
+    }
+
+    MessageDialog(
+        isShowing = showOboeStats,
+        icon = Icons.Outlined.BarChart,
+        title = "Oboe Audio Engine Stats",
+        text = oboeStats,
+        confirmText = "Close",
+        onConfirm = {
+            showOboeStats = false
+        },
+    )
+
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackBarHostState) },
         topBar = {
@@ -618,6 +660,17 @@ private fun PlayerScreen(
                             contentDescription = null
                         )
                     }
+                },
+                actions = {
+                    IconButton(
+                        onClick = { showOboeStats = true },
+                        content = {
+                            Icon(
+                                imageVector = Icons.Outlined.BarChart,
+                                contentDescription = "Oboe Stats"
+                            )
+                        }
+                    )
                 },
                 skipToPrevious = uiState.skipToPrevious,
                 info = viewFlipperText

@@ -16,6 +16,7 @@ lifecycleViewmodel = "2.10.0" # https://mvnrepository.com/artifact/androidx.life
 materialKolor = "5.0.0-alpha04" # https://mvnrepository.com/artifact/com.materialkolor/material-kolor
 media = "1.7.1" # https://mvnrepository.com/artifact/androidx.media/media
 navigation3 = "1.1.0-alpha01" # https://mvnrepository.com/artifact/androidx.navigation3/navigation3-runtime
+oboe = "1.10.0" # https://mvnrepository.com/artifact/com.google.oboe/oboe
 permissionsCompose = "1.0.5" # https://mvnrepository.com/artifact/com.meticha/permissions_compose
 reorderable = "3.0.0" # https://mvnrepository.com/artifact/sh.calvin.reorderable/reorderable
 settings = "2.23.0" # https://github.com/alorma/Compose-Settings/releases
@@ -44,7 +45,7 @@ datastore-preferences = { module = "androidx.datastore:datastore-preferences", v
 dfc = { module = "com.lazygeniouz:dfc", version.ref = "dfc" }
 koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose" }
 koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin-bom" }
-koin-navigation3 = {group = "io.insert-koin", name = "koin-compose-navigation3", version = "4.2.0-beta2"}
+koin-navigation3 = { group = "io.insert-koin", name = "koin-compose-navigation3", version = "4.2.0-beta2" }
 kotlinx-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinXImmutable" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 kotlinx-serialization-xml = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinxSerialization" }
@@ -54,6 +55,7 @@ ktor-serialization-xml = { module = "io.ktor:ktor-serialization-kotlinx-xml", ve
 leakcanary-android = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanaryAndroid" }
 materialKolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
 media = { module = "androidx.media:media", version.ref = "media" }
+oboe = { module = "com.google.oboe:oboe", version.ref = "oboe" }
 permissions-compose = { group = "com.meticha", name = "permissions_compose", version.ref = "permissionsCompose" }
 reorderable = { module = "sh.calvin.reorderable:reorderable", version.ref = "reorderable" }
 timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }

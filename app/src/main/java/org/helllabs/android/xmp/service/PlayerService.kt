@@ -206,17 +206,17 @@ class PlayerService :
             }
 
             AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
-                // Lower the volume
+                // Lower the volume - don't pause
                 Xmp.setVolume(Xmp.DUCK_VOLUME)
             }
 
             AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
-                // Pause playback
-                mediaController.transportControls.pause()
+                // Just duck for transient losses too (notifications)
+                Xmp.setVolume(Xmp.DUCK_VOLUME)
             }
 
             AudioManager.AUDIOFOCUS_LOSS -> {
-                // Stop playback
+                // Only stop for permanent loss (like phone calls)
                 mediaController.transportControls.stop()
             }
         }
@@ -741,8 +741,8 @@ class PlayerService :
                                 if (cmd == CMD_STOP) {
                                     break
                                 }
-                                Timber.d("Paused...")
-                                Thread.sleep(1000)
+                                // Timber.d("Paused...")
+                                Thread.sleep(50) // Lower value for oboe
                             } catch (_: InterruptedException) {
                                 break
                             }

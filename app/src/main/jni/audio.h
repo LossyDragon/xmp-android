@@ -1,13 +1,21 @@
 #ifndef XMP_JNI_AUDIO_H
 #define XMP_JNI_AUDIO_H
 
-#define INC(x, max) do { \
-    if (++(x) >= (max)) { (x) = 0; } \
-} while (0)
+#include <stdint.h>
 
-#define DEC(x, max) do { \
-    if (--(x) < 0) { (x) = (max) - 1; } \
-} while (0)
+#define INC(x, max)       \
+  do {                    \
+    if (++(x) >= (max)) { \
+      (x) = 0;            \
+    }                     \
+  } while (0)
+
+#define DEC(x, max)    \
+  do {                 \
+    if (--(x) < 0) {   \
+      (x) = (max) - 1; \
+    }                  \
+  } while (0)
 
 void drop_audio(void);
 
@@ -21,7 +29,7 @@ int open_audio(int, int);
 
 int play_audio(void);
 
-int play_buffer(void *, int, int);
+int play_buffer(void*, int, int);
 
 int restart_audio(void);
 
@@ -30,5 +38,17 @@ int set_volume(int);
 int stop_audio(void);
 
 void close_audio(void);
+
+struct AudioStats {
+  int32_t xrun_count;
+  int32_t underrun_count;
+  int32_t frames_per_burst;
+  int32_t buffer_capacity;
+  int32_t buffer_size;
+  int sample_rate;
+  const char* audio_api;
+  const char* sharing_mode;
+};
+int get_audio_stats(struct AudioStats* stats);
 
 #endif

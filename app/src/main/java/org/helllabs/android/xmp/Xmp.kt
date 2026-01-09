@@ -7,6 +7,7 @@ import android.net.Uri
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import org.helllabs.android.xmp.core.StorageManager
+import org.helllabs.android.xmp.model.AudioStats
 import org.helllabs.android.xmp.model.ChannelInfo
 import org.helllabs.android.xmp.model.FrameInfo
 import org.helllabs.android.xmp.model.ModInfo
@@ -20,7 +21,7 @@ object Xmp {
 
     const val MAX_BUFFER_MS = 1000
 
-    const val DUCK_VOLUME = 0x500
+    const val DUCK_VOLUME = 700 // 30% (0f..1f)
 
     // Return codes
     const val XMP_END = 1 // End of module reached
@@ -159,6 +160,8 @@ object Xmp {
     external fun setSequence(seq: Int): Boolean
 
     external fun setVolume(vol: Int): Int
+
+    external fun getAudioStats(): AudioStats?
 
     /**
      * Helper to get formats
