@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.4)
-project(xmp-jni LANGUAGES C CXX)
+
+set(PROJECT_NAME "xmp-jni")
+
+project(${PROJECT_NAME} LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -7,13 +10,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Add libxmp's CMakeLists.txt
 add_subdirectory(libxmp)
 
+# Find Oboe package from gradle import.
 find_package(oboe REQUIRED CONFIG)
 
-add_library(xmp-jni SHARED xmp-jni.cpp oboe.cpp)
+add_library(${PROJECT_NAME} SHARED xmp-jni.cpp oboe.cpp)
 
 # Link libraries
-target_link_libraries(xmp-jni xmp_static oboe::oboe android log)
+target_link_libraries(${PROJECT_NAME} xmp_static oboe::oboe android log)
 
 # Include directories
-# xmp-jni.c needs use of xmp.h and common.h
-target_include_directories(xmp-jni PRIVATE libxmp/include libxmp/src)
+# xmp-jni.cpp needs use of xmp.h and common.h
+target_include_directories(${PROJECT_NAME} PRIVATE libxmp/include libxmp/src)

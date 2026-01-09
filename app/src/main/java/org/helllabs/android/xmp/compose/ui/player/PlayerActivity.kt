@@ -1,7 +1,6 @@
 package org.helllabs.android.xmp.compose.ui.player
 
 import android.content.ComponentName
-import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.content.res.Configuration
@@ -16,10 +15,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.*
 import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.BarChart
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.retain.retain
+import androidx.compose.runtime.retain.*
 import androidx.compose.ui.*
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.*
@@ -624,13 +623,11 @@ private fun PlayerScreen(
 
             Timber.d("Fetching Audio Stats")
             oboeStats = """
-                xRun Count: ${stats.xrunCount}
-                Underrun Count: ${stats.underrunCount}
+                Audio Glitches: ${stats.xrunCount} (system), ${stats.underrunCount} (app)
+                Sample Rate: ${stats.sampleRate} Hz
+                Buffer: ${stats.bufferSize} / ${stats.bufferCapacity} frames
                 Frames Per Burst: ${stats.framesPerBurst}
-                Buffer Capacity: ${stats.bufferCapacity}
-                Buffer Size: ${stats.bufferSize}
-                Sample Rate: ${stats.sampleRate}
-                Audio Api: ${stats.audioApi}
+                Audio API: ${stats.audioApi}
                 Sharing Mode: ${stats.sharingMode}
             """.trimIndent()
 
