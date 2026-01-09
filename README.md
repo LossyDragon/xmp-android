@@ -6,9 +6,9 @@ Xmp Mod Player is an Android app that uses [libxmp](https://github.com/libxmp/li
 ---
 [![Signed Release APK](https://github.com/LossyDragon/xmp-android/actions/workflows/app-build-release.yml/badge.svg?branch=2023)](https://github.com/LossyDragon/xmp-android/actions/workflows/app-build-release.yml)
 <br>
-Release builds can be download by clicking on the badge above, click on the title of the top most green checkmark, and download the `XmpAndroid` zip file in the Artifacts area. 
+Release builds can be download by clicking on the badge above, click on the title of the top most green checkmark, and download the `XmpAndroid` zip file in the Artifacts area.
 <br><br>
-Note: If upgrading with a recent CI build and it fails to install, it's probably because the build version number wasn't changed. 
+Note: If upgrading with a recent CI build and it fails to install, it's probably because the build version number wasn't changed.
 <br><br>
 
 ### This is a unofficial fan made revival
@@ -31,7 +31,7 @@ The [Play Store](https://play.google.com/store/apps/details?id=org.helllabs.andr
 - Storage Access Framework - Mods and Playlists will now be under one directory instead of two separate folders in your root storage
 - A complete UI overhaul using Jetpack Compose
 - New json based playlist - Old playlist migration planned
-- (Planned) oboe - A high performance audio library using OpenSL or AAudio
+- Oboe - A high performance audio library using either OpenSL or AAudio
 - (Planned) media3 - A media support library for a rich media experience
 
 Full list of dependencies can be found [here](https://github.com/LossyDragon/xmp-android/blob/2023/gradle/libs.versions.toml)
