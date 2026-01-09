@@ -28,6 +28,10 @@
     public *;
 }
 
+-keep public class org.helllabs.android.xmp.model.AudioStats {
+    public *;
+}
+
 -keep public class * extends android.app.Application
 
 # Keep source file and line number information in crash reports
