@@ -7,7 +7,6 @@ import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lazygeniouz.dfc.file.DocumentFileCompat
-import java.text.DateFormat
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
@@ -71,6 +70,7 @@ class ExplorerViewModel(
     val deleteFileChoice = MutableStateFlow<Uri?>(null)
 
     private var navigationJob: Job? = null
+    private var lastNavigationTime = 0L
 
     // Cache directory contents to improve performance on back navigation
     private val directoryCache = object : LinkedHashMap<String, List<FileItem>>(
@@ -81,7 +81,7 @@ class ExplorerViewModel(
         override fun removeEldestEntry(
             eldest: MutableMap.MutableEntry<String, List<FileItem>>?
         ): Boolean {
-            return size > 50
+            return size > 100
         }
     }
 
@@ -174,6 +174,14 @@ class ExplorerViewModel(
     fun onNavigate(uri: Uri?) {
         if (uri == null) return
 
+        // Meh debouncer
+        val now = System.currentTimeMillis()
+        if (now - lastNavigationTime < 300) {
+            Timber.d("Navigation debounced")
+            return
+        }
+        lastNavigationTime = now
+
         saveScrollPosition()
 
         navigationJob?.cancel()
@@ -201,7 +209,6 @@ class ExplorerViewModel(
                     return@launch
                 }
 
-                // Get saved scroll position for this directory (0 if not visited before)
                 val cacheKey = uri.toString()
                 val savedScrollPosition = scrollPositionCache[cacheKey] ?: 0
 
@@ -210,6 +217,7 @@ class ExplorerViewModel(
                 val cachedList = directoryCache[cacheKey]
 
                 if (cachedList != null) {
+                    Timber.d("Using cached list for $cacheKey (${cachedList.size} items)")
                     val crumbs = buildBreadcrumbsFromUri(targetDir)
                     withContext(Dispatchers.Main) {
                         _uiState.update {
@@ -225,32 +233,9 @@ class ExplorerViewModel(
 
                 val crumbs = buildBreadcrumbsFromUri(targetDir)
 
-                val childUris = storageManager.listDirectoryContents(uri)
+                val list = storageManager.listDirectoryWithMetadata(uri)
 
-                val list = childUris.mapNotNull { childUri ->
-                    val docFile = storageManager.getDocumentFileFromUri(childUri)
-                        ?: return@mapNotNull null
-
-                    if (docFile.isDirectory()) {
-                        FileItem(
-                            name = docFile.name,
-                            comment = "",
-                            uri = childUri,
-                            isDirectory = true,
-                        )
-                    } else {
-                        val date = DateFormat
-                            .getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM)
-                            .format(docFile.lastModified)
-
-                        FileItem(
-                            name = docFile.name,
-                            comment = "$date (${docFile.length / 1024} kB)",
-                            uri = childUri,
-                            isDirectory = false
-                        )
-                    }
-                }
+                Timber.d("Loaded ${list.size} items for $cacheKey")
 
                 directoryCache[cacheKey] = list
 
@@ -461,11 +446,6 @@ class ExplorerViewModel(
 
     fun clearPlaylist() {
         playlistChoice.value = null
-    }
-
-    fun clearCache() {
-        directoryCache.clear()
-        scrollPositionCache.clear()
     }
 
     fun getScrollPosition(path: String): Int {

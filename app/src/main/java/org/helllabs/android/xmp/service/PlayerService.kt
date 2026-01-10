@@ -243,6 +243,13 @@ class PlayerService :
                     showNotification()
 
                     if (!isPlaying.value) {
+                        // Prefill buffer on resume.
+                        var filled = 0
+                        while (filled < 3 && Xmp.hasFreeBuffer()) {
+                            Xmp.fillBuffer(false)
+                            filled++
+                        }
+                        Timber.d("Pre-filled $filled buffers before resume")
                         Xmp.restartAudio()
                     }
 

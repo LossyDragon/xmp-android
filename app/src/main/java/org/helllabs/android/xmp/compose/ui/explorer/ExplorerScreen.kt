@@ -17,7 +17,7 @@ import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.*
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
-import androidx.lifecycle.Lifecycle
+import androidx.core.net.toUri
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.collections.immutable.toPersistentList
@@ -58,17 +58,18 @@ fun ExplorerScreen(
 
     LaunchedEffect(state.crumbs.lastOrNull()?.path) {
         val currentPath = state.crumbs.lastOrNull()?.path?.toString()
-        if (currentPath != null) {
+        if (currentPath != null && !state.isLoading) {
             val savedPosition = viewModel.getScrollPosition(currentPath)
-            if (savedPosition > 0) {
-                viewModel.listState.animateScrollToItem(savedPosition)
+            if (savedPosition > 0 && savedPosition < state.list.size) {
+                viewModel.listState.scrollToItem(savedPosition)
+                Timber.d("UI restored scroll to position: $savedPosition for path: $currentPath")
             }
         }
     }
 
-    LifecycleResumeEffect(Lifecycle.Event.ON_RESUME) {
+    LifecycleResumeEffect(Unit) {
         Timber.d("Lifecycle onResume")
-        viewModel.onRefresh()
+        viewModel.onRestore()
 
         onPauseOrDispose {
             Timber.d("Lifecycle onPause")
@@ -219,13 +220,18 @@ fun ExplorerScreen(
 
                 DropDownSelection.ADD_TO_QUEUE -> {
                     if (item.isDirectory) {
-                        onPlayModule(
-                            storageManager.walkDownDirectory(item.uri, includeDirectories = false),
-                            0,
-                            false,
-                            state.isShuffle,
-                            state.isLoop,
-                        )
+                        scope.launch {
+                            onPlayModule(
+                                storageManager.walkDownDirectory(
+                                    item.uri,
+                                    includeDirectories = false
+                                ),
+                                0,
+                                false,
+                                state.isShuffle,
+                                state.isLoop,
+                            )
+                        }
                     } else {
                         onAddQueue(
                             listOf(item.uri),
@@ -235,13 +241,17 @@ fun ExplorerScreen(
                     }
                 }
 
-                DropDownSelection.DIR_PLAY_CONTENTS -> onPlayModule(
-                    storageManager.walkDownDirectory(item.uri, includeDirectories = false),
-                    0,
-                    false,
-                    state.isShuffle,
-                    state.isLoop,
-                )
+                DropDownSelection.DIR_PLAY_CONTENTS -> {
+                    scope.launch {
+                        onPlayModule(
+                            storageManager.walkDownDirectory(item.uri, includeDirectories = false),
+                            0,
+                            false,
+                            state.isShuffle,
+                            state.isLoop,
+                        )
+                    }
+                }
 
                 DropDownSelection.FILE_PLAY_HERE -> onPlayModule(
                     viewModel.getItems(),
@@ -337,7 +347,11 @@ private fun ExplorerScreenContent(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                itemsIndexed(state.list) { index, item ->
+                items(
+                    count = state.list.size,
+                    key = { index -> state.list[index].uri.toString() }
+                ) { index ->
+                    val item = state.list[index]
                     ExplorerListCard(
                         item = item,
                         onItemClick = { onItemClick(item, index) },
@@ -372,8 +386,10 @@ private fun Preview_ExplorerScreenContent() {
                 list = List(10) {
                     FileItem(
                         name = "Name $it",
-                        comment = "Comment $it",
-                        uri = Uri.EMPTY
+                        uri = it.toString().toUri(),
+                        isDirectory = it % 3 == 0,
+                        lastModified = System.currentTimeMillis(),
+                        size = (100 + it * 50).toLong()
                     )
                 },
                 crumbs = List(4) {

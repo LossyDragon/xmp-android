@@ -8,8 +8,11 @@ import androidx.core.net.toUri
 import com.lazygeniouz.dfc.file.DocumentFileCompat
 import java.io.File
 import java.util.Locale
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.core.Constants.DEFAULT_DOWNLOAD_DIR
+import org.helllabs.android.xmp.model.FileItem
 import org.helllabs.android.xmp.model.ModInfo
 import org.helllabs.android.xmp.model.Module
 import timber.log.Timber
@@ -158,59 +161,6 @@ class StorageManager(private val context: Context, private val prefManager: Pref
     }
 
     /**
-     * List only the immediate children of a directory (non-recursive)
-     *
-     * @param uri the directory URI
-     * @return list of immediate child URIs
-     */
-    fun listDirectoryContents(uri: Uri?): List<Uri> {
-        if (uri == null) return emptyList()
-
-        return try {
-            val docId = DocumentsContract.getDocumentId(uri)
-            val childDocUri = DocumentsContract.buildChildDocumentsUriUsingTree(uri, docId)
-            val projection = arrayOf(
-                DocumentsContract.Document.COLUMN_DOCUMENT_ID,
-                DocumentsContract.Document.COLUMN_MIME_TYPE,
-                DocumentsContract.Document.COLUMN_DISPLAY_NAME
-            )
-
-            val directories = mutableListOf<Uri>()
-            val files = mutableListOf<Uri>()
-
-            context.contentResolver.query(
-                childDocUri,
-                projection,
-                null,
-                null,
-                null
-            )?.use { cursor ->
-                val idCol = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DOCUMENT_ID)
-                val mimeCol = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_MIME_TYPE)
-
-                while (cursor.moveToNext()) {
-                    val childDocumentId = cursor.getString(idCol)
-                    val mimeType = cursor.getString(mimeCol)
-                    val childUri = DocumentsContract.buildDocumentUriUsingTree(uri, childDocumentId)
-
-                    if (mimeType == DocumentsContract.Document.MIME_TYPE_DIR) {
-                        directories.add(childUri)
-                    } else {
-                        files.add(childUri)
-                    }
-                }
-            }
-
-            // Return directories first, then files, sorted alphabetically
-            directories.sortedBy { getFileName(it)?.lowercase() } +
-                files.sortedBy { getFileName(it)?.lowercase() }
-        } catch (e: Exception) {
-            Timber.e(e, "Error listing directory: $uri")
-            emptyList()
-        }
-    }
-
-    /**
      * A Top-Down File Walker
      *
      * Will walk down a given uri and collect uris in alphabetical order, folders first
@@ -354,6 +304,89 @@ class StorageManager(private val context: Context, private val prefManager: Pref
         } catch (e: SecurityException) {
             Timber.e(e, "Failed to take persistable permission")
             false
+        }
+    }
+
+    /**
+     * List directory contents with metadata in a single optimized query
+     * Much faster than calling getDocumentFileFromUri for each item
+     */
+    suspend fun listDirectoryWithMetadata(uri: Uri?): List<FileItem> = withContext(Dispatchers.IO) {
+        if (uri == null) return@withContext emptyList()
+
+        try {
+            val docId = DocumentsContract.getDocumentId(uri)
+            val childDocUri = DocumentsContract.buildChildDocumentsUriUsingTree(uri, docId)
+
+            // Get ALL metadata in one query
+            val projection = arrayOf(
+                DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+                DocumentsContract.Document.COLUMN_MIME_TYPE,
+                DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+                DocumentsContract.Document.COLUMN_LAST_MODIFIED,
+                DocumentsContract.Document.COLUMN_SIZE
+            )
+
+            val directories = mutableListOf<FileItem>()
+            val files = mutableListOf<FileItem>()
+
+            context.contentResolver.query(
+                childDocUri,
+                projection,
+                null,
+                null,
+                null
+            )?.use { cursor ->
+                val idCol = cursor.getColumnIndexOrThrow(
+                    DocumentsContract.Document.COLUMN_DOCUMENT_ID
+                )
+                val mimeCol = cursor.getColumnIndexOrThrow(
+                    DocumentsContract.Document.COLUMN_MIME_TYPE
+                )
+                val nameCol = cursor.getColumnIndexOrThrow(
+                    DocumentsContract.Document.COLUMN_DISPLAY_NAME
+                )
+                val modCol = cursor.getColumnIndexOrThrow(
+                    DocumentsContract.Document.COLUMN_LAST_MODIFIED
+                )
+                val sizeCol = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_SIZE)
+
+                while (cursor.moveToNext()) {
+                    val childDocumentId = cursor.getString(idCol)
+                    val mimeType = cursor.getString(mimeCol)
+                    val name = cursor.getString(nameCol)
+                    val lastModified = cursor.getLong(modCol)
+                    val size = cursor.getLong(sizeCol)
+                    val childUri = DocumentsContract.buildDocumentUriUsingTree(uri, childDocumentId)
+
+                    val item = FileItem(
+                        name = name,
+                        uri = childUri,
+                        isDirectory = mimeType == DocumentsContract.Document.MIME_TYPE_DIR,
+                        lastModified = lastModified,
+                        size = size / 1024 // KB
+                    )
+
+                    if (item.isDirectory) {
+                        directories.add(item)
+                    } else {
+                        files.add(item)
+                    }
+                }
+            }
+
+            // Sort directories first, then files. case-insensitive.
+            val sortedDirectories = directories.sortedWith(
+                compareBy(String.CASE_INSENSITIVE_ORDER) { it.name }
+            )
+            val sortedFiles = files.sortedWith(
+                compareBy(String.CASE_INSENSITIVE_ORDER) { it.name }
+            )
+
+            sortedDirectories + sortedFiles
+        } catch (e: Exception) {
+            Timber.e(e, "Error listing directory: $uri")
+            emptyList()
         }
     }
 }

@@ -212,7 +212,7 @@ class PlayerActivity : ComponentActivity() {
                             break
                         }
 
-                        if (!currentState.screenOn || !viewModel.isPlaying || modPlayer == null) {
+                        if (!currentState.screenOn || modPlayer == null) {
                             Timber.d(
                                 "Waiting - Screen On: ${currentState.screenOn}, " +
                                     "isPlaying: ${viewModel.isPlaying}, " +
