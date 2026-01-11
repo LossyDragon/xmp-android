@@ -13,20 +13,18 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.core.PlaylistManager
 import org.helllabs.android.xmp.core.PrefManager
-import org.helllabs.android.xmp.core.StorageManager
 import org.helllabs.android.xmp.model.FileItem
 import timber.log.Timber
 
 @Immutable
 data class PlaylistsUiState(
     val isLoading: Boolean = true,
-    val playlistLocation: String = "",
     val playlists: ImmutableList<FileItem> = persistentListOf()
 )
 
 class PlaylistsViewModel(
     private val playlistManager: PlaylistManager,
-    private val storageManager: StorageManager
+    private val prefManager: PrefManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PlaylistsUiState())
@@ -36,7 +34,13 @@ class PlaylistsViewModel(
     val snackMessage: StateFlow<String?> = _snackMessage.asStateFlow()
 
     init {
-        refreshPlaylists()
+        viewModelScope.launch {
+            prefManager.flowPlaylistRootPath().collect {
+                if (it.isNotBlank()) {
+                    refreshPlaylists()
+                }
+            }
+        }
     }
 
     /** Display a snackbar message. */
@@ -68,21 +72,10 @@ class PlaylistsViewModel(
                 }
             )
 
-            val location = storageManager.getPlaylistsRootDirectory().fold(
-                onSuccess = { file ->
-                    file.path
-                },
-                onFailure = { error ->
-                    Timber.e(error, "Failed to find playlist root")
-                    ""
-                }
-            )
-
             Timber.d("Fetched ${playlists.size} playlists")
             _uiState.update {
                 it.copy(
                     isLoading = false,
-                    playlistLocation = location,
                     playlists = playlists,
                 )
             }

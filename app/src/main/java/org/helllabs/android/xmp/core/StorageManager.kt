@@ -50,15 +50,13 @@ class StorageManager(private val context: Context, private val prefManager: Pref
     /**
      * Gets the top level path for playlists
      */
-    suspend fun getPlaylistsRootDirectory(): Result<File> = runCatching {
-        val playlistsDir = File(prefManager.getPlaylistRootPath())
+    suspend fun getPlaylistsRootDirectory(): Result<DocumentFileCompat> = runCatching {
+        val prefUri = prefManager.getPlaylistRootPath()
 
-        if (!playlistsDir.exists()) {
-            playlistsDir.mkdirs()
-        }
+        Timber.d("Loading playlist path: $prefUri")
 
-        Timber.d("Playlist Dir is $playlistsDir")
-        playlistsDir
+        DocumentFileCompat.fromTreeUri(context, prefUri.toUri())
+            ?: throw XmpException("Getting playlist directory returned null")
     }
 
     /**

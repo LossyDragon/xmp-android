@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
+import android.provider.DocumentsContract
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -144,6 +145,48 @@ class MainActivity : ComponentActivity() {
                     hasExplorerPath = true
                 }
             }
+            // endregion
+
+            // region [REGION] Initial Playlist path, for playlists.
+            var hasPlaylistsPath by remember { mutableStateOf(false) }
+            val playlistDocumentTreeResult = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.OpenDocumentTree(),
+                onResult = { uri ->
+                    if (uri == null) {
+                        Timber.w("uri was null setting playlist default path")
+                        return@rememberLauncherForActivityResult
+                    }
+                    lifecycleScope.launch {
+                        storageManager.takePersistablePerms(uri)
+                        prefManager.setPlaylistRootPath(uri.toString())
+                    }
+                }
+            )
+            MessageDialog(
+                isShowing = hasPlaylistsPath,
+                title = "Playlist Storage Request",
+                text = "Xmp Mod Player needs a directory to store playlists.\n" +
+                    "Press OK to choose a location for your playlists.\n" +
+                    "This can be changed at any time within settings.",
+                confirmText = "OK",
+                onConfirm = {
+                    val documentsUri = DocumentsContract.buildDocumentUri(
+                        "com.android.externalstorage.documents",
+                        "primary:Documents"
+                    )
+                    playlistDocumentTreeResult.launch(documentsUri)
+                    hasPlaylistsPath = false
+                },
+                onDismiss = {
+                    hasPlaylistsPath = false
+                }
+            )
+            LaunchedEffect(Unit) {
+                if (prefManager.getPlaylistRootPath().isBlank()) {
+                    hasPlaylistsPath = true
+                }
+            }
+            // endregion
 
             XmpTheme {
                 // I'm not impressed with passing these lambas all the way to the Activity,

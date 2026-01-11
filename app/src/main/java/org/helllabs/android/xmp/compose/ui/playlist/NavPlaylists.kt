@@ -66,10 +66,12 @@ fun NavPlaylists(
                     snackBarHostState = snackbarHostState,
                     onSettings = onSettings,
                     onNavPlaylist = {
+                        Timber.d("Selected Playlist: ${it.uri}")
                         val screen = NavKeyPlaylists.Selected(uri = it.uri)
                         playlistBackStack.add(screen)
                     },
                     onEditPlaylist = {
+                        Timber.d("Edit Playlist: ${it?.uri}")
                         val screen = NavKeyPlaylists.Edit(uri = it?.uri)
                         playlistBackStack.add(screen)
                     }

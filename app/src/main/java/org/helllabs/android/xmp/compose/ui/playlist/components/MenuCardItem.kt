@@ -7,6 +7,7 @@ import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.*
 import androidx.compose.ui.text.style.*
 import androidx.compose.ui.tooling.preview.*
@@ -23,11 +24,9 @@ fun MenuCardItem(
     onLongClick: () -> Unit
 ) {
     ListItem(
-        modifier = Modifier.combinedClickable(onClick = {}, onLongClick = onLongClick),
-        shapes = ListItemDefaults.shapes().copy(
-            shape = XmpRoundedCorner
-        ),
-        onClick = onClick,
+        modifier = Modifier
+            .clip(XmpRoundedCorner)
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
         colors = ListItemDefaults.colors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         ),
@@ -38,7 +37,7 @@ fun MenuCardItem(
                 tint = MaterialTheme.colorScheme.onSurface
             )
         },
-        content = {
+        headlineContent = {
             Text(
                 text = item.name,
                 style = MaterialTheme.typography.bodyLarge

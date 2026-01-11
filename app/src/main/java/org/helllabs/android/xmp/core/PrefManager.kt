@@ -36,7 +36,7 @@ class PrefManager(context: Context, private val json: Json) {
         val INITIAL_START_DESTINATION = stringPreferencesKey("initial_start_destination")
 
         val EXPLORER_ROOT_PATH = stringPreferencesKey("explorer_root_path")
-        val PLAYLIST_ROOT_PATH = stringPreferencesKey("playlist_root_path")
+        val PLAYLISTS_ROOT_PATH = stringPreferencesKey("playlists_root_path")
 
         val INSTALL_EXAMPLE_PLAYLIST = booleanPreferencesKey("example_playlist_created")
 
@@ -90,11 +90,9 @@ class PrefManager(context: Context, private val json: Json) {
     suspend fun getExplorerRootPath(): String = get(Keys.EXPLORER_ROOT_PATH, "")
     suspend fun setExplorerRootPath(value: String) = set(Keys.EXPLORER_ROOT_PATH, value)
 
-    val playlistsDir = File(context.getExternalFilesDir(null), "playlists")
-    suspend fun getPlaylistRootPath(): String =
-        get(Keys.PLAYLIST_ROOT_PATH, playlistsDir.toString())
-    suspend fun setPlaylistRootPath(value: String) =
-        set(Keys.PLAYLIST_ROOT_PATH, value)
+    suspend fun getPlaylistRootPath(): String = get(Keys.PLAYLISTS_ROOT_PATH, "")
+    suspend fun setPlaylistRootPath(value: String) = set(Keys.PLAYLISTS_ROOT_PATH, value)
+    fun flowPlaylistRootPath() = getFlow(Keys.PLAYLISTS_ROOT_PATH, "")
 
     /**
      * 1: Start playing at selection

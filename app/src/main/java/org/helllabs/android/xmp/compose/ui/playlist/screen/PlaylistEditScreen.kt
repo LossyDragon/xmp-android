@@ -10,20 +10,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.*
 import androidx.compose.ui.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.*
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
-import androidx.compose.ui.window.*
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.compose.components.KoinPreview
 import org.helllabs.android.xmp.compose.components.MessageDialog
 import org.helllabs.android.xmp.compose.components.ProgressbarIndicator
-import org.helllabs.android.xmp.compose.ui.search.viewmodel.DownloadStatus
 import org.helllabs.android.xmp.core.PlaylistManager
 import org.helllabs.android.xmp.model.Playlist
 import org.koin.compose.koinInject
@@ -45,7 +41,7 @@ fun PlaylistEditScreen(
     var description by rememberSaveable(playlist) { mutableStateOf(playlist.comment) }
 
     LaunchedEffect(Unit) {
-        delay(250.milliseconds)
+        delay(250.milliseconds) // Slight delay to request focus
         focusRequester.requestFocus()
     }
 
@@ -196,13 +192,21 @@ fun PlaylistEditScreen(
                                     .getOrThrow()
                             } else {
                                 /* Update */
-                                playlist = playlistManager
-                                    .setComment(playlist, description)
-                                playlist = playlistManager
-                                    .renamePlaylist(uri, playlist, title)
+                                var updatedUri: Uri = uri
+
+                                playlist = playlistManager.setComment(playlist, description)
+
+                                playlistManager.renamePlaylist(uri, playlist, title)
+                                    .onSuccess { newUri ->
+                                        updatedUri = newUri
+                                        playlist = playlist.copy(name = title)
+                                    }
                                     .getOrThrow()
-                                playlistManager.savePlaylist(uri, playlist)
+
+                                playlistManager.savePlaylist(updatedUri, playlist)
+                                    .getOrThrow()
                             }
+
                             onBack(true)
                         }
                     },

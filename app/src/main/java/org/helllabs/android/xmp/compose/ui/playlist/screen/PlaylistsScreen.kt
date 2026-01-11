@@ -192,7 +192,6 @@ private class PlaylistPreview : PreviewParameterProvider<PlaylistsUiState> {
         get() = sequenceOf(
             PlaylistsUiState(
                 isLoading = false,
-                playlistLocation = "file://Android/data/org.helllabs.android.xmp/files/playlists",
                 playlists = List(15) {
                     FileItem(
                         name = "Name $it",
@@ -203,7 +202,6 @@ private class PlaylistPreview : PreviewParameterProvider<PlaylistsUiState> {
             ),
             PlaylistsUiState(
                 isLoading = true,
-                playlistLocation = "file://Android/data/org.helllabs.android.xmp/files/playlists",
                 playlists = List(1) {
                     FileItem(
                         name = "Name $it",
@@ -214,7 +212,6 @@ private class PlaylistPreview : PreviewParameterProvider<PlaylistsUiState> {
             ),
             PlaylistsUiState(
                 isLoading = false,
-                playlistLocation = "file://Android/data/org.helllabs.android.xmp/files/playlists",
             ),
         )
 }

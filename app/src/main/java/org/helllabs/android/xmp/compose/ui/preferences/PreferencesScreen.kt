@@ -13,7 +13,7 @@ import androidx.compose.ui.*
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.*
 import androidx.compose.ui.tooling.preview.*
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.*
 import com.alorma.compose.settings.ui.SettingsGroup
 import com.alorma.compose.settings.ui.SettingsMenuLink
 import kotlinx.coroutines.launch
@@ -45,7 +45,7 @@ fun PreferencesScreen(
     }
 
     val playlistsDir by produceState("") {
-        value = storageManager.getPlaylistsRootDirectory().getOrThrow().path
+        value = storageManager.getPlaylistsRootDirectory().getOrThrow().uri.toString()
     }
 
     val setExplorerResult = rememberLauncherForActivityResult(

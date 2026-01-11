@@ -16,7 +16,12 @@ import org.koin.dsl.module
 val viewModelModule = module {
     single { FileManager(context = get()) }
 
-    viewModel { PlaylistsViewModel(playlistManager = get(), storageManager = get()) }
+    viewModel {
+        PlaylistsViewModel(
+            playlistManager = get(),
+            prefManager = get()
+        )
+    }
 
     viewModel { (uri: Uri) ->
         SelectedPlaylistViewModel(
@@ -26,9 +31,15 @@ val viewModelModule = module {
         )
     }
 
-    viewModel { ExplorerViewModel(get(), get(), get()) }
+    viewModel {
+        ExplorerViewModel(
+            playlistManager = get(),
+            prefManager = get(),
+            storageManager = get()
+        )
+    }
 
-    viewModel { SearchResultViewModel(get()) }
+    viewModel { SearchResultViewModel(repository = get()) }
 
     viewModel {
         ResultViewModel(
@@ -40,5 +51,5 @@ val viewModelModule = module {
         )
     }
 
-    viewModel { PlayerViewModel(get()) }
+    viewModel { PlayerViewModel(prefManager = get()) }
 }
