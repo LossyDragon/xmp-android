@@ -374,7 +374,7 @@ namespace {
   };
 
   xmp_subinstrument* getSubinstrument(const xmp_module_info& mi, int ins, int key) {
-    if (ins < 0 || ins >= mi.mod->ins || key >= XMP_MAX_KEYS) {
+    if (ins < 0 || ins >= mi.mod->ins || key < 0 || key >= XMP_MAX_KEYS) {
       return nullptr;
     }
 
@@ -383,6 +383,12 @@ namespace {
     }
 
     int mapped = mi.mod->xxi[ins].map[key].ins;
+
+    // Additional safety check
+    if (mapped < 0 || mapped >= mi.mod->xxi[ins].nsm) {
+      return nullptr;
+    }
+
     return &mi.mod->xxi[ins].sub[mapped];
   }
 
@@ -991,7 +997,14 @@ JNIEXPORT void JNICALL JNI_FUNCTION(getSampleData)(JNIEnv* env, jobject obj, jbo
 
   width = std::min(width, MAX_BUFFER_SIZE);
 
-  if (period == 0 || ins < 0 || key > 0x80) {
+  // Validate channel index
+  if (chn < 0 || chn >= XMP_MAX_CHANNELS) {
+    populateBuffer(width);
+    return;
+  }
+
+  // Validate all parameters
+  if (period <= 0 || ins < 0 || key < 0 || key >= XMP_MAX_KEYS) {
     populateBuffer(width);
     return;
   }

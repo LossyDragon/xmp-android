@@ -81,10 +81,10 @@ fun ComposeChannelViewer(
     val yOffset = remember {
         Animatable(0f)
     }
-    val buffer = remember {
-        ByteArray(Xmp.MAX_BUFFERS)
+    val buffers = remember(modVars) {
+        Array(modVars.numChannels) { ByteArray(Xmp.MAX_BUFFERS) }
     }
-    val channelData = remember(modVars.numChannels) {
+    val channelData = remember(modVars) {
         ChannelViewerData(modVars.numChannels)
     }
     val channelNumber = remember(modVars.numChannels) {
@@ -101,14 +101,14 @@ fun ComposeChannelViewer(
         }
         delta
     }
-    val waveformPaths = remember(modVars.numChannels) {
+    val waveformPaths = remember(modVars) {
         Array(modVars.numChannels) { Path() }
     }
     val isChnMuted by remember(isMuted) {
         // Need this to keep pointerInput updated for any changes.
         derivedStateOf { isMuted.isMuted }
     }
-    val visibleChannelRange by remember {
+    val visibleChannelRange by remember(modVars.numChannels, canvasSize, dimensions.yMultiplier) {
         derivedStateOf {
             val numChannels = modVars.numChannels
             if (canvasSize.height == 0f || numChannels == 0) {
@@ -193,7 +193,7 @@ fun ComposeChannelViewer(
             channelData = channelData,
             channelNumber = channelNumber,
             yOffset = yOffset.value,
-            buffer = buffer,
+            buffers = buffers,
             waveformPaths = waveformPaths,
             textMeasurer = textMeasurer
         )
@@ -221,7 +221,7 @@ private fun DrawScope.drawChannels(
     channelData: ChannelViewerData,
     channelNumber: List<String>,
     yOffset: Float,
-    buffer: ByteArray,
+    buffers: Array<ByteArray>,
     waveformPaths: Array<Path>,
     textMeasurer: TextMeasurer
 ) {
@@ -381,7 +381,7 @@ private fun DrawScope.drawChannels(
                     period,
                     chn,
                     Xmp.MAX_BUFFERS,
-                    buffer
+                    buffers[chn]
                 )
             }
 
@@ -391,6 +391,9 @@ private fun DrawScope.drawChannels(
                 size = Size(width = scopeWidth, height = scopeHeight),
                 topLeft = Offset(x = scopeXOffset, y = scopeYOffset)
             )
+
+            // Get the buffer for this channel
+            val buffer = buffers[chn]
 
             // Draw waveform
             val centerY = scopeYOffset + (scopeHeight / 2)
