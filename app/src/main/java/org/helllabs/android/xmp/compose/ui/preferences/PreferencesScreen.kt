@@ -2,6 +2,7 @@ package org.helllabs.android.xmp.compose.ui.preferences
 
 import android.content.Intent
 import android.content.res.Configuration
+import android.net.Uri
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -45,7 +46,10 @@ fun PreferencesScreen(
     }
 
     val playlistsDir by produceState("") {
-        value = storageManager.getPlaylistsRootDirectory().getOrThrow().uri.toString()
+        value = Uri.decode(prefManager.getPlaylistRootPath())
+    }
+    val explorerDir by produceState("") {
+        value = Uri.decode(prefManager.getExplorerRootPath())
     }
 
     val setExplorerResult = rememberLauncherForActivityResult(
@@ -110,6 +114,7 @@ fun PreferencesScreen(
             SettingsGroupDownload()
             SettingsGroupInformation(
                 playlistsDir = playlistsDir,
+                explorerDir = explorerDir,
                 onFormats = onFormats,
                 onAbout = onAbout
             )

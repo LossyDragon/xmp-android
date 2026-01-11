@@ -1,7 +1,6 @@
 package org.helllabs.android.xmp.compose.ui.explorer.components
 
 import android.net.Uri
-import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.*
@@ -161,7 +160,6 @@ fun ExplorerListCard(
     )
 }
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun BreadCrumbs(
     modifier: Modifier = Modifier,
@@ -177,71 +175,79 @@ fun BreadCrumbs(
             verticalAlignment = Alignment.CenterVertically
         ) {
             stickyHeader {
-                var isContextMenuVisible by rememberSaveable { mutableStateOf(false) }
-
-                Surface(
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    shape = RoundedCornerShape(
-                        topEnd = 16.dp,
-                        bottomEnd = 16.dp
-                    )
-                ) {
-                    val haptic = LocalHapticFeedback.current
-                    IconButton(
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            isContextMenuVisible = true
-                        }
-                    ) {
-                        Icon(imageVector = Icons.Default.MoreHoriz, contentDescription = null)
-
-                        Box(
-                            modifier = Modifier
-                                .wrapContentSize()
-                        ) {
-                            DropdownMenu(
-                                expanded = isContextMenuVisible,
-                                onDismissRequest = { isContextMenuVisible = false },
-                                shape = RoundedCornerShape(16.dp),
-                                content = {
-                                    DropdownMenuGroup(
-                                        shapes = MenuDefaults.groupShape(0, 1),
-                                        content = {
-                                            DropdownMenuItem(
-                                                enabled = false,
-                                                text = { Text(text = "All Files") },
-                                                onClick = { }
-                                            )
-                                            crumbDropDownItems.forEach {
-                                                DropdownMenuItem(
-                                                    text = {
-                                                        Text(
-                                                            text = it.text,
-                                                            style = MaterialTheme.typography.bodyLarge
-                                                        )
-                                                    },
-                                                    onClick = {
-                                                        haptic.performHapticFeedback(
-                                                            HapticFeedbackType.LongPress
-                                                        )
-                                                        onCrumbMenu(it.selection)
-                                                        isContextMenuVisible = false
-                                                    }
-                                                )
-                                            }
-                                        }
-                                    )
-                                }
-                            )
-                        }
-                    }
-                }
+                BreadCrumbMenu(onCrumbMenu = onCrumbMenu)
             }
             itemsIndexed(crumbs) { index, item ->
                 BreadCrumbChip(
                     enabled = item.enabled,
                     onClick = { onCrumbClick(item, index) },
                     label = item.name
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun BreadCrumbMenu(
+    onCrumbMenu: (DropDownSelection) -> Unit
+) {
+    var isContextMenuVisible by rememberSaveable { mutableStateOf(false) }
+
+    Surface(
+        color = MaterialTheme.colorScheme.primaryContainer,
+        shape = RoundedCornerShape(
+            topEnd = 16.dp,
+            bottomEnd = 16.dp
+        )
+    ) {
+        val haptic = LocalHapticFeedback.current
+        IconButton(
+            onClick = {
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                isContextMenuVisible = true
+            }
+        ) {
+            Icon(imageVector = Icons.Default.MoreHoriz, contentDescription = null)
+
+            Box(
+                modifier = Modifier
+                    .wrapContentSize()
+            ) {
+                DropdownMenu(
+                    expanded = isContextMenuVisible,
+                    onDismissRequest = { isContextMenuVisible = false },
+                    shape = RoundedCornerShape(16.dp),
+                    content = {
+                        DropdownMenuGroup(
+                            shapes = MenuDefaults.groupShape(0, 1),
+                            content = {
+                                DropdownMenuItem(
+                                    enabled = false,
+                                    text = { Text(text = "All Files") },
+                                    onClick = { }
+                                )
+                                crumbDropDownItems.forEach {
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text(
+                                                text = it.text,
+                                                style = MaterialTheme.typography.bodyLarge
+                                            )
+                                        },
+                                        onClick = {
+                                            haptic.performHapticFeedback(
+                                                HapticFeedbackType.LongPress
+                                            )
+                                            onCrumbMenu(it.selection)
+                                            isContextMenuVisible = false
+                                        }
+                                    )
+                                }
+                            }
+                        )
+                    }
                 )
             }
         }
