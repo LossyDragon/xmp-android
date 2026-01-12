@@ -8,7 +8,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.*
 import androidx.compose.ui.*
 import androidx.compose.ui.tooling.preview.*
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -36,17 +35,17 @@ val bottomBarItems = persistentListOf(
     NavKeyMain.Downloads
 )
 
-val BottomBarScreenSaver = Saver<NavKeyMain, String>(
-    save = { it::class.simpleName ?: "Unknown" },
-    restore = {
-        when (it) {
-            NavKeyMain.Playlists::class.simpleName -> NavKeyMain.Playlists
-            NavKeyMain.Explorer::class.simpleName -> NavKeyMain.Explorer
-            NavKeyMain.Downloads::class.simpleName -> NavKeyMain.Downloads
-            else -> NavKeyMain.Playlists
-        }
-    }
-)
+// val BottomBarScreenSaver = Saver<NavKeyMain, String>(
+//     save = { it::class.simpleName ?: "Unknown" },
+//     restore = {
+//         when (it) {
+//             NavKeyMain.Playlists::class.simpleName -> NavKeyMain.Playlists
+//             NavKeyMain.Explorer::class.simpleName -> NavKeyMain.Explorer
+//             NavKeyMain.Downloads::class.simpleName -> NavKeyMain.Downloads
+//             else -> NavKeyMain.Playlists
+//         }
+//     }
+// )
 
 @Composable
 fun MainNavigation(
@@ -149,22 +148,25 @@ fun MainNavigation(
                     entry<NavKeyMain.Explorer> {
                         val viewModel = koinViewModel<ExplorerViewModel>()
                         val result = rememberLauncherForActivityResult(
-                            contract = ActivityResultContracts.StartActivityForResult()
-                        ) { result ->
-                            when (result.resultCode) {
-                                RESULT_OK -> result.data?.getStringExtra("message")?.let { msg ->
-                                    if (msg.isBlank()) {
-                                        return@let
+                            contract = ActivityResultContracts.StartActivityForResult(),
+                            onResult = { result ->
+                                val resultCode = result.resultCode
+                                val resultData = result.data
+                                when (resultCode) {
+                                    RESULT_OK -> resultData?.getStringExtra("message")?.let { msg ->
+                                        if (msg.isBlank()) {
+                                            return@let
+                                        }
+                                        Timber.w("Result with error: $msg")
+                                        scope.launch {
+                                            snackBarHostState.showSnackbar(msg)
+                                        }
                                     }
-                                    Timber.w("Result with error: $msg")
-                                    scope.launch {
-                                        snackBarHostState.showSnackbar(msg)
-                                    }
-                                }
 
-                                2 -> viewModel.onRefresh()
+                                    2 -> viewModel.onRefresh()
+                                }
                             }
-                        }
+                        )
 
                         ExplorerScreen(
                             modifier = Modifier.consumeWindowInsets(paddingValues),

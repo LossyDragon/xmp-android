@@ -6,15 +6,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.*
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.*
 import androidx.compose.ui.text.*
-import androidx.compose.ui.text.font.*
 import androidx.compose.ui.text.style.*
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
-import kotlinx.serialization.Serializable
+import com.alorma.compose.settings.ui.SettingsMenuLink
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.compose.components.XmpTopBar
 import org.helllabs.android.xmp.compose.components.themedText
@@ -28,6 +27,7 @@ fun AboutScreen(
     libVersion: String,
     onBack: () -> Unit
 ) {
+    val uriHandler = LocalUriHandler.current
     val scrollState = rememberScrollState()
     val isScrolled by remember {
         derivedStateOf {
@@ -93,6 +93,10 @@ fun AboutScreen(
                 style = MaterialTheme.typography.bodyLarge
             )
             AboutText(
+                string = stringResource(id = R.string.about_author_fork),
+                style = MaterialTheme.typography.bodyLarge
+            )
+            AboutText(
                 string = stringResource(id = R.string.about_xmp, libVersion),
                 style = MaterialTheme.typography.bodyLarge
             )
@@ -106,7 +110,7 @@ fun AboutScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
-                text = stringResource(id = R.string.changelog),
+                text = "Links",
                 fontFamily = michromaFontFamily,
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.headlineSmall.copy(
@@ -114,9 +118,24 @@ fun AboutScreen(
                     baselineShift = BaselineShift(.3f)
                 )
             )
-            AboutText(
-                string = stringResource(id = R.string.changelog_text),
-                style = MaterialTheme.typography.bodyMedium
+            SettingsMenuLink(
+                title = {
+                    Text(text = "Xmp Android (this fork)")
+                },
+                subtitle = {
+                    Text(text = "https://github.com/LossyDragon/xmp-android")
+                },
+                onClick = { uriHandler.openUri("https://github.com/LossyDragon/xmp-android") }
+            )
+            SettingsMenuLink(
+                title = { Text(text = "Xmp Android (Original)") },
+                subtitle = { Text(text = "https://github.com/cmatsuoka/xmp-android") },
+                onClick = { uriHandler.openUri("https://github.com/cmatsuoka/xmp-android") }
+            )
+            SettingsMenuLink(
+                title = { Text(text = "Libxmp") },
+                subtitle = { Text(text = "https://github.com/libxmp/libxmp/") },
+                onClick = { uriHandler.openUri("https://github.com/libxmp/libxmp/") }
             )
         }
     }

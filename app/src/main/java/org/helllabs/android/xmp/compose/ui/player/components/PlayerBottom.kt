@@ -34,12 +34,11 @@ fun PlayerBottomAppBar(
         modifier = modifier
     ) {
         Column(
-            Modifier
+            modifier = Modifier
                 .fillMaxWidth()
                 .windowInsetsPadding(windowInsets)
                 .padding(contentPadding),
             horizontalAlignment = Alignment.CenterHorizontally,
-
             content = content
         )
     }

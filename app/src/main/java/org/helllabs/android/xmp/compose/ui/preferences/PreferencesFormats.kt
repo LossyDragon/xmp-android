@@ -8,17 +8,18 @@ import androidx.compose.foundation.lazy.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.draw.*
 import androidx.compose.ui.hapticfeedback.*
 import androidx.compose.ui.platform.*
-import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.res.*
 import androidx.compose.ui.tooling.preview.*
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.*
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.compose.components.XmpTopBar
+import org.helllabs.android.xmp.compose.theme.XmpRoundedCorner
 import org.helllabs.android.xmp.compose.theme.XmpTheme
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -67,13 +68,10 @@ fun FormatsScreen(
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             items(formatsList) { item ->
-                Surface(
-                    shape = MaterialTheme.shapes.medium,
-                    color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    ListItem(
-                        modifier = Modifier.combinedClickable(
+                ListItem(
+                    modifier = Modifier
+                        .clip(XmpRoundedCorner)
+                        .combinedClickable(
                             onClick = { /* Nothing */ },
                             onLongClick = {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -87,17 +85,16 @@ fun FormatsScreen(
                                 }
                             }
                         ),
-                        colors = ListItemDefaults.colors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
-                        ),
-                        headlineContent = {
-                            Text(
-                                text = item,
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                        }
-                    )
-                }
+                    colors = ListItemDefaults.colors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                    ),
+                    headlineContent = {
+                        Text(
+                            text = item,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+                )
             }
         }
     }

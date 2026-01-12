@@ -13,11 +13,15 @@ import org.koin.compose.KoinApplication
 import org.koin.core.module.Module
 import org.koin.dsl.koinConfiguration
 
+@Suppress("ParamsComparedByRef")
 @Composable
 fun KoinPreview(
     modules: List<Module> = listOf(appModule, viewModelModule),
     content: @Composable () -> Unit
 ) {
+    val view = LocalView.current
+    require(view.isInEditMode)
+
     val context = LocalContext.current.applicationContext
     CompositionLocalProvider(
         LocalInspectionMode provides true,

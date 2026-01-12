@@ -13,6 +13,7 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.IconToggleButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import org.helllabs.android.xmp.compose.theme.XmpTheme
 
@@ -26,37 +27,44 @@ fun BottomBarButtons(
 ) {
     BottomAppBar(
         actions = {
-            IconToggleButton(
+            ActionButton(
                 checked = isShuffle,
                 onCheckedChange = onShuffle,
-                colors = IconButtonDefaults.iconToggleButtonColors(
-                    checkedContentColor = Color.Green
-                ),
-                content = {
-                    Icon(imageVector = Icons.Filled.Shuffle, contentDescription = null)
-                }
+                imageVector = Icons.Filled.Shuffle,
             )
-            IconToggleButton(
+            ActionButton(
                 checked = isLoop,
                 onCheckedChange = onLoop,
-                colors = IconButtonDefaults.iconToggleButtonColors(
-                    checkedContentColor = Color.Green
-                ),
-                content = {
-                    Icon(imageVector = Icons.Filled.Repeat, contentDescription = null)
-                }
+                imageVector = Icons.Filled.Repeat,
             )
         },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onPlayAll,
-                containerColor = BottomAppBarDefaults.bottomAppBarFabColor,
-                elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation(),
-                content = {
-                    Icon(imageVector = Icons.Filled.PlayArrow, contentDescription = null)
-                }
-            )
+        floatingActionButton = { PlayAllButton(onClick = onPlayAll) },
+    )
+}
+
+@Composable
+private fun PlayAllButton(onClick: () -> Unit) {
+    FloatingActionButton(
+        onClick = onClick,
+        containerColor = BottomAppBarDefaults.bottomAppBarFabColor,
+        elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation(),
+        content = {
+            Icon(imageVector = Icons.Filled.PlayArrow, contentDescription = null)
         }
+    )
+}
+
+@Composable
+private fun ActionButton(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    imageVector: ImageVector
+) {
+    IconToggleButton(
+        checked = checked,
+        onCheckedChange = onCheckedChange,
+        colors = IconButtonDefaults.iconToggleButtonColors(checkedContentColor = Color.Green),
+        content = { Icon(imageVector = imageVector, contentDescription = null) }
     )
 }
 

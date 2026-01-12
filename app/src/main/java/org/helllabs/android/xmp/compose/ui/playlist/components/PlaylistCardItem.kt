@@ -21,6 +21,7 @@ import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
 import kotlinx.collections.immutable.persistentListOf
 import org.helllabs.android.xmp.compose.components.KoinPreview
+import org.helllabs.android.xmp.compose.theme.XmpRoundedCorner
 import org.helllabs.android.xmp.core.StorageManager
 import org.helllabs.android.xmp.model.DropDownItem
 import org.helllabs.android.xmp.model.DropDownSelection
@@ -54,7 +55,7 @@ fun PlaylistCardItem(
         Card(
             modifier = Modifier.fillMaxWidth(),
             interactionSource = interactionSource,
-            shape = MaterialTheme.shapes.extraLarge,
+            shape = XmpRoundedCorner,
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
             ),
@@ -168,7 +169,7 @@ private fun Preview_PlaylistCardItem() {
                     )
                 ),
                 onSettle = { _, _ -> }
-            ) { index, item, isDragging ->
+            ) { _, item, isDragging ->
                 key(item.id) {
                     ReorderableItem {
                         val interactionSource = remember { MutableInteractionSource() }

@@ -74,13 +74,14 @@ fun ViewFlipper(
             AnimatedContent(
                 targetState = info,
                 transitionSpec = { transitionSpec.using(SizeTransform(clip = false)) },
-                label = "XMP ViewFlipper"
-            ) {
-                ViewFlipperItem(
-                    infoTitle = it.first,
-                    infoType = it.second
-                )
-            }
+                label = "XMP ViewFlipper",
+                content = {
+                    ViewFlipperItem(
+                        infoTitle = it.first,
+                        infoType = it.second
+                    )
+                }
+            )
         }
     )
 }
@@ -117,6 +118,10 @@ private fun ViewFlipperItem(
         }
     }
 }
+
+/**********
+ * Preview
+ **********/
 
 @Preview
 @Composable

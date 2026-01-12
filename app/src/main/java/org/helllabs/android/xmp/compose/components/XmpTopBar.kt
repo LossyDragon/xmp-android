@@ -1,19 +1,11 @@
 package org.helllabs.android.xmp.compose.components
 
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
-import com.materialkolor.ktx.darken
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.*
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.tooling.preview.*
 import org.helllabs.android.xmp.compose.theme.XmpTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -41,19 +33,7 @@ fun XmpTopBar(
                 style = MaterialTheme.typography.titleLarge
             )
         },
-        navigationIcon = {
-            onBack?.let {
-                IconButton(
-                    onClick = onBack,
-                    content = {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = null
-                        )
-                    }
-                )
-            }
-        },
+        navigationIcon = { onBack?.let { BackButton(onClick = onBack) } },
         actions = actions
     )
 }

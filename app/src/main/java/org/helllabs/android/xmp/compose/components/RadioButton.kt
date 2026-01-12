@@ -11,7 +11,7 @@ import androidx.compose.ui.unit.*
 import org.helllabs.android.xmp.compose.theme.XmpTheme
 
 /**
- * RadioButton with Text
+ * RadioButton with Text and Sub-Text
  */
 @Composable
 fun RadioButtonItem(

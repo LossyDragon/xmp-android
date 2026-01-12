@@ -19,7 +19,7 @@ import org.helllabs.android.xmp.compose.components.RadioButtonItem
 import org.helllabs.android.xmp.compose.theme.XmpTheme
 import org.helllabs.android.xmp.compose.ui.player.PlayerSheetState
 
-@Stable
+@Immutable
 sealed class PlayerSheetEvent {
     data class OnSequence(val seq: Int) : PlayerSheetEvent()
     data object OnAllSeq : PlayerSheetEvent()
@@ -27,7 +27,7 @@ sealed class PlayerSheetEvent {
     data object OnAddToPlaylist : PlayerSheetEvent()
 }
 
-@Stable
+@Immutable
 data class SubSongItem(val index: Int, val string: String)
 
 @Composable
@@ -36,22 +36,29 @@ fun PlayerSheet(
     state: PlayerSheetState,
     onEvent: (PlayerSheetEvent) -> Unit
 ) {
-    val context = LocalContext.current
+    val resources = LocalResources.current
     val lazyState = rememberLazyListState()
 
     val subSongSequences = remember(state.numOfSequences) {
-        val main = context.getString(R.string.sidebar_main_song)
-        state.numOfSequences.mapIndexed { index, item ->
-            val sub = context.getString(R.string.sidebar_sub_song, index)
-            val text = if (index == 0) main else sub
-            val string = String.format(
+        state.numOfSequences.mapIndexed { index, duration ->
+            val labelResId = if (index == 0) {
+                R.string.sidebar_main_song
+            } else {
+                R.string.sidebar_sub_song
+            }
+            val label = resources.getString(labelResId, index)
+
+            val minutes = duration / 60000
+            val seconds = (duration / 1000) % 60
+            val formattedTime = String.format(
                 Locale.getDefault(),
                 "%2d:%02d (%s)",
-                item / 60000,
-                item / 1000 % 60,
-                text
+                minutes,
+                seconds,
+                label
             )
-            SubSongItem(index, string)
+
+            SubSongItem(index, formattedTime)
         }
     }
 
@@ -68,13 +75,14 @@ fun PlayerSheet(
                     modifier = Modifier
                         .weight(1f)
                         .wrapContentWidth(Alignment.End),
-                    onClick = { onEvent(PlayerSheetEvent.OnAddToPlaylist) }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = null,
-                    )
-                }
+                    onClick = { onEvent(PlayerSheetEvent.OnAddToPlaylist) },
+                    content = {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = null,
+                        )
+                    }
+                )
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -84,14 +92,16 @@ fun PlayerSheet(
                     modifier = Modifier
                         .weight(1f)
                         .wrapContentWidth(Alignment.End),
-                    onClick = { onEvent(PlayerSheetEvent.OnMessage) }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Info,
-                        contentDescription = null,
-                    )
-                }
+                    onClick = { onEvent(PlayerSheetEvent.OnMessage) },
+                    content = {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = null,
+                        )
+                    }
+                )
             }
+
             Spacer(modifier = Modifier.height(12.dp))
 
             ModuleInsDetails(stringResource(id = R.string.sidebar_channels), state.moduleInfo[3])
@@ -120,17 +130,11 @@ fun PlayerSheet(
 
             LazyColumn(state = lazyState) {
                 items(subSongSequences) { item ->
-                    val onClick = remember(item) {
-                        {
-                            onEvent(PlayerSheetEvent.OnSequence(item.index))
-                        }
-                    }
-
                     RadioButtonItem(
                         index = item.index,
                         selection = state.currentSequence,
                         text = item.string,
-                        onClick = onClick
+                        onClick = { onEvent(PlayerSheetEvent.OnSequence(item.index)) }
                     )
                 }
             }

@@ -27,10 +27,11 @@
     <string name="sponsor">Sponsor</string>
     <string name="unsupported">Unsupported</string>
 
-    <string name="about_author">Written by Claudio Matsuoka</string>
+    <string name="about_author">Originally written by Claudio Matsuoka</string>
+    <string name="about_author_fork">Fork written by LossyDragon</string>
     <string name="about_version">Version: %s</string>
     <string name="about_version_code">Build: %s</string>
-    <string name="about_xmp">Using libxmp %s written by Claudio Matsuoka and Hipolito Carraro Jr.</string>
+    <string name="about_xmp">Using libxmp %s written by\nClaudio Matsuoka, Hipolito Carraro Jr.,\nand Contributors.</string>
     <string name="copied">Copied to clipboard</string>
     <string name="delete_file_message">Are you sure you want to delete %s?</string>
     <string name="delete_file_title">Delete File</string>
