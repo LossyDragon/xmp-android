@@ -2,8 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     namespace "org.helllabs.android.xmp"
-    compileSdkVersion 27
-    buildToolsVersion '27.0.3'
+    compileSdkVersion 34
     defaultConfig {
         applicationId "org.helllabs.android.xmp"
         minSdkVersion 14
@@ -26,15 +25,25 @@ android {
     }
     productFlavors {
     }
+
+    // https://developer.android.com/reference/tools/gradle-api/7.4/com/android/build/api/dsl/BuildFeatures
+    buildFeatures {
+        aidl true
+    }
+
+    // Override apikey.xml with a TMA provided key. Usually in your global gradle.properties.file
+    defaultConfig {
+        resValue "string", "modarchive_apikey", project.findProperty("modArchiveApiKey") ?: "apikey"
+    }
 }
 
 dependencies {
     implementation project(":material-preferences")
 
-    implementation 'com.android.support:appcompat-v7:23.1.1'
-    implementation 'com.android.support:cardview-v7:23.1.1'
-    implementation 'com.android.support:recyclerview-v7:23.1.1'
-    implementation('com.h6ah4i.android.widget.advrecyclerview:advrecyclerview:0.8.5@aar') {
+    implementation 'com.android.support:appcompat-v7:28.0.0'
+    implementation 'com.android.support:cardview-v7:28.0.0'
+    implementation 'com.android.support:recyclerview-v7:28.0.0'
+    implementation('com.h6ah4i.android.widget.advrecyclerview:advrecyclerview:1.0.0@aar') {
         transitive = true
     }
     implementation("com.github.pluscubed:recycler-fast-scroll:0.3.2")

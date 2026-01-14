@@ -8,9 +8,6 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
-import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -18,6 +15,10 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ImageButton;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import org.helllabs.android.xmp.R;
 import org.helllabs.android.xmp.XmpApplication;
@@ -137,7 +138,7 @@ public abstract class BasePlaylistActivity extends AppCompatActivity {
 	protected abstract void update();
 
 	protected void setSwipeRefresh(final RecyclerView recyclerView) {
-		final SwipeRefreshLayout swipeRefresh = (SwipeRefreshLayout) findViewById(R.id.swipeContainer);
+		final SwipeRefreshLayout swipeRefresh = findViewById(R.id.swipeContainer);
 		swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
 			@Override
 			public void onRefresh() {
@@ -332,25 +333,21 @@ public abstract class BasePlaylistActivity extends AppCompatActivity {
 
 	@Override
 	public boolean onOptionsItemSelected(final MenuItem item) {
-		switch (item.getItemId()) {
-			case android.R.id.home:
-				final Intent intent = new Intent(this, PlaylistMenu.class);
-				intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-				startActivity(intent);
-				return true;
-			case R.id.menu_new_playlist:
-				PlaylistUtils.newPlaylistDialog(this);
-				break;
-			case R.id.menu_prefs:
-				startActivityForResult(new Intent(this, Preferences.class), SETTINGS_REQUEST);
-				break;
-			case R.id.menu_refresh:
-				update();
-				break;
-			case R.id.menu_download:
-				startActivityForResult(new Intent(this, Search.class), SEARCH_REQUEST);
-				break;
-		}
+        int itemId = item.getItemId();
+        if (itemId == android.R.id.home) {
+            final Intent intent = new Intent(this, PlaylistMenu.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(intent);
+            return true;
+        } else if (itemId == R.id.menu_new_playlist) {
+            PlaylistUtils.newPlaylistDialog(this);
+        } else if (itemId == R.id.menu_prefs) {
+            startActivityForResult(new Intent(this, Preferences.class), SETTINGS_REQUEST);
+        } else if (itemId == R.id.menu_refresh) {
+            update();
+        } else if (itemId == R.id.menu_download) {
+            startActivityForResult(new Intent(this, Search.class), SEARCH_REQUEST);
+        }
 		return super.onOptionsItemSelected(item);
 	}
 }

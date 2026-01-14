@@ -2,13 +2,14 @@ package org.helllabs.android.xmp.browser.playlist;
 
 import android.content.Context;
 import android.graphics.Typeface;
-import android.support.v4.view.ViewCompat;
-import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import androidx.core.view.ViewCompat;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.h6ah4i.android.widget.advrecyclerview.draggable.DraggableItemAdapter;
 import com.h6ah4i.android.widget.advrecyclerview.draggable.ItemDraggableRange;
@@ -276,6 +277,22 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
 	    if (playlist != null) {
 		    playlist.setListChanged(true);
 	    }
+    }
+
+    @Override
+    public boolean onCheckCanDrop(int i, int i1) {
+        // noop
+        return false;
+    }
+
+    @Override
+    public void onItemDragStarted(int i) {
+        // noop
+    }
+
+    @Override
+    public void onItemDragFinished(int i, int i1, boolean b) {
+        // noop
     }
 
     @Override

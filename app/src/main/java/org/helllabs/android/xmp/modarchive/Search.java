@@ -8,7 +8,6 @@ import org.helllabs.android.xmp.modarchive.result.TitleResult;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
@@ -17,6 +16,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioGroup;
 import android.widget.TextView;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 public class Search extends AppCompatActivity implements TextView.OnEditorActionListener {
 
@@ -88,22 +89,17 @@ public class Search extends AppCompatActivity implements TextView.OnEditorAction
 
 		Intent intent;
 
-		switch (selectedId) {
-		case R.id.title_radio:
-			intent = new Intent(context, TitleResult.class);
-			intent.putExtra(SEARCH_TEXT, searchText);
-			startActivity(intent);
-			overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
-			break;
-		case R.id.artist_radio:
-			intent = new Intent(context, ArtistResult.class);
-			intent.putExtra(SEARCH_TEXT, searchText);
-			startActivity(intent);
-			overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
-			break;
-		default:
-			break;
-		}
+        if (selectedId == R.id.title_radio) {
+            intent = new Intent(context, TitleResult.class);
+            intent.putExtra(SEARCH_TEXT, searchText);
+            startActivity(intent);
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+        } else if (selectedId == R.id.artist_radio) {
+            intent = new Intent(context, ArtistResult.class);
+            intent.putExtra(SEARCH_TEXT, searchText);
+            startActivity(intent);
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+        }
 	}
 
 }

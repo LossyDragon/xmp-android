@@ -3,7 +3,8 @@ package org.helllabs.android.xmp.service.notifier;
 import org.helllabs.android.xmp.R;
 
 import android.app.Service;
-import android.support.v4.app.NotificationCompat;
+
+import androidx.core.app.NotificationCompat;
 
 
 public class LegacyNotifier extends Notifier {
