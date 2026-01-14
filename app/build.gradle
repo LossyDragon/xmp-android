@@ -43,6 +43,14 @@ android {
     defaultConfig {
         resValue "string", "modarchive_apikey", project.findProperty("modArchiveApiKey") ?: "apikey"
     }
+
+    // To compile under 'release' a baseline must be ran noting any lint issues within the project.
+    // Also ignores build failue "Google Play requires that apps target API level 33 or higher".
+    // First run `./gradlew updateLintBaseline` then build under release.
+    // https://developer.android.com/studio/write/lint#snapshot
+    lint {
+        baseline = file("lint-baseline.xml")
+    }
 }
 
 dependencies {

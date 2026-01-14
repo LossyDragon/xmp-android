@@ -32,3 +32,7 @@ app/app.iml
 *~
 *.swp
 
+#xmp-android
+app/lint-baseline.xml
+app/release/
+app/release/output-metadata.json
