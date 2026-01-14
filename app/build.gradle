@@ -3,13 +3,16 @@ apply plugin: 'com.android.application'
 android {
     namespace "org.helllabs.android.xmp"
     compileSdkVersion 34
+
+    ndkVersion "21.4.7075529"  // One of the last NDK's to support API 14.
+
     defaultConfig {
         applicationId "org.helllabs.android.xmp"
         minSdkVersion 14
         targetSdkVersion 27
 
         ndk {
-            moduleName "xmp-prebuilt"
+            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
         }
     }
     buildTypes {
@@ -18,12 +21,17 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-project.txt'
         }
     }
-    // Temporarily disable ndk build
-    sourceSets.main {
-        jni.srcDirs = []
-        jniLibs.srcDir 'src/main/libs'
+
+    externalNativeBuild {
+        ndkBuild {
+            path 'src/main/jni/Android.mk'
+        }
     }
-    productFlavors {
+
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ['src/main/libs']
+        }
     }
 
     // https://developer.android.com/reference/tools/gradle-api/7.4/com/android/build/api/dsl/BuildFeatures
