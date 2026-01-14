@@ -782,6 +782,9 @@ public class PlayerActivity extends Activity {
 		//	deleteDialog.cancel();
 		//}
 
+        stopUpdate = true;
+        handler.removeCallbacksAndMessages(null);
+
 		saveAllSeqPreference();
 		
 		synchronized (playerLock) {
