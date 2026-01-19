@@ -4,6 +4,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.net.Uri
 import android.os.IBinder
 import androidx.core.content.ContextCompat
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,6 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import timber.log.Timber
 
 class PlayerConnection(private val context: Context) {
+
     var modPlayer: PlayerService? = null
         private set
 
@@ -47,11 +49,16 @@ class PlayerConnection(private val context: Context) {
         }
     }
 
+    fun addToQueue(list: List<Uri>) {
+        modPlayer?.add(list)
+    }
+
     fun startForegroundService() {
         val intent = Intent(context, PlayerService::class.java)
         ContextCompat.startForegroundService(context, intent)
     }
 
+    @Suppress("unused")
     fun stopForegroundService() {
         val intent = Intent(context, PlayerService::class.java)
         context.stopService(intent)

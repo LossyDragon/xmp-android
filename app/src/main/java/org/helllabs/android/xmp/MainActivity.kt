@@ -1,13 +1,10 @@
 package org.helllabs.android.xmp
 
 import android.Manifest
-import android.content.ComponentName
 import android.content.Intent
-import android.content.ServiceConnection
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.IBinder
 import android.provider.DocumentsContract
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.ManagedActivityResultLauncher
@@ -15,13 +12,9 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.retain.retain
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.retain.*
 import androidx.lifecycle.lifecycleScope
 import com.meticha.permissions_compose.AppPermission
 import com.meticha.permissions_compose.PermissionManagerConfig
@@ -38,7 +31,7 @@ import org.helllabs.android.xmp.core.Constants
 import org.helllabs.android.xmp.core.PrefManager
 import org.helllabs.android.xmp.core.StorageManager
 import org.helllabs.android.xmp.core.setEdgeToEdgeConfig
-import org.helllabs.android.xmp.service.PlayerBinder
+import org.helllabs.android.xmp.service.PlayerConnection
 import org.helllabs.android.xmp.service.PlayerService
 import org.koin.android.ext.android.inject
 import timber.log.Timber
@@ -49,24 +42,7 @@ class MainActivity : ComponentActivity() {
 
     private val prefManager by inject<PrefManager>()
     private val storageManager by inject<StorageManager>()
-
-    private var mAddList: List<Uri> = listOf()
-    private var mModPlayer: PlayerService? = null
-    private val connection: ServiceConnection = object : ServiceConnection {
-
-        override fun onServiceConnected(className: ComponentName, service: IBinder) {
-            mModPlayer = (service as PlayerBinder).getService()
-
-            mModPlayer!!.add(mAddList)
-            mAddList = listOf()
-
-            unbindService(this)
-        }
-
-        override fun onServiceDisconnected(className: ComponentName) {
-            mModPlayer = null
-        }
-    }
+    private val playerConnection by inject<PlayerConnection>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setEdgeToEdgeConfig()
@@ -86,6 +62,22 @@ class MainActivity : ComponentActivity() {
             val onSnackMessage: (String) -> Unit = {
                 lifecycleScope.launch {
                     snackBarHostState.showSnackbar(message = it)
+                }
+            }
+
+            DisposableEffect(Unit) {
+                val job = lifecycleScope.launch {
+                    PlayerService.isAlive.collect { isAlive ->
+                        if (isAlive) {
+                            playerConnection.bindService()
+                        } else {
+                            playerConnection.unBindService()
+                        }
+                    }
+                }
+                onDispose {
+                    job.cancel()
+                    playerConnection.unBindService()
                 }
             }
 
@@ -249,20 +241,18 @@ class MainActivity : ComponentActivity() {
         result: PlayerActivityLauncher,
         onSnackMessage: (String) -> Unit
     ) {
-        lifecycleScope.launch {
-            if (modList.isEmpty()) {
-                onSnackMessage(getString(R.string.error_snack_no_files_to_play))
-                return@launch
-            }
-
-            onPlayModule(
-                modList = modList,
-                isShuffleMode = isShuffleMode,
-                isLoopMode = isLoopMode,
-                result = result,
-                onSnackMessage = onSnackMessage,
-            )
+        if (modList.isEmpty()) {
+            onSnackMessage(getString(R.string.error_snack_no_files_to_play))
+            return
         }
+
+        onPlayModule(
+            modList = modList,
+            isShuffleMode = isShuffleMode,
+            isLoopMode = isLoopMode,
+            result = result,
+            onSnackMessage = onSnackMessage,
+        )
     }
 
     private fun onItemClick(
@@ -273,7 +263,7 @@ class MainActivity : ComponentActivity() {
         result: PlayerActivityLauncher,
         onSnackMessage: (String) -> Unit
     ) {
-        fun playAllStaringAtPosition() {
+        fun playAllStartingAtPosition() {
             if (position < 0) {
                 throw RuntimeException("Play count is negative")
             }
@@ -336,7 +326,7 @@ class MainActivity : ComponentActivity() {
         val playlistMode = runBlocking { prefManager.getPlaylistMode() }
         Timber.d("Item Clicked: $playlistMode")
         when (playlistMode) {
-            1 -> playAllStaringAtPosition()
+            1 -> playAllStartingAtPosition()
             2 -> playThisFile()
             3 -> addToQueue()
         }
@@ -389,10 +379,7 @@ class MainActivity : ComponentActivity() {
         }
 
         if (PlayerService.isAlive.value) {
-            mAddList = list
-            Intent(this, PlayerService::class.java).also {
-                bindService(it, connection, 0)
-            }
+            playerConnection.addToQueue(list)
         } else {
             onPlayModule(
                 modList = list,

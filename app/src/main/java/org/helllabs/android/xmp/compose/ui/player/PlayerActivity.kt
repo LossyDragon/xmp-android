@@ -1,12 +1,9 @@
 package org.helllabs.android.xmp.compose.ui.player
 
-import android.content.ComponentName
 import android.content.Intent
-import android.content.ServiceConnection
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
-import android.os.IBinder
 import android.support.v4.media.session.MediaControllerCompat
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
@@ -68,7 +65,7 @@ import org.helllabs.android.xmp.model.ChannelInfo
 import org.helllabs.android.xmp.model.FrameInfo
 import org.helllabs.android.xmp.model.ModVars
 import org.helllabs.android.xmp.service.EndPlayback
-import org.helllabs.android.xmp.service.PlayerBinder
+import org.helllabs.android.xmp.service.PlayerConnection
 import org.helllabs.android.xmp.service.PlayerEvent
 import org.helllabs.android.xmp.service.PlayerService
 import org.koin.android.ext.android.inject
@@ -83,53 +80,18 @@ class PlayerActivity : ComponentActivity() {
 
     private val prefManager by inject<PrefManager>()
 
+    private val playerConnection by inject<PlayerConnection>()
+
     private val snackBarHostState = SnackbarHostState()
 
     /* Detect if Screen is on or off */
     private lateinit var screenReceiver: ScreenReceiver
 
-    /* Actual mod player (the Service) */
-    private var modPlayer: PlayerService? = null
-    private var controls: MediaControllerCompat? = null
+    private val modPlayer: PlayerService?
+        get() = playerConnection.modPlayer
 
-    private val connection: ServiceConnection = object : ServiceConnection {
-        override fun onServiceConnected(className: ComponentName, service: IBinder) {
-            Timber.i("Service connected")
-            modPlayer = (service as PlayerBinder).getService()
-            controls = modPlayer!!.mediaController
-
-            viewModel.onConnected(true)
-            viewModel.isPlaying(PlayerService.isPlaying.value)
-
-            lifecycleScope.launch {
-                modPlayer!!.playerEvent.collect { event ->
-                    handlePlayerEvent(event)
-                }
-            }
-
-            with(viewModel.activityState.value) {
-                if (fileList.isNotEmpty()) {
-                    Timber.d("Start new queue")
-                    playNewMod(fileList, start)
-                } else {
-                    Timber.d("Reconnect to existing service")
-                    viewModel.showNewMod(modPlayer!!, false)
-                }
-            }
-        }
-
-        override fun onServiceDisconnected(className: ComponentName) {
-            Timber.i("Service disconnected")
-
-            saveAllSeqPreference()
-            viewModel.onConnected(false)
-
-            modPlayer = null
-
-            setResult(RESULT_OK)
-            finish()
-        }
-    }
+    private val controls: MediaControllerCompat?
+        get() = modPlayer?.mediaController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setEdgeToEdgeConfig()
@@ -152,6 +114,48 @@ class PlayerActivity : ComponentActivity() {
         screenReceiver.register(context = this)
 
         setContent {
+            val isBound by playerConnection.isBound.collectAsStateWithLifecycle()
+
+            // Handle service connection/disconnection
+            LaunchedEffect(isBound) {
+                if (isBound && modPlayer != null) {
+                    Timber.i("Service connected")
+                    viewModel.onConnected(true)
+                    viewModel.isPlaying(PlayerService.isPlaying.value)
+
+                    modPlayer?.playerEvent?.collect { event ->
+                        handlePlayerEvent(event)
+                    }
+                }
+            }
+
+            // Start playback when connected and we have files
+            LaunchedEffect(isBound) {
+                if (isBound && modPlayer != null) {
+                    with(viewModel.activityState.value) {
+                        if (fileList.isNotEmpty()) {
+                            Timber.d("Start new queue")
+                            playNewMod(fileList, start)
+                        } else {
+                            Timber.d("Reconnect to existing service")
+                            viewModel.showNewMod(modPlayer!!, false)
+                        }
+                    }
+                }
+            }
+
+            DisposableEffect(Unit) {
+                onDispose {
+                    if (!playerConnection.isBound.value) {
+                        Timber.i("Service disconnected")
+                        saveAllSeqPreference()
+                        viewModel.onConnected(false)
+                        setResult(RESULT_OK)
+                        finish()
+                    }
+                }
+            }
+
             // Collect different states
             val buttonState by viewModel.buttonState.collectAsStateWithLifecycle()
             val drawerState by viewModel.drawerState.collectAsStateWithLifecycle()
@@ -214,9 +218,10 @@ class PlayerActivity : ComponentActivity() {
 
                         if (!currentState.screenOn || modPlayer == null) {
                             Timber.d(
-                                "Waiting - Screen On: ${currentState.screenOn}, " +
-                                    "isPlaying: ${viewModel.isPlaying}, " +
-                                    "modPlayer null: ${modPlayer == null}"
+                                "Waiting - Screen On: %s, isPlaying: %s, modPlayer null: %s",
+                                currentState.screenOn,
+                                viewModel.isPlaying,
+                                modPlayer == null
                             )
                             delay(500.milliseconds)
                             continue
@@ -394,10 +399,7 @@ class PlayerActivity : ComponentActivity() {
 
         saveAllSeqPreference()
 
-        modPlayer = null
-        if (viewModel.uiState.value.serviceConnected) {
-            unbindService(connection)
-        }
+        playerConnection.unBindService()
 
         screenReceiver.unregister(this)
     }
@@ -459,18 +461,12 @@ class PlayerActivity : ComponentActivity() {
             PlayerService.fileListUri.clear()
         }
 
-        val service = Intent(this, PlayerService::class.java)
-
         if (!viewModel.uiState.value.serviceConnected) {
             Timber.i("Start service")
-            startService(service)
+            playerConnection.startForegroundService()
         }
 
-        if (!bindService(service, connection, BIND_AUTO_CREATE)) {
-            Timber.e("Can't bind to service")
-            setResult(RESULT_OK)
-            finish()
-        }
+        playerConnection.bindService()
     }
 
     private fun handlePlayerEvent(event: PlayerEvent) {
