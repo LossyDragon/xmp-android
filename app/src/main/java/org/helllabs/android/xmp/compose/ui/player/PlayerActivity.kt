@@ -762,7 +762,7 @@ private fun Preview_PlayerScreen(
             ),
             buttonState = PlayerButtonsState(
                 isPlaying = true,
-                repeatMode = RepeatMode.REPEAT_ALL
+                repeatMode = RepeatMode.REPEAT
             ),
             timeState = PlayerTimeState(
                 timeNow = "00:00",

@@ -492,7 +492,7 @@ class PlayerService :
                 isLoopPlaylist = false
             }
 
-            RepeatMode.REPEAT_ALL -> {
+            RepeatMode.REPEAT -> {
                 isRepeating = false
                 isLoopPlaylist = true
             }

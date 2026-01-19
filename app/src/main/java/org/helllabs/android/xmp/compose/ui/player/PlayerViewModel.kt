@@ -27,7 +27,7 @@ import timber.log.Timber
 
 enum class RepeatMode {
     OFF,
-    REPEAT_ALL,
+    REPEAT,
     REPEAT_ONE
 }
 
@@ -257,7 +257,7 @@ class PlayerViewModel(prefManager: PrefManager) : ViewModel() {
         }
 
         val mode = if (modPlayer.isLoopPlaylist) {
-            RepeatMode.REPEAT_ALL
+            RepeatMode.REPEAT
         } else if (modPlayer.isRepeating) {
             RepeatMode.REPEAT_ONE
         } else {

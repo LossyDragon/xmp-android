@@ -3,7 +3,6 @@ package org.helllabs.android.xmp.compose.ui.player.components
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.*
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.Repeat
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
@@ -71,8 +70,8 @@ fun PlayerControls(
         IconButton(
             onClick = {
                 val nextMode = when (state.repeatMode) {
-                    RepeatMode.OFF -> RepeatMode.REPEAT_ALL
-                    RepeatMode.REPEAT_ALL -> RepeatMode.REPEAT_ONE
+                    RepeatMode.OFF -> RepeatMode.REPEAT
+                    RepeatMode.REPEAT -> RepeatMode.REPEAT_ONE
                     RepeatMode.REPEAT_ONE -> RepeatMode.OFF
                 }
                 onEvent(PlayerControlsEvent.OnRepeat(nextMode))
@@ -82,8 +81,13 @@ fun PlayerControls(
                 modifier = Modifier.scale(1.2f),
                 imageVector = when (state.repeatMode) {
                     RepeatMode.OFF -> Icons.Default.Repeat
-                    RepeatMode.REPEAT_ALL -> Icons.Default.RepeatOn
-                    RepeatMode.REPEAT_ONE -> Icons.Default.RepeatOne // TODO terrible button
+                    RepeatMode.REPEAT -> Icons.Default.RepeatOn
+                    RepeatMode.REPEAT_ONE -> Icons.Default.RepeatOneOn
+                },
+                tint = if (state.repeatMode != RepeatMode.OFF) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    LocalContentColor.current
                 },
                 contentDescription = null
             )
@@ -91,14 +95,34 @@ fun PlayerControls(
     }
 }
 
+private class PlayerButtonsPreview : PreviewParameterProvider<PlayerButtonsState> {
+    override fun getDisplayName(index: Int): String {
+        return when (index) {
+            0 -> RepeatMode.OFF.name
+            1 -> RepeatMode.REPEAT.name
+            2 -> RepeatMode.REPEAT_ONE.name
+            else -> "Unknown"
+        }
+    }
+
+    override val values: Sequence<PlayerButtonsState>
+        get() = sequenceOf(
+            PlayerButtonsState(isPlaying = true, repeatMode = RepeatMode.OFF),
+            PlayerButtonsState(isPlaying = false, repeatMode = RepeatMode.REPEAT),
+            PlayerButtonsState(isPlaying = true, repeatMode = RepeatMode.REPEAT_ONE),
+        )
+}
+
 @Preview
 @Composable
-private fun Preview_PlayerButtons() {
+private fun Preview_PlayerButtons(
+    @PreviewParameter(PlayerButtonsPreview::class) state: PlayerButtonsState
+) {
     XmpTheme {
         PlayerBottomAppBar {
             PlayerControls(
+                state = state,
                 onEvent = { },
-                state = PlayerButtonsState(isPlaying = true, repeatMode = RepeatMode.REPEAT_ONE)
             )
         }
     }
