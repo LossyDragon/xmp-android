@@ -1,44 +1,29 @@
 package org.helllabs.android.xmp.service
 
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledExecutorService
-import java.util.concurrent.ScheduledFuture
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
+import kotlinx.coroutines.*
 
-class Watchdog(private val timeoutSeconds: Int) {
-    private var executor: ScheduledExecutorService? = null
-    private var listener: OnTimeoutListener? = null
-    private var scheduledTask: ScheduledFuture<*>? = null
-
-    fun interface OnTimeoutListener {
-        fun onTimeout()
-    }
-
-    fun setOnTimeoutListener(listener: OnTimeoutListener?) {
-        this.listener = listener
-    }
+class Watchdog(private val timeoutSeconds: Long, private val onTimeout: () -> Unit) {
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+    private val currentJob = AtomicReference<Job?>(null)
 
     fun start() {
-        refresh()
+        stop()
+        currentJob.set(
+            scope.launch {
+                delay(timeoutSeconds * 1000)
+                onTimeout()
+            }
+        )
     }
 
     fun stop() {
-        scheduledTask?.cancel(false)
-        scheduledTask = null
-        executor?.shutdown()
-        executor = null
+        currentJob.getAndSet(null)?.cancel()
     }
 
     fun refresh() {
-        scheduledTask?.cancel(false)
-
-        if (executor == null) {
-            executor = Executors.newSingleThreadScheduledExecutor()
+        if (currentJob.get() != null) {
+            start()
         }
-
-        scheduledTask = executor?.schedule({
-            listener?.onTimeout()
-            stop()
-        }, timeoutSeconds.toLong(), TimeUnit.SECONDS)
     }
 }

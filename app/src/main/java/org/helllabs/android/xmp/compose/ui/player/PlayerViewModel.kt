@@ -282,7 +282,7 @@ class PlayerViewModel(prefManager: PrefManager) : ViewModel() {
             seqVars.update { SequenceVars(sequence) }
 
             _insName.update {
-                val instruments = Xmp.getInstruments() ?: Array(modVars.value.numInstruments) { "" }
+                val instruments = Xmp.getInstruments()
                 instruments.toPersistentList()
             }
 

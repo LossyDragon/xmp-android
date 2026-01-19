@@ -39,7 +39,7 @@ sealed class DownloadStatus {
     data object Success : DownloadStatus()
 }
 
-@Stable
+@Immutable
 data class ModuleResultState(
     val isRandom: Boolean = false,
     val isLoading: Boolean = false,

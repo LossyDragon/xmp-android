@@ -774,16 +774,21 @@ JNIEXPORT jstring JNICALL JNI_FUNCTION(getVersion)(JNIEnv* env, jobject obj) {
 JNIEXPORT jobjectArray JNICALL JNI_FUNCTION(getFormats)(JNIEnv* env, jobject obj) {
   const char* const* list = xmp_get_format_list();
 
+  jclass stringClass = env->FindClass("java/lang/String");
+  if (!stringClass) return env->NewObjectArray(0, env->FindClass("java/lang/String"), nullptr);
+
   int num = 0;
-  while (list[num] != nullptr) {
-    ++num;
+  if (list) {
+    while (list[num] != nullptr) {
+      ++num;
+    }
   }
 
-  jclass stringClass = env->FindClass("java/lang/String");
-  if (!stringClass) return nullptr;
-
   jobjectArray stringArray = env->NewObjectArray(num, stringClass, nullptr);
-  if (!stringArray) return nullptr;
+  if (!stringArray) {
+    env->DeleteLocalRef(stringClass);
+    return env->NewObjectArray(0, stringClass, nullptr);
+  }
 
   for (int i = 0; i < num; i++) {
     jstring s = env->NewStringUTF(list[i]);
@@ -824,17 +829,22 @@ JNIEXPORT jbyteArray JNICALL JNI_FUNCTION(getComment)(JNIEnv* env, jobject obj) 
 JNIEXPORT jobjectArray JNICALL JNI_FUNCTION(getInstruments)(JNIEnv* env, jobject obj) {
   XmpPlayerState& state = XmpPlayerState::instance();
 
-  if (!state.isModuleLoaded()) return nullptr;
-
-  const xmp_module_info& mi = state.getModuleInfo();
-
   jclass stringClass = env->FindClass("java/lang/String");
   if (!stringClass) return nullptr;
 
+  if (!state.isModuleLoaded()) {
+    jobjectArray empty = env->NewObjectArray(0, stringClass, nullptr);
+    env->DeleteLocalRef(stringClass);
+    return empty;
+  }
+
+  const xmp_module_info& mi = state.getModuleInfo();
+
   jobjectArray stringArray = env->NewObjectArray(mi.mod->ins, stringClass, nullptr);
   if (!stringArray) {
+    jobjectArray empty = env->NewObjectArray(0, stringClass, nullptr);
     env->DeleteLocalRef(stringClass);
-    return nullptr;
+    return empty;
   }
 
   for (int i = 0; i < mi.mod->ins; i++) {
@@ -1164,23 +1174,19 @@ JNIEXPORT jint JNICALL JNI_FUNCTION(setVolume)(JNIEnv* env, jobject obj, jint vo
 JNIEXPORT jobject JNICALL JNI_FUNCTION(getAudioStats)(JNIEnv* env, jobject obj) {
   struct AudioStats stats{};
 
-  if (get_audio_stats(&stats) < 0) {
-    return nullptr;
-  }
-
-  // Find the AudioStats Java class
   jclass statsClass = env->FindClass("org/helllabs/android/xmp/model/AudioStats");
   if (!statsClass) return nullptr;
 
-  // Get constructor
   jmethodID constructor = env->GetMethodID(statsClass, "<init>", "(IIIIIILjava/lang/String;Ljava/lang/String;)V");
   if (!constructor) {
     env->DeleteLocalRef(statsClass);
     return nullptr;
   }
 
-  jstring apiStr = env->NewStringUTF(stats.audio_api);
-  jstring modeStr = env->NewStringUTF(stats.sharing_mode);
+  get_audio_stats(&stats);
+
+  jstring apiStr = env->NewStringUTF(stats.audio_api ? stats.audio_api : "");
+  jstring modeStr = env->NewStringUTF(stats.sharing_mode ? stats.sharing_mode : "");
 
   jobject statsObj =
     env->NewObject(statsClass, constructor, stats.xrun_count, stats.underrun_count, stats.frames_per_burst, stats.buffer_capacity, stats.buffer_size, stats.sample_rate, apiStr, modeStr);

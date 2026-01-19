@@ -202,7 +202,7 @@ private fun SearchModuleResultScreenContent(
                 else -> stringResource(id = R.string.download)
             }
 
-            BottomAppBar {
+            ShortNavigationBar {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceAround,
@@ -211,17 +211,15 @@ private fun SearchModuleResultScreenContent(
                     Button(
                         modifier = Modifier.width(128.dp),
                         enabled = !state.isLoading && state.moduleSupported,
-                        onClick = { onPlay(state.module!!.module) }
-                    ) {
-                        Text(text = buttonText)
-                    }
+                        onClick = { onPlay(state.module!!.module) },
+                        content = { Text(text = buttonText) }
+                    )
                     Button(
                         modifier = Modifier.width(128.dp),
                         enabled = !state.isLoading,
-                        onClick = onRandom
-                    ) {
-                        Text(text = stringResource(id = R.string.random))
-                    }
+                        onClick = onRandom,
+                        content = { Text(text = stringResource(id = R.string.random)) }
+                    )
                 }
             }
         }

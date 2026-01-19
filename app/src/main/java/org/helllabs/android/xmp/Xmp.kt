@@ -12,7 +12,6 @@ import org.helllabs.android.xmp.model.ChannelInfo
 import org.helllabs.android.xmp.model.FrameInfo
 import org.helllabs.android.xmp.model.ModInfo
 import org.helllabs.android.xmp.model.ModVars
-import org.helllabs.android.xmp.model.SequenceVars
 import timber.log.Timber
 
 object Xmp {
@@ -106,9 +105,9 @@ object Xmp {
 
     external fun getComment(): ByteArray
 
-    external fun getFormats(): Array<String>?
+    external fun getFormats(): Array<String>
 
-    external fun getInstruments(): Array<String>?
+    external fun getInstruments(): Array<String>
 
     external fun getLoopCount(): Int
 
@@ -157,13 +156,13 @@ object Xmp {
 
     external fun setVolume(vol: Int): Int
 
-    external fun getAudioStats(): AudioStats?
+    external fun getAudioStats(): AudioStats
 
     /**
      * Helper to get formats
      */
     val formats: ImmutableList<String>
-        get() = getFormats().orEmpty().sorted().toPersistentList()
+        get() = getFormats().sorted().toPersistentList()
 
     /**
      * Test module from File Descriptor

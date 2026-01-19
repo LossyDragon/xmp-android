@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.api.Repository
 import org.helllabs.android.xmp.core.Resource
 
-@Stable
+@Immutable
 data class SearchResultState(
     val isLoading: Boolean = false,
     val softError: String? = null,

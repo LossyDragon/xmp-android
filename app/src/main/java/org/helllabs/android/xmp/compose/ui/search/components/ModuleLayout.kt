@@ -72,7 +72,7 @@ fun ModuleLayout(
                 val lastCharIndex = textLayoutResultState!!.getLineEnd(1, true)
                 val showMoreString = "Show More"
                 val adjustedText = module.license.description
-                    .substring(startIndex = 0, endIndex = lastCharIndex)
+                    .take(lastCharIndex)
                     .dropLast(showMoreString.length)
                     .dropLastWhile { it == ' ' || it == '.' }
 

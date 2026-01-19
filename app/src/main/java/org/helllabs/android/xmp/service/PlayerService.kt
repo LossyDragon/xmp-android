@@ -107,7 +107,7 @@ class PlayerService :
     private lateinit var mediaSession: MediaSessionCompat
 
     private var playThread: Thread? = null
-    private lateinit var watchdog: Watchdog
+    private var watchdog: Watchdog? = null
 
     lateinit var mediaController: MediaControllerCompat
         private set
@@ -159,12 +159,13 @@ class PlayerService :
 
         mediaController.transportControls.stop()
 
-        watchdog.stop()
-
         mediaSession.isActive = false
         mediaSession.release()
 
         handlerThread.quitSafely()
+
+        watchdog?.stop()
+        watchdog = null
 
         playThread = null
     }
@@ -354,8 +355,9 @@ class PlayerService :
             isAlive.value = false
             isPlaying.value = false
 
-            watchdog = Watchdog(10).apply {
-                setOnTimeoutListener {
+            watchdog = Watchdog(
+                timeoutSeconds = 10,
+                onTimeout = {
                     Timber.w("Stopped by watchdog")
 
                     serviceScope.launch {
@@ -365,8 +367,7 @@ class PlayerService :
                     abandonAudioFocus()
                     stopSelf()
                 }
-                start()
-            }
+            )
         }
     }
 
@@ -598,6 +599,8 @@ class PlayerService :
         override fun run() {
             cmd = CMD_NONE
 
+            watchdog!!.start()
+
             var lastRecognized = 0
             var oldPos = -1
             var skipToPrevious = false
@@ -746,7 +749,7 @@ class PlayerService :
                             } catch (_: InterruptedException) {
                                 break
                             }
-                            watchdog.refresh()
+                            watchdog!!.refresh()
                         }
 
                         if (discardBuffer) {
@@ -769,7 +772,7 @@ class PlayerService :
                             break
                         }
 
-                        watchdog.refresh()
+                        watchdog!!.refresh()
 
                         // Periodically update notification state
                         val fi = FrameInfo()
@@ -835,7 +838,7 @@ class PlayerService :
 
             Timber.d("Exiting play loop")
 
-            watchdog.stop()
+            watchdog!!.stop()
 
             Thread.sleep(100) // Let the player finish getting data
 

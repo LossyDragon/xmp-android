@@ -115,7 +115,7 @@ private fun Preview_HistoryScreen() {
     XmpTheme(useDarkTheme = true) {
         SearchHistoryScreen(
             historyList = List(12) {
-                Module(songtitle = "Module $it")
+                Module(songtitle = "Module $it", format = "XM")
             }.toPersistentList(),
             onBack = { },
             onClear = { },

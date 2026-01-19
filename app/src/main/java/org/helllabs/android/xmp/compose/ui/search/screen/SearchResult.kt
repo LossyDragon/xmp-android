@@ -1,7 +1,5 @@
 package org.helllabs.android.xmp.compose.ui.search.screen
 
-import android.content.res.Configuration
-import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.material3.*
@@ -10,7 +8,7 @@ import androidx.compose.ui.*
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.*
 import androidx.compose.ui.tooling.preview.*
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.compose.components.ProgressbarIndicator
@@ -29,8 +27,6 @@ import org.helllabs.android.xmp.model.Item
 import org.helllabs.android.xmp.model.Items
 import org.helllabs.android.xmp.model.Module
 import org.helllabs.android.xmp.model.SearchListResult
-import org.helllabs.android.xmp.model.Sponsor
-import org.helllabs.android.xmp.model.SponsorDetails
 
 enum class SearchType {
     ARTIST,

@@ -612,11 +612,6 @@ private fun PlayerScreen(
         while (isActive && showOboeStats) {
             val stats = Xmp.getAudioStats()
 
-            if (stats == null) {
-                delay(1.seconds)
-                continue
-            }
-
             Timber.d("Fetching Audio Stats")
             oboeStats = """
                 Audio Glitches: ${stats.xrunCount} (system), ${stats.underrunCount} (app)
