@@ -576,23 +576,14 @@ class PlayerService :
             return
         }
 
-        val items = list.mapNotNull { item ->
-            val modInfo = ModInfo()
-            if (storageManager.testModule(item, modInfo)) {
-                val desc = MediaDescriptionCompat.Builder()
-                    .setTitle(modInfo.name.ifEmpty { item.lastPathSegment })
-                    .setMediaUri(item)
-                    .setSubtitle(modInfo.type)
-                    .build()
+        // Don't test module here, its too slow for a large list.
+        list.map { uri ->
+            val desc = MediaDescriptionCompat.Builder()
+                .setMediaUri(uri)
+                .build()
 
-                MediaSessionCompat.QueueItem(desc, desc.hashCode().toLong())
-            } else {
-                Timber.w("Item: $item was not a valid module")
-                null
-            }
-        }
-
-        playlist.addAll(items)
+            MediaSessionCompat.QueueItem(desc, desc.hashCode().toLong())
+        }.also(playlist::addAll)
     }
 
     private fun <T> MutableList<T>.shuffleWithFirst(index: Int) {
@@ -620,8 +611,10 @@ class PlayerService :
 
                 // If this file is unrecognized, and we're going backwards, go to previous
                 // If we're at the start of the list, go to the last recognized file
-                val isValid =
-                    queueItem.description.mediaUri?.let { storageManager.testModule(it) } ?: false
+                val modInfo = ModInfo()
+                val isValid = queueItem.description.mediaUri?.let {
+                    storageManager.testModule(it, modInfo)
+                } ?: false
                 if (!isValid) {
                     Timber.w("$currentFileUri: unrecognized format")
                     serviceScope.launch {
@@ -724,11 +717,11 @@ class PlayerService :
                         )
                         putString(
                             MediaMetadataCompat.METADATA_KEY_TITLE,
-                            queueItem.description.title.toString()
+                            modInfo.name
                         )
                         putString(
                             MediaMetadataCompat.METADATA_KEY_ARTIST,
-                            queueItem.description.subtitle.toString()
+                            modInfo.type
                         )
                         putLong(
                             MediaMetadataCompat.METADATA_KEY_DURATION,

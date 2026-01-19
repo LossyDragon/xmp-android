@@ -97,17 +97,14 @@ fun MainNavigation(
                         selected = currentBottomBarScreen == destination,
                         label = { Text(text = destination.title) },
                         icon = {
-                            if (currentBottomBarScreen == destination) {
-                                Icon(
-                                    imageVector = destination.selectedIcon!!,
-                                    contentDescription = null
-                                )
-                            } else {
-                                Icon(
-                                    imageVector = destination.unSelectedIcon!!,
-                                    contentDescription = null
-                                )
-                            }
+                            Icon(
+                                imageVector = if (currentBottomBarScreen == destination) {
+                                    destination.selectedIcon!!
+                                } else {
+                                    destination.unSelectedIcon!!
+                                },
+                                contentDescription = null
+                            )
                         },
                         onClick = {
                             if (mainBackStack.lastOrNull() != destination) {
