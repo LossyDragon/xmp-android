@@ -12,6 +12,7 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.collections.immutable.persistentListOf
 import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.model.ChannelInfo
 import org.helllabs.android.xmp.model.FrameInfo
@@ -155,7 +156,7 @@ internal fun composeSampleSeqVars(): SequenceVars {
     if (!BuildConfig.DEBUG) {
         throw Exception("This function shouldn't be used in non debug builds.")
     }
-    return SequenceVars(sequence = intArrayOf(1111, 2222, 3333, 4444, 5555, 6666))
+    return SequenceVars(sequence = persistentListOf(1111, 2222, 3333, 4444, 5555, 6666))
 }
 
 internal val composePreviewRowFxParm = intArrayOf(

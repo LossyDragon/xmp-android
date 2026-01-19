@@ -62,11 +62,7 @@ object Xmp {
         System.loadLibrary("xmp-jni")
     }
 
-    // external fun loadModule(name: String?): Int
-
-    // external fun testModule(name: String?, info: ModInfo?): Boolean
-
-    external fun loadModuleFd(fd: Int): Int
+    external fun loadModuleFd(fd: Int, modInfo: ModInfo): Int
 
     external fun deinit(): Int
 
@@ -143,7 +139,7 @@ object Xmp {
         buffer: ByteArray?
     )
 
-    external fun getSeqVars(vars: SequenceVars)
+    external fun getSeqVars(): IntArray
 
     external fun getVersion(): String
 
@@ -180,21 +176,11 @@ object Xmp {
     ): Boolean {
         Timber.d("Testing: ${storageManager.getFileName(uri)}")
 
-        val pfd = context.contentResolver.openFileDescriptor(uri, "r")
-        val res = if (pfd != null) {
-            val fd = pfd.detachFd()
-            pfd.close()
-
-            testModuleFd(fd, modInfo)
-        } else {
-            false
-        }
-
-        if (res) {
-            Timber.i("Test Success: ${modInfo.name} | ${modInfo.type}")
-        }
-
-        return res
+        return context.contentResolver.openFileDescriptor(uri, "r")?.use { pfd ->
+            testModuleFd(pfd.detachFd(), modInfo).also { success ->
+                if (success) Timber.i("Test Success: ${modInfo.name} | ${modInfo.type}")
+            }
+        } ?: false
     }
 
     /**
@@ -203,53 +189,19 @@ object Xmp {
     fun loadFromFd(
         context: Context,
         storageManager: StorageManager,
-        uri: Uri
+        uri: Uri,
+        modInfo: ModInfo = ModInfo()
     ): Int {
         Timber.d("Loading: ${storageManager.getFileName(uri)}")
 
-        // Open ONCE for both test and load
-        val pfd = context.contentResolver.openFileDescriptor(uri, "r")
-        if (pfd == null) {
-            Timber.e("Failed to open file descriptor for $uri")
-            return -1
-        }
-
-        return try {
-            val testFd = pfd.dup()?.detachFd()
-            if (testFd == null) {
-                Timber.e("Failed to duplicate file descriptor")
-                pfd.close()
-                return -1
+        return context.contentResolver.openFileDescriptor(uri, "r")?.use { pfd ->
+            loadModuleFd(pfd.detachFd(), modInfo).also { result ->
+                when (result) {
+                    0 -> Timber.i("Loaded: ${modInfo.name} | ${modInfo.type}")
+                    -2 -> Timber.d("Test failed for $uri")
+                    else -> Timber.e("Load failed: $result")
+                }
             }
-
-            val modInfo = ModInfo()
-            val testResult = testModuleFd(testFd, modInfo)
-
-            if (!testResult) {
-                Timber.d("Test failed for $uri")
-                pfd.close()
-                return -1
-            }
-
-            Timber.i("Test Success: ${modInfo.name} | ${modInfo.type}")
-
-            val loadFd = pfd.dup()?.detachFd()
-            if (loadFd == null) {
-                Timber.e("Failed to duplicate file descriptor for loading")
-                pfd.close()
-                return -1
-            }
-
-            val result = loadModuleFd(loadFd)
-
-            pfd.close()
-
-            Timber.d("Load Module from file descriptor, result: $result")
-            result
-        } catch (e: Exception) {
-            Timber.e(e, "Exception loading module")
-            pfd.close()
-            -1
-        }
+        } ?: -1
     }
 }

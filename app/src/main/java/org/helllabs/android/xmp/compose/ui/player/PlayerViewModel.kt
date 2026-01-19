@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.lazygeniouz.dfc.file.DocumentFileCompat
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,7 +21,6 @@ import org.helllabs.android.xmp.core.PrefManager
 import org.helllabs.android.xmp.model.ChannelInfo
 import org.helllabs.android.xmp.model.FrameInfo
 import org.helllabs.android.xmp.model.ModVars
-import org.helllabs.android.xmp.model.Playlist
 import org.helllabs.android.xmp.model.SequenceVars
 import org.helllabs.android.xmp.service.PlayerService
 import timber.log.Timber
@@ -224,9 +224,8 @@ class PlayerViewModel(prefManager: PrefManager) : ViewModel() {
         Xmp.getModVars(mVars)
         _modVars.update { mVars }
 
-        val sVars = SequenceVars()
-        Xmp.getSeqVars(sVars)
-        seqVars.update { sVars }
+        val sequence = Xmp.getSeqVars().asList().toImmutableList()
+        seqVars.update { SequenceVars(sequence) }
 
         _drawerState.update {
             it.copy(
@@ -278,7 +277,9 @@ class PlayerViewModel(prefManager: PrefManager) : ViewModel() {
 
         if (_uiState.value.serviceConnected) {
             Xmp.getModVars(modVars.value)
-            Xmp.getSeqVars(seqVars.value)
+
+            val sequence = Xmp.getSeqVars().asList().toImmutableList()
+            seqVars.update { SequenceVars(sequence) }
 
             _insName.update {
                 val instruments = Xmp.getInstruments() ?: Array(modVars.value.numInstruments) { "" }

@@ -27,7 +27,6 @@ namespace {
   constexpr int PERIOD_BASE = 13696;
   constexpr int BUFFER_TIME_MS = 40;
   constexpr int MIN_BUFFER_NUM = 3;
-  constexpr int MAX_DISPLAY_SEQUENCES = 16;
 
   constexpr const char* TAG = "Xmp Mod Player jni";
 }
@@ -54,6 +53,7 @@ namespace {
     }
 
     XmpPlayerState(const XmpPlayerState&) = delete;
+
     XmpPlayerState& operator=(const XmpPlayerState&) = delete;
 
     // Accessors with lock guards
@@ -64,6 +64,7 @@ namespace {
     bool isInitialized() const {
       return initialized_;
     }
+
     void setInitialized(bool val) {
       initialized_ = val;
     }
@@ -71,6 +72,7 @@ namespace {
     bool isModuleLoaded() const {
       return mod_is_loaded_;
     }
+
     void setModuleLoaded(bool val) {
       mod_is_loaded_ = val;
     }
@@ -78,6 +80,7 @@ namespace {
     bool isPlaying() const {
       return playing_;
     }
+
     void setPlaying(bool val) {
       playing_ = val;
     }
@@ -85,6 +88,7 @@ namespace {
     int getActualRate() const {
       return actual_rate_;
     }
+
     void setActualRate(int rate) {
       actual_rate_ = rate;
     }
@@ -92,6 +96,7 @@ namespace {
     int getBufferNum() const {
       return buffer_num_;
     }
+
     void setBufferNum(int num) {
       buffer_num_ = num;
     }
@@ -99,6 +104,7 @@ namespace {
     int getLoopCount() const {
       return loop_count_;
     }
+
     void setLoopCount(int count) {
       loop_count_ = count;
     }
@@ -106,6 +112,7 @@ namespace {
     int getSequence() const {
       return sequence_;
     }
+
     void setSequence(int seq) {
       sequence_ = seq;
     }
@@ -117,6 +124,7 @@ namespace {
     xmp_context getContext() const {
       return ctx_;
     }
+
     void setContext(xmp_context ctx) {
       ctx_ = ctx;
     }
@@ -128,27 +136,35 @@ namespace {
     std::array<int, XMP_MAX_CHANNELS>& getCurrentVolume() {
       return cur_vol_;
     }
+
     std::array<int, XMP_MAX_CHANNELS>& getFinalVolume() {
       return final_vol_;
     }
+
     std::array<int, XMP_MAX_CHANNELS>& getHoldVolume() {
       return hold_vol_;
     }
+
     std::array<int, XMP_MAX_CHANNELS>& getInstruments() {
       return ins_;
     }
+
     std::array<int, XMP_MAX_CHANNELS>& getKeys() {
       return key_;
     }
+
     std::array<int, XMP_MAX_CHANNELS>& getLastKeys() {
       return last_key_;
     }
+
     std::array<int, XMP_MAX_CHANNELS>& getPan() {
       return pan_;
     }
+
     std::array<int, XMP_MAX_CHANNELS>& getPeriod() {
       return period_;
     }
+
     std::array<int, XMP_MAX_CHANNELS>& getPosition() {
       return pos_;
     }
@@ -168,6 +184,7 @@ namespace {
     int getBefore() const {
       return before_;
     }
+
     void setBefore(int val) {
       before_ = val;
     }
@@ -175,6 +192,7 @@ namespace {
     int getNow() const {
       return now_;
     }
+
     void setNow(int val) {
       now_ = val;
     }
@@ -185,6 +203,7 @@ namespace {
 
   private:
     XmpPlayerState() = default;
+
     ~XmpPlayerState() = default;
 
     std::mutex mutex_;
@@ -241,10 +260,6 @@ namespace {
     jfieldID seqDuration = nullptr;
   };
 
-  struct SeqVarsIDs {
-    jfieldID sequenceField = nullptr;
-  };
-
   struct FrameInfoIDs {
     jfieldID posField = nullptr;
     jfieldID patternField = nullptr;
@@ -259,38 +274,7 @@ namespace {
   ModInfoIDs g_modInfoIDs;
   ChannelVarsIDs g_channelVarsIDs;
   ModVarsIDs g_modVarsIDs;
-  SeqVarsIDs g_seqVarsIDs;
   FrameInfoIDs g_frameInfoIDs;
-
-  // Helper class for JNI local references
-  class JniLocalRef {
-  public:
-    JniLocalRef(JNIEnv* env, jobject obj) : env_(env), obj_(obj) {}
-
-    ~JniLocalRef() {
-      if (obj_ && env_) {
-        env_->DeleteLocalRef(obj_);
-      }
-    }
-
-    JniLocalRef(const JniLocalRef&) = delete;
-    JniLocalRef& operator=(const JniLocalRef&) = delete;
-
-    JniLocalRef(JniLocalRef&& other) noexcept : env_(other.env_), obj_(other.obj_) {
-      other.obj_ = nullptr;
-    }
-
-    jobject get() const {
-      return obj_;
-    }
-    explicit operator jobject() const {
-      return obj_;
-    }
-
-  private:
-    JNIEnv* env_;
-    jobject obj_;
-  };
 
   // Field ID caching functions
   void cacheModInfoIDs(JNIEnv* env) {
@@ -328,13 +312,6 @@ namespace {
     }
   }
 
-  void cacheSequenceVarsIDs(JNIEnv* env) {
-    if (jclass cls = env->FindClass("org/helllabs/android/xmp/model/SequenceVars")) {
-      g_seqVarsIDs.sequenceField = env->GetFieldID(cls, "sequence", "[I");
-      env->DeleteLocalRef(cls);
-    }
-  }
-
   void cacheFrameInfoIDs(JNIEnv* env) {
     if (jclass cls = env->FindClass("org/helllabs/android/xmp/model/FrameInfo")) {
       g_frameInfoIDs.posField = env->GetFieldID(cls, "pos", "I");
@@ -360,11 +337,13 @@ namespace {
     }
 
     FileHandle(const FileHandle&) = delete;
+
     FileHandle& operator=(const FileHandle&) = delete;
 
     FILE* get() const {
       return file_;
     }
+
     explicit operator bool() const {
       return file_ != nullptr;
     }
@@ -454,7 +433,7 @@ JNIEXPORT jboolean JNICALL JNI_FUNCTION(init)(JNIEnv* env, jobject obj, jint rat
   cacheFrameInfoIDs(env);
   cacheModInfoIDs(env);
   cacheModVarsIDs(env);
-  cacheSequenceVarsIDs(env);
+  // cacheSequenceVarsIDs(env);
 
   state.setInitialized(true);
   LOGI("init() completed successfully - actual_rate=%d", actual_rate);
@@ -483,36 +462,50 @@ JNIEXPORT jint JNICALL JNI_FUNCTION(deinit)(JNIEnv* env, jobject obj) {
   return 0;
 }
 
-JNIEXPORT jint JNICALL JNI_FUNCTION(loadModuleFd)(JNIEnv* env, jobject obj, jint fd) {
+JNIEXPORT jint JNICALL JNI_FUNCTION(loadModuleFd)(JNIEnv* env, jobject obj, jint fd, jobject modInfo) {
   LOGI("loadModuleFd() called - fd: %d, tid: %d", fd, get_thread_id());
 
-  FileHandle file(fdopen(fd, "r"));
+  FileHandle file(fdopen(fd, "rb"));
   if (!file) {
-    LOGE("loadModuleFd() - fdopen failed for fd %d: %s", fd, strerror(errno));
+    LOGE("loadModuleFd() - fdopen failed: %s", strerror(errno));
     return -1;
   }
+
+  xmp_test_info ti{};
+  int res = xmp_test_module_from_file(file.get(), &ti);
+
+  if (res != 0) {
+    LOGW("loadModuleFd() - test failed: %d", res);
+    return -2;
+  }
+
+  // Populate modInfo
+  if (!g_modInfoIDs.name || !g_modInfoIDs.type) {
+    cacheModInfoIDs(env);
+  }
+
+  jstring name = env->NewStringUTF(ti.name);
+  jstring type = env->NewStringUTF(ti.type);
+  env->SetObjectField(modInfo, g_modInfoIDs.name, name);
+  env->SetObjectField(modInfo, g_modInfoIDs.type, type);
+
+  rewind(file.get());
 
   struct stat statbuf{};
   if (fstat(fd, &statbuf) != 0) {
-    LOGE("loadModuleFd() - fstat failed for fd %d: %s", fd, strerror(errno));
-    return -1;
+    LOGE("loadModuleFd() - fstat failed: %s", strerror(errno));
+    return -3;
   }
 
   XmpPlayerState& state = XmpPlayerState::instance();
-  int res = xmp_load_module_from_file(state.getContext(), file.get(), static_cast<off_t>(statbuf.st_size));
+  res = xmp_load_module_from_file(state.getContext(), file.get(), static_cast<off_t>(statbuf.st_size));
 
   if (res == 0) {
     xmp_get_module_info(state.getContext(), &state.getModuleInfo());
-
-    const xmp_module_info& mi = state.getModuleInfo();
-    LOGI("loadModuleFd() - module loaded: %s (type: %s)", mi.mod->name, mi.mod->type);
-
     state.getPosition().fill(0);
     state.setSequence(0);
     state.setModuleLoaded(true);
-  } else {
-    LOGE("loadModuleFd() - failed to load module, error: %d", res);
-    state.setModuleLoaded(false);
+    LOGI("loadModuleFd() - loaded: %s", ti.name);
   }
 
   return res;
@@ -541,16 +534,16 @@ JNIEXPORT jboolean JNICALL JNI_FUNCTION(testModuleFd)(JNIEnv* env, jobject obj, 
   if (res == 0) {
     LOGI("testModuleFd() - valid module: '%s' (type: %s)", ti.name, ti.type);
 
-    JniLocalRef name(env, env->NewStringUTF(ti.name));
-    JniLocalRef type(env, env->NewStringUTF(ti.type));
+    jstring name = env->NewStringUTF(ti.name);
+    jstring type = env->NewStringUTF(ti.type);
 
-    if (!name.get() || !type.get()) {
+    if (!name || !type) {
       LOGE("testModuleFd() - failed to create Java strings");
       return JNI_FALSE;
     }
 
-    env->SetObjectField(modInfo, g_modInfoIDs.name, name.get());
-    env->SetObjectField(modInfo, g_modInfoIDs.type, type.get());
+    env->SetObjectField(modInfo, g_modInfoIDs.name, name);
+    env->SetObjectField(modInfo, g_modInfoIDs.type, type);
 
     LOGD("testModuleFd() - successfully populated modInfo");
   } else {
@@ -793,8 +786,9 @@ JNIEXPORT jobjectArray JNICALL JNI_FUNCTION(getFormats)(JNIEnv* env, jobject obj
   if (!stringArray) return nullptr;
 
   for (int i = 0; i < num; i++) {
-    JniLocalRef s(env, env->NewStringUTF(list[i]));
-    env->SetObjectArrayElement(stringArray, i, s.get());
+    jstring s = env->NewStringUTF(list[i]);
+    env->SetObjectArrayElement(stringArray, i, s);
+    env->DeleteLocalRef(s);
   }
 
   env->DeleteLocalRef(stringClass);
@@ -847,8 +841,9 @@ JNIEXPORT jobjectArray JNICALL JNI_FUNCTION(getInstruments)(JNIEnv* env, jobject
     std::array<char, 64> buf{};
     snprintf(buf.data(), buf.size(), "%02X %s", i + 1, mi.mod->xxi[i].name);
 
-    JniLocalRef s(env, env->NewStringUTF(buf.data()));
-    env->SetObjectArrayElement(stringArray, i, s.get());
+    jstring s = env->NewStringUTF(buf.data());
+    env->SetObjectArrayElement(stringArray, i, s);
+    env->DeleteLocalRef(s);
   }
 
   env->DeleteLocalRef(stringClass);
@@ -943,15 +938,18 @@ JNIEXPORT void JNICALL JNI_FUNCTION(getPatternRow)(JNIEnv* env, jobject obj, jin
 
   const xmp_module_info& mi = state.getModuleInfo();
 
-  if (pat > mi.mod->pat || row > mi.mod->xxp[pat]->rows) return;
+  if (pat >= mi.mod->pat) return;
 
   const xmp_pattern* xxp = mi.mod->xxp[pat];
+
+  if (!xxp || row >= xxp->rows) return;
+
   int chn = mi.mod->chn;
 
-  std::vector<jbyte> row_note(chn);
-  std::vector<jbyte> row_ins(chn);
-  std::vector<jbyte> row_fxt(chn);
-  std::vector<jbyte> row_fxp(chn);
+  std::array<jbyte, XMP_MAX_CHANNELS> row_note{};
+  std::array<jbyte, XMP_MAX_CHANNELS> row_ins{};
+  std::array<jbyte, XMP_MAX_CHANNELS> row_fxt{};
+  std::array<jbyte, XMP_MAX_CHANNELS> row_fxp{};
 
   for (int i = 0; i < chn; i++) {
     const xmp_track* xxt = mi.mod->xxt[xxp->index[i]];
@@ -1127,27 +1125,32 @@ JNIEXPORT jint JNICALL JNI_FUNCTION(getMaxSequences)(JNIEnv* env, jobject obj) {
   return MAX_SEQUENCES;
 }
 
-JNIEXPORT void JNICALL JNI_FUNCTION(getSeqVars)(JNIEnv* env, jobject obj, jobject seqVars) {
+JNIEXPORT jintArray JNICALL JNI_FUNCTION(getSeqVars)(JNIEnv* env, jobject obj) {
   XmpPlayerState& state = XmpPlayerState::instance();
 
-  if (!state.isModuleLoaded()) return;
+  if (!state.isModuleLoaded()) {
+    return env->NewIntArray(0);
+  }
 
   const xmp_module_info& mi = state.getModuleInfo();
-  int num = std::min(mi.num_sequences, MAX_DISPLAY_SEQUENCES);
+  int num = mi.num_sequences;
 
-  if (!g_seqVarsIDs.sequenceField) {
-    cacheSequenceVarsIDs(env);
+  if (num <= 0) {
+    return env->NewIntArray(0);
   }
 
   jintArray result = env->NewIntArray(num);
-  if (!result) return;
-
-  for (int i = 0; i < num; i++) {
-    jint value = mi.seq_data[i].duration;
-    env->SetIntArrayRegion(result, i, 1, &value);
+  if (!result) {
+    return env->NewIntArray(0);
   }
 
-  env->SetObjectField(seqVars, g_seqVarsIDs.sequenceField, result);
+  std::vector<jint> durations(num);
+  for (int i = 0; i < num; i++) {
+    durations[i] = mi.seq_data[i].duration;
+  }
+  env->SetIntArrayRegion(result, 0, num, durations.data());
+
+  return result;
 }
 
 JNIEXPORT jint JNICALL JNI_FUNCTION(getVolume)(JNIEnv* env, jobject obj) {
@@ -1176,11 +1179,11 @@ JNIEXPORT jobject JNICALL JNI_FUNCTION(getAudioStats)(JNIEnv* env, jobject obj) 
     return nullptr;
   }
 
-  JniLocalRef apiStr(env, env->NewStringUTF(stats.audio_api));
-  JniLocalRef modeStr(env, env->NewStringUTF(stats.sharing_mode));
+  jstring apiStr = env->NewStringUTF(stats.audio_api);
+  jstring modeStr = env->NewStringUTF(stats.sharing_mode);
 
   jobject statsObj =
-    env->NewObject(statsClass, constructor, stats.xrun_count, stats.underrun_count, stats.frames_per_burst, stats.buffer_capacity, stats.buffer_size, stats.sample_rate, apiStr.get(), modeStr.get());
+    env->NewObject(statsClass, constructor, stats.xrun_count, stats.underrun_count, stats.frames_per_burst, stats.buffer_capacity, stats.buffer_size, stats.sample_rate, apiStr, modeStr);
 
   env->DeleteLocalRef(statsClass);
   return statsObj;
