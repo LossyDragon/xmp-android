@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Add libxmp's CMakeLists.txt
 add_subdirectory(libxmp)
+target_compile_options(xmp_static PRIVATE -Wno-unused-function)
 
 # Find Oboe package from gradle import.
 find_package(oboe REQUIRED CONFIG)
