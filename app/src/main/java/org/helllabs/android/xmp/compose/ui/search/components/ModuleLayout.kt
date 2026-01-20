@@ -20,6 +20,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.compose.components.annotatedLinkStringCombined
@@ -111,13 +112,13 @@ fun ModuleLayout(
         val info = stringResource(
             R.string.result_by,
             module.format,
-            module.getArtist(),
+            module.artist,
             size
         )
 
         Spacer(modifier = Modifier.height(10.dp))
         // Title
-        Text(text = module.getSongTitle().toString())
+        Text(text = module.songtitle)
         Spacer(modifier = Modifier.height(5.dp))
         // Filename
         Text(text = module.filename, textAlign = TextAlign.Center)
@@ -163,14 +164,14 @@ fun ModuleLayout(
             HeaderText(stringResource(id = R.string.song_message))
             Spacer(modifier = Modifier.height(10.dp))
             // Song Message Content
-            MonoSpaceText(text = module.parseComment())
+            MonoSpaceText(text = module.formattedComment)
             Spacer(modifier = Modifier.height(10.dp))
         }
         // Instruments
         HeaderText(stringResource(id = R.string.instruments))
         Spacer(modifier = Modifier.height(10.dp))
         // Instruments Content
-        MonoSpaceText(text = module.parseInstruments())
+        MonoSpaceText(text = module.formattedInstruments)
         Spacer(modifier = Modifier.height(10.dp))
         // Sponsor
         if (moduleResult.hasSponsor) {
@@ -224,7 +225,7 @@ private fun Preview_ModuleLayout() {
             filename = "",
             bytes = 669669,
             format = "XM",
-            artistInfo = ArtistInfo(artist = listOf(Artist(alias = "Some Artist"))),
+            artistInfo = ArtistInfo(artist = persistentListOf(Artist(alias = "Some Artist"))),
             infopage = "http://localhost",
             license = License(
                 title = "Some License Title",

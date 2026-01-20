@@ -18,6 +18,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.collections.immutable.persistentListOf
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.compose.theme.XmpTheme
 import org.helllabs.android.xmp.model.Artist
@@ -54,7 +55,7 @@ fun ItemModule(
         },
         headlineContent = {
             Text(
-                text = item.getSongTitle().toString(),
+                text = item.songtitle,
                 maxLines = 1,
                 fontSize = 18.sp,
                 overflow = TextOverflow.Ellipsis
@@ -62,7 +63,7 @@ fun ItemModule(
         },
         supportingContent = {
             Text(
-                text = item.getArtist(),
+                text = item.artist,
                 maxLines = 1,
                 fontSize = 14.sp,
                 overflow = TextOverflow.Ellipsis
@@ -88,7 +89,7 @@ private fun Preview_ItemModule() {
                 format = "XM",
                 songtitle = "Some History Song Title",
                 artistInfo = ArtistInfo(
-                    artist = listOf(Artist(alias = "Some History Artist Info"))
+                    artist = persistentListOf(Artist(alias = "Some History Artist Info"))
                 ),
                 bytes = 6690000
             ),

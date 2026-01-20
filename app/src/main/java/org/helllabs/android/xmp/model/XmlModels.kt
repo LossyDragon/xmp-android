@@ -2,17 +2,15 @@
 
 package org.helllabs.android.xmp.model
 
-import android.os.Build
 import android.text.Html
 import android.text.Spanned
-import androidx.compose.runtime.Stable
-import androidx.core.text.toSpanned
+import androidx.compose.runtime.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import nl.adaptivity.xmlutil.serialization.*
 
-@Stable
+@Immutable
 @Serializable
 @SerialName("modarchive")
 data class ModuleResult(
@@ -23,15 +21,41 @@ data class ModuleResult(
     @XmlElement val module: Module = Module()
 ) {
     @Transient
-    val hasSponsor: Boolean = sponsor.details.text.isNotEmpty()
+    val hasSponsor: Boolean = sponsor.details.text.isNotBlank()
 }
 
-@Stable
+@Immutable
+@Serializable
+@SerialName("modarchive")
+data class SearchListResult(
+    @XmlElement val sponsor: Sponsor = Sponsor(),
+    @XmlElement val error: String? = null,
+    @XmlElement val results: Int = 0,
+    @XmlElement val totalpages: Int = 0,
+    @XmlSerialName("module", "", "") val module: List<Module> = emptyList()
+)
+
+@Immutable
+@Serializable
+@SerialName("modarchive")
+data class ArtistResult(
+    @XmlElement val sponsor: Sponsor = Sponsor(),
+    @XmlElement val error: String? = null,
+    @XmlElement val results: Int = 0,
+    @XmlElement val total_results: Int = 0,
+    @XmlElement val totalpages: Int = 0,
+    @XmlElement val items: Items = Items()
+) {
+    val listItems: List<Item>
+        get() = items.item
+}
+
+@Immutable
 @Serializable
 @SerialName("sponsor")
 data class Sponsor(@XmlElement val details: SponsorDetails = SponsorDetails())
 
-@Stable
+@Immutable
 @Serializable
 @SerialName("details")
 data class SponsorDetails(
@@ -41,7 +65,7 @@ data class SponsorDetails(
     @XmlElement val imagehtml: String = ""
 )
 
-@Stable
+@Immutable
 @Serializable
 @SerialName("module")
 data class Module(
@@ -65,59 +89,36 @@ data class Module(
     @XmlElement val genreid: Int = 0,
     @XmlElement val genretext: String = "",
     @XmlElement val channels: Int = 0,
+    @XmlSerialName("overall_ratings", "", "")
     @XmlElement val overallRatings: OverallRatings = OverallRatings(),
     @XmlElement val license: License = License(),
+    @XmlSerialName("artist_info", "", "")
     @XmlElement val artistInfo: ArtistInfo = ArtistInfo()
 ) {
     val byteSize: Int
-        get() = bytes.div(1024)
+        get() = bytes / 1024
 
-    fun getArtist(): String {
-        with(artistInfo) {
-            artist.firstOrNull {
-                return it.alias
-            }
+    val downloadUrl: String
+        get() = url.trim()
 
-            guessedArtistList.firstOrNull {
-                return it
-            }
+    val artist: String
+        get() = artistInfo.artist.firstOrNull()?.alias?.trim()
+            ?: artistInfo.guessedArtistList.firstOrNull()?.trim()
+            ?: "unknown"
 
-            return "unknown"
-        }
-    }
+    val title: Spanned
+        get() = songtitle.trim().ifEmpty { "(untitled)" }.asHtml()
 
-    @Stable
-    fun getSongTitle(): Spanned {
-        val title = if (songtitle.isNotEmpty()) songtitle.asHtml() else "(untitled)"
-        return title.toSpanned()
-    }
+    val formattedInstruments: String
+        get() = instruments.lineSequence()
+            .joinToString("\n") { it.asHtml().toString() }
 
-    fun parseInstruments(): String {
-        val lines = instruments.split("\n").toTypedArray()
-        val buffer = StringBuilder()
-
-        lines.map {
-            val line = it.asHtml()
-            buffer.appendLine(line)
-        }
-
-        return buffer.toString()
-    }
-
-    fun parseComment(): String {
-        val lines = comment.split("\n").toTypedArray()
-        val buffer = StringBuilder()
-
-        lines.map {
-            val line = it.asHtml()
-            buffer.appendLine(line)
-        }
-
-        return buffer.toString()
-    }
+    val formattedComment: String
+        get() = comment.lineSequence()
+            .joinToString("\n") { it.asHtml().toString() }
 }
 
-@Stable
+@Immutable
 @Serializable
 @SerialName("featured")
 data class Featured(
@@ -126,12 +127,12 @@ data class Featured(
     @XmlElement val timestamp: String = ""
 )
 
-@Stable
+@Immutable
 @Serializable
 @SerialName("favourites")
 data class Favourites(@XmlElement val favoured: Int = 0, @XmlElement val myfav: Int = 0)
 
-@Stable
+@Immutable
 @Serializable
 @SerialName("overall_ratings")
 data class OverallRatings(
@@ -141,7 +142,7 @@ data class OverallRatings(
     @XmlElement val review_total: Int = 0
 )
 
-@Stable
+@Immutable
 @Serializable
 @SerialName("license")
 data class License(
@@ -153,7 +154,7 @@ data class License(
     @XmlElement val legalurl: String = ""
 )
 
-@Stable
+@Immutable
 @Serializable
 @SerialName("artist_info")
 data class ArtistInfo(
@@ -166,15 +167,15 @@ data class ArtistInfo(
         get() = guessed_artist.alias
 }
 
-// (Link Dead) https://modarchive.org/forums/index.php?topic=4713.0
-// Not even TMA knows much about this.
-// NOTE: I'm not sure of this is correct, rare to see multiple guest artists.
-@Stable
+@Immutable
 @Serializable
 @SerialName("guessed_artist")
-data class GuessedArtists(@XmlSerialName("alias", "", "") val alias: List<String> = emptyList())
+data class GuessedArtists(
+    @XmlSerialName("alias", "", "")
+    val alias: List<String> = emptyList()
+)
 
-@Stable
+@Immutable
 @Serializable
 @SerialName("artist")
 data class Artist(
@@ -187,43 +188,20 @@ data class Artist(
     @XmlElement val module_data: ModuleData = ModuleData()
 )
 
-@Stable
+@Immutable
 @Serializable
 @SerialName("module_data")
 data class ModuleData(@XmlElement val module_description: String = "")
 
-@Stable
-@Serializable
-@SerialName("modarchive")
-data class SearchListResult(
-    @XmlElement val sponsor: Sponsor = Sponsor(),
-    @XmlElement val error: String? = null,
-    @XmlElement val results: Int = 0,
-    @XmlElement val totalpages: Int = 0,
-    @XmlSerialName("module", "", "") val module: List<Module> = emptyList()
-)
-
-@Stable
-@Serializable
-@SerialName("modarchive")
-data class ArtistResult(
-    @XmlElement val sponsor: Sponsor = Sponsor(),
-    @XmlElement val error: String? = null,
-    @XmlElement val results: Int = 0,
-    @XmlElement val total_results: Int = 0,
-    @XmlElement val totalpages: Int = 0,
-    @XmlElement val items: Items = Items()
-) {
-    val listItems: List<Item>
-        get() = items.item
-}
-
-@Stable
+@Immutable
 @Serializable
 @SerialName("items")
-data class Items(@XmlSerialName("item", "", "") val item: List<Item> = emptyList())
+data class Items(
+    @XmlSerialName("item", "", "")
+    val item: List<Item> = emptyList()
+)
 
-@Stable
+@Immutable
 @Serializable
 @SerialName("item")
 data class Item(
@@ -239,17 +217,4 @@ data class Item(
     @XmlElement val profile: String = ""
 )
 
-/**
- * General helper functions related to Strings
- */
-private fun String?.asHtml(): Spanned {
-    if (this.isNullOrEmpty()) {
-        return "".toSpanned()
-    }
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-        Html.fromHtml(this, Html.FROM_HTML_MODE_LEGACY)
-    } else {
-        @Suppress("DEPRECATION")
-        Html.fromHtml(this)
-    }
-}
+private fun String.asHtml(): Spanned = Html.fromHtml(this, Html.FROM_HTML_MODE_LEGACY)

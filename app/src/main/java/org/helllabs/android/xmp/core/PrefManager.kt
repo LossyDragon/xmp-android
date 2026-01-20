@@ -215,6 +215,7 @@ class PrefManager(context: Context, private val json: Json) {
             list.toPersistentList()
         } catch (e: Exception) {
             Timber.e(e, "Error parsing search history")
+            dataStore.edit { it.remove(Keys.SEARCH_HISTORY) }
             persistentListOf()
         }
     }

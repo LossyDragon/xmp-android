@@ -125,7 +125,7 @@ class ResultViewModel(
         mod: Module,
         outputFile: DocumentFileCompat
     ): Result<Unit> = runCatching {
-        val response = httpClient.get(mod.url)
+        val response = httpClient.get(mod.downloadUrl)
         val contentLength = response.contentLength() ?: 0L
         val channel = response.bodyAsChannel()
 
@@ -185,6 +185,7 @@ class ResultViewModel(
                 }
             },
             onFailure = { error ->
+                Timber.e(error)
                 _uiState.update {
                     it.copy(
                         softError = error.message,

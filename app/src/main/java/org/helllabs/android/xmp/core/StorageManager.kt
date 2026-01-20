@@ -78,7 +78,7 @@ class StorageManager(private val context: Context, private val prefManager: Pref
             }
 
             if (prefManager.getArtistFolder()) {
-                val artistName = module.getArtist()
+                val artistName = module.artist
                 targetDir = getOrCreateDirectory(targetDir, artistName, "artist")
             }
 

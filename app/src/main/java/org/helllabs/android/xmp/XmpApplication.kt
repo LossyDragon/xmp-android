@@ -1,7 +1,7 @@
 package org.helllabs.android.xmp
 
 import android.app.Application
-import org.helllabs.android.xmp.core.ReleaseTree
+import android.util.Log
 import org.helllabs.android.xmp.di.appModule
 import org.helllabs.android.xmp.di.modArchiveModule
 import org.helllabs.android.xmp.di.viewModelModule
@@ -12,6 +12,17 @@ import timber.log.Timber
 // TODO add migration tool for older playlists.
 
 class XmpApplication : Application() {
+
+    private class ReleaseTree : Timber.Tree() {
+        override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
+            if (priority == Log.DEBUG) {
+                return
+            }
+
+            Log.println(priority, "Xmp Mod Player", message)
+        }
+    }
+
     override fun onCreate() {
         super.onCreate()
 

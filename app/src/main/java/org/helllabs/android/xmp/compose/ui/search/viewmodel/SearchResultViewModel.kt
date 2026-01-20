@@ -10,6 +10,7 @@ import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.api.ModArchiveService
 import org.helllabs.android.xmp.model.ArtistResult
 import org.helllabs.android.xmp.model.SearchListResult
+import timber.log.Timber
 
 sealed class SearchResult {
     data class Modules(val data: SearchListResult) : SearchResult()
@@ -43,6 +44,7 @@ class SearchResultViewModel(private val modArchive: ModArchiveService) : ViewMod
                 }
             },
             onFailure = { error ->
+                Timber.e(error)
                 _uiState.update {
                     it.copy(softError = error.message, isLoading = false)
                 }
@@ -64,6 +66,7 @@ class SearchResultViewModel(private val modArchive: ModArchiveService) : ViewMod
                 }
             },
             onFailure = { error ->
+                Timber.e(error)
                 _uiState.update {
                     it.copy(softError = error.message, isLoading = false)
                 }
@@ -85,6 +88,7 @@ class SearchResultViewModel(private val modArchive: ModArchiveService) : ViewMod
                 }
             },
             onFailure = { error ->
+                Timber.e(error)
                 _uiState.update {
                     it.copy(softError = error.message, isLoading = false)
                 }
