@@ -18,6 +18,7 @@ import org.helllabs.android.xmp.compose.ui.search.components.GuruFrame
 import org.helllabs.android.xmp.compose.ui.search.components.GuruTextButton
 import org.helllabs.android.xmp.compose.ui.search.components.ItemArtist
 import org.helllabs.android.xmp.compose.ui.search.components.ItemModule
+import org.helllabs.android.xmp.compose.ui.search.viewmodel.SearchResult
 import org.helllabs.android.xmp.compose.ui.search.viewmodel.SearchResultState
 import org.helllabs.android.xmp.compose.ui.search.viewmodel.SearchResultViewModel
 import org.helllabs.android.xmp.model.Artist
@@ -101,9 +102,18 @@ private fun TitleResultScreen(
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    when (val items = state.result) {
-                        is SearchListResult -> {
-                            items(items.module) { item ->
+                    when (state.result) {
+                        is SearchResult.Artists -> {
+                            items(state.result.data.listItems) { item ->
+                                ItemArtist(
+                                    alias = item.alias,
+                                    onClick = { onArtistId(item.id) }
+                                )
+                            }
+                        }
+
+                        is SearchResult.Modules -> {
+                            items(state.result.data.module) { item ->
                                 ItemModule(
                                     item = item,
                                     onClick = { onItemId(item.id) }
@@ -111,14 +121,7 @@ private fun TitleResultScreen(
                             }
                         }
 
-                        is ArtistResult -> {
-                            items(items.listItems) { item ->
-                                ItemArtist(
-                                    alias = item.alias,
-                                    onClick = { onArtistId(item.id) }
-                                )
-                            }
-                        }
+                        else -> Unit
                     }
                 }
             }
@@ -133,14 +136,16 @@ private fun Preview_TitleResult() {
         TitleResultScreen(
             state = SearchResultState(
                 title = stringResource(id = R.string.screen_title_artist),
-                result = ArtistResult(
-                    items = Items(
-                        item = List(15) {
-                            Item(
-                                id = it,
-                                alias = "Artist $it",
-                            )
-                        }
+                result = SearchResult.Artists(
+                    ArtistResult(
+                        items = Items(
+                            item = List(15) {
+                                Item(
+                                    id = it,
+                                    alias = "Artist $it",
+                                )
+                            }
+                        )
                     )
                 ),
             ),
@@ -158,17 +163,19 @@ private fun Preview_TitleResult2() {
         TitleResultScreen(
             state = SearchResultState(
                 title = stringResource(id = R.string.screen_title_result),
-                result = SearchListResult(
-                    module = List(15) {
-                        Module(
-                            format = "XM",
-                            songtitle = "Some Song Title $it",
-                            artistInfo = ArtistInfo(
-                                artist = listOf(Artist(alias = "Some Artist"))
-                            ),
-                            bytes = 669669
-                        )
-                    }
+                result = SearchResult.Modules(
+                    SearchListResult(
+                        module = List(15) {
+                            Module(
+                                format = "XM",
+                                songtitle = "Some Song Title $it",
+                                artistInfo = ArtistInfo(
+                                    artist = listOf(Artist(alias = "Some Artist"))
+                                ),
+                                bytes = 669669
+                            )
+                        }
+                    )
                 )
             ),
             onBack = {},

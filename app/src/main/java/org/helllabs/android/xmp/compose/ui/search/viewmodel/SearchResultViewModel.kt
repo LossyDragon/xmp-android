@@ -5,119 +5,90 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.helllabs.android.xmp.api.Repository
-import org.helllabs.android.xmp.core.Resource
+import org.helllabs.android.xmp.api.ModArchiveService
+import org.helllabs.android.xmp.model.ArtistResult
+import org.helllabs.android.xmp.model.SearchListResult
+
+sealed class SearchResult {
+    data class Modules(val data: SearchListResult) : SearchResult()
+    data class Artists(val data: ArtistResult) : SearchResult()
+}
 
 @Immutable
 data class SearchResultState(
     val isLoading: Boolean = false,
     val softError: String? = null,
     val title: String = "",
-    val result: Any? = null
+    val result: SearchResult? = null
 )
 
-class SearchResultViewModel(private val repository: Repository) : ViewModel() {
+class SearchResultViewModel(private val modArchive: ModArchiveService) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SearchResultState())
     val uiState = _uiState.asStateFlow()
 
-    fun getFileOrTitle(string: String, query: String) = viewModelScope.launch {
-        _uiState.update { it.copy(title = string, isLoading = true) }
+    fun getFileOrTitle(title: String, query: String) = viewModelScope.launch {
+        _uiState.update { it.copy(title = title, isLoading = true) }
 
-        repository.getFileNameOrTitle(query).collectLatest { resource ->
-            when (resource) {
-                is Resource.Success -> {
-                    val result = resource.data
-                    if (result != null) {
-                        _uiState.update {
-                            it.copy(result = result, softError = "", isLoading = false)
-                        }
-                    } else {
-                        _uiState.update {
-                            it.copy(softError = "No data returned", isLoading = false)
-                        }
-                    }
+        modArchive.getSearchByFileNameOrTitle(query).fold(
+            onSuccess = { result ->
+                _uiState.update {
+                    it.copy(
+                        result = SearchResult.Modules(result),
+                        softError = null,
+                        isLoading = false
+                    )
                 }
-
-                is Resource.Error -> {
-                    _uiState.update {
-                        it.copy(softError = resource.message, isLoading = false)
-                    }
-                }
-
-                is Resource.Loading -> {
-                    _uiState.update { it.copy(isLoading = true) }
+            },
+            onFailure = { error ->
+                _uiState.update {
+                    it.copy(softError = error.message, isLoading = false)
                 }
             }
-        }
+        )
     }
 
     fun getArtistById(id: Int) = viewModelScope.launch {
         _uiState.update { it.copy(isLoading = true) }
 
-        repository.getArtistById(id).collectLatest { resource ->
-            when (resource) {
-                is Resource.Success -> {
-                    val result = resource.data
-                    if (result != null) {
-                        _uiState.update {
-                            it.copy(result = result, softError = "", isLoading = false)
-                        }
-                    } else {
-                        _uiState.update {
-                            it.copy(softError = "No data returned", isLoading = false)
-                        }
-                    }
+        modArchive.getArtistById(id).fold(
+            onSuccess = { result ->
+                _uiState.update {
+                    it.copy(
+                        result = SearchResult.Modules(result),
+                        softError = null,
+                        isLoading = false
+                    )
                 }
-
-                is Resource.Error -> {
-                    _uiState.update {
-                        it.copy(softError = resource.message, isLoading = false)
-                    }
-                }
-
-                is Resource.Loading -> {
-                    _uiState.update { it.copy(isLoading = true) }
+            },
+            onFailure = { error ->
+                _uiState.update {
+                    it.copy(softError = error.message, isLoading = false)
                 }
             }
-        }
+        )
     }
 
-    fun getArtists(string: String, query: String) = viewModelScope.launch {
-        _uiState.update { it.copy(title = string, isLoading = true) }
+    fun getArtists(title: String, query: String) = viewModelScope.launch {
+        _uiState.update { it.copy(title = title, isLoading = true) }
 
-        repository.getArtistSearch(query).collectLatest { resource ->
-            when (resource) {
-                is Resource.Success -> {
-                    val result = resource.data
-                    if (result != null) {
-                        _uiState.update {
-                            it.copy(
-                                result = result,
-                                softError = "",
-                                isLoading = false
-                            )
-                        }
-                    } else {
-                        _uiState.update {
-                            it.copy(softError = "No data returned", isLoading = false)
-                        }
-                    }
+        modArchive.getArtistSearch(query).fold(
+            onSuccess = { result ->
+                _uiState.update {
+                    it.copy(
+                        result = SearchResult.Artists(result),
+                        softError = null,
+                        isLoading = false
+                    )
                 }
-
-                is Resource.Error -> {
-                    _uiState.update {
-                        it.copy(softError = resource.message, isLoading = false)
-                    }
-                }
-
-                is Resource.Loading -> {
-                    _uiState.update { it.copy(isLoading = true) }
+            },
+            onFailure = { error ->
+                _uiState.update {
+                    it.copy(softError = error.message, isLoading = false)
                 }
             }
-        }
+        )
     }
 }

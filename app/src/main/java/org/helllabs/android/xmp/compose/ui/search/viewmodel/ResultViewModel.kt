@@ -14,16 +14,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import okio.buffer
 import okio.sink
-import org.helllabs.android.xmp.api.Repository
+import org.helllabs.android.xmp.api.ModArchiveService
 import org.helllabs.android.xmp.core.Constants.isSupported
 import org.helllabs.android.xmp.core.FileManager
 import org.helllabs.android.xmp.core.PrefManager
-import org.helllabs.android.xmp.core.Resource
 import org.helllabs.android.xmp.core.StorageManager
 import org.helllabs.android.xmp.model.Module
 import org.helllabs.android.xmp.model.ModuleResult
@@ -53,7 +51,7 @@ data class ModuleResultState(
 
 class ResultViewModel(
     private val httpClient: HttpClient,
-    private val repository: Repository,
+    private val modArchive: ModArchiveService,
     private val storageManager: StorageManager,
     private val fileManager: FileManager,
     private val prefManager: PrefManager
@@ -162,60 +160,39 @@ class ResultViewModel(
 
         viewModelScope.launch {
             _uiState.update { it.copy(isRandom = false, isLoading = true) }
-
-            repository.getModuleById(id).collectLatest { resource ->
-                handleModuleResource(resource)
-            }
+            handleModuleResource(modArchive.getModuleById(id))
         }
     }
 
     fun getRandomModule() {
         viewModelScope.launch {
             _uiState.update { it.copy(isRandom = true, isLoading = true) }
-
-            repository.getRandomModule().collectLatest { resource ->
-                handleModuleResource(resource)
-            }
+            handleModuleResource(modArchive.getRandomModule())
         }
     }
 
-    private suspend fun handleModuleResource(resource: Resource<ModuleResult>) {
-        when (resource) {
-            is Resource.Success -> {
-                val result = resource.data
-                if (result != null) {
-                    saveModuleToHistory(result.module)
-                    _uiState.update {
-                        it.copy(
-                            module = result,
-                            moduleExists = doesModuleExist(result),
-                            moduleSupported = isModuleSupported(result),
-                            isLoading = false
-                        )
-                    }
-                } else {
-                    _uiState.update {
-                        it.copy(
-                            softError = "No data returned",
-                            isLoading = false
-                        )
-                    }
-                }
-            }
-
-            is Resource.Error -> {
+    private suspend fun handleModuleResource(resource: Result<ModuleResult>) {
+        resource.fold(
+            onSuccess = { result ->
+                saveModuleToHistory(result.module)
                 _uiState.update {
                     it.copy(
-                        softError = resource.message,
+                        module = result,
+                        moduleExists = doesModuleExist(result),
+                        moduleSupported = isModuleSupported(result),
+                        isLoading = false
+                    )
+                }
+            },
+            onFailure = { error ->
+                _uiState.update {
+                    it.copy(
+                        softError = error.message,
                         isLoading = false
                     )
                 }
             }
-
-            is Resource.Loading -> {
-                _uiState.update { it.copy(isLoading = true) }
-            }
-        }
+        )
     }
 
     fun deleteModule() {

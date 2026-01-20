@@ -39,12 +39,12 @@ val viewModelModule = module {
         )
     }
 
-    viewModel { SearchResultViewModel(repository = get()) }
+    viewModel { SearchResultViewModel(modArchive = get()) }
 
     viewModel {
         ResultViewModel(
             httpClient = get(),
-            repository = get(),
+            modArchive = get(),
             storageManager = get(),
             fileManager = get(),
             prefManager = get()
