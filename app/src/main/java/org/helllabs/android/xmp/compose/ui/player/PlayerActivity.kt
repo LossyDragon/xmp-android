@@ -167,6 +167,8 @@ class PlayerActivity : ComponentActivity() {
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
             val channelInfo by viewModel.channelInfo.collectAsStateWithLifecycle()
             val frameInfo by viewModel.frameInfo.collectAsStateWithLifecycle()
+            val sampleData by viewModel.sampleData.collectAsStateWithLifecycle()
+            val patternData by viewModel.patternData.collectAsStateWithLifecycle()
 
             // Add to playlist
             val scope = rememberCoroutineScope()
@@ -229,6 +231,12 @@ class PlayerActivity : ComponentActivity() {
 
                         // Update ViewerInfo()
                         viewModel.updateViewInfo()
+
+                        // Update sample data
+                        viewModel.updateSampleData()
+
+                        // Update pattern data
+                        viewModel.updatePatternData()
 
                         // Get the current playback time
                         val time = Xmp.time().div(100F)
@@ -295,6 +303,9 @@ class PlayerActivity : ComponentActivity() {
                     channelInfo = channelInfo,
                     isMuted = isMuted,
                     infoState = infoState,
+                    sampleData = sampleData,
+                    patternData = patternData,
+                    onVisibleRowRangeChanged = viewModel::setVisibleRowRange,
                     onControlsEvent = {
                         Timber.d("onControlsEvent $it")
                         when (it) {
@@ -564,6 +575,9 @@ private fun PlayerScreen(
     snackBarHostState: SnackbarHostState,
     timeState: PlayerTimeState,
     uiState: PlayerState,
+    sampleData: SampleDataState,
+    patternData: PatternDataState,
+    onVisibleRowRangeChanged: (IntRange) -> Unit,
     onChangeViewer: () -> Unit,
     onControlsEvent: (PlayerControlsEvent) -> Unit,
     onSeekEvent: (SeekEvent) -> Unit,
@@ -707,6 +721,8 @@ private fun PlayerScreen(
                     isMuted = isMuted,
                     modType = uiState.infoType,
                     modVars = modVars,
+                    patternData = patternData,
+                    onVisibleRowRangeChanged = onVisibleRowRangeChanged,
                 )
 
                 2 -> ComposeChannelViewer(
@@ -716,6 +732,7 @@ private fun PlayerScreen(
                     insName = instrumentNames,
                     isMuted = isMuted,
                     modVars = modVars,
+                    sampleData = sampleData,
                 )
             }
         }
@@ -782,6 +799,9 @@ private fun Preview_PlayerScreen(
                     false
                 }.toPersistentList()
             ),
+            sampleData = SampleDataState(),
+            patternData = PatternDataState(),
+            onVisibleRowRangeChanged = { },
             onControlsEvent = { },
             onSeekEvent = { },
             onSheetEvent = { },

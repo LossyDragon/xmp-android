@@ -12,6 +12,7 @@ import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -94,6 +95,42 @@ data class ChannelMuteState(val isMuted: ImmutableList<Boolean> = persistentList
     fun count(predicate: (Boolean) -> Boolean) = isMuted.count(predicate)
 }
 
+@Immutable
+data class SampleDataState(val buffers: ImmutableList<ByteArray> = persistentListOf())
+
+@Immutable
+data class PatternRowData(
+    val notes: ByteArray = ByteArray(64),
+    val instruments: ByteArray = ByteArray(64),
+    val fxType: ByteArray = ByteArray(64),
+    val fxParm: ByteArray = ByteArray(64)
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is PatternRowData) return false
+        return notes.contentEquals(other.notes) &&
+            instruments.contentEquals(other.instruments) &&
+            fxType.contentEquals(other.fxType) &&
+            fxParm.contentEquals(other.fxParm)
+    }
+
+    override fun hashCode(): Int {
+        var result = notes.contentHashCode()
+        result = 31 * result + instruments.contentHashCode()
+        result = 31 * result + fxType.contentHashCode()
+        result = 31 * result + fxParm.contentHashCode()
+        return result
+    }
+}
+
+@Immutable
+data class PatternDataState(
+    val rows: Map<Int, PatternRowData> = emptyMap(),
+    val currentPattern: Int = -1
+) {
+    fun getRow(row: Int): PatternRowData? = rows[row]
+}
+
 class PlayerViewModel(prefManager: PrefManager) : ViewModel() {
 
     private val _activityState = MutableStateFlow(PlayerActivityState())
@@ -148,6 +185,36 @@ class PlayerViewModel(prefManager: PrefManager) : ViewModel() {
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = false
         )
+
+    val sampleData: StateFlow<SampleDataState>
+        field = MutableStateFlow(SampleDataState())
+    private var holdKey: IntArray = IntArray(Xmp.MAX_CHANNELS)
+    private var keyRow: IntArray = IntArray(Xmp.MAX_CHANNELS)
+    private var sampleBuffers: Array<ByteArray>? = null
+
+    val patternData: StateFlow<PatternDataState>
+        field = MutableStateFlow(PatternDataState())
+
+    // reusable buffers
+    private val tempRowNotes = ByteArray(64)
+    private val tempRowInstruments = ByteArray(64)
+    private val tempRowFxType = ByteArray(64)
+    private val tempRowFxParm = ByteArray(64)
+
+    // Track which rows already fetched for the current pattern
+    private var cachedPatternRows: MutableMap<Int, PatternRowData> = mutableMapOf()
+    private var cachedPattern: Int = -1
+
+    private var currentVisibleRowRange: IntRange = IntRange.EMPTY
+
+    fun setVisibleRowRange(range: IntRange) {
+        currentVisibleRowRange = range
+    }
+
+    fun updatePatternData() {
+        if (currentVisibleRowRange.isEmpty()) return
+        updatePatternData(currentVisibleRowRange)
+    }
 
     /** Player Functions **/
 
@@ -219,6 +286,9 @@ class PlayerViewModel(prefManager: PrefManager) : ViewModel() {
 
     fun showNewMod(modPlayer: PlayerService, skipToPrevious: Boolean) {
         Timber.i("Show new module | Previous: $skipToPrevious")
+
+        resetSampleData()
+        resetPatternData()
 
         val mVars = ModVars()
         Xmp.getModVars(mVars)
@@ -387,6 +457,113 @@ class PlayerViewModel(prefManager: PrefManager) : ViewModel() {
                 }.toPersistentList()
             )
         }
+    }
+
+    fun updateSampleData() {
+        if (!_buttonState.value.isPlaying) return
+
+        val numChannels = modVars.value.numChannels
+        if (numChannels == 0) return
+
+        // Initialize or resize buffers if needed
+        if (sampleBuffers == null || sampleBuffers!!.size != numChannels) {
+            sampleBuffers = Array(numChannels) { ByteArray(Xmp.MAX_BUFFERS) }
+            holdKey = IntArray(numChannels)
+            keyRow = IntArray(numChannels)
+        }
+
+        val ci = channelInfo.value
+        val fi = frameInfo.value
+
+        for (chn in 0 until numChannels) {
+            val ins = ci.instruments[chn]
+            val period = ci.periods[chn]
+            val row = fi.row
+            var key = ci.keys[chn]
+
+            // Update key tracking (moved from ComposeChannelViewer)
+            if (key >= 0) {
+                holdKey[chn] = key
+                if (keyRow[chn] == row) {
+                    key = -1
+                } else {
+                    keyRow[chn] = row
+                }
+            }
+
+            Xmp.getSampleData(
+                key >= 0,
+                ins,
+                holdKey[chn],
+                period,
+                chn,
+                Xmp.MAX_BUFFERS,
+                sampleBuffers!![chn]
+            )
+        }
+
+        sampleData.value = SampleDataState(
+            buffers = sampleBuffers!!.map { it.copyOf() }.toPersistentList()
+        )
+    }
+
+    fun updatePatternData(visibleRowRange: IntRange) {
+        val fi = _frameInfo.value
+        if (fi.numRows == 0) return
+
+        // If pattern changed, clear the cache
+        if (cachedPattern != fi.pattern) {
+            cachedPatternRows.clear()
+            cachedPattern = fi.pattern
+        }
+
+        var hasNewData = false
+
+        for (row in visibleRowRange) {
+            if (row < 0 || row >= fi.numRows) continue
+
+            // Skip if we already have this row cached
+            if (cachedPatternRows.containsKey(row)) continue
+
+            Xmp.getPatternRow(
+                pat = fi.pattern,
+                row = row,
+                rowNotes = tempRowNotes,
+                rowInstruments = tempRowInstruments,
+                rowFxType = tempRowFxType,
+                rowFxParm = tempRowFxParm
+            )
+
+            cachedPatternRows[row] = PatternRowData(
+                notes = tempRowNotes.copyOf(),
+                instruments = tempRowInstruments.copyOf(),
+                fxType = tempRowFxType.copyOf(),
+                fxParm = tempRowFxParm.copyOf()
+            )
+
+            hasNewData = true
+        }
+
+        // Only emit new state if we fetched new rows or pattern changed
+        if (hasNewData || patternData.value.currentPattern != fi.pattern) {
+            patternData.value = PatternDataState(
+                rows = cachedPatternRows.toMap(),
+                currentPattern = fi.pattern
+            )
+        }
+    }
+
+    private fun resetSampleData() {
+        holdKey = IntArray(Xmp.MAX_CHANNELS)
+        keyRow = IntArray(Xmp.MAX_CHANNELS)
+        sampleBuffers = null
+        sampleData.value = SampleDataState()
+    }
+
+    fun resetPatternData() {
+        cachedPatternRows.clear()
+        cachedPattern = -1
+        patternData.value = PatternDataState()
     }
 
     fun onAddToPlaylist(uri: Uri) {

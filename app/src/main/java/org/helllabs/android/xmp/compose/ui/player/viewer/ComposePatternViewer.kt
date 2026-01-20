@@ -20,6 +20,7 @@ import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.compose.theme.XmpTheme
 import org.helllabs.android.xmp.compose.theme.seed
 import org.helllabs.android.xmp.compose.ui.player.ChannelMuteState
+import org.helllabs.android.xmp.compose.ui.player.PatternDataState
 import org.helllabs.android.xmp.compose.ui.player.Util
 import org.helllabs.android.xmp.model.FrameInfo
 import org.helllabs.android.xmp.model.ModVars
@@ -63,7 +64,9 @@ internal fun ComposePatternViewer(
     fi: FrameInfo,
     isMuted: ChannelMuteState,
     modType: String,
-    modVars: ModVars
+    modVars: ModVars,
+    patternData: PatternDataState,
+    onVisibleRowRangeChanged: (IntRange) -> Unit
 ) {
     val density = LocalDensity.current
     val scope = rememberCoroutineScope()
@@ -111,11 +114,6 @@ internal fun ComposePatternViewer(
             )
         }
     }
-
-    val rowFxParm = remember { ByteArray(64) }
-    val rowFxType = remember { ByteArray(64) }
-    val rowInsts = remember { ByteArray(64) }
-    val rowNotes = remember { ByteArray(64) }
 
     val textCache = remember(modVars.numChannels, fi.numRows) {
         Array(fi.numRows) {
@@ -179,6 +177,10 @@ internal fun ComposePatternViewer(
         scope.launch {
             offsetX.snapTo(0f)
         }
+    }
+
+    LaunchedEffect(visibleRowRange) {
+        onVisibleRowRangeChanged(visibleRowRange)
     }
 
     Canvas(
@@ -253,107 +255,63 @@ internal fun ComposePatternViewer(
 
         if (PlayerService.isAlive.value && fi.numRows > 0 && modVars.numChannels > 0) {
             for (row in visibleRowRange) {
-                // Be very careful here!
-                // Our variables are latency-compensated but pattern data is current
-                // so caution is needed to avoid retrieving data using old variables
-                // from a module with pattern data from a newly loaded one.
-                Xmp.getPatternRow(
-                    pat = fi.pattern,
-                    row = row,
-                    rowNotes = rowNotes,
-                    rowInstruments = rowInsts,
-                    rowFxType = rowFxType,
-                    rowFxParm = rowFxParm
-                )
+                val rowData = patternData.getRow(row) ?: continue
 
-                // Update cache for visible channels
                 for (chn in visibleChannelRange) {
                     val cacheEntry = textCache[row][chn]
 
                     val needsUpdate = !cacheEntry.isValid ||
-                        cacheEntry.note != rowNotes[chn] ||
-                        cacheEntry.instrument != rowInsts[chn] ||
-                        cacheEntry.effectType != rowFxType[chn] ||
-                        cacheEntry.effectParam != rowFxParm[chn] ||
+                        cacheEntry.note != rowData.notes[chn] ||
+                        cacheEntry.instrument != rowData.instruments[chn] ||
+                        cacheEntry.effectType != rowData.fxType[chn] ||
+                        cacheEntry.effectParam != rowData.fxParm[chn] ||
                         cacheEntry.isMuted != mutedState[chn]
 
                     if (needsUpdate) {
-                        cacheEntry.note = rowNotes[chn]
-                        cacheEntry.instrument = rowInsts[chn]
-                        cacheEntry.effectType = rowFxType[chn]
-                        cacheEntry.effectParam = rowFxParm[chn]
+                        cacheEntry.note = rowData.notes[chn]
+                        cacheEntry.instrument = rowData.instruments[chn]
+                        cacheEntry.effectType = rowData.fxType[chn]
+                        cacheEntry.effectParam = rowData.fxParm[chn]
                         cacheEntry.isMuted = mutedState[chn]
 
                         cacheEntry.textLayout = infoTextMeasurer.measure(
                             text = buildAnnotatedString {
-                                // Notes
                                 withStyle(
                                     style = SpanStyle(
                                         color = if (mutedState[chn]) noteColorMuted else noteColor
-                                    ),
-                                    block = {
-                                        append(Util.note(rowNotes[chn].toInt()))
-                                    }
-                                )
-                                // Instruments
-                                withStyle(
-                                    style = SpanStyle(
-                                        color = if (mutedState[chn]) {
-                                            instrumentColorMuted
-                                        } else {
-                                            instrumentColor
-                                        }
-                                    ),
-                                    block = {
-                                        append(Util.num(rowInsts[chn].toInt()))
-                                    }
-                                )
-                                // Effects
-                                withStyle(
-                                    style = SpanStyle(
-                                        color = if (mutedState[chn]) {
-                                            effectColorMuted
-                                        } else {
-                                            effectColor
-                                        }
-                                    ),
-                                    block = {
-                                        val fxt = rowFxType[chn]
-                                        val fx = if (fxt < 0) {
-                                            "-"
-                                        } else {
-                                            effectsTable.getOrElse(fxt) {
-                                                Timber.w(
-                                                    "Unknown FX: $fxt in chn ${chn + 1}, " +
-                                                        "row $row, using $currentType. Type:$modType"
-                                                )
-                                                "?"
-                                            }
-                                        }
-                                        append(fx)
-                                    }
-                                )
-                                // Effects Params
-                                withStyle(
-                                    style = SpanStyle(
-                                        color = if (mutedState[chn]) {
-                                            effectColorMuted
-                                        } else {
-                                            effectColor
-                                        }
-                                    ),
-                                    block = {
-                                        append(Util.num(rowFxParm[chn].toInt()))
-                                    }
-                                )
-                            },
-                            style = patternTextStyle.copy(
-                                background = if (view.isInEditMode) {
-                                    Color.Green
-                                } else {
-                                    Color.Unspecified
+                                    )
+                                ) {
+                                    append(Util.note(rowData.notes[chn].toInt()))
                                 }
-                            )
+                                withStyle(
+                                    style = SpanStyle(
+                                        color = if (mutedState[chn]) instrumentColorMuted else instrumentColor
+                                    )
+                                ) {
+                                    append(Util.num(rowData.instruments[chn].toInt()))
+                                }
+                                withStyle(
+                                    style = SpanStyle(
+                                        color = if (mutedState[chn]) effectColorMuted else effectColor
+                                    )
+                                ) {
+                                    val fxt = rowData.fxType[chn]
+                                    val fx = if (fxt < 0) {
+                                        "-"
+                                    } else {
+                                        effectsTable.getOrElse(fxt) { "?" }
+                                    }
+                                    append(fx)
+                                }
+                                withStyle(
+                                    style = SpanStyle(
+                                        color = if (mutedState[chn]) effectColorMuted else effectColor
+                                    )
+                                ) {
+                                    append(Util.num(rowData.fxParm[chn].toInt()))
+                                }
+                            },
+                            style = patternTextStyle
                         )
 
                         cacheEntry.isValid = true
@@ -440,6 +398,8 @@ private fun Preview_PatternViewer() {
                 }.toPersistentList()
             ),
             modVars = modVars,
+            patternData = PatternDataState(),
+            onVisibleRowRangeChanged = { },
         )
     }
 }

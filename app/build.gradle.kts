@@ -1,5 +1,6 @@
 @file:Suppress("UnstableApiUsage")
 
+import org.gradle.kotlin.dsl.support.KotlinCompilerOptions
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.io.FileInputStream
 import java.util.Properties
@@ -118,6 +119,9 @@ android {
     kotlin {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_17)
+        }
+        sourceSets.all {
+            languageSettings.enableLanguageFeature("ExplicitBackingFields")
         }
     }
 

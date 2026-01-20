@@ -24,10 +24,10 @@ import org.helllabs.android.xmp.compose.theme.XmpTheme
 import org.helllabs.android.xmp.compose.theme.michromaFontFamily
 import org.helllabs.android.xmp.compose.theme.seed
 import org.helllabs.android.xmp.compose.ui.player.ChannelMuteState
+import org.helllabs.android.xmp.compose.ui.player.SampleDataState
 import org.helllabs.android.xmp.model.ChannelInfo
 import org.helllabs.android.xmp.model.FrameInfo
 import org.helllabs.android.xmp.model.ModVars
-import org.helllabs.android.xmp.service.PlayerService
 
 // TODO: 2 Column support on wider screens or in landscape.
 
@@ -65,7 +65,8 @@ fun ComposeChannelViewer(
     frameInfo: FrameInfo,
     insName: ImmutableList<String>,
     isMuted: ChannelMuteState,
-    modVars: ModVars
+    modVars: ModVars,
+    sampleData: SampleDataState
 ) {
     val density = LocalDensity.current
     val scope = rememberCoroutineScope()
@@ -81,11 +82,8 @@ fun ComposeChannelViewer(
     val yOffset = remember {
         Animatable(0f)
     }
-    val buffers = remember(modVars) {
-        Array(modVars.numChannels) { ByteArray(Xmp.MAX_BUFFERS) }
-    }
     val channelData = remember(modVars) {
-        ChannelViewerData(modVars.numChannels)
+        ChannelViewerData()
     }
     val channelNumber = remember(modVars.numChannels) {
         (0 until modVars.numChannels).map {
@@ -105,7 +103,6 @@ fun ComposeChannelViewer(
         Array(modVars.numChannels) { Path() }
     }
     val isChnMuted by remember(isMuted) {
-        // Need this to keep pointerInput updated for any changes.
         derivedStateOf { isMuted.isMuted }
     }
     val visibleChannelRange by remember(modVars.numChannels, canvasSize, dimensions.yMultiplier) {
@@ -126,7 +123,6 @@ fun ComposeChannelViewer(
     }
 
     LaunchedEffect(modVars.numInstruments, modVars.numChannels) {
-        // Scroll to the top on song change
         scope.launch {
             yOffset.animateTo(
                 targetValue = 0f,
@@ -162,12 +158,10 @@ fun ComposeChannelViewer(
                             if (scopeRect.contains(adjustedOffset)) {
                                 val unMuteCount = isChnMuted.count { !it }
                                 if (unMuteCount == 1) {
-                                    // Un-mute all
                                     for (i in 0 until modVars.numChannels) {
                                         Xmp.mute(i, 0)
                                     }
                                 } else {
-                                    // Mute all except chn
                                     for (i in 0 until modVars.numChannels) {
                                         Xmp.mute(i, if (i == chn) 0 else 1)
                                     }
@@ -185,7 +179,6 @@ fun ComposeChannelViewer(
         drawChannels(
             visibleChannelRange = visibleChannelRange,
             channelInfo = channelInfo,
-            frameInfo = frameInfo,
             insName = insName,
             isChnMuted = isChnMuted,
             modVars = modVars,
@@ -193,7 +186,7 @@ fun ComposeChannelViewer(
             channelData = channelData,
             channelNumber = channelNumber,
             yOffset = yOffset.value,
-            buffers = buffers,
+            sampleData = sampleData,
             waveformPaths = waveformPaths,
             textMeasurer = textMeasurer
         )
@@ -208,12 +201,9 @@ fun ComposeChannelViewer(
     }
 }
 
-/** Helpers **/
-
 private fun DrawScope.drawChannels(
     visibleChannelRange: IntRange,
     channelInfo: ChannelInfo,
-    frameInfo: FrameInfo,
     insName: ImmutableList<String>,
     isChnMuted: ImmutableList<Boolean>,
     modVars: ModVars,
@@ -221,7 +211,7 @@ private fun DrawScope.drawChannels(
     channelData: ChannelViewerData,
     channelNumber: List<String>,
     yOffset: Float,
-    buffers: Array<ByteArray>,
+    sampleData: SampleDataState,
     waveformPaths: Array<Path>,
     textMeasurer: TextMeasurer
 ) {
@@ -232,25 +222,12 @@ private fun DrawScope.drawChannels(
 
     for (chn in visibleChannelRange) {
         if (chn >= isChnMuted.size) {
-            continue // Skip this channel if mute state hasn't caught up yet
+            continue
         }
 
         val ins = channelInfo.instruments[chn]
         val pan = channelInfo.pans[chn]
-        val period = channelInfo.periods[chn]
-        val row = frameInfo.row
-        var key = channelInfo.keys[chn]
         val isMuted = isChnMuted[chn]
-
-        // Update key tracking
-        if (key >= 0) {
-            channelData.holdKey[chn] = key
-            if (channelData.keyRow[chn] == row) {
-                key = -1
-            } else {
-                channelData.keyRow[chn] = row
-            }
-        }
 
         // Calculate reused offsets for this channel once
         val channelY = yMult * chn
@@ -344,7 +321,7 @@ private fun DrawScope.drawChannels(
             )
         }
 
-        // Scope area, once per chn.
+        // Scope area
         val scopeXOffset = xMult + xMult / 4
         val scopeYOffset = chnYWithOffset + yMult / 6
         val scopeHeight = yMult - yMult / 3
@@ -369,22 +346,6 @@ private fun DrawScope.drawChannels(
                 )
             )
         } else {
-            // Be very careful here!
-            // Our variables are latency-compensated but sample data is current
-            // so caution is needed to avoid retrieving data using old variables
-            // from a module with sample data from a newly loaded one.
-            if (PlayerService.isAlive.value) {
-                Xmp.getSampleData(
-                    key >= 0,
-                    ins,
-                    channelData.holdKey[chn],
-                    period,
-                    chn,
-                    Xmp.MAX_BUFFERS,
-                    buffers[chn]
-                )
-            }
-
             // Channel scope background
             drawRect(
                 color = backgroundColor,
@@ -392,16 +353,21 @@ private fun DrawScope.drawChannels(
                 topLeft = Offset(x = scopeXOffset, y = scopeYOffset)
             )
 
-            // Get the buffer for this channel
-            val buffer = buffers[chn]
+            // Get the buffer for this channel from sampleData
+            val buffer = if (chn < sampleData.buffers.size) {
+                sampleData.buffers[chn]
+            } else {
+                null
+            }
 
             // Draw waveform
             val centerY = scopeYOffset + (scopeHeight / 2)
             val halfHeight = scopeHeight / 2
             val volumeScale = channelInfo.finalVols[chn].coerceIn(0, 64) / 64f
-            val widthScale = scopeWidth / buffer.size
 
-            if (volumeScale > 0.01f) {
+            if (buffer != null && buffer.isNotEmpty() && volumeScale > 0.01f) {
+                val widthScale = scopeWidth / buffer.size
+
                 var hasNonZeroValue = false
                 var minVal = 127f
                 var maxVal = -128f
@@ -450,22 +416,10 @@ private fun DrawScope.drawChannels(
                         )
                     }
                 } else {
-                    // Horizontal line when no data
-                    drawLine(
-                        color = waveformColor,
-                        start = Offset(scopeXOffset, centerY),
-                        end = Offset(scopeXOffset + scopeWidth, centerY),
-                        strokeWidth = 0.75f
-                    )
+                    drawFlatLine(scopeXOffset, centerY, scopeWidth)
                 }
             } else {
-                // Horizontal line when volume is too low
-                drawLine(
-                    color = waveformColor,
-                    start = Offset(scopeXOffset, centerY),
-                    end = Offset(scopeXOffset + scopeWidth, centerY),
-                    strokeWidth = 0.75f
-                )
+                drawFlatLine(scopeXOffset, centerY, scopeWidth)
             }
         }
     }
@@ -481,6 +435,15 @@ private fun getScopeRect(chn: Int, dimensions: ChannelViewerDimensions, yOffset:
         top = scopeYOffset,
         right = scopeXOffset + dimensions.scopeWidth,
         bottom = scopeYOffset + scopeHeight
+    )
+}
+
+private fun DrawScope.drawFlatLine(scopeXOffset: Float, centerY: Float, scopeWidth: Float) {
+    drawLine(
+        color = waveformColor,
+        start = Offset(scopeXOffset, centerY),
+        end = Offset(scopeXOffset + scopeWidth, centerY),
+        strokeWidth = 0.75f
     )
 }
 
@@ -506,9 +469,7 @@ private class ChannelViewerDimensions(density: Density) {
     }
 }
 
-private class ChannelViewerData(numChannels: Int) {
-    val holdKey: IntArray = IntArray(numChannels)
-    val keyRow: IntArray = IntArray(Xmp.MAX_CHANNELS)
+private class ChannelViewerData {
     var muteLabelCache: TextLayoutResult? = null
 }
 
@@ -532,7 +493,8 @@ private fun Preview_ChannelViewer() {
             modVars = modVars,
             insName = List(modVars.numInstruments) {
                 String.format("%02X %s", it + 1, "Instrument Name")
-            }.toPersistentList()
+            }.toPersistentList(),
+            sampleData = SampleDataState()
         )
     }
 }
