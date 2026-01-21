@@ -1,0 +1,41 @@
+package org.helllabs.android.xmp.ui.screens.preferences
+
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.alorma.compose.settings.ui.SettingsGroup
+import com.alorma.compose.settings.ui.SettingsMenuLink
+import org.helllabs.android.xmp.R
+
+@Composable
+fun SettingsGroupInformation(
+    playlistsDir: String,
+    explorerDir: String,
+    onFormats: () -> Unit,
+    onAbout: () -> Unit
+) {
+    SettingsGroup(
+        title = { Text(text = stringResource(id = R.string.pref_category_information)) }
+    ) {
+        SettingsMenuLink(
+            title = { Text(text = stringResource(R.string.pref_list_formats_title)) },
+            subtitle = { Text(text = stringResource(id = R.string.pref_list_formats_summary)) },
+            onClick = onFormats
+        )
+        SettingsMenuLink(
+            title = { Text(text = stringResource(R.string.pref_about_title)) },
+            subtitle = { Text(text = stringResource(id = R.string.pref_about_summary)) },
+            onClick = onAbout
+        )
+        SettingsMenuLink(
+            title = { Text(text = "Playlists Directory") },
+            subtitle = { Text(text = playlistsDir) },
+            onClick = { }
+        )
+        SettingsMenuLink(
+            title = { Text(text = "Explorer Directory") },
+            subtitle = { Text(text = explorerDir) },
+            onClick = { }
+        )
+    }
+}

@@ -36,13 +36,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
-import org.helllabs.android.xmp.compose.ui.player.PlayerActivity
-import org.helllabs.android.xmp.compose.ui.player.RepeatMode
 import org.helllabs.android.xmp.core.PrefManager
 import org.helllabs.android.xmp.core.StorageManager
 import org.helllabs.android.xmp.model.FrameInfo
 import org.helllabs.android.xmp.model.ModInfo
 import org.helllabs.android.xmp.model.ModVars
+import org.helllabs.android.xmp.ui.screens.player.PlayerActivity
+import org.helllabs.android.xmp.ui.screens.player.RepeatMode
 import org.koin.android.ext.android.inject
 import timber.log.Timber
 

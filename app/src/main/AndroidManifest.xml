@@ -35,7 +35,7 @@
 
         <!-- Player -->
         <activity
-            android:name=".compose.ui.player.PlayerActivity"
+            android:name=".ui.screens.player.PlayerActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:exported="true"
             android:launchMode="singleTop">

@@ -22,17 +22,17 @@ import com.meticha.permissions_compose.rememberAppPermissionState
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import org.helllabs.android.xmp.compose.RootNavigation
-import org.helllabs.android.xmp.compose.components.MessageDialog
-import org.helllabs.android.xmp.compose.components.PermissionsRationaleDialog
-import org.helllabs.android.xmp.compose.theme.XmpTheme
-import org.helllabs.android.xmp.compose.ui.player.PlayerActivity
 import org.helllabs.android.xmp.core.Constants
 import org.helllabs.android.xmp.core.PrefManager
 import org.helllabs.android.xmp.core.StorageManager
 import org.helllabs.android.xmp.core.setEdgeToEdgeConfig
 import org.helllabs.android.xmp.service.PlayerConnection
 import org.helllabs.android.xmp.service.PlayerService
+import org.helllabs.android.xmp.ui.RootNavigation
+import org.helllabs.android.xmp.ui.components.MessageDialog
+import org.helllabs.android.xmp.ui.components.PermissionsRationaleDialog
+import org.helllabs.android.xmp.ui.screens.player.PlayerActivity
+import org.helllabs.android.xmp.ui.theme.XmpTheme
 import org.koin.android.ext.android.inject
 import timber.log.Timber
 

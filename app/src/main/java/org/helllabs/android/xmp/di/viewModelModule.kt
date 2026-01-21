@@ -3,13 +3,13 @@
 package org.helllabs.android.xmp.di
 
 import android.net.Uri
-import org.helllabs.android.xmp.compose.ui.explorer.ExplorerViewModel
-import org.helllabs.android.xmp.compose.ui.player.PlayerViewModel
-import org.helllabs.android.xmp.compose.ui.playlist.viewmodel.PlaylistsViewModel
-import org.helllabs.android.xmp.compose.ui.playlist.viewmodel.SelectedPlaylistViewModel
-import org.helllabs.android.xmp.compose.ui.search.viewmodel.ResultViewModel
-import org.helllabs.android.xmp.compose.ui.search.viewmodel.SearchResultViewModel
 import org.helllabs.android.xmp.core.FileManager
+import org.helllabs.android.xmp.ui.screens.explorer.ExplorerViewModel
+import org.helllabs.android.xmp.ui.screens.player.PlayerViewModel
+import org.helllabs.android.xmp.ui.screens.playlist.viewmodel.PlaylistsViewModel
+import org.helllabs.android.xmp.ui.screens.playlist.viewmodel.SelectedPlaylistViewModel
+import org.helllabs.android.xmp.ui.screens.search.viewmodel.ResultViewModel
+import org.helllabs.android.xmp.ui.screens.search.viewmodel.SearchResultViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
