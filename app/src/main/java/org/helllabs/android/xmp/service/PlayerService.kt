@@ -620,22 +620,39 @@ class PlayerService :
                 } ?: false
                 if (!isValid) {
                     Timber.w("$currentFileUri: unrecognized format")
+                    val badModule = currentFileUri.lastPathSegment?.ifEmpty { "module was" }
                     serviceScope.launch {
-                        val module = currentFileUri.lastPathSegment?.ifEmpty { "module was" }
                         _playerEvent.emit(
                             PlayerEvent.ErrorMessage(
-                                "$module unrecognized. Skipping to next module"
+                                "$badModule unrecognized. Skipping to next module"
                             )
                         )
                     }
+
+                    // Adjust position based on direction,
+                    // then clear CMD_PREV to prevent double-decrement
                     if (cmd == CMD_PREV) {
-                        if (playlistPosition <= 0) {
-                            // -1 because we have queue.next() in the while condition
-                            playlistPosition = lastRecognized - 1
-                            continue
-                        }
-                        playlistPosition.minus(2).coerceAtLeast(0)
+                        playlistPosition--
+                        cmd = CMD_NONE // Clear so we don't decrement again
+                    } else {
+                        playlistPosition++
                     }
+
+                    // yes! Big brain moment
+                    if (playlistPosition >= playlist.size) {
+                        if (isLoopPlaylist) {
+                            playlistPosition = 0
+                        } else {
+                            break
+                        }
+                    } else if (playlistPosition < 0) {
+                        playlistPosition = if (isLoopPlaylist) {
+                            playlist.size - 1
+                        } else {
+                            0
+                        }
+                    }
+
                     continue
                 }
 
