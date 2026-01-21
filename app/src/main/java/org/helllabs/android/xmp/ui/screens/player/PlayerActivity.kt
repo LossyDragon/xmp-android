@@ -2,40 +2,33 @@ package org.helllabs.android.xmp.ui.screens.player
 
 import android.content.Intent
 import android.content.res.Configuration
-import android.net.Uri
 import android.os.Bundle
-import android.support.v4.media.session.MediaControllerCompat
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.*
-import androidx.compose.material.icons.automirrored.filled.*
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.retain.*
-import androidx.compose.ui.*
-import androidx.compose.ui.platform.*
-import androidx.compose.ui.res.*
-import androidx.compose.ui.tooling.preview.*
-import androidx.compose.ui.unit.*
-import androidx.compose.ui.window.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import java.nio.charset.StandardCharsets
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
-import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toPersistentList
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.helllabs.android.xmp.MainActivity
 import org.helllabs.android.xmp.R
 import org.helllabs.android.xmp.Xmp
@@ -44,29 +37,16 @@ import org.helllabs.android.xmp.core.PrefManager
 import org.helllabs.android.xmp.core.setEdgeToEdgeConfig
 import org.helllabs.android.xmp.di.appModule
 import org.helllabs.android.xmp.di.viewModelModule
-import org.helllabs.android.xmp.model.ChannelInfo
-import org.helllabs.android.xmp.model.FrameInfo
-import org.helllabs.android.xmp.model.ModVars
 import org.helllabs.android.xmp.service.EndPlayback
 import org.helllabs.android.xmp.service.PlayerConnection
 import org.helllabs.android.xmp.service.PlayerEvent
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.ui.components.MessageDialog
 import org.helllabs.android.xmp.ui.components.SingleChoiceListDialog
-import org.helllabs.android.xmp.ui.screens.player.components.PlayerBottomAppBar
-import org.helllabs.android.xmp.ui.screens.player.components.PlayerControls
-import org.helllabs.android.xmp.ui.screens.player.components.PlayerControlsEvent
-import org.helllabs.android.xmp.ui.screens.player.components.PlayerInfo
-import org.helllabs.android.xmp.ui.screens.player.components.PlayerSeekBar
-import org.helllabs.android.xmp.ui.screens.player.components.PlayerSheet
-import org.helllabs.android.xmp.ui.screens.player.components.PlayerSheetEvent
-import org.helllabs.android.xmp.ui.screens.player.components.SeekEvent
-import org.helllabs.android.xmp.ui.screens.player.components.ViewFlipper
+import org.helllabs.android.xmp.ui.screens.player.components.*
 import org.helllabs.android.xmp.ui.screens.player.viewer.ComposeChannelViewer
 import org.helllabs.android.xmp.ui.screens.player.viewer.ComposePatternViewer
 import org.helllabs.android.xmp.ui.screens.player.viewer.InstrumentViewer
-import org.helllabs.android.xmp.ui.screens.player.viewer.composeSampleChannelInfo
-import org.helllabs.android.xmp.ui.screens.player.viewer.composeSampleFrameInfo
 import org.helllabs.android.xmp.ui.theme.XmpTheme
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
@@ -77,341 +57,74 @@ import timber.log.Timber
 class PlayerActivity : ComponentActivity() {
 
     private val viewModel by inject<PlayerViewModel>()
-
     private val prefManager by inject<PrefManager>()
-
     private val playerConnection by inject<PlayerConnection>()
-
     private val snackBarHostState = SnackbarHostState()
-
-    /* Detect if Screen is on or off */
     private lateinit var screenReceiver: ScreenReceiver
-
-    private val modPlayer: PlayerService?
-        get() = playerConnection.modPlayer
-
-    private val controls: MediaControllerCompat?
-        get() = modPlayer?.mediaController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setEdgeToEdgeConfig()
         super.onCreate(savedInstanceState)
-
-        // defensive initialization, when opened via intents
-        getKoinApplicationOrNull() ?: startKoin {
-            androidContext(this@PlayerActivity)
-            modules(listOf(viewModelModule, appModule))
-        }
+        initKoinIfNeeded()
 
         Timber.d("onCreate")
-
         handleIntent(intent)
-
-        // Initialize our ScreenReceiver
-        screenReceiver = ScreenReceiver(onScreenEvent = viewModel::screenOn)
-
-        // Register ScreenReceiver on/off events
-        screenReceiver.register(context = this)
+        setupScreenReceiver()
 
         setContent {
             val isBound by playerConnection.isBound.collectAsStateWithLifecycle()
 
-            // Handle service connection/disconnection
-            LaunchedEffect(isBound) {
-                if (isBound && modPlayer != null) {
-                    Timber.i("Service connected")
-                    viewModel.onConnected(true)
-                    viewModel.isPlaying(PlayerService.isPlaying.value)
+            // Handle service lifecycle
+            ServiceLifecycleEffects(isBound)
 
-                    modPlayer?.playerEvent?.collect { event ->
-                        handlePlayerEvent(event)
-                    }
-                }
-            }
+            // Consolidated state collection - single object instead of 12+ separate flows
+            val screenState by viewModel.screenState.collectAsStateWithLifecycle()
 
-            // Start playback when connected and we have files
-            LaunchedEffect(isBound) {
-                if (isBound && modPlayer != null) {
-                    with(viewModel.activityState.value) {
-                        if (fileList.isNotEmpty()) {
-                            Timber.d("Start new queue")
-                            playNewMod(fileList, start)
-                        } else {
-                            Timber.d("Reconnect to existing service")
-                            viewModel.showNewMod(modPlayer!!, false)
-                        }
-                    }
-                }
-            }
+            // Keep screen on preference
+            KeepScreenOnEffect()
 
-            DisposableEffect(Unit) {
-                onDispose {
-                    if (!playerConnection.isBound.value) {
-                        Timber.i("Service disconnected")
-                        saveAllSeqPreference()
-                        viewModel.onConnected(false)
-                        setResult(RESULT_OK)
-                        finish()
-                    }
-                }
-            }
-
-            // Collect different states
-            val buttonState by viewModel.buttonState.collectAsStateWithLifecycle()
-            val drawerState by viewModel.drawerState.collectAsStateWithLifecycle()
-            val infoState by viewModel.infoState.collectAsStateWithLifecycle()
-            val instrumentNames by viewModel.insName.collectAsStateWithLifecycle()
-            val isMuted by viewModel.isMuted.collectAsStateWithLifecycle()
-            val modVars by viewModel.modVars.collectAsStateWithLifecycle()
-            val timeState by viewModel.timeState.collectAsStateWithLifecycle()
-            val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-            val channelInfo by viewModel.channelInfo.collectAsStateWithLifecycle()
-            val frameInfo by viewModel.frameInfo.collectAsStateWithLifecycle()
-            val sampleData by viewModel.sampleData.collectAsStateWithLifecycle()
-            val patternData by viewModel.patternData.collectAsStateWithLifecycle()
-
-            // Add to playlist
-            val scope = rememberCoroutineScope()
-            // val resources = LocalResources.current
-            val choice by viewModel.playlistChoice.collectAsStateWithLifecycle()
-            // val playlists by viewModel.playlistList.collectAsStateWithLifecycle()
-
-            // Keep screen on if preference is set.
-            val keepScreenOn by prefManager.keepScreenOnFlow()
-                .collectAsStateWithLifecycle(initialValue = false)
-            DisposableEffect(keepScreenOn) {
-                if (keepScreenOn) {
-                    window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-                } else {
-                    window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-                }
-
-                onDispose {
-                    window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-                }
-            }
-
+            // Snackbar error collection
             LaunchedEffect(Unit) {
-                viewModel.softError.collectLatest {
-                    snackBarHostState.showSnackbar(it)
-                }
+                viewModel.softError.collect { snackBarHostState.showSnackbar(it) }
             }
 
-            // Restart the loop on info change
-            LaunchedEffect(uiState.infoTitle, uiState.infoType, uiState.serviceConnected) {
-                withContext(Dispatchers.IO) {
-                    Timber.d("Start LaunchedEffect Loop")
-
-                    viewModel.resetPlayTime()
-
-                    while (isActive && uiState.serviceConnected) {
-                        val currentState = viewModel.uiState.value
-                        val activityState = viewModel.activityState.value
-
-                        if (!currentState.serviceConnected) {
-                            Timber.i("Service disconnected, stopping update loop")
-                            break
-                        }
-
-                        if (activityState.playTime < 0) {
-                            Timber.i("Stop update")
-                            break
-                        }
-
-                        if (!currentState.screenOn || modPlayer == null) {
-                            Timber.d(
-                                "Waiting - Screen On: %s, isPlaying: %s, modPlayer null: %s",
-                                currentState.screenOn,
-                                viewModel.isPlaying,
-                                modPlayer == null
-                            )
-                            delay(500.milliseconds)
-                            continue
-                        }
-
-                        // Update ViewerInfo()
-                        viewModel.updateViewInfo()
-
-                        // Update sample data
-                        viewModel.updateSampleData()
-
-                        // Update pattern data
-                        viewModel.updatePatternData()
-
-                        // Get the current playback time
-                        val time = Xmp.time().div(100F)
-                        viewModel.setPlayTime(time)
-
-                        // Update the seekbar for the current time
-                        viewModel.updateSeekBar()
-
-                        // Update playback and total-playback time
-                        viewModel.updateInfoTime()
-
-                        // Update Speed, Bpm, Pos, Pat
-                        viewModel.updateInfoState()
-
-                        delay(33.milliseconds)
-                    }
-
-                    Timber.i("Update loop ended")
-                }
-            }
+            // Main update loop - triggered by state changes
+            UpdateLoopEffect(screenState.ui.serviceConnected)
 
             XmpTheme {
-                // Hoisted here because of native jni call.
-                MessageDialog(
-                    isShowing = uiState.showMessageDialog,
-                    icon = Icons.Default.Info,
-                    title = "Comments",
-                    text = uiState.currentMessage,
-                    confirmText = stringResource(id = android.R.string.ok),
-                    onConfirm = viewModel::closeMessage
-                )
+                // Dialogs
+                PlayerDialogs(screenState)
 
-                // TODO
-                SingleChoiceListDialog(
-                    isShowing = choice != null,
-                    icon = Icons.AutoMirrored.Filled.PlaylistAdd,
-                    title = stringResource(id = R.string.dialog_title_select_playlist),
-                    selectedIndex = -1,
-                    textList = persistentListOf(), // playlists.map { it.name }.toPersistentList(),
-                    onConfirm = viewModel::addToPlaylist,
-                    onDismiss = {
-                        viewModel.clearPlaylist()
-                    },
-                    onEmpty = {
-                        scope.launch {
-                            snackBarHostState.showSnackbar(
-                                // message = resources.getString(R.string.error_snack_no_playlists)
-                                message = "Not Implemented"
-                            )
-                            viewModel.clearPlaylist()
-                        }
-                    }
-                )
-
+                // Main screen
                 PlayerScreen(
                     snackBarHostState = snackBarHostState,
-                    uiState = uiState,
-                    timeState = timeState,
-                    drawerState = drawerState,
-                    instrumentNames = instrumentNames,
-                    modVars = modVars,
-                    buttonState = buttonState,
-                    frameInfo = frameInfo,
-                    channelInfo = channelInfo,
-                    isMuted = isMuted,
-                    infoState = infoState,
-                    sampleData = sampleData,
-                    patternData = patternData,
-                    onVisibleRowRangeChanged = viewModel::setVisibleRowRange,
-                    onControlsEvent = {
-                        Timber.d("onControlsEvent $it")
-                        when (it) {
-                            PlayerControlsEvent.OnNext -> {
-                                controls!!.transportControls.skipToNext()
-                                viewModel.isPlaying(true)
-                            }
-
-                            PlayerControlsEvent.OnPlay -> {
-                                if (PlayerService.isPlaying.value) {
-                                    controls!!.transportControls.pause()
-                                } else {
-                                    controls!!.transportControls.play()
-                                }
-                                viewModel.isPlaying(PlayerService.isPlaying.value)
-                            }
-
-                            PlayerControlsEvent.OnPrev -> {
-                                controls!!.transportControls.skipToPrevious()
-                                viewModel.isPlaying(PlayerService.isPlaying.value)
-                            }
-
-                            PlayerControlsEvent.OnStop -> {
-                                controls!!.transportControls.stop()
-                            }
-
-                            is PlayerControlsEvent.OnRepeat -> {
-                                modPlayer!!.toggleLoop(it.value)
-                                viewModel.toggleLoop(it.value)
-                            }
-                        }
-                    },
-                    onSheetEvent = {
-                        when (it) {
-                            PlayerSheetEvent.OnAllSeq -> {
-                                val res = modPlayer!!.toggleAllSequences()
-                                viewModel.onAllSequence(res)
-                            }
-
-                            PlayerSheetEvent.OnMessage -> {
-                                val comment = String(Xmp.getComment(), StandardCharsets.UTF_8)
-                                if (comment.isEmpty()) {
-                                    lifecycleScope.launch {
-                                        val msg = "No comment to display"
-                                        snackBarHostState.showSnackbar(msg)
-                                    }
-                                } else {
-                                    viewModel.showMessage(true, comment.trim())
-                                }
-                                viewModel.showSheet(false)
-                            }
-
-                            PlayerSheetEvent.OnAddToPlaylist -> {
-                                viewModel.onAddToPlaylist(modPlayer!!.currentFileUri)
-                            }
-
-                            is PlayerSheetEvent.OnSequence -> {
-                                Timber.i("Set sequence $it")
-                                val res = modPlayer!!.setSequence(it.seq)
-                                viewModel.onSequence(res)
-                            }
-                        }
-                    },
-                    onSeekEvent = {
-                        when (it) {
-                            is SeekEvent.OnSeek -> {
-                                if (it.isSeeking) {
-                                    viewModel.isSeeking(true)
-                                } else {
-                                    controls!!.transportControls.seekTo(it.value.toLong() * 100)
-                                    viewModel.isSeeking(false)
-                                    viewModel.setPlayTime(Xmp.time().div(100F))
-                                }
-                            }
-                        }
-                    },
+                    screenState = screenState,
+                    onControlsEvent = viewModel::handleControlsEvent,
+                    onSheetEvent = { handleSheetEvent(it) },
+                    onSeekEvent = viewModel::handleSeekEvent,
                     onChangeViewer = viewModel::changeViewer,
                     onSheetVisibleDialog = viewModel::showSheet,
+                    onVisibleRowRangeChanged = viewModel::setVisibleRowRange
                 )
             }
         }
     }
 
-    override fun onPause() {
-        super.onPause()
-        Timber.d("onPause")
-    }
+    // region Lifecycle
 
     override fun onResume() {
         super.onResume()
         Timber.d("onResume")
-
         lifecycleScope.launch {
-            val value = prefManager.getShowInfoLine()
-            viewModel.showInfoLine(value)
+            viewModel.showInfoLine(prefManager.getShowInfoLine())
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
         Timber.d("onDestroy")
-
         saveAllSeqPreference()
-
         playerConnection.unBindService()
-
         screenReceiver.unregister(this)
     }
 
@@ -419,6 +132,206 @@ class PlayerActivity : ComponentActivity() {
         super.onNewIntent(intent)
         Timber.i("onNewIntent")
         handleIntent(intent)
+    }
+
+    // endregion
+
+    // region Setup
+
+    private fun initKoinIfNeeded() {
+        getKoinApplicationOrNull() ?: startKoin {
+            androidContext(this@PlayerActivity)
+            modules(listOf(viewModelModule, appModule))
+        }
+    }
+
+    private fun setupScreenReceiver() {
+        screenReceiver = ScreenReceiver(onScreenEvent = viewModel::screenOn)
+        screenReceiver.register(context = this)
+    }
+
+    // endregion
+
+    // region Composable Effects
+
+    @Composable
+    private fun ServiceLifecycleEffects(isBound: Boolean) {
+        val modPlayer = playerConnection.modPlayer
+
+        LaunchedEffect(isBound) {
+            if (isBound && modPlayer != null) {
+                Timber.i("Service connected")
+                viewModel.onConnected(true)
+                viewModel.isPlaying(PlayerService.isPlaying.value)
+                modPlayer.playerEvent.collect { handlePlayerEvent(it) }
+            }
+        }
+
+        LaunchedEffect(isBound) {
+            if (isBound && modPlayer != null) {
+                val state = viewModel.activityState.value
+                if (state.fileList.isNotEmpty()) {
+                    Timber.d("Start new queue")
+                    viewModel.playNewMod(modPlayer, state.fileList, state.start)
+                } else {
+                    Timber.d("Reconnect to existing service")
+                    viewModel.showNewMod(modPlayer, false)
+                }
+            }
+        }
+
+        DisposableEffect(Unit) {
+            onDispose {
+                if (!playerConnection.isBound.value) {
+                    Timber.i("Service disconnected")
+                    saveAllSeqPreference()
+                    viewModel.onConnected(false)
+                    setResult(RESULT_OK)
+                    finish()
+                }
+            }
+        }
+    }
+
+    @Composable
+    private fun KeepScreenOnEffect() {
+        val keepScreenOn by prefManager.keepScreenOnFlow()
+            .collectAsStateWithLifecycle(initialValue = false)
+
+        DisposableEffect(keepScreenOn) {
+            if (keepScreenOn) {
+                window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            } else {
+                window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            }
+            onDispose {
+                window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            }
+        }
+    }
+
+    @Composable
+    private fun UpdateLoopEffect(serviceConnected: Boolean) {
+        LaunchedEffect(serviceConnected) {
+            if (serviceConnected) {
+                Timber.d("Starting update loop")
+                viewModel.startUpdateLoop(playerConnection.modPlayer)
+            }
+        }
+    }
+
+    @Composable
+    private fun PlayerDialogs(screenState: PlayerScreenState) {
+        val scope = rememberCoroutineScope()
+        val choice by viewModel.playlistChoice.collectAsStateWithLifecycle()
+
+        MessageDialog(
+            isShowing = screenState.ui.showMessageDialog,
+            icon = Icons.Default.Info,
+            title = "Comments",
+            text = screenState.ui.currentMessage,
+            confirmText = stringResource(id = android.R.string.ok),
+            onConfirm = viewModel::closeMessage
+        )
+
+        SingleChoiceListDialog(
+            isShowing = choice != null,
+            icon = Icons.AutoMirrored.Filled.PlaylistAdd,
+            title = stringResource(id = R.string.dialog_title_select_playlist),
+            selectedIndex = -1,
+            textList = persistentListOf(),
+            onConfirm = viewModel::addToPlaylist,
+            onDismiss = { viewModel.clearPlaylist() },
+            onEmpty = {
+                scope.launch {
+                    snackBarHostState.showSnackbar("Not Implemented")
+                    viewModel.clearPlaylist()
+                }
+            }
+        )
+    }
+
+    // endregion
+
+    // region Event Handlers
+
+    private fun handleSheetEvent(event: PlayerSheetEvent) {
+        val modPlayer = playerConnection.modPlayer ?: return
+
+        when (event) {
+            PlayerSheetEvent.OnAllSeq -> {
+                viewModel.onAllSequence(modPlayer.toggleAllSequences())
+            }
+
+            PlayerSheetEvent.OnMessage -> {
+                val comment = String(Xmp.getComment(), StandardCharsets.UTF_8)
+                if (comment.isEmpty()) {
+                    lifecycleScope.launch {
+                        snackBarHostState.showSnackbar("No comment to display")
+                    }
+                } else {
+                    viewModel.showMessage(true, comment.trim())
+                }
+                viewModel.showSheet(false)
+            }
+
+            PlayerSheetEvent.OnAddToPlaylist -> {
+                viewModel.onAddToPlaylist(modPlayer.currentFileUri)
+            }
+
+            is PlayerSheetEvent.OnSequence -> {
+                Timber.i("Set sequence ${event.seq}")
+                viewModel.onSequence(modPlayer.setSequence(event.seq))
+            }
+        }
+    }
+
+    private fun handlePlayerEvent(event: PlayerEvent) {
+        val modPlayer = playerConnection.modPlayer
+
+        when (event) {
+            PlayerEvent.EndMod -> Timber.d("endModCallback: end of module")
+
+            is PlayerEvent.NewMod -> {
+                Timber.d("newModCallback: show module data")
+                modPlayer?.let { viewModel.showNewMod(it, event.isPrevious) }
+            }
+
+            PlayerEvent.NewSequence -> {
+                Timber.d("newSequenceCallback")
+                modPlayer ?: return
+                viewModel.updateModVars()
+                viewModel.showNewSequence { time ->
+                    val minutes = time / 60000
+                    val seconds = time / 1000 % 60
+                    lifecycleScope.launch {
+                        snackBarHostState.showSnackbar(
+                            "New sequence duration: $minutes:${seconds.toString().padStart(2, '0')}"
+                        )
+                    }
+                }
+            }
+
+            PlayerEvent.Paused -> modPlayer?.let { viewModel.isPlaying(false) }
+
+            PlayerEvent.Play -> modPlayer?.let { viewModel.isPlaying(true) }
+
+            is PlayerEvent.EndPlay -> {
+                Timber.d("endPlayCallback: End progress thread")
+                val message = when (event.result) {
+                    EndPlayback.ERROR_FOCUS -> "Unable to get Audio Focus"
+                    EndPlayback.ERROR_WATCHDOG -> "Stopped by watchdog"
+                    EndPlayback.ERROR_INIT -> "Unable to initialize native XMP library"
+                    else -> ""
+                }
+                setResult(RESULT_OK, Intent().putExtra("message", message))
+                finish()
+            }
+
+            is PlayerEvent.ErrorMessage -> {
+                lifecycleScope.launch { snackBarHostState.showSnackbar(event.msg) }
+            }
+        }
     }
 
     private fun handleIntent(intent: Intent?) {
@@ -431,13 +344,13 @@ class PlayerActivity : ComponentActivity() {
             return
         }
 
-        // Oops. We don't want to start service if launched from history and service is not running
-        // so run the browser instead.
+        // Don't start service if launched from history
         if ((intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) != 0) {
             Timber.i("Player started from history")
-            Intent(this, MainActivity::class.java).apply {
-                setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-            }.also(::startActivity)
+            startActivity(
+                Intent(this, MainActivity::class.java)
+                    .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            )
             finish()
             return
         }
@@ -454,10 +367,7 @@ class PlayerActivity : ComponentActivity() {
         }
 
         intent.extras?.let { extras ->
-            // Sanity, because i can't brain
-            if (intent.data != null) {
-                return@let
-            }
+            if (intent.data != null) return@let
 
             val fileList = PlayerService.fileListUri.toList()
             Timber.i("Player started from intent extras. ${fileList.size} items in list")
@@ -468,11 +378,10 @@ class PlayerActivity : ComponentActivity() {
                 keepFirst = extras.getBoolean(Constants.PARM_KEEPFIRST),
                 start = extras.getInt(Constants.PARM_START)
             )
-
             PlayerService.fileListUri.clear()
         }
 
-        if (!viewModel.uiState.value.serviceConnected) {
+        if (!viewModel.screenState.value.ui.serviceConnected) {
             Timber.i("Start service")
             playerConnection.startForegroundService()
         }
@@ -480,162 +389,59 @@ class PlayerActivity : ComponentActivity() {
         playerConnection.bindService()
     }
 
-    private fun handlePlayerEvent(event: PlayerEvent) {
-        when (event) {
-            PlayerEvent.EndMod -> {
-                Timber.d("endModCallback: end of module")
-            }
-
-            is PlayerEvent.NewMod -> {
-                Timber.d("newModCallback: show module data")
-                viewModel.showNewMod(modPlayer!!, event.isPrevious)
-            }
-
-            PlayerEvent.NewSequence -> {
-                Timber.d("newSequenceCallback: ")
-                if (modPlayer == null) {
-                    return
-                }
-
-                viewModel.updateModVars()
-
-                viewModel.showNewSequence { time ->
-                    val minutes = time / 60000
-                    val seconds = time / 1000 % 60
-                    val string = "$minutes:${seconds.toString().padStart(2, '0')}"
-                    lifecycleScope.launch {
-                        snackBarHostState.showSnackbar("New sequence duration: $string")
-                    }
-                }
-            }
-
-            PlayerEvent.Paused -> {
-                modPlayer?.let { viewModel.isPlaying(false) }
-            }
-
-            PlayerEvent.Play -> {
-                modPlayer?.let { viewModel.isPlaying(true) }
-            }
-
-            is PlayerEvent.EndPlay -> {
-                Timber.d("endPlayCallback: End progress thread")
-                val resultIntent = Intent().apply {
-                    val message = when (event.result) {
-                        EndPlayback.ERROR_FOCUS -> "Unable to get Audio Focus"
-                        EndPlayback.ERROR_WATCHDOG -> "Stopped by watchdog"
-                        EndPlayback.ERROR_INIT -> "Unable to initialize native XMP library"
-                        else -> ""
-                    }
-
-                    putExtra("message", message)
-                }
-                setResult(RESULT_OK, resultIntent)
-
-                finish()
-            }
-
-            is PlayerEvent.ErrorMessage -> {
-                lifecycleScope.launch {
-                    snackBarHostState.showSnackbar(event.msg)
-                }
-            }
-        }
-    }
-
     private fun saveAllSeqPreference() {
         Timber.d("Write all sequences preference")
-        // Write our all sequences button status to shared prefs
         lifecycleScope.launch {
-            prefManager.setAllSequences(modPlayer?.playAllSequences ?: false)
+            prefManager.setAllSequences(playerConnection.modPlayer?.playAllSequences ?: false)
         }
     }
 
-    private fun playNewMod(fileList: List<Uri>, start: Int) {
-        modPlayer?.play(
-            fileList = fileList,
-            start = start,
-            shuffle = viewModel.activityState.value.shuffleMode,
-            loopList = viewModel.activityState.value.loopListMode,
-            keepFirst = viewModel.activityState.value.keepFirst
-        )
-    }
+    // endregion
 }
+
+// region PlayerScreen Composable
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PlayerScreen(
-    buttonState: PlayerButtonsState,
-    drawerState: PlayerSheetState,
-    infoState: PlayerInfoState,
-    instrumentNames: ImmutableList<String>,
-    isMuted: ChannelMuteState,
-    modVars: ModVars,
-    channelInfo: ChannelInfo,
-    frameInfo: FrameInfo,
     snackBarHostState: SnackbarHostState,
-    timeState: PlayerTimeState,
-    uiState: PlayerState,
-    sampleData: SampleDataState,
-    patternData: PatternDataState,
-    onVisibleRowRangeChanged: (IntRange) -> Unit,
-    onChangeViewer: () -> Unit,
+    screenState: PlayerScreenState,
     onControlsEvent: (PlayerControlsEvent) -> Unit,
     onSeekEvent: (SeekEvent) -> Unit,
     onSheetEvent: (PlayerSheetEvent) -> Unit,
-    onSheetVisibleDialog: (Boolean) -> Unit
+    onChangeViewer: () -> Unit,
+    onSheetVisibleDialog: (Boolean) -> Unit,
+    onVisibleRowRangeChanged: (IntRange) -> Unit
 ) {
-    val viewFlipperText by remember(uiState.infoTitle, uiState.infoType) {
-        mutableStateOf(Pair(uiState.infoTitle, uiState.infoType))
+    val viewFlipperText = remember(screenState.ui.infoTitle, screenState.ui.infoType) {
+        screenState.ui.infoTitle to screenState.ui.infoType
     }
 
-    if (uiState.showInfoDialog) {
-        Dialog(
-            onDismissRequest = { onSheetVisibleDialog(false) },
-            properties = DialogProperties(
-                usePlatformDefaultWidth = false
-            )
-        ) {
-            Scaffold(
-                topBar = {
-                    CenterAlignedTopAppBar(
-                        title = { Text(text = "Module Info") },
-                        navigationIcon = {
-                            IconButton(onClick = { onSheetVisibleDialog(false) }) {
-                                Icon(
-                                    imageVector = Icons.Default.Close,
-                                    contentDescription = null
-                                )
-                            }
-                        }
-                    )
-                }
-            ) { paddingValues ->
-                PlayerSheet(
-                    modifier = Modifier.padding(paddingValues),
-                    state = drawerState,
-                    onEvent = onSheetEvent
-                )
-            }
-        }
+    // Module info dialog
+    if (screenState.ui.showInfoDialog) {
+        ModuleInfoDialog(
+            drawerState = screenState.drawer,
+            onDismiss = { onSheetVisibleDialog(false) },
+            onEvent = onSheetEvent
+        )
     }
 
-    var showOboeStats by retain { mutableStateOf(false) }
+    // Oboe stats dialog
+    var showOboeStats by remember { mutableStateOf(false) }
     var oboeStats by remember { mutableStateOf("") }
 
     LaunchedEffect(showOboeStats) {
         while (isActive && showOboeStats) {
-            val stats = Xmp.getAudioStats()
-
-            Timber.d("Fetching Audio Stats")
-            oboeStats = """
+            oboeStats = Xmp.getAudioStats().let { stats ->
+                """
                 Audio Glitches: ${stats.xrunCount} (system), ${stats.underrunCount} (app)
                 Sample Rate: ${stats.sampleRate} Hz
                 Buffer: ${stats.bufferSize} / ${stats.bufferCapacity} frames
                 Frames Per Burst: ${stats.framesPerBurst}
                 Audio API: ${stats.audioApi}
                 Sharing Mode: ${stats.sharingMode}
-            """.trimIndent()
-
+                """.trimIndent()
+            }
             delay(3.seconds)
         }
     }
@@ -646,9 +452,7 @@ private fun PlayerScreen(
         title = "Oboe Audio Engine Stats",
         text = oboeStats,
         confirmText = "Close",
-        onConfirm = {
-            showOboeStats = false
-        },
+        onConfirm = { showOboeStats = false }
     )
 
     Scaffold(
@@ -657,40 +461,25 @@ private fun PlayerScreen(
             ViewFlipper(
                 navigationIcon = {
                     IconButton(onClick = { onSheetVisibleDialog(true) }) {
-                        Icon(
-                            imageVector = Icons.Default.Menu,
-                            contentDescription = null
-                        )
+                        Icon(Icons.Default.Menu, contentDescription = null)
                     }
                 },
                 actions = {
-                    IconButton(
-                        onClick = { showOboeStats = true },
-                        content = {
-                            Icon(
-                                imageVector = Icons.Outlined.BarChart,
-                                contentDescription = "Oboe Stats"
-                            )
-                        }
-                    )
+                    IconButton(onClick = { showOboeStats = true }) {
+                        Icon(Icons.Outlined.BarChart, contentDescription = "Oboe Stats")
+                    }
                 },
-                skipToPrevious = uiState.skipToPrevious,
+                skipToPrevious = screenState.ui.skipToPrevious,
                 info = viewFlipperText
             )
         },
         bottomBar = {
             PlayerBottomAppBar {
-                PlayerInfo(state = infoState)
+                PlayerInfo(state = screenState.info)
                 Spacer(modifier = Modifier.height(12.dp))
-                PlayerSeekBar(
-                    state = timeState,
-                    onSeek = onSeekEvent,
-                )
+                PlayerSeekBar(state = screenState.time, onSeek = onSeekEvent)
                 Spacer(modifier = Modifier.height(12.dp))
-                PlayerControls(
-                    state = buttonState,
-                    onEvent = onControlsEvent,
-                )
+                PlayerControls(state = screenState.buttons, onEvent = onControlsEvent)
             }
         }
     ) { paddingValues ->
@@ -703,113 +492,70 @@ private fun PlayerScreen(
             }
         }
 
-        Box(
-            modifier = modifier.padding(paddingValues)
-        ) {
-            when (uiState.currentViewer) {
+        Box(modifier = modifier.padding(paddingValues)) {
+            when (screenState.ui.currentViewer) {
                 0 -> InstrumentViewer(
                     onTap = onChangeViewer,
-                    channelInfo = channelInfo,
-                    insName = instrumentNames,
-                    isMuted = isMuted,
-                    modVars = modVars,
+                    channelInfo = screenState.channelInfo,
+                    insName = screenState.instrumentNames,
+                    isMuted = screenState.isMuted,
+                    modVars = screenState.modVars
                 )
 
                 1 -> ComposePatternViewer(
                     onTap = onChangeViewer,
-                    fi = frameInfo,
-                    isMuted = isMuted,
-                    modType = uiState.infoType,
-                    modVars = modVars,
-                    patternData = patternData,
-                    onVisibleRowRangeChanged = onVisibleRowRangeChanged,
+                    fi = screenState.frameInfo,
+                    isMuted = screenState.isMuted,
+                    modType = screenState.ui.infoType,
+                    modVars = screenState.modVars,
+                    patternData = screenState.patternData,
+                    onVisibleRowRangeChanged = onVisibleRowRangeChanged
                 )
 
                 2 -> ComposeChannelViewer(
                     onTap = onChangeViewer,
-                    channelInfo = channelInfo,
-                    frameInfo = frameInfo,
-                    insName = instrumentNames,
-                    isMuted = isMuted,
-                    modVars = modVars,
-                    sampleData = sampleData,
+                    channelInfo = screenState.channelInfo,
+                    frameInfo = screenState.frameInfo,
+                    insName = screenState.instrumentNames,
+                    isMuted = screenState.isMuted,
+                    modVars = screenState.modVars,
+                    sampleData = screenState.sampleData
                 )
             }
         }
     }
 }
 
-// region [Region] Compose Previews
-class PlayerPreviewProvider : PreviewParameterProvider<Boolean> {
-    override val values = sequenceOf(false, true)
-}
-
-@Preview
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun Preview_PlayerScreen(
-    @PreviewParameter(PlayerPreviewProvider::class) sheetValue: Boolean
+private fun ModuleInfoDialog(
+    drawerState: PlayerSheetState,
+    onDismiss: () -> Unit,
+    onEvent: (PlayerSheetEvent) -> Unit
 ) {
-    val modVars = remember {
-        ModVars(190968, 30, 25, 12, 40, 18, 1, 0)
-    }
-
-    val sheetVisible = remember(sheetValue) {
-        mutableStateOf(sheetValue)
-    }
-
-    XmpTheme {
-        PlayerScreen(
-            snackBarHostState = SnackbarHostState(),
-            uiState = PlayerState(
-                infoTitle = "Title 1",
-                infoType = "Fast Tracker",
-                currentViewer = 0,
-                showInfoDialog = sheetVisible.value,
-            ),
-            infoState = PlayerInfoState(
-                infoSpeed = "11",
-                infoBpm = "22",
-                infoPos = "33",
-                infoPat = "44"
-            ),
-            buttonState = PlayerButtonsState(
-                isPlaying = true,
-                repeatMode = RepeatMode.REPEAT
-            ),
-            timeState = PlayerTimeState(
-                timeNow = "00:00",
-                timeTotal = "00:00",
-                seekPos = 25f,
-                seekMax = 100f
-            ),
-            drawerState = PlayerSheetState(
-                moduleInfo = listOf(111, 222, 333, 444, 555),
-                isPlayAllSequences = true,
-                numOfSequences = List(12) { it },
-                currentSequence = 2
-            ),
-            instrumentNames = List(modVars.numInstruments) {
-                String.format("%02X %s", it + 1, "Instrument Name")
-            }.toPersistentList(),
-            modVars = modVars,
-            channelInfo = composeSampleChannelInfo(),
-            frameInfo = composeSampleFrameInfo(),
-            isMuted = ChannelMuteState(
-                isMuted = List(modVars.numChannels) {
-                    false
-                }.toPersistentList()
-            ),
-            sampleData = SampleDataState(),
-            patternData = PatternDataState(),
-            onVisibleRowRangeChanged = { },
-            onControlsEvent = { },
-            onSeekEvent = { },
-            onSheetEvent = { },
-            onChangeViewer = { },
-            onSheetVisibleDialog = {
-                sheetVisible.value = it
-            },
-        )
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Scaffold(
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = { Text(text = "Module Info") },
+                    navigationIcon = {
+                        IconButton(onClick = onDismiss) {
+                            Icon(Icons.Default.Close, contentDescription = null)
+                        }
+                    }
+                )
+            }
+        ) { paddingValues ->
+            PlayerSheet(
+                modifier = Modifier.padding(paddingValues),
+                state = drawerState,
+                onEvent = onEvent
+            )
+        }
     }
 }
+
 // endregion

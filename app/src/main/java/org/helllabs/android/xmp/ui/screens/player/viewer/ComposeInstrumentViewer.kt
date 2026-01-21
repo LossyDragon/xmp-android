@@ -57,10 +57,10 @@ internal fun InstrumentViewer(
     }
 
     // Pre-measured text for all instruments - only recalculates on instrument list change
-    val measuredText = remember(modVars.numInstruments, insName) {
-        (0 until modVars.numInstruments).map {
+    val measuredText = remember(insName) {
+        insName.map {
             textMeasurer.measure(
-                text = AnnotatedString(insName[it]),
+                text = AnnotatedString(it),
                 style = instrumentTextStyle
             )
         }
@@ -133,7 +133,7 @@ internal fun InstrumentViewer(
         val rowHeightInv = 1f / dimensions.rowHeight
         val firstVisibleRow = (-yOffset.value * rowHeightInv).toInt().coerceAtLeast(0)
         val lastVisibleRow = ((-yOffset.value + size.height) * rowHeightInv).toInt()
-            .coerceAtMost(modVars.numInstruments - 1)
+            .coerceAtMost(measuredText.size - 1)
 
         // Draw only visible instruments
         for (i in firstVisibleRow..lastVisibleRow) {
@@ -142,6 +142,8 @@ internal fun InstrumentViewer(
 
             // Draw active channel volume boxes for this instrument
             for (j in 0 until modVars.numChannels) {
+                if (j >= isMuted.size) continue
+
                 // Skip muted channels or channels not playing this instrument
                 if (isMuted.isMuted[j] || i != channelInfo.instruments[j]) {
                     continue

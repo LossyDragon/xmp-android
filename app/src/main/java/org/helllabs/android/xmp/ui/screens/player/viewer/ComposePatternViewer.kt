@@ -24,7 +24,6 @@ import org.helllabs.android.xmp.ui.screens.player.PatternDataState
 import org.helllabs.android.xmp.ui.screens.player.Util
 import org.helllabs.android.xmp.ui.theme.XmpTheme
 import org.helllabs.android.xmp.ui.theme.seed
-import timber.log.Timber
 
 // Maybe keep the row numbers in view at all times, and move the channel columns instead?
 
@@ -130,20 +129,6 @@ internal fun ComposePatternViewer(
         canvasSize.height.div(2).div(yAxisMultiplier).toInt().times(yAxisMultiplier)
     }
 
-    val currentRow = fi.row.toFloat()
-    val rowYOffset = remember(barLineY, currentRow, yAxisMultiplier) {
-        barLineY - (currentRow * yAxisMultiplier)
-    }
-
-    val visibleRowRange = remember(canvasSize, rowYOffset, yAxisMultiplier) {
-        val firstVisible = ((yAxisMultiplier - rowYOffset) / yAxisMultiplier).toInt()
-            .coerceAtLeast(0)
-        val lastVisible = ((canvasSize.height - rowYOffset) / yAxisMultiplier).toInt()
-            .coerceAtMost(fi.numRows - 1)
-
-        firstVisible..lastVisible
-    }
-
     // Dynamically calculate visible channels based on scroll position
     val visibleChannelRange by remember(canvasSize, modVars.numChannels, xAxisMultiplier) {
         derivedStateOf {
@@ -172,14 +157,21 @@ internal fun ComposePatternViewer(
 
     // Reset scroll position
     LaunchedEffect(modVars.numChannels, canvasSize /*, fi.pattern */) {
-        Timber.d("Resetting scroll position")
         scope.launch {
             offsetX.snapTo(0f)
         }
     }
 
-    LaunchedEffect(visibleRowRange) {
-        onVisibleRowRangeChanged(visibleRowRange)
+    LaunchedEffect(fi.row, fi.numRows, canvasSize, barLineY) {
+        if (canvasSize == Size.Zero || fi.numRows == 0) return@LaunchedEffect
+
+        val rowYOffset = barLineY - (fi.row * yAxisMultiplier)
+        val buffer = 10 // Pre-fetch extra rows
+        val firstVisible = ((yAxisMultiplier - rowYOffset) / yAxisMultiplier).toInt() - buffer
+        val lastVisible = ((canvasSize.height - rowYOffset) / yAxisMultiplier).toInt() + buffer
+        val range = firstVisible.coerceAtLeast(0)..lastVisible.coerceAtMost(fi.numRows - 1)
+
+        onVisibleRowRangeChanged(range)
     }
 
     Canvas(
@@ -196,6 +188,14 @@ internal fun ComposePatternViewer(
         if (canvasSize != size) {
             canvasSize = size
         }
+
+        val rowYOffset = barLineY - (fi.row * yAxisMultiplier)
+        val padding = 2
+        val firstVisible = ((yAxisMultiplier - rowYOffset) / yAxisMultiplier).toInt() - padding
+        val lastVisible = ((canvasSize.height - rowYOffset) / yAxisMultiplier).toInt() + padding
+        val visibleRowRange = firstVisible
+            .coerceAtLeast(0)..lastVisible
+            .coerceAtMost(maxOf(0, fi.numRows - 1))
 
         // Column backgrounds
         for (i in 1 until modVars.numChannels) {
@@ -284,14 +284,22 @@ internal fun ComposePatternViewer(
                                 }
                                 withStyle(
                                     style = SpanStyle(
-                                        color = if (mutedState[chn]) instrumentColorMuted else instrumentColor
+                                        color = if (mutedState[chn]) {
+                                            instrumentColorMuted
+                                        } else {
+                                            instrumentColor
+                                        }
                                     )
                                 ) {
                                     append(Util.num(rowData.instruments[chn].toInt()))
                                 }
                                 withStyle(
                                     style = SpanStyle(
-                                        color = if (mutedState[chn]) effectColorMuted else effectColor
+                                        color = if (mutedState[chn]) {
+                                            effectColorMuted
+                                        } else {
+                                            effectColor
+                                        }
                                     )
                                 ) {
                                     val fxt = rowData.fxType[chn]
@@ -304,7 +312,11 @@ internal fun ComposePatternViewer(
                                 }
                                 withStyle(
                                     style = SpanStyle(
-                                        color = if (mutedState[chn]) effectColorMuted else effectColor
+                                        color = if (mutedState[chn]) {
+                                            effectColorMuted
+                                        } else {
+                                            effectColor
+                                        }
                                     )
                                 ) {
                                     append(Util.num(rowData.fxParm[chn].toInt()))
@@ -331,6 +343,9 @@ internal fun ComposePatternViewer(
                     (row * yAxisMultiplier) +
                     (yAxisMultiplier / 2 - textLayout.size.height / 2)
 
+                // Skip drawing if it would be in the header
+                if (noteCenterY < yAxisMultiplier) continue
+
                 // Pattern text
                 drawText(
                     textLayoutResult = textLayout,
@@ -343,6 +358,9 @@ internal fun ComposePatternViewer(
             val textCenterY = rowYOffset +
                 (row * yAxisMultiplier) +
                 (yAxisMultiplier / 2 - rowText[row].size.height / 2)
+
+            // Skip drawing if it would be in the header
+            if (textCenterY < yAxisMultiplier) continue
 
             drawText(
                 textLayoutResult = rowText[row],
