@@ -691,7 +691,7 @@ class PlayerViewModel(prefManager: PrefManager) : ViewModel() {
 
         val ci = channelInfo.value
         val fi = frameInfo.value
-        val buffers = sampleBuffers!!
+        val buffers = sampleBuffers ?: arrayOf()
 
         for (chn in 0 until numChannels) {
             val ins = ci.instruments[chn]
