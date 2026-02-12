@@ -42,3 +42,6 @@ app/release/output-metadata.json
 
 # Signing Configs
 *.jks
+
+# Gradle Daemon
+gradle/gradle-daemon-jvm.properties
