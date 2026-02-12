@@ -857,6 +857,9 @@ class PlayerService :
 
             watchdog!!.stop()
 
+            isAlive.value = false
+            isPlaying.value = false
+
             Thread.sleep(100) // Let the player finish getting data
 
             Xmp.stopModule()

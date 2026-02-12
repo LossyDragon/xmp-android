@@ -121,8 +121,9 @@ class MainActivity : ComponentActivity() {
                 isShowing = hasExplorerPath,
                 title = "Storage Request",
                 text = "Xmp Mod Player needs a default directory to browse modules.\n" +
-                    "Press OK to choose an initial path. Downloads will be stored in here too.\n" +
-                    "This can be changed at any time within settings.",
+                    "If you don't already have a collection of modules, making a \"mods\" " +
+                    "folder will work for first time users.\n" +
+                    "Downloads will be stored in here too.\n",
                 confirmText = "OK",
                 onConfirm = {
                     documentTreeResult.launch(null)
@@ -157,9 +158,8 @@ class MainActivity : ComponentActivity() {
             MessageDialog(
                 isShowing = hasPlaylistsPath,
                 title = "Playlist Storage Request",
-                text = "Xmp Mod Player needs a directory to store playlists.\n" +
-                    "Press OK to choose a location for your playlists.\n" +
-                    "This can be changed at any time within settings.",
+                text = "Xmp Mod Player needs a default directory to store playlists.\n" +
+                    "Choose a parent directory; like Documents, as a subdirectory called \"xmp\" will be created to store playlists.\n",
                 confirmText = "OK",
                 onConfirm = {
                     val documentsUri = DocumentsContract.buildDocumentUri(

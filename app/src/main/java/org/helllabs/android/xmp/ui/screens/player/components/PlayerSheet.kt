@@ -70,22 +70,23 @@ fun PlayerSheet(
         ) {
             Spacer(modifier = Modifier.height(12.dp))
 
-            ModuleSection(text = stringResource(id = R.string.sidebar_add_playlist)) {
-                IconButton(
-                    modifier = Modifier
-                        .weight(1f)
-                        .wrapContentWidth(Alignment.End),
-                    onClick = { onEvent(PlayerSheetEvent.OnAddToPlaylist) },
-                    content = {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = null,
-                        )
-                    }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
+            // TODO make better impl of it
+            // ModuleSection(text = stringResource(id = R.string.sidebar_add_playlist)) {
+            //     IconButton(
+            //         modifier = Modifier
+            //             .weight(1f)
+            //             .wrapContentWidth(Alignment.End),
+            //         onClick = { onEvent(PlayerSheetEvent.OnAddToPlaylist) },
+            //         content = {
+            //             Icon(
+            //                 imageVector = Icons.Default.Add,
+            //                 contentDescription = null,
+            //             )
+            //         }
+            //     )
+            // }
+            //
+            // Spacer(modifier = Modifier.height(12.dp))
 
             ModuleSection(text = stringResource(id = R.string.sidebar_details)) {
                 IconButton(

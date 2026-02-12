@@ -50,13 +50,16 @@ import org.helllabs.android.xmp.ui.screens.player.viewer.InstrumentViewer
 import org.helllabs.android.xmp.ui.theme.XmpTheme
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.context.GlobalContext.getKoinApplicationOrNull
 import org.koin.core.context.GlobalContext.startKoin
 import timber.log.Timber
 
 class PlayerActivity : ComponentActivity() {
 
-    private val viewModel by inject<PlayerViewModel>()
+    // private val viewModel by inject<PlayerViewModel>()
+    private val viewModel: PlayerViewModel by viewModel() // "Lifecycle awareness" for vm ...ok
+
     private val prefManager by inject<PrefManager>()
     private val playerConnection by inject<PlayerConnection>()
     private val snackBarHostState = SnackbarHostState()
@@ -122,6 +125,7 @@ class PlayerActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        viewModel.onConnected(false) // Band-Aid fix
         Timber.d("onDestroy")
         saveAllSeqPreference()
         playerConnection.unBindService()
@@ -318,6 +322,7 @@ class PlayerActivity : ComponentActivity() {
 
             is PlayerEvent.EndPlay -> {
                 Timber.d("endPlayCallback: End progress thread")
+                viewModel.onConnected(false)
                 val message = when (event.result) {
                     EndPlayback.ERROR_FOCUS -> "Unable to get Audio Focus"
                     EndPlayback.ERROR_WATCHDOG -> "Stopped by watchdog"

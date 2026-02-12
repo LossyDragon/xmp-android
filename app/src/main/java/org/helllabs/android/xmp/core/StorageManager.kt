@@ -274,7 +274,12 @@ class StorageManager(private val context: Context, private val prefManager: Pref
      *         permissions are denied, or any other error occurs during creation.
      */
     fun getDocumentFileFromUri(uri: Uri): DocumentFileCompat? = try {
-        DocumentFileCompat.fromSingleUri(context, uri)
+        // Tree URIs need fromTreeUri, single document URIs need fromSingleUri
+        if (DocumentsContract.isTreeUri(uri)) {
+            DocumentFileCompat.fromTreeUri(context, uri)
+        } else {
+            DocumentFileCompat.fromSingleUri(context, uri)
+        }
     } catch (e: IllegalStateException) {
         Timber.e(e, "DocumentFileCompat failed for URI: $uri")
         null
@@ -310,7 +315,10 @@ class StorageManager(private val context: Context, private val prefManager: Pref
      * Much faster than calling getDocumentFileFromUri for each item
      */
     suspend fun listDirectoryWithMetadata(uri: Uri?): List<FileItem> = withContext(Dispatchers.IO) {
-        if (uri == null) return@withContext emptyList()
+        if (uri == null) {
+            Timber.w("listDirectory: uri is null")
+            return@withContext emptyList()
+        }
 
         try {
             val docId = DocumentsContract.getDocumentId(uri)

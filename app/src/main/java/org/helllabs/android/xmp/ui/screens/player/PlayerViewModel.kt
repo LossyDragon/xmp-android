@@ -430,6 +430,10 @@ class PlayerViewModel(prefManager: PrefManager) : ViewModel() {
         get() = buttonState.value.isPlaying
 
     fun onConnected(value: Boolean) {
+        if (!value) {
+            updateJob?.cancel()
+            updateJob = null
+        }
         uiState.update { it.copy(serviceConnected = value) }
     }
 
