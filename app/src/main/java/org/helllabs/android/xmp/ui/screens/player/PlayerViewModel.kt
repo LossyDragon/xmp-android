@@ -15,6 +15,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -324,9 +325,7 @@ class PlayerViewModel(prefManager: PrefManager) : ViewModel() {
      * Runs on Default dispatcher to avoid blocking UI.
      */
     fun startUpdateLoop(modPlayer: PlayerService?) {
-        Timber.d("startUpdateLoop called, modPlayer=$modPlayer")
-
-        updateJob?.cancel()
+        Timber.d("Start update loop")
 
         if (modPlayer == null) {
             Timber.e("modPlayer is null, aborting update loop")
@@ -348,8 +347,10 @@ class PlayerViewModel(prefManager: PrefManager) : ViewModel() {
                 }
 
                 // Update all viewer data
+                ensureActive()
                 updateViewInfo()
                 updateSampleData()
+                ensureActive()
 
                 // Update time and seekbar
                 val time = Xmp.time().div(100f)
@@ -430,11 +431,13 @@ class PlayerViewModel(prefManager: PrefManager) : ViewModel() {
         get() = buttonState.value.isPlaying
 
     fun onConnected(value: Boolean) {
+        Timber.d("onConnected($value) called from ${Thread.currentThread().name}")
+        uiState.update { it.copy(serviceConnected = value) }
         if (!value) {
+            Timber.d("Cancelling updateJob: $updateJob")
             updateJob?.cancel()
             updateJob = null
         }
-        uiState.update { it.copy(serviceConnected = value) }
     }
 
     fun toggleLoop(value: RepeatMode) {
@@ -662,6 +665,10 @@ class PlayerViewModel(prefManager: PrefManager) : ViewModel() {
     }
 
     private fun updateViewInfo() {
+        if (!uiState.value.serviceConnected) {
+            Timber.w("Service not connected!")
+            return
+        }
         val ci = ChannelInfo()
         Xmp.getChannelData(ci)
         channelInfo.value = ci
@@ -681,7 +688,14 @@ class PlayerViewModel(prefManager: PrefManager) : ViewModel() {
     // region Sample Data (optimized)
 
     private fun updateSampleData() {
-        if (!buttonState.value.isPlaying) return
+        if (!uiState.value.serviceConnected) {
+            Timber.w("Service not connected!")
+            return
+        }
+        if (!buttonState.value.isPlaying) {
+            Timber.w("Not playing!")
+            return
+        }
 
         val numChannels = modVars.value.numChannels
         if (numChannels == 0) return

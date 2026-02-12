@@ -168,6 +168,13 @@ class PlayerActivity : ComponentActivity() {
                 viewModel.onConnected(true)
                 viewModel.isPlaying(PlayerService.isPlaying.value)
                 modPlayer.playerEvent.collect { handlePlayerEvent(it) }
+            } else if (!isBound && viewModel.screenState.value.ui.serviceConnected) {
+                Timber.i("Service disconnected, stopping update loop")
+                viewModel.onConnected(false)
+                setResult(RESULT_OK)
+                finish()
+            } else if (!isBound) {
+                viewModel.onConnected(false)
             }
         }
 
