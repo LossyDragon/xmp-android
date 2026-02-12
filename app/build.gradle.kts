@@ -36,7 +36,7 @@ android {
         minSdk = 24 // Android 7 - Nougat
         targetSdk = 36 // Android 15 Vanilla Ice Cream
 
-        versionCode = 124
+        versionCode = 125
         versionName = "5.0-SNAPSHOT"
 
         ndk.abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
