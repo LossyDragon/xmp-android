@@ -53,7 +53,7 @@ fun NavPlaylists(
     NavDisplay(
         backStack = playlistBackStack,
         onBack = { playlistBackStack.removeLastOrNull() },
-        sceneStrategy = dialogStrategy,
+        sceneStrategies = listOf(dialogStrategy),
         entryDecorators = listOf(
             rememberSaveableStateHolderNavEntryDecorator(),
             rememberViewModelStoreNavEntryDecorator()

@@ -1,13 +1,11 @@
 @file:Suppress("UnstableApiUsage")
 
-import org.gradle.kotlin.dsl.support.KotlinCompilerOptions
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.io.FileInputStream
 import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.android.kotlin)
     alias(libs.plugins.gradle.kotlinter)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.kotlin.compiler)
@@ -22,10 +20,9 @@ val keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.exists()) {
     keyProperties.load(FileInputStream(keystorePropertiesFile))
 }
-
 android {
     namespace = "org.helllabs.android.xmp"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "org.helllabs.android.xmp"
@@ -127,6 +124,12 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
+    }
+}
+
+afterEvaluate {
+    listOf("debugStabilityCheck", "gHAStabilityCheck", "releaseStabilityCheck").forEach { taskName ->
+        tasks.findByName(taskName)?.mustRunAfter("compileDebugUnitTestKotlin")
     }
 }
 
