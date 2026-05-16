@@ -31,7 +31,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.helllabs.android.xmp.MainActivity
 import org.helllabs.android.xmp.R
-import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.core.Constants
 import org.helllabs.android.xmp.core.PrefManager
 import org.helllabs.android.xmp.core.setEdgeToEdgeConfig
@@ -48,6 +47,7 @@ import org.helllabs.android.xmp.ui.screens.player.viewer.ComposeChannelViewer
 import org.helllabs.android.xmp.ui.screens.player.viewer.ComposePatternViewer
 import org.helllabs.android.xmp.ui.screens.player.viewer.InstrumentViewer
 import org.helllabs.android.xmp.ui.theme.XmpTheme
+import org.helllabs.libxmp.Xmp
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.ext.android.viewModel

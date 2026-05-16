@@ -17,11 +17,11 @@ import androidx.compose.ui.unit.*
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.launch
-import org.helllabs.android.xmp.model.ChannelInfo
-import org.helllabs.android.xmp.model.ModVars
 import org.helllabs.android.xmp.ui.screens.player.ChannelMuteState
 import org.helllabs.android.xmp.ui.theme.XmpTheme
 import org.helllabs.android.xmp.ui.theme.seed
+import org.helllabs.libxmp.model.ChannelInfo
+import org.helllabs.libxmp.model.ModVars
 
 private const val VOLUME_STEPS = 32
 private val barShape = CornerRadius(8f, 8f)

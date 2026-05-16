@@ -36,7 +36,7 @@ namespace {
 #define LOGW(...) __android_log_print(ANDROID_LOG_WARN, TAG, __VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, TAG, __VA_ARGS__)
 
-#define JNI_FUNCTION(name) Java_org_helllabs_android_xmp_Xmp_##name
+#define JNI_FUNCTION(name) Java_org_helllabs_libxmp_Xmp_##name
 
 namespace {
 
@@ -278,7 +278,7 @@ namespace {
 
   // Field ID caching functions
   void cacheModInfoIDs(JNIEnv* env) {
-    if (jclass cls = env->FindClass("org/helllabs/android/xmp/model/ModInfo")) {
+    if (jclass cls = env->FindClass("org/helllabs/libxmp/model/ModInfo")) {
       g_modInfoIDs.name = env->GetFieldID(cls, "name", "Ljava/lang/String;");
       g_modInfoIDs.type = env->GetFieldID(cls, "type", "Ljava/lang/String;");
       env->DeleteLocalRef(cls);
@@ -286,7 +286,7 @@ namespace {
   }
 
   void cacheChannelVarsIDs(JNIEnv* env) {
-    if (jclass cls = env->FindClass("org/helllabs/android/xmp/model/ChannelInfo")) {
+    if (jclass cls = env->FindClass("org/helllabs/libxmp/model/ChannelInfo")) {
       g_channelVarsIDs.volumes = env->GetFieldID(cls, "volumes", "[I");
       g_channelVarsIDs.finalVols = env->GetFieldID(cls, "finalVols", "[I");
       g_channelVarsIDs.pans = env->GetFieldID(cls, "pans", "[I");
@@ -299,7 +299,7 @@ namespace {
   }
 
   void cacheModVarsIDs(JNIEnv* env) {
-    if (jclass cls = env->FindClass("org/helllabs/android/xmp/model/ModVars")) {
+    if (jclass cls = env->FindClass("org/helllabs/libxmp/model/ModVars")) {
       g_modVarsIDs.currentSequence = env->GetFieldID(cls, "currentSequence", "I");
       g_modVarsIDs.lengthInPatterns = env->GetFieldID(cls, "lengthInPatterns", "I");
       g_modVarsIDs.numChannels = env->GetFieldID(cls, "numChannels", "I");
@@ -313,7 +313,7 @@ namespace {
   }
 
   void cacheFrameInfoIDs(JNIEnv* env) {
-    if (jclass cls = env->FindClass("org/helllabs/android/xmp/model/FrameInfo")) {
+    if (jclass cls = env->FindClass("org/helllabs/libxmp/model/FrameInfo")) {
       g_frameInfoIDs.posField = env->GetFieldID(cls, "pos", "I");
       g_frameInfoIDs.patternField = env->GetFieldID(cls, "pattern", "I");
       g_frameInfoIDs.rowField = env->GetFieldID(cls, "row", "I");
@@ -1174,7 +1174,7 @@ JNIEXPORT jint JNICALL JNI_FUNCTION(setVolume)(JNIEnv* env, jobject obj, jint vo
 JNIEXPORT jobject JNICALL JNI_FUNCTION(getAudioStats)(JNIEnv* env, jobject obj) {
   struct AudioStats stats{};
 
-  jclass statsClass = env->FindClass("org/helllabs/android/xmp/model/AudioStats");
+  jclass statsClass = env->FindClass("org/helllabs/libxmp/model/AudioStats");
   if (!statsClass) return nullptr;
 
   jmethodID constructor = env->GetMethodID(statsClass, "<init>", "(IIIIIILjava/lang/String;Ljava/lang/String;)V");

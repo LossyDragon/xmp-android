@@ -16,14 +16,14 @@ import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.launch
-import org.helllabs.android.xmp.model.FrameInfo
-import org.helllabs.android.xmp.model.ModVars
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.ui.screens.player.ChannelMuteState
 import org.helllabs.android.xmp.ui.screens.player.PatternDataState
 import org.helllabs.android.xmp.ui.screens.player.Util
 import org.helllabs.android.xmp.ui.theme.XmpTheme
 import org.helllabs.android.xmp.ui.theme.seed
+import org.helllabs.libxmp.model.FrameInfo
+import org.helllabs.libxmp.model.ModVars
 
 // Maybe keep the row numbers in view at all times, and move the channel columns instead?
 

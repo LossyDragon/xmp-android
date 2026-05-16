@@ -14,10 +14,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.collections.immutable.persistentListOf
 import org.helllabs.android.xmp.BuildConfig
-import org.helllabs.android.xmp.model.ChannelInfo
-import org.helllabs.android.xmp.model.FrameInfo
-import org.helllabs.android.xmp.model.ModVars
 import org.helllabs.android.xmp.model.SequenceVars
+import org.helllabs.libxmp.model.ChannelInfo
+import org.helllabs.libxmp.model.FrameInfo
+import org.helllabs.libxmp.model.ModVars
 
 @Suppress("unused")
 internal fun DrawScope.debugPatternViewColumns(

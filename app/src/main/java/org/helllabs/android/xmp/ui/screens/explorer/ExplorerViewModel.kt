@@ -25,9 +25,9 @@ import org.helllabs.android.xmp.core.PlaylistManager.Companion.addItems
 import org.helllabs.android.xmp.core.PrefManager
 import org.helllabs.android.xmp.core.StorageManager
 import org.helllabs.android.xmp.model.FileItem
-import org.helllabs.android.xmp.model.ModInfo
 import org.helllabs.android.xmp.model.Playlist
 import org.helllabs.android.xmp.model.PlaylistItem
+import org.helllabs.libxmp.model.ModInfo
 import timber.log.Timber
 
 @Immutable

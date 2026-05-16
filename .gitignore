@@ -35,6 +35,7 @@ app/app.iml
 app/.cxx/
 app/release/baselineProfiles/
 app/release/output-metadata.json
+libxmp/.cxx/
 
 # Kotlin 2.0
 .kotlin/sessions

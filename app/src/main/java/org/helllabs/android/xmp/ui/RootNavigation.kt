@@ -8,13 +8,14 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import kotlinx.collections.immutable.toPersistentList
 import org.helllabs.android.xmp.BuildConfig
 import org.helllabs.android.xmp.PlayerActivityLauncher
-import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.ui.navkey.NavKeyRoot
 import org.helllabs.android.xmp.ui.screens.preferences.AboutScreen
 import org.helllabs.android.xmp.ui.screens.preferences.FormatsScreen
 import org.helllabs.android.xmp.ui.screens.preferences.PreferencesScreen
+import org.helllabs.libxmp.Xmp
 
 @Composable
 fun RootNavigation(
@@ -76,7 +77,7 @@ fun RootNavigation(
                 )
             }
             entry<NavKeyRoot.SettingsFormats> {
-                val formats = remember { Xmp.formats }
+                val formats = remember { Xmp.formatsSorted.toPersistentList() }
                 FormatsScreen(
                     snackBarHostState = snackBarHostState,
                     formatsList = formats,

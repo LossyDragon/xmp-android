@@ -1,4 +1,5 @@
 [versions]
+java = "17"
 activityCompose = "1.13.0" # https://mvnrepository.com/artifact/androidx.activity/activity-compose
 androidGradlePlugin = "9.2.1" # https://mvnrepository.com/artifact/com.android.application/com.android.application.gradle.plugin
 composeBom = "2026.05.00" # https://mvnrepository.com/artifact/androidx.compose/compose-bom

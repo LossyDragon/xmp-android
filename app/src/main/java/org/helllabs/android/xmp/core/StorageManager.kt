@@ -6,15 +6,14 @@ import android.net.Uri
 import android.provider.DocumentsContract
 import androidx.core.net.toUri
 import com.lazygeniouz.dfc.file.DocumentFileCompat
-import java.io.File
 import java.util.Locale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.core.Constants.DEFAULT_DOWNLOAD_DIR
 import org.helllabs.android.xmp.model.FileItem
-import org.helllabs.android.xmp.model.ModInfo
 import org.helllabs.android.xmp.model.Module
+import org.helllabs.libxmp.Xmp
+import org.helllabs.libxmp.model.ModInfo
 import timber.log.Timber
 
 /**
@@ -24,14 +23,12 @@ class StorageManager(private val context: Context, private val prefManager: Pref
 
     fun testModule(uri: Uri, modInfo: ModInfo = ModInfo()): Boolean = Xmp.testFromFd(
         context = context,
-        storageManager = this,
         uri = uri,
         modInfo = modInfo
     )
 
     fun loadModule(uri: Uri): Int = Xmp.loadFromFd(
         context = context,
-        storageManager = this,
         uri = uri
     )
 

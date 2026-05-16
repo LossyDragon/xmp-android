@@ -25,15 +25,15 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import org.helllabs.android.xmp.Xmp
 import org.helllabs.android.xmp.core.PrefManager
-import org.helllabs.android.xmp.model.ChannelInfo
-import org.helllabs.android.xmp.model.FrameInfo
-import org.helllabs.android.xmp.model.ModVars
 import org.helllabs.android.xmp.model.SequenceVars
 import org.helllabs.android.xmp.service.PlayerService
 import org.helllabs.android.xmp.ui.screens.player.components.PlayerControlsEvent
 import org.helllabs.android.xmp.ui.screens.player.components.SeekEvent
+import org.helllabs.libxmp.Xmp
+import org.helllabs.libxmp.model.ChannelInfo
+import org.helllabs.libxmp.model.FrameInfo
+import org.helllabs.libxmp.model.ModVars
 import timber.log.Timber
 
 // region State Classes

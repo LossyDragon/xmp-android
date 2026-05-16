@@ -1,13 +1,10 @@
-package org.helllabs.android.xmp.model
-
-import androidx.compose.runtime.Immutable
-import org.helllabs.android.xmp.Xmp
+package org.helllabs.libxmp.model
 
 /**
  * Real-time audio statistics from the Oboe audio engine.
  *
  * Provides performance metrics and configuration details about the active audio stream.
- * All values represent the current state at the time [Xmp.getAudioStats] was called.
+ * All values represent the current state at the time [org.helllabs.libxmp.Xmp.getAudioStats] was called.
  *
  * @property xrunCount Total number of buffer underruns/overruns detected by the audio system.
  *                     Higher values indicate audio glitches. Only available on devices that
@@ -27,7 +24,6 @@ import org.helllabs.android.xmp.Xmp
  * @property sharingMode Stream sharing mode: "Exclusive" (dedicated audio path, lowest latency)
  *                       or "Shared" (mixed with other apps, more compatible).
  */
-@Immutable
 data class AudioStats(
     val xrunCount: Int = 0,
     val underrunCount: Int = 0,

@@ -19,15 +19,15 @@ import androidx.compose.ui.unit.*
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.launch
-import org.helllabs.android.xmp.Xmp
-import org.helllabs.android.xmp.model.ChannelInfo
-import org.helllabs.android.xmp.model.FrameInfo
-import org.helllabs.android.xmp.model.ModVars
 import org.helllabs.android.xmp.ui.screens.player.ChannelMuteState
 import org.helllabs.android.xmp.ui.screens.player.SampleDataState
 import org.helllabs.android.xmp.ui.theme.XmpTheme
 import org.helllabs.android.xmp.ui.theme.michromaFontFamily
 import org.helllabs.android.xmp.ui.theme.seed
+import org.helllabs.libxmp.Xmp
+import org.helllabs.libxmp.model.ChannelInfo
+import org.helllabs.libxmp.model.FrameInfo
+import org.helllabs.libxmp.model.ModVars
 
 // TODO: 2 Column support on wider screens or in landscape.
 
