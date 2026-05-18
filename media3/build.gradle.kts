@@ -1,7 +1,8 @@
 @file:Suppress("UnstableApiUsage")
 
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
+import java.io.FileInputStream
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
@@ -18,6 +19,14 @@ kotlin {
     }
 }
 
+/**
+ * For GitHub Actions, using 'GHA' build variant
+ */
+val keyProperties = Properties()
+val keystorePropertiesFile = rootProject.file("key.properties")
+if (keystorePropertiesFile.exists()) {
+    keyProperties.load(FileInputStream(keystorePropertiesFile))
+}
 
 android {
     namespace = "com.lossydragon.media3"
@@ -42,13 +51,37 @@ android {
         buildConfigField("String", "API_KEY", apiKey)
     }
 
+    signingConfigs {
+        create("GHA") {
+            keyAlias = keyProperties["keyAlias"].toString()
+            keyPassword = keyProperties["keyPassword"].toString()
+            storeFile = keyProperties["storeFile"]?.let { file(it) }
+            storePassword = keyProperties["storePassword"].toString()
+        }
+    }
+
     buildTypes {
+        debug {
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+            isJniDebuggable = true
+        }
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+        create("GHA") {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+            signingConfig = signingConfigs.getByName("GHA")
+            matchingFallbacks += listOf("release")
         }
     }
 
