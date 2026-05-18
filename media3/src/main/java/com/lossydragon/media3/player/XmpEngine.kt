@@ -15,7 +15,7 @@ import org.helllabs.libxmp.model.ModInfo
 import org.helllabs.libxmp.model.ModVars
 import timber.log.Timber
 
-class XmpRenderEngine(private val context: Context) {
+class XmpEngine(private val context: Context) {
 
     companion object {
         const val SAMPLE_RATE = 44100
@@ -72,6 +72,7 @@ class XmpRenderEngine(private val context: Context) {
             Timber.e("Xmp.init() failed")
             return false
         }
+
         initialized = true
 
         val modInfo = ModInfo()
@@ -95,6 +96,7 @@ class XmpRenderEngine(private val context: Context) {
         Timber.d("start() called")
         if (!initialized) return
         if (renderThread?.isAlive == true) return
+
         stopRequest = false
         paused = false
 
@@ -136,6 +138,7 @@ class XmpRenderEngine(private val context: Context) {
 
     fun resume() {
         if (!paused) return
+
         paused = false
         Xmp.dropAudio()
         Xmp.playAudio()
@@ -186,10 +189,10 @@ class XmpRenderEngine(private val context: Context) {
                 val endReached = Xmp.fillBuffer(false) < 0
 
                 Xmp.getInfo(frameInfo)
-                val timeMs = Xmp.time()
                 Xmp.getModVars(modVars)
                 Xmp.getChannelData(channelInfo)
 
+                val timeMs = Xmp.time()
                 val numCh = modVars.numChannels.coerceIn(0, CHANNELS)
 
                 for (i in 0 until numCh) {

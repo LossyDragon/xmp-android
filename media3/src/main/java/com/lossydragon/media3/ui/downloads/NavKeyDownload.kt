@@ -1,6 +1,7 @@
 package com.lossydragon.media3.ui.downloads
 
 import androidx.navigation3.runtime.NavKey
+import com.lossydragon.media3.model.SearchType
 import kotlinx.serialization.Serializable
 
 sealed interface NavKeyDownload : NavKey {

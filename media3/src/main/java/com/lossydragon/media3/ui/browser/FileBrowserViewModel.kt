@@ -4,46 +4,20 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.DocumentsContract
-import androidx.compose.runtime.Immutable
 import androidx.core.content.edit
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.lossydragon.media3.model.BrowserUiState
+import com.lossydragon.media3.model.FileItem
 import com.lossydragon.media3.model.ModuleFile
-import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
+import com.lossydragon.media3.util.SKIP_EXTENSIONS
+import com.lossydragon.media3.util.UNSUPPORTED_EXTENSIONS
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import timber.log.Timber
-
-private val UNSUPPORTED_EXTENSIONS = setOf("ahx", "hvl", "mo3")
-private val SKIP_EXTENSIONS = setOf(
-    "txt", "pdf", "doc", "docx", "rtf", "nfo", "diz", "me",
-    "jpg", "jpeg", "png", "gif", "bmp", "webp",
-    "zip", "rar", "7z", "gz", "tar",
-    "mp3", "flac", "ogg", "wav", "mp4", "avi",
-    "xml", "json", "html", "htm", "css", "js",
-)
-
-@Immutable
-data class FileItem(val name: String, val uri: Uri, val isDirectory: Boolean, val size: Long)
-
-@Immutable
-data class BrowserUiState(
-    val currentPath: String = "",
-    val files: ImmutableList<ModuleFile> = persistentListOf(),
-    val directories: ImmutableList<FileItem> = persistentListOf(),
-    val breadcrumbs: ImmutableList<String> = persistentListOf(),
-    val isLoading: Boolean = true,
-    val hasStorageAccess: Boolean = false,
-    val isShuffle: Boolean = false,
-    val isLoop: Boolean = false,
-    val error: String? = null
-)
 
 class FileBrowserViewModel(private val appContext: Context) : ViewModel() {
 

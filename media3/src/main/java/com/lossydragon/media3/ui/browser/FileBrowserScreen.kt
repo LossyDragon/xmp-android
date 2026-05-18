@@ -18,6 +18,8 @@ import androidx.compose.ui.input.nestedscroll.*
 import androidx.compose.ui.text.style.*
 import androidx.compose.ui.unit.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.lossydragon.media3.model.BrowserUiState
+import com.lossydragon.media3.model.FileItem
 import com.lossydragon.media3.model.ModuleFile
 import com.lossydragon.media3.player.XmpPlayerViewModel
 import com.lossydragon.media3.ui.player.MiniPlayerBar

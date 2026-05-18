@@ -26,9 +26,38 @@ import kotlinx.coroutines.launch
 import org.helllabs.libxmp.Xmp
 import timber.log.Timber
 
+@Suppress("ktlint:standard:class-signature")
 @OptIn(UnstableApi::class)
-class XmpSimplePlayer(context: Context, private val engine: XmpRenderEngine) :
-    SimpleBasePlayer(Looper.getMainLooper()) {
+class XmpPlayer(
+    context: Context,
+    private val engine: XmpEngine
+) : SimpleBasePlayer(Looper.getMainLooper()) {
+
+    companion object {
+        fun ModuleFile.toMediaItem() = MediaItem.Builder()
+            .setUri(this.uri)
+            .setMediaId(this.uri.toString())
+            .setMediaMetadata(
+                MediaMetadata.Builder()
+                    .setTitle(this.name)
+                    .setArtist(this.extension.uppercase())
+                    .setIsPlayable(true)
+                    .build()
+            )
+            .build()
+
+        // Great naming!
+        fun ModuleFile.toMediaItem2(duration: Long): MediaMetadata {
+            val realName = Xmp.getModName().ifBlank { this.name }
+            val realType = Xmp.getModType().ifBlank { this.extension }
+            return MediaMetadata.Builder()
+                .setTitle(realName)
+                .setArtist(realType)
+                .setDurationMs(duration)
+                .setIsPlayable(true)
+                .build()
+        }
+    }
 
     @Volatile
     private var pendingSeekPositionMs: Long = -1L
@@ -46,7 +75,6 @@ class XmpSimplePlayer(context: Context, private val engine: XmpRenderEngine) :
 
     val currentIndexFlow: StateFlow<Int>
         field = MutableStateFlow(0)
-
     val queueFlow: StateFlow<List<ModuleFile>>
         field = MutableStateFlow<List<ModuleFile>>(emptyList())
 
@@ -78,26 +106,13 @@ class XmpSimplePlayer(context: Context, private val engine: XmpRenderEngine) :
         queue.addAll(files)
 
         playlist.clear()
-        playlist.addAll(
-            files.map { file ->
-                MediaItem.Builder()
-                    .setUri(file.uri)
-                    .setMediaId(file.uri.toString())
-                    .setMediaMetadata(
-                        MediaMetadata.Builder()
-                            .setTitle(file.name)
-                            .setArtist(file.extension.uppercase())
-                            .setIsPlayable(true)
-                            .build()
-                    )
-                    .build()
-            }
-        )
+        playlist.addAll(files.map { it.toMediaItem() })
 
         playWhenReady = true
         currentIndex = startAt.coerceIn(0, playlist.lastIndex)
         queueFlow.value = files
         currentIndexFlow.value = currentIndex
+
         invalidateState()
         loadAndStartAt(currentIndex)
     }
@@ -108,20 +123,12 @@ class XmpSimplePlayer(context: Context, private val engine: XmpRenderEngine) :
 
         Thread {
             if (engine.load(file)) {
-                val realName = Xmp.getModName().ifBlank { file.name }
-                val realType = Xmp.getModType().ifBlank { file.extension }
+                val metaData = file.toMediaItem2(engine.durationMs.value)
 
                 val realItem = MediaItem.Builder()
                     .setUri(file.uri)
                     .setMediaId(file.uri.toString())
-                    .setMediaMetadata(
-                        MediaMetadata.Builder()
-                            .setTitle(realName)
-                            .setArtist(realType)
-                            .setDurationMs(engine.durationMs.value)
-                            .setIsPlayable(true)
-                            .build()
-                    )
+                    .setMediaMetadata(metaData)
                     .build()
 
                 mainHandler.post {
@@ -187,51 +194,49 @@ class XmpSimplePlayer(context: Context, private val engine: XmpRenderEngine) :
         }
     }
 
-    override fun getState(): State = State.Builder()
-        .setAvailableCommands(
-            Player.Commands.Builder()
-                .addAll(
-                    COMMAND_PLAY_PAUSE,
-                    COMMAND_SEEK_IN_CURRENT_MEDIA_ITEM,
-                    COMMAND_SEEK_TO_MEDIA_ITEM,
-                    COMMAND_SEEK_TO_PREVIOUS,
-                    COMMAND_SEEK_TO_NEXT,
-                    COMMAND_GET_CURRENT_MEDIA_ITEM,
-                    COMMAND_GET_METADATA,
-                    COMMAND_GET_TIMELINE,
-                    COMMAND_STOP,
-                )
-                .build()
-        )
-        .setPlaylist(
-            playlist.mapIndexed { i, item ->
-                val uid = item.mediaId.ifEmpty {
-                    item.localConfiguration?.uri?.toString() ?: i.toString()
-                }
-                MediaItemData.Builder(uid)
-                    .setMediaItem(item)
-                    .setIsSeekable(true)
-                    .setDurationUs(
-                        if (i == currentIndex && engine.durationMs.value > 0) {
-                            engine.durationMs.value * 1_000L
-                        } else {
-                            C.TIME_UNSET
-                        }
-                    )
-                    .build()
+    override fun getState(): State {
+        val commands = Player.Commands.Builder().addAll(
+            COMMAND_PLAY_PAUSE,
+            COMMAND_SEEK_IN_CURRENT_MEDIA_ITEM,
+            COMMAND_SEEK_TO_MEDIA_ITEM,
+            COMMAND_SEEK_TO_PREVIOUS,
+            COMMAND_SEEK_TO_NEXT,
+            COMMAND_GET_CURRENT_MEDIA_ITEM,
+            COMMAND_GET_METADATA,
+            COMMAND_GET_TIMELINE,
+            COMMAND_STOP,
+        ).build()
+
+        val playlist = playlist.mapIndexed { i, item ->
+            val uid = item.mediaId.ifEmpty {
+                item.localConfiguration?.uri?.toString() ?: i.toString()
             }
-        )
-        .setCurrentMediaItemIndex(currentIndex)
-        .setPlayWhenReady(engine.isPlaying.value, PLAY_WHEN_READY_CHANGE_REASON_USER_REQUEST)
-        .setPlaybackState(if (playlist.isEmpty()) STATE_IDLE else STATE_READY)
-        .setContentPositionMs(
-            if (pendingSeekPositionMs >= 0) {
-                pendingSeekPositionMs
+            val duration = if (i == currentIndex && engine.durationMs.value > 0) {
+                engine.durationMs.value * 1_000L
             } else {
-                engine.positionMs.value
+                C.TIME_UNSET
             }
-        )
-        .build()
+            MediaItemData.Builder(uid)
+                .setMediaItem(item)
+                .setIsSeekable(true)
+                .setDurationUs(duration)
+                .build()
+        }
+        val position = if (pendingSeekPositionMs >= 0) {
+            pendingSeekPositionMs
+        } else {
+            engine.positionMs.value
+        }
+
+        return State.Builder()
+            .setAvailableCommands(commands)
+            .setPlaylist(playlist)
+            .setCurrentMediaItemIndex(currentIndex)
+            .setPlayWhenReady(engine.isPlaying.value, PLAY_WHEN_READY_CHANGE_REASON_USER_REQUEST)
+            .setPlaybackState(if (playlist.isEmpty()) STATE_IDLE else STATE_READY)
+            .setContentPositionMs(position)
+            .build()
+    }
 
     override fun handleSetPlayWhenReady(playWhenReady: Boolean): ListenableFuture<*> {
         this.playWhenReady = playWhenReady
@@ -274,9 +279,7 @@ class XmpSimplePlayer(context: Context, private val engine: XmpRenderEngine) :
     }
 
     override fun handleStop(): ListenableFuture<*> {
-        Thread {
-            engine.stop()
-        }.start()
+        Thread { engine.stop() }.start()
         queue.clear()
         playlist.clear()
         playWhenReady = false

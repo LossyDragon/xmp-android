@@ -38,7 +38,7 @@
         </receiver>
 
         <service
-            android:name=".player.XmpPlaybackService"
+            android:name=".player.XmpService"
             android:exported="true"
             android:foregroundServiceType="mediaPlayback"
             android:stopWithTask="false">

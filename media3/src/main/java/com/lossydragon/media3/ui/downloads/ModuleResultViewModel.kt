@@ -4,13 +4,13 @@ import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
 import android.provider.DocumentsContract
-import androidx.compose.runtime.*
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lossydragon.media3.data.ModArchiveService
+import com.lossydragon.media3.model.DownloadStatus
 import com.lossydragon.media3.model.Module
-import com.lossydragon.media3.model.ModuleResult
+import com.lossydragon.media3.model.ModuleResultState
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsChannel
@@ -24,26 +24,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
-
-@Immutable
-sealed class DownloadStatus {
-    data object None : DownloadStatus()
-    data object Loading : DownloadStatus()
-    data class Progress(val percent: Float) : DownloadStatus()
-    data object Success : DownloadStatus()
-    data class Error(val message: String) : DownloadStatus()
-}
-
-@Immutable
-data class ModuleResultState(
-    val isLoading: Boolean = false,
-    val isRandom: Boolean = false,
-    val module: ModuleResult? = null,
-    val moduleExists: Boolean = false,
-    val softError: String? = null,
-    val hardError: String? = null,
-    val downloadStatus: DownloadStatus = DownloadStatus.None
-)
 
 class ModuleResultViewModel(
     private val appContext: Context,

@@ -19,7 +19,7 @@ import org.koin.android.ext.android.inject
 import timber.log.Timber
 
 @OptIn(UnstableApi::class)
-class XmpPlaybackService : MediaLibraryService() {
+class XmpService : MediaLibraryService() {
 
     private companion object {
         private const val NOTIFICATION_ID = 669
@@ -27,7 +27,7 @@ class XmpPlaybackService : MediaLibraryService() {
         private const val ROOT_ID = "xmp_root"
     }
 
-    private val player: XmpSimplePlayer by inject()
+    private val player: XmpPlayer by inject()
     private lateinit var mediaLibrarySession: MediaLibrarySession
 
     private val libraryCallback = object : MediaLibrarySession.Callback {

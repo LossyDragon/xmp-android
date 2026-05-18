@@ -84,7 +84,7 @@ object Xmp {
 
     external fun seek(time: Int): Int
 
-    external fun setPlayer(parm: Int, `val`: Int)
+    external fun setPlayer(parm: Int, value: Int)
 
     external fun startPlayer(rate: Int): Int
 

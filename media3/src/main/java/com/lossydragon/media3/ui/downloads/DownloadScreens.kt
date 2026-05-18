@@ -30,11 +30,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.lossydragon.media3.model.DownloadStatus
 import com.lossydragon.media3.model.Module
 import com.lossydragon.media3.model.ModuleResult
+import com.lossydragon.media3.model.SearchResult
+import com.lossydragon.media3.model.SearchType
 import com.lossydragon.media3.util.fromHtml
-
-enum class SearchType { TITLE, ARTIST }
 
 @Composable
 fun DownloadSearchScreen(

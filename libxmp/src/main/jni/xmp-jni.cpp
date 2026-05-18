@@ -713,9 +713,9 @@ JNIEXPORT void JNICALL JNI_FUNCTION(getInfo)(JNIEnv* env, jobject obj, jobject f
   }
 }
 
-JNIEXPORT void JNICALL JNI_FUNCTION(setPlayer)(JNIEnv* env, jobject obj, jint parm, jint val) {
+JNIEXPORT void JNICALL JNI_FUNCTION(setPlayer)(JNIEnv* env, jobject obj, jint parm, jint value) {
   XmpPlayerState& state = XmpPlayerState::instance();
-  xmp_set_player(state.getContext(), parm, val);
+  xmp_set_player(state.getContext(), parm, value);
 }
 
 JNIEXPORT jint JNICALL JNI_FUNCTION(getPlayer)(JNIEnv* env, jobject obj, jint parm) {

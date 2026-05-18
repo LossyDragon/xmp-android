@@ -13,7 +13,7 @@ import androidx.core.content.ContextCompat
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
-import com.lossydragon.media3.player.XmpPlaybackService
+import com.lossydragon.media3.player.XmpService
 import com.lossydragon.media3.ui.XmpNavHost
 import com.lossydragon.media3.ui.theme.XmpTheme
 
@@ -35,7 +35,7 @@ class MainActivity : ComponentActivity() {
         super.onStart()
         val sessionToken = SessionToken(
             this,
-            ComponentName(this, XmpPlaybackService::class.java)
+            ComponentName(this, XmpService::class.java)
         )
         controllerFuture = MediaController.Builder(this, sessionToken).buildAsync()
     }

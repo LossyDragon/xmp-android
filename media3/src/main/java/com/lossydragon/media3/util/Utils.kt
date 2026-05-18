@@ -15,3 +15,12 @@ fun Long.formatSize(): String = when {
 
 fun String.fromHtml(): String =
     Html.fromHtml(this, Html.FROM_HTML_MODE_LEGACY).toString().trim()
+
+val UNSUPPORTED_EXTENSIONS = setOf("ahx", "hvl", "mo3")
+val SKIP_EXTENSIONS = setOf(
+    "txt", "pdf", "doc", "docx", "rtf", "nfo", "diz", "me",
+    "jpg", "jpeg", "png", "gif", "bmp", "webp",
+    "zip", "rar", "7z", "gz", "tar",
+    "mp3", "flac", "ogg", "wav", "mp4", "avi",
+    "xml", "json", "html", "htm", "css", "js",
+)

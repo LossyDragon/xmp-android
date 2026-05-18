@@ -1,29 +1,15 @@
 package com.lossydragon.media3.ui.downloads
 
-import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lossydragon.media3.data.ModArchiveService
-import com.lossydragon.media3.model.ArtistResult
-import com.lossydragon.media3.model.SearchListResult
+import com.lossydragon.media3.model.DownloadSearchState
+import com.lossydragon.media3.model.SearchResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
-
-sealed class SearchResult {
-    data class Modules(val data: SearchListResult) : SearchResult()
-    data class Artists(val data: ArtistResult) : SearchResult()
-}
-
-@Immutable
-data class DownloadSearchState(
-    val isLoading: Boolean = false,
-    val error: String? = null,
-    val title: String = "",
-    val result: SearchResult? = null
-)
 
 class DownloadViewModel(private val service: ModArchiveService) : ViewModel() {
 

@@ -23,7 +23,7 @@ import timber.log.Timber
 @OptIn(UnstableApi::class)
 class XmpPlayerViewModel(
     private val appContext: Context,
-    private val player: XmpSimplePlayer
+    private val player: XmpPlayer
 ) : ViewModel() {
 
     val state: StateFlow<PlayerUiState>
@@ -94,7 +94,7 @@ class XmpPlayerViewModel(
             )
         }
 
-        appContext.startService(Intent(appContext, XmpPlaybackService::class.java))
+        appContext.startService(Intent(appContext, XmpService::class.java))
 
         player.loadQueue(listOf(file), startAt = 0, loop = false)
     }
@@ -116,7 +116,7 @@ class XmpPlayerViewModel(
             )
         }
 
-        appContext.startService(Intent(appContext, XmpPlaybackService::class.java))
+        appContext.startService(Intent(appContext, XmpService::class.java))
         player.loadQueue(ordered, startIndex, isLoop)
     }
 
