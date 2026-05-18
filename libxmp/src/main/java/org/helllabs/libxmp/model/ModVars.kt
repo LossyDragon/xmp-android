@@ -1,8 +1,11 @@
 package org.helllabs.libxmp.model
 
+import androidx.compose.runtime.Immutable
+
 /**
  * @see [org.helllabs.libxmp.Xmp.getModVars]
  */
+@Immutable
 data class ModVars(
     val seqDuration: Int = 0,
     val lengthInPatterns: Int = 0,

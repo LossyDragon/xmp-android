@@ -12,6 +12,13 @@ plugins {
     alias(libs.plugins.stability.analyzer)
 }
 
+kotlin {
+    compilerOptions {
+        freeCompilerArgs.addAll("-XXLanguage:+ExplicitBackingFields")
+        jvmTarget.set(JvmTarget.JVM_17)
+    }
+}
+
 /**
  * For GitHub Actions, using 'GHA' build variant
  */
@@ -97,13 +104,6 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.toVersion(libs.versions.java.get())
         targetCompatibility = JavaVersion.toVersion(libs.versions.java.get())
-    }
-
-    kotlin {
-        compilerOptions {
-            freeCompilerArgs.addAll("-XXLanguage:+ExplicitBackingFields")
-            jvmTarget.set(JvmTarget.JVM_17)
-        }
     }
 
     packaging {

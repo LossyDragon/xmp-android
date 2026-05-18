@@ -732,16 +732,16 @@ JNIEXPORT void JNICALL JNI_FUNCTION(getModVars)(JNIEnv* env, jobject obj, jobjec
   XmpPlayerState& state = XmpPlayerState::instance();
   int tid = get_thread_id();
 
-  LOGD("getModVars() called - tid: %d, initialized: %d", tid, state.isInitialized());
+  // LOGD("getModVars() called - tid: %d, initialized: %d", tid, state.isInitialized());
 
   if (!state.isInitialized()) {
     LOGW("getModVars() - early exit: not initialized - tid: %d", tid);
     return;
   }
 
-  LOGD("getModVars() - attempting lock - tid: %d", tid);
+  // LOGD("getModVars() - attempting lock - tid: %d", tid);
   std::unique_lock<std::mutex> lock = state.lock();
-  LOGD("getModVars() - acquired lock - tid: %d", tid);
+  // LOGD("getModVars() - acquired lock - tid: %d", tid);
 
   if (!state.isModuleLoaded()) {
     LOGW("getModVars() - module not loaded - tid: %d", tid);
@@ -764,7 +764,7 @@ JNIEXPORT void JNICALL JNI_FUNCTION(getModVars)(JNIEnv* env, jobject obj, jobjec
   env->SetIntField(modVars, g_modVarsIDs.numSequence, mi.num_sequences);
   env->SetIntField(modVars, g_modVarsIDs.currentSequence, seq);
 
-  LOGD("getModVars() completed - tid: %d", tid);
+  // LOGD("getModVars() completed - tid: %d", tid);
 }
 
 JNIEXPORT jstring JNICALL JNI_FUNCTION(getVersion)(JNIEnv* env, jobject obj) {

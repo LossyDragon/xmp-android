@@ -16,6 +16,7 @@ leakcanaryAndroid = "2.14" # https://mvnrepository.com/artifact/com.squareup.lea
 lifecycleViewmodel = "2.10.0" # https://mvnrepository.com/artifact/androidx.lifecycle/lifecycle-viewmodel-navigation3
 materialKolor = "5.0.0-alpha07" # https://mvnrepository.com/artifact/com.materialkolor/material-kolor
 media = "1.8.0" # https://mvnrepository.com/artifact/androidx.media/media
+media3 = "1.10.1" # https://mvnrepository.com/artifact/androidx.media3/media3-common/1.10.0
 navigation3 = "1.1.1" # https://mvnrepository.com/artifact/androidx.navigation3/navigation3-runtime
 oboe = "1.10.0" # https://mvnrepository.com/artifact/com.google.oboe/oboe
 permissionsCompose = "1.0.5" # https://mvnrepository.com/artifact/com.meticha/permissions_compose
@@ -32,6 +33,7 @@ compose-foundation = { module = "androidx.compose.foundation:foundation" }
 compose-material-icons-core = { module = "androidx.compose.material:material-icons-core" }
 compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
 compose-material3 = { module = "androidx.compose.material3:material3", version = "1.5.0-alpha19" }
+compose-runtime = { module = "androidx.compose.runtime:runtime" }
 compose-runtime-livedata = { module = "androidx.compose.runtime:runtime-livedata" }
 compose-settings-ui = { module = "com.github.alorma.compose-settings:ui-tiles", version.ref = "settings" }
 compose-settings-ui-extended = { module = "com.github.alorma.compose-settings:ui-tiles-extended", version.ref = "settings" }
@@ -55,6 +57,8 @@ ktor-client-negotiation = { module = "io.ktor:ktor-client-content-negotiation", 
 ktor-serialization-xml = { module = "io.ktor:ktor-serialization-kotlinx-xml", version.ref = "ktor" }
 leakcanary-android = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanaryAndroid" }
 materialKolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
+media3-common  = { group = "androidx.media3", name = "media3-common",  version.ref = "media3" }
+media3-session = { group = "androidx.media3", name = "media3-session",  version.ref = "media3" }
 media = { module = "androidx.media:media", version.ref = "media" }
 oboe = { module = "com.google.oboe:oboe", version.ref = "oboe" }
 permissions-compose = { group = "com.meticha", name = "permissions_compose", version.ref = "permissionsCompose" }

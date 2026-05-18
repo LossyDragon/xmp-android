@@ -6,15 +6,13 @@ plugins {
 
 android {
     namespace = "org.helllabs.libxmp"
+
     compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
+        version = release(37)
     }
 
     defaultConfig {
-        minSdk = 16
-
+        minSdk = 21
         ndk.abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
         externalNativeBuild.cmake {
             cppFlags += listOf("-std=c++17")
@@ -27,20 +25,18 @@ android {
         }
     }
 
-    externalNativeBuild.cmake {
-        path = file("src/main/jni/CMakeLists.txt")
-    }
+    externalNativeBuild.cmake.path = file("src/main/jni/CMakeLists.txt")
 
     compileOptions {
         sourceCompatibility = JavaVersion.toVersion(libs.versions.java.get())
         targetCompatibility = JavaVersion.toVersion(libs.versions.java.get())
     }
 
-    buildFeatures {
-        prefab = true
-    }
+    buildFeatures.prefab = true
 
     dependencies {
+        implementation(platform(libs.compose.bom))
+        implementation(libs.compose.runtime)
         implementation(libs.oboe)
         implementation(libs.timber)
     }

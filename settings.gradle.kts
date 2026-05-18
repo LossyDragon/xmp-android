@@ -19,4 +19,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Xmp Android"
-include(":app", ":libxmp")
+include(":app", ":libxmp", ":media3")

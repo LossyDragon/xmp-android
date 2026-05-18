@@ -1,5 +1,7 @@
 package org.helllabs.libxmp.model
 
+import androidx.compose.runtime.Immutable
+
 /**
  * Real-time audio statistics from the Oboe audio engine.
  *
@@ -24,6 +26,7 @@ package org.helllabs.libxmp.model
  * @property sharingMode Stream sharing mode: "Exclusive" (dedicated audio path, lowest latency)
  *                       or "Shared" (mixed with other apps, more compatible).
  */
+@Immutable
 data class AudioStats(
     val xrunCount: Int = 0,
     val underrunCount: Int = 0,
