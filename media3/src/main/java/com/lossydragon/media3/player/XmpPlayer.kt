@@ -1,19 +1,28 @@
 package com.lossydragon.media3.player
 
 import android.content.Context
+import android.media.AudioAttributes
+import android.media.AudioFocusRequest
+import android.media.AudioManager
+import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import android.provider.DocumentsContract
 import androidx.annotation.OptIn
+import androidx.core.net.toUri
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.common.SimpleBasePlayer
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.session.MediaSession
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
+import com.lossydragon.media3.data.XmpPreferences
 import com.lossydragon.media3.model.FrameSnapshot
 import com.lossydragon.media3.model.ModuleFile
+import kotlin.math.abs
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -23,14 +32,18 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.helllabs.libxmp.Xmp
+import org.helllabs.libxmp.model.ModInfo
+import org.koin.compose.koinInject
 import timber.log.Timber
 
 @Suppress("ktlint:standard:class-signature")
 @OptIn(UnstableApi::class)
 class XmpPlayer(
-    context: Context,
-    private val engine: XmpEngine
+    private val context: Context,
+    private val engine: XmpEngine,
+    private val prefs: XmpPreferences
 ) : SimpleBasePlayer(Looper.getMainLooper()) {
 
     companion object {
@@ -80,6 +93,9 @@ class XmpPlayer(
 
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var positionUpdateJob: Job? = null
+
+    private var audioFocusRequest: AudioFocusRequest? = null
+    private val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
     init {
         Timber.d("XmpSimplePlayer init")
@@ -205,6 +221,9 @@ class XmpPlayer(
             COMMAND_GET_METADATA,
             COMMAND_GET_TIMELINE,
             COMMAND_STOP,
+            COMMAND_PREPARE,
+            COMMAND_SET_MEDIA_ITEM,
+            COMMAND_CHANGE_MEDIA_ITEMS,
         ).build()
 
         val playlistItems = playlist.mapIndexed { i, item ->
@@ -238,9 +257,85 @@ class XmpPlayer(
             .build()
     }
 
+    override fun handleSetMediaItems(
+        mediaItems: List<MediaItem>,
+        startIndex: Int,
+        startPositionMs: Long
+    ): ListenableFuture<*> {
+        Timber.d("Auto handleSetMediaItems count=${mediaItems.size} startIndex=$startIndex")
+
+        val files = mediaItems.mapNotNull { item ->
+            val uri = item.localConfiguration?.uri ?: return@mapNotNull null
+            ModuleFile(
+                uri = uri,
+                name = item.mediaMetadata.title?.toString() ?: uri.lastPathSegment ?: "Unknown",
+                sizeBytes = 0L,
+                extension = uri.lastPathSegment?.substringAfterLast('.') ?: "",
+            )
+        }
+
+        if (files.isEmpty()) return Futures.immediateVoidFuture()
+
+        // If only one item, try to load the full directory as queue
+        val firstUri = files.first().uri
+        val treeUri = (
+            runBlocking { prefs.getLastDirectoryUri() }
+                ?: return Futures.immediateVoidFuture()
+            ).toUri()
+
+        // Find parent dir of the selected file and query siblings
+        val docId = DocumentsContract.getDocumentId(firstUri)
+        val parentDocId = docId.substringBeforeLast('/')
+        val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, parentDocId)
+
+        val siblings = mutableListOf<ModuleFile>()
+        context.contentResolver.query(
+            childrenUri,
+            arrayOf(
+                DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+                DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+                DocumentsContract.Document.COLUMN_MIME_TYPE,
+            ),
+            null,
+            null,
+            DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+        )?.use { cursor ->
+            while (cursor.moveToNext()) {
+                val sibDocId = cursor.getString(0)
+                val name = cursor.getString(1)
+                val mime = cursor.getString(2)
+                if (mime == DocumentsContract.Document.MIME_TYPE_DIR) return@use
+                val sibUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, sibDocId)
+                if (Xmp.testFromFd(context, sibUri, ModInfo())) {
+                    siblings.add(
+                        ModuleFile(
+                            uri = sibUri,
+                            name = name,
+                            sizeBytes = 0L,
+                            extension = name.substringAfterLast('.', ""),
+                        )
+                    )
+                }
+            }
+        }
+
+        val queue = if (siblings.isNotEmpty()) siblings else files
+        val startAt = queue.indexOfFirst { it.uri == firstUri }.coerceAtLeast(0)
+
+        loadQueue(queue, startAt, loop = false)
+        return Futures.immediateVoidFuture()
+    }
+
     override fun handleSetPlayWhenReady(playWhenReady: Boolean): ListenableFuture<*> {
+        Timber.d("Auto handleSetPlayWhenReady=$playWhenReady isPlaying=${engine.isPlaying.value}")
         this.playWhenReady = playWhenReady
-        if (playWhenReady) engine.resume() else engine.pause()
+        if (!playWhenReady) {
+            engine.pause()
+        } else if (!engine.isPlaying.value) {
+            requestAudioFocus()
+            engine.resume()
+        }
+        // if not paused and not playing — loadAndStartAt will call engine.start() when ready
         return Futures.immediateVoidFuture()
     }
 
@@ -325,7 +420,7 @@ class XmpPlayer(
             while (true) {
                 delay(500L)
                 if (pendingSeekPositionMs >= 0) {
-                    val diff = kotlin.math.abs(engine.positionMs.value - pendingSeekPositionMs)
+                    val diff = abs(engine.positionMs.value - pendingSeekPositionMs)
                     if (diff < 2_000L) pendingSeekPositionMs = -1L
                 }
                 invalidateState()
@@ -336,5 +431,32 @@ class XmpPlayer(
     private fun stopPositionUpdates() {
         positionUpdateJob?.cancel()
         positionUpdateJob = null
+    }
+
+    private fun requestAudioFocus() {
+        val request = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+            .setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .build()
+            )
+            .setAcceptsDelayedFocusGain(true)
+            .setOnAudioFocusChangeListener { focusChange ->
+                when (focusChange) {
+                    AudioManager.AUDIOFOCUS_GAIN -> engine.resume()
+                    AudioManager.AUDIOFOCUS_LOSS -> engine.pause()
+                    AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> engine.pause()
+                }
+            }
+            .build()
+        audioFocusRequest = request
+        val result = audioManager.requestAudioFocus(request)
+        Timber.d("Audio focus result=$result")
+    }
+
+    fun abandonAudioFocus() {
+        audioFocusRequest?.let { audioManager.abandonAudioFocusRequest(it) }
+        audioFocusRequest = null
     }
 }

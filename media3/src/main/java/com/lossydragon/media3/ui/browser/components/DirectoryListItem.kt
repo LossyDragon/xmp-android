@@ -13,7 +13,10 @@ import com.lossydragon.media3.ui.theme.XmpTheme
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-internal fun DirectoryListItem(item: FileItem, onClick: () -> Unit) {
+internal fun DirectoryListItem(
+    item: FileItem,
+    onClick: () -> Unit
+) {
     ListItem(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),

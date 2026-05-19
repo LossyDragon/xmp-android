@@ -9,7 +9,10 @@ import io.ktor.client.request.parameter
 import io.ktor.client.statement.bodyAsText
 import nl.adaptivity.xmlutil.serialization.XML
 
-class ModArchiveService(private val client: HttpClient, private val apiKey: String) {
+class ModArchiveService(
+    private val client: HttpClient,
+    private val apiKey: String
+) {
 
     private suspend inline fun <reified T> executeRequest(
         request: String,
@@ -33,6 +36,7 @@ class ModArchiveService(private val client: HttpClient, private val apiKey: Stri
         }
 
         if (!error.isNullOrEmpty()) throw Exception(error)
+
         data
     }
 

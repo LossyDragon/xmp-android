@@ -1,6 +1,5 @@
 package com.lossydragon.media3.ui.browser.components
 
-import android.net.Uri
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn

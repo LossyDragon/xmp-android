@@ -39,8 +39,7 @@ internal fun BreadCrumbs(
     }
 
     LazyRow(
-        modifier = modifier
-            .fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         state = scrollState,
         verticalAlignment = Alignment.CenterVertically,
         contentPadding = PaddingValues(horizontal = 8.dp),

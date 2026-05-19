@@ -28,7 +28,7 @@ val appModule = module {
 
     single { ModArchiveService(get(), BuildConfig.API_KEY) }
     single { XmpEngine(androidContext()) }
-    single { XmpPlayer(androidContext(), get()) }
+    single { XmpPlayer(androidContext(), get(), get()) }
     single { XmpPreferences(androidContext()) }
     single {
         HttpClient(engineFactory = Android) {

@@ -6,7 +6,12 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 @Immutable
-data class FileItem(val name: String, val uri: Uri, val isDirectory: Boolean, val size: Long)
+data class FileItem(
+    val name: String,
+    val uri: Uri,
+    val isDirectory: Boolean,
+    val size: Long
+)
 
 @Immutable
 data class BrowserUiState(

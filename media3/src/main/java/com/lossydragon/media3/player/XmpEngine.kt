@@ -18,7 +18,7 @@ import timber.log.Timber
 class XmpEngine(private val context: Context) {
 
     companion object {
-        const val SAMPLE_RATE = 48000
+        const val SAMPLE_RATE = 44100
         private const val BUFFER_MS = 200
         private const val CHANNELS = Xmp.MAX_CHANNELS
     }

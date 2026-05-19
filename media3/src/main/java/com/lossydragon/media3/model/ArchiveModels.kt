@@ -46,13 +46,16 @@ data class ArtistResult(
     @XmlElement val totalpages: Int = 0,
     @XmlElement val items: Items = Items()
 ) {
-    val listItems: List<Item> get() = items.item
+    val listItems: List<Item>
+        get() = items.item
 }
 
 @Immutable
 @Serializable
 @SerialName("sponsor")
-data class Sponsor(@XmlElement val details: SponsorDetails = SponsorDetails())
+data class Sponsor(
+    @XmlElement val details: SponsorDetails = SponsorDetails()
+)
 
 @Immutable
 @Serializable
@@ -94,9 +97,12 @@ data class Module(
     @XmlSerialName("artist_info", "", "")
     @XmlElement val artistInfo: ArtistInfo = ArtistInfo()
 ) {
-    val isSupported: Boolean get() = format.uppercase() !in UNSUPPORTED
-    val downloadUrl: String get() = url.trim()
-    val sizeKb: Int get() = bytes / 1024
+    val isSupported: Boolean
+        get() = format.uppercase() !in UNSUPPORTED
+    val downloadUrl: String
+        get() = url.trim()
+    val sizeKb: Int
+        get() = bytes / 1024
     val artist: String
         get() = artistInfo.artist.firstOrNull()
             ?.alias
@@ -121,7 +127,10 @@ data class Featured(
 @Immutable
 @Serializable
 @SerialName("favourites")
-data class Favourites(@XmlElement val favoured: Int = 0, @XmlElement val myfav: Int = 0)
+data class Favourites(
+    @XmlElement val favoured: Int = 0,
+    @XmlElement val myfav: Int = 0
+)
 
 @Suppress("PropertyName")
 @Immutable
@@ -156,13 +165,16 @@ data class ArtistInfo(
     @XmlElement val guessed_artists: Int = 0,
     @XmlElement val guessed_artist: GuessedArtists = GuessedArtists()
 ) {
-    val guessedArtistList: List<String> get() = guessed_artist.alias
+    val guessedArtistList: List<String>
+        get() = guessed_artist.alias
 }
 
 @Immutable
 @Serializable
 @SerialName("guessed_artist")
-data class GuessedArtists(@XmlSerialName("alias", "", "") val alias: List<String> = emptyList())
+data class GuessedArtists(
+    @XmlSerialName("alias", "", "") val alias: List<String> = emptyList()
+)
 
 @Suppress("PropertyName")
 @Immutable
@@ -182,12 +194,16 @@ data class Artist(
 @Immutable
 @Serializable
 @SerialName("module_data")
-data class ModuleData(@XmlElement val module_description: String = "")
+data class ModuleData(
+    @XmlElement val module_description: String = ""
+)
 
 @Immutable
 @Serializable
 @SerialName("items")
-data class Items(@XmlSerialName("item", "", "") val item: List<Item> = emptyList())
+data class Items(
+    @XmlSerialName("item", "", "") val item: List<Item> = emptyList()
+)
 
 @Suppress("PropertyName")
 @Immutable
