@@ -8,6 +8,7 @@ import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lossydragon.media3.data.ModArchiveService
+import com.lossydragon.media3.data.XmpPreferences
 import com.lossydragon.media3.model.DownloadStatus
 import com.lossydragon.media3.model.Module
 import com.lossydragon.media3.model.ModuleResultState
@@ -19,8 +20,10 @@ import io.ktor.utils.io.readAvailable
 import java.io.OutputStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -28,13 +31,16 @@ import timber.log.Timber
 class ModuleResultViewModel(
     private val appContext: Context,
     private val service: ModArchiveService,
-    private val httpClient: HttpClient
+    private val httpClient: HttpClient,
+    prefs: XmpPreferences
 ) : ViewModel() {
 
     val state: StateFlow<ModuleResultState>
         field = MutableStateFlow(ModuleResultState())
 
     private var downloadJob: Job? = null
+
+    private val lastDirectory: Flow<String?> = prefs.getLastDirectoryFlow()
 
     fun getModuleById(id: Int) {
         if (id < 0) {
@@ -152,8 +158,7 @@ class ModuleResultViewModel(
     fun deleteModule(module: Module) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val prefs = appContext.getSharedPreferences("xmp_prefs", Context.MODE_PRIVATE)
-                val rootUri = (prefs.getString("last_directory_uri", null) ?: return@launch).toUri()
+                val rootUri = (lastDirectory.firstOrNull() ?: return@launch).toUri()
                 val dirUri = getDownloadDir(rootUri, module) ?: return@launch
                 val dirDocId = DocumentsContract.getDocumentId(dirUri)
                 val filename = module.url.substringAfterLast('#')
@@ -195,10 +200,9 @@ class ModuleResultViewModel(
         }
     }
 
-    private fun checkExists(module: Module): Boolean {
+    private suspend fun checkExists(module: Module): Boolean {
         return try {
-            val prefs = appContext.getSharedPreferences("xmp_prefs", Context.MODE_PRIVATE)
-            val rootUri = (prefs.getString("last_directory_uri", null) ?: return false).toUri()
+            val rootUri = (lastDirectory.firstOrNull() ?: return false).toUri()
             val dirUri = getDownloadDir(rootUri, module) ?: return false
             val dirDocId = DocumentsContract.getDocumentId(dirUri)
             val filename = module.url.substringAfterLast('#')
@@ -271,17 +275,15 @@ class ModuleResultViewModel(
         return newUri?.let { DocumentsContract.getDocumentId(it) }
     }
 
-    private fun getOrCreateOutputFile(module: Module): OutputStream? {
+    private suspend fun getOrCreateOutputFile(module: Module): OutputStream? {
         return try {
-            val prefs = appContext.getSharedPreferences("xmp_prefs", Context.MODE_PRIVATE)
-            val rootUri = prefs.getString("last_directory_uri", null) ?: return null
-            val dirUri = getDownloadDir(rootUri.toUri(), module) ?: return null
-            val treeUri = rootUri.toUri()
+            val rootUri = lastDirectory.firstOrNull()?.toUri() ?: return null
+            val dirUri = getDownloadDir(rootUri, module) ?: return null
             val dirDocId = DocumentsContract.getDocumentId(dirUri)
             val filename = module.url.substringAfterLast('#')
 
             // Check if file exists
-            val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, dirDocId)
+            val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(rootUri, dirDocId)
             var fileUri: Uri? = null
             appContext.contentResolver.query(
                 childrenUri,
@@ -296,7 +298,7 @@ class ModuleResultViewModel(
                 while (cursor.moveToNext()) {
                     if (cursor.getString(1) == filename) {
                         fileUri = DocumentsContract.buildDocumentUriUsingTree(
-                            treeUri,
+                            rootUri,
                             cursor.getString(0)
                         )
                         break

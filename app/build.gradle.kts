@@ -27,6 +27,7 @@ val keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.exists()) {
     keyProperties.load(FileInputStream(keystorePropertiesFile))
 }
+
 android {
     namespace = "org.helllabs.android.xmp"
     compileSdk = 37
@@ -38,7 +39,7 @@ android {
          * https://apilevels.com/
          */
         minSdk = 24 // Android 7 - Nougat
-        targetSdk = 36 // Android 15 Vanilla Ice Cream
+        targetSdk = 37 // Android 15 Vanilla Ice Cream
 
         versionCode = 130
         versionName = "5.0-SNAPSHOT"
@@ -115,7 +116,11 @@ android {
 }
 
 afterEvaluate {
-    listOf("debugStabilityCheck", "gHAStabilityCheck", "releaseStabilityCheck").forEach { taskName ->
+    listOf(
+        "debugStabilityCheck",
+        "gHAStabilityCheck",
+        "releaseStabilityCheck"
+    ).forEach { taskName ->
         tasks.findByName(taskName)?.mustRunAfter("compileDebugUnitTestKotlin")
     }
 }

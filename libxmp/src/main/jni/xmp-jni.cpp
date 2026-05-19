@@ -547,7 +547,10 @@ JNIEXPORT jboolean JNICALL JNI_FUNCTION(testModuleFd)(JNIEnv* env, jobject obj, 
 
     LOGD("testModuleFd() - successfully populated modInfo");
   } else {
-    LOGW("testModuleFd() - not a valid module, error: %d", res);
+      char path[PATH_MAX];
+      ssize_t len = readlink(("/proc/self/fd/" + std::to_string(fd)).c_str(), path, sizeof(path) - 1);
+      if (len > 0) path[len] = '\0';
+      LOGW("testModuleFd() - not a valid module, error: %d, file: %s", res, len > 0 ? path : "unknown");
   }
 
   return res == 0 ? JNI_TRUE : JNI_FALSE;

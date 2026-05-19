@@ -5,7 +5,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.*
+import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.material.icons.*
@@ -16,20 +16,27 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.input.nestedscroll.*
 import androidx.compose.ui.text.style.*
-import androidx.compose.ui.unit.*
+import androidx.compose.ui.tooling.preview.*
+import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.lossydragon.media3.model.BrowserUiState
 import com.lossydragon.media3.model.FileItem
 import com.lossydragon.media3.model.ModuleFile
+import com.lossydragon.media3.model.PlaybackStatus
+import com.lossydragon.media3.model.PlayerUiState
 import com.lossydragon.media3.player.XmpPlayerViewModel
-import com.lossydragon.media3.ui.player.MiniPlayerBar
-import com.lossydragon.media3.util.formatSize
-import kotlinx.collections.immutable.ImmutableList
+import com.lossydragon.media3.ui.browser.components.BreadCrumbs
+import com.lossydragon.media3.ui.browser.components.EmptyPrompt
+import com.lossydragon.media3.ui.browser.components.ModuleList
+import com.lossydragon.media3.ui.player.components.MiniPlayerBar
+import com.lossydragon.media3.ui.theme.XmpTheme
+import kotlinx.collections.immutable.persistentListOf
+import org.helllabs.libxmp.model.ModInfo
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun FileBrowserScreen(
-    modifier: Modifier,
+fun FileBrowserScreenRoute(
+    modifier: Modifier = Modifier,
     onNavigateToPlayer: () -> Unit,
     onBack: () -> Unit
 ) {
@@ -40,9 +47,6 @@ fun FileBrowserScreen(
 
     val browserState by browserViewModel.state.collectAsStateWithLifecycle()
     val playerState by playerViewModel.state.collectAsStateWithLifecycle()
-
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
-    val listState = rememberLazyListState()
 
     val folderPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocumentTree(),
@@ -55,6 +59,72 @@ fun FileBrowserScreen(
         }
     }
 
+    FileBrowserScreen(
+        modifier = modifier,
+        browserState = browserState,
+        playerState = playerState,
+        onNavigateToPlayer = onNavigateToPlayer,
+        onBack = onBack,
+        onFolderPick = { folderPicker.launch(null) },
+        onNavigateUp = { browserViewModel.navigateUp() },
+        canNavigateUp = { browserViewModel.canNavigateUp() },
+        onBreadcrumb = { browserViewModel.navigateToBreadcrumb(it) },
+        onPlayAll = {
+            if (browserState.files.isNotEmpty()) {
+                playerViewModel.playAll(
+                    files = browserState.files,
+                    startAt = 0,
+                    isShuffle = browserState.isShuffle,
+                    isLoop = browserState.isLoop,
+                )
+                onNavigateToPlayer()
+            }
+        },
+        onSelect = { file ->
+            val index = browserState.files.indexOf(file)
+            playerViewModel.playAll(
+                files = browserState.files,
+                startAt = if (index >= 0) index else 0,
+                isShuffle = browserState.isShuffle,
+                isLoop = browserState.isLoop,
+            )
+            onNavigateToPlayer()
+        },
+        onDir = browserViewModel::navigateInto,
+        onMiniPlayerTap = onNavigateToPlayer,
+        onMiniPlayerToggle = playerViewModel::togglePlayPause,
+        onMiniPlayerNext = playerViewModel::next,
+        onMiniPlayerPrev = playerViewModel::previous,
+        getCached = browserViewModel::getMetadata,
+        onCache = browserViewModel::setMetadata,
+    )
+}
+
+@Composable
+private fun FileBrowserScreen(
+    modifier: Modifier = Modifier,
+    browserState: BrowserUiState,
+    playerState: PlayerUiState,
+    onNavigateToPlayer: () -> Unit,
+    onBack: () -> Unit,
+    onFolderPick: () -> Unit,
+    onNavigateUp: () -> Unit,
+    canNavigateUp: () -> Boolean,
+    onBreadcrumb: (Int) -> Unit,
+    onPlayAll: () -> Unit,
+    onSelect: (ModuleFile) -> Unit,
+    onDir: (FileItem) -> Unit,
+    onMiniPlayerTap: () -> Unit,
+    onMiniPlayerToggle: () -> Unit,
+    onMiniPlayerNext: () -> Unit,
+    onMiniPlayerPrev: () -> Unit,
+    getCached: (String) -> ModInfo,
+    onCache: (String, ModInfo) -> Unit
+) {
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+    val listState = rememberLazyListState()
+    val hasModule = playerState.currentModule != null
+
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
@@ -65,309 +135,173 @@ fun FileBrowserScreen(
                             text = if (browserState.currentPath.isEmpty()) {
                                 "Module Browser"
                             } else {
-                                browserState.currentPath.substringAfterLast('/')
-                                    .substringAfterLast(':')
+                                browserState.currentPath.substringAfterLast(
+                                    '/'
+                                ).substringAfterLast(':')
                             },
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
                     },
                     navigationIcon = {
-                        if (browserViewModel.canNavigateUp()) {
-                            IconButton(
-                                onClick = { browserViewModel.navigateUp() },
-                                content = {
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                        contentDescription = null
-                                    )
-                                }
-                            )
+                        if (canNavigateUp()) {
+                            IconButton(onClick = onNavigateUp) {
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
+                            }
                         }
                     },
                     actions = {
-                        IconButton(
-                            onClick = { folderPicker.launch(null) },
-                            content = {
-                                Icon(
-                                    imageVector = Icons.Default.FolderOpen,
-                                    contentDescription = null
-                                )
-                            }
-                        )
+                        IconButton(onClick = onFolderPick) {
+                            Icon(Icons.Default.FolderOpen, null)
+                        }
                     },
                     scrollBehavior = scrollBehavior,
                 )
                 if (browserState.breadcrumbs.isNotEmpty()) {
                     BreadCrumbs(
                         breadcrumbs = browserState.breadcrumbs,
-                        onCrumbClick = { browserViewModel.navigateToBreadcrumb(it) },
+                        onCrumbClick = onBreadcrumb,
                     )
                     HorizontalDivider()
                 }
             }
         },
+        floatingActionButton = {
+            // Hide FAB when mini player is visible to avoid overlap
+            AnimatedVisibility(
+                visible = !hasModule && browserState.hasStorageAccess && !browserState.isLoading,
+                enter = scaleIn() + fadeIn(),
+                exit = scaleOut() + fadeOut(),
+            ) {
+                FloatingActionButton(onClick = onPlayAll) {
+                    Icon(Icons.Default.PlayArrow, contentDescription = "Play All")
+                }
+            }
+        },
         bottomBar = {
-            if (playerState.currentModule != null) {
+            AnimatedVisibility(
+                visible = hasModule,
+                enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+                exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
+            ) {
                 MiniPlayerBar(
                     state = playerState,
-                    onTap = onNavigateToPlayer,
-                    onToggle = playerViewModel::togglePlayPause,
-                )
-            } else {
-                BrowserBottomBar(
-                    isShuffle = browserState.isShuffle,
-                    isLoop = browserState.isLoop,
-                    onShuffle = browserViewModel::setShuffle,
-                    onLoop = browserViewModel::setLoop,
-                    onPlayAll = {
-                        if (browserState.files.isNotEmpty()) {
-                            playerViewModel.playAll(
-                                files = browserState.files,
-                                startAt = 0,
-                                isShuffle = browserState.isShuffle,
-                                isLoop = browserState.isLoop,
-                            )
-                            onNavigateToPlayer()
-                        }
-                    },
+                    onTap = onMiniPlayerTap,
+                    onPlayPause = onMiniPlayerToggle,
+                    onNext = onMiniPlayerNext,
+                    onPrevious = onMiniPlayerPrev,
                 )
             }
         },
         content = { padding ->
             when {
                 browserState.isLoading -> Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding),
+                    modifier = Modifier.fillMaxSize().padding(padding),
                     contentAlignment = Alignment.Center,
-                    content = { CircularProgressIndicator() }
-                )
+                ) { CircularProgressIndicator() }
 
                 !browserState.hasStorageAccess -> EmptyPrompt(
                     padding = padding,
-                    onPick = { folderPicker.launch(null) },
+                    onPick = onFolderPick,
                 )
 
-                browserState.files.isEmpty() && browserState.directories.isEmpty() ->
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(padding),
-                        contentAlignment = Alignment.Center,
-                        content = { Text(text = "No module files found in this folder.") }
-                    )
+                browserState.files.isEmpty() && browserState.directories.isEmpty() -> Box(
+                    modifier = Modifier.fillMaxSize().padding(padding),
+                    contentAlignment = Alignment.Center,
+                ) { Text("No module files found in this folder.") }
 
                 else -> ModuleList(
                     state = browserState,
                     padding = padding,
                     listState = listState,
-                    onDir = browserViewModel::navigateInto,
-                    onSelect = { file ->
-                        // Play all files in directory, starting at the tapped file
-                        val index = browserState.files.indexOf(file)
-                        playerViewModel.playAll(
-                            files = browserState.files,
-                            startAt = if (index >= 0) index else 0,
-                            isShuffle = browserState.isShuffle,
-                            isLoop = browserState.isLoop,
-                        )
-                        onNavigateToPlayer()
-                    },
+                    onDir = onDir,
+                    onSelect = onSelect,
+                    getCached = getCached,
+                    onCache = onCache,
                 )
             }
         }
     )
 }
 
+@Preview
 @Composable
-private fun EmptyPrompt(padding: PaddingValues, onPick: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(padding)
-            .padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-        content = {
-            Icon(
-                imageVector = Icons.Default.FolderOpen,
-                contentDescription = null,
-                modifier = Modifier.size(72.dp),
-                tint = MaterialTheme.colorScheme.primary,
-            )
-            Text(
-                text = "No folder selected",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(top = 16.dp),
-            )
-            Text(
-                text = "Tap the folder icon to browse your tracker modules",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 8.dp),
-            )
-        }
-    )
-}
-
-@Composable
-private fun ModuleList(
-    state: BrowserUiState,
-    padding: PaddingValues,
-    listState: LazyListState,
-    onDir: (FileItem) -> Unit,
-    onSelect: (ModuleFile) -> Unit
-) {
-    LazyColumn(
-        state = listState,
-        contentPadding = padding,
-        modifier = Modifier.fillMaxSize(),
-        content = {
-            items(
-                items = state.directories,
-                key = { it.uri.toString() },
-                itemContent = { dir ->
-                    DirectoryListItem(dir = dir, onClick = { onDir(dir) })
-                }
-            )
-            items(
-                items = state.files,
-                key = { it.uri.toString() },
-                itemContent = { file ->
-                    ModuleListItem(file = file, onClick = { onSelect(file) })
-                }
-            )
-        }
-    )
-}
-
-@Composable
-private fun DirectoryListItem(dir: FileItem, onClick: () -> Unit) {
-    ListItem(
-        headlineContent = { Text(dir.name) },
-        leadingContent = {
-            Icon(
-                imageVector = Icons.Default.Folder,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.tertiary
-            )
-        },
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-    )
-}
-
-@Composable
-private fun BreadCrumbs(
-    breadcrumbs: ImmutableList<String>,
-    onCrumbClick: (Int) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val scrollState = rememberLazyListState()
-
-    // Auto-scroll to end
-    LaunchedEffect(breadcrumbs.size) {
-        if (breadcrumbs.isNotEmpty()) {
-            scrollState.animateScrollToItem(breadcrumbs.lastIndex)
-        }
+private fun Preview() {
+    XmpTheme {
+        FileBrowserScreen(
+            modifier = Modifier,
+            browserState = BrowserUiState(
+                currentPath = "primary:Xmp/Modules",
+                hasStorageAccess = true,
+                isLoading = false,
+                isShuffle = true,
+                isLoop = false,
+                breadcrumbs = persistentListOf("Xmp", "Modules"),
+                directories = persistentListOf(
+                    FileItem(
+                        name = "TheModArchive",
+                        uri = "1".toUri(),
+                        isDirectory = true,
+                        size = 0L
+                    ),
+                    FileItem(name = "Demos", uri = "2".toUri(), isDirectory = true, size = 0L),
+                ),
+                files = persistentListOf(
+                    ModuleFile(
+                        uri = "content://preview/1".toUri(),
+                        name = "a_journey_into_sound.far",
+                        sizeBytes = 123456L,
+                        extension = "far"
+                    ),
+                    ModuleFile(
+                        uri = "content://preview/2".toUri(),
+                        name = "aegis_-_beneath_the_fallen_stars.it",
+                        sizeBytes = 1820792L,
+                        extension = "it"
+                    ),
+                    ModuleFile(
+                        uri = "content://preview/3".toUri(),
+                        name = "alpharapii.mod",
+                        sizeBytes = 45678L,
+                        extension = "mod"
+                    ),
+                    ModuleFile(
+                        uri = "content://preview/4".toUri(),
+                        name = "chiptune_no_184.mod",
+                        sizeBytes = 6658L,
+                        extension = "mod"
+                    ),
+                ),
+            ),
+            playerState = PlayerUiState(
+                status = PlaybackStatus.PLAYING,
+                currentModule = ModuleFile(
+                    uri = "content://preview/1".toUri(),
+                    name = "a_journey_into_sound.far",
+                    sizeBytes = 123456L,
+                    extension = "far",
+                ),
+                moduleName = "A Journey Into Sound",
+                moduleType = "FAR",
+                positionMs = 62000L,
+                durationMs = 252849L,
+                currentQueueIndex = 0,
+            ),
+            onNavigateToPlayer = {},
+            onBack = {},
+            onFolderPick = {},
+            onNavigateUp = {},
+            canNavigateUp = { false },
+            onBreadcrumb = {},
+            onPlayAll = {},
+            onSelect = {},
+            onDir = {},
+            onMiniPlayerTap = {},
+            onMiniPlayerToggle = {},
+            onMiniPlayerNext = {},
+            onMiniPlayerPrev = {},
+            getCached = { ModInfo() },
+            onCache = { _, _ -> },
+        )
     }
-
-    LazyRow(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 4.dp),
-        state = scrollState,
-        verticalAlignment = Alignment.CenterVertically,
-        content = {
-            itemsIndexed(breadcrumbs) { index, crumb ->
-                val isLast = index == breadcrumbs.lastIndex
-                AssistChip(
-                    modifier = Modifier.padding(horizontal = 2.dp),
-                    enabled = !isLast,
-                    onClick = { onCrumbClick(index) },
-                    label = { Text(text = crumb, style = MaterialTheme.typography.labelMedium) },
-                    trailingIcon = if (!isLast) {
-                        {
-                            Icon(
-                                imageVector = Icons.Default.ChevronRight,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
-                    } else {
-                        null
-                    },
-                )
-            }
-        }
-    )
-}
-
-@Composable
-fun BrowserBottomBar(
-    isShuffle: Boolean,
-    isLoop: Boolean,
-    onShuffle: (Boolean) -> Unit,
-    onLoop: (Boolean) -> Unit,
-    onPlayAll: () -> Unit
-) {
-    BottomAppBar(
-        actions = {
-            IconToggleButton(
-                checked = isShuffle,
-                onCheckedChange = onShuffle,
-                colors = IconButtonDefaults.iconToggleButtonColors(
-                    checkedContentColor = MaterialTheme.colorScheme.primary
-                ),
-                content = { Icon(imageVector = Icons.Default.Shuffle, contentDescription = null) }
-            )
-            IconToggleButton(
-                checked = isLoop,
-                onCheckedChange = onLoop,
-                colors = IconButtonDefaults.iconToggleButtonColors(
-                    checkedContentColor = MaterialTheme.colorScheme.primary
-                ),
-                content = { Icon(imageVector = Icons.Default.Repeat, contentDescription = null) }
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onPlayAll,
-                containerColor = BottomAppBarDefaults.bottomAppBarFabColor,
-                elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation(),
-                content = { Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null) }
-            )
-        }
-    )
-}
-
-@Composable
-private fun ModuleListItem(file: ModuleFile, onClick: () -> Unit) {
-    ListItem(
-        headlineContent = {
-            Text(
-                text = file.name,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        },
-        supportingContent = {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(text = file.extension.uppercase(), color = MaterialTheme.colorScheme.primary)
-                Text(text = file.sizeBytes.formatSize())
-            }
-        },
-        leadingContent = {
-            Icon(
-                Icons.Default.AudioFile,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.secondary
-            )
-        },
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-    )
 }

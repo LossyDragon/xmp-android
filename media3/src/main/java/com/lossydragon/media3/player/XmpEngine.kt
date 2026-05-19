@@ -18,7 +18,7 @@ import timber.log.Timber
 class XmpEngine(private val context: Context) {
 
     companion object {
-        const val SAMPLE_RATE = 44100
+        const val SAMPLE_RATE = 48000
         private const val BUFFER_MS = 200
         private const val CHANNELS = Xmp.MAX_CHANNELS
     }
@@ -116,8 +116,16 @@ class XmpEngine(private val context: Context) {
         Xmp.setPlayer(Xmp.PLAYER_MIX, 70)
         Xmp.setPlayer(Xmp.PLAYER_VOLUME, 100)
 
+        var prefillCount = 0
         while (Xmp.hasFreeBuffer()) {
-            if (Xmp.fillBuffer(false) == Xmp.XMP_END) break
+            val result = Xmp.fillBuffer(false)
+            Timber.d("start() prefill #$prefillCount result=$result XMP_END=${Xmp.XMP_END}")
+            if (result < 0) break
+            prefillCount++
+            if (prefillCount > 100) {
+                Timber.e("start() prefill loop exceeded 100 iterations — breaking")
+                break
+            }
         }
 
         Xmp.playAudio()
@@ -183,6 +191,7 @@ class XmpEngine(private val context: Context) {
                 while (!Xmp.hasFreeBuffer() && !paused && !stopRequest) {
                     Thread.sleep(40)
                 }
+                // Timber.d("renderLoop: hasFreeBuffer=${Xmp.hasFreeBuffer()} stopRequest=$stopRequest paused=$paused")
 
                 if (stopRequest) break
 
@@ -222,10 +231,11 @@ class XmpEngine(private val context: Context) {
                 _positionMs.value = timeMs.toLong()
 
                 if (endReached) {
+                    // Timber.d("renderLoop endReached at positionMs=${_positionMs.value} durationMs=${_durationMs.value}")
+                    // Timber.d("renderLoop endReached — setting endedNaturally=$endedNaturally")
                     endedNaturally = true
                     _isPlaying.value = false
                     Xmp.stopAudio()
-                    Timber.d("renderLoop endReached — setting endedNaturally=$endedNaturally")
                     break
                 }
             } catch (_: InterruptedException) {

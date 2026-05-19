@@ -31,7 +31,6 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace = "com.lossydragon.media3"
 
-
     compileSdk {
         version = release(37)
     }
@@ -39,6 +38,9 @@ android {
     defaultConfig {
         applicationId = "com.lossydragon.media3"
 
+        /*
+         * https://apilevels.com/
+         */
         minSdk = 26
         targetSdk = 37
 
@@ -127,8 +129,6 @@ dependencies {
     // Logging
     implementation(libs.timber)
 
-    implementation("com.anggrayudi:storage:2.2.0")
-    implementation("com.anggrayudi:storage-compose:2.2.0")
     implementation(libs.bundles.ktor)
     implementation(libs.datastore.preferences)
 }

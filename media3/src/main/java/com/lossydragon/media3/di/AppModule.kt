@@ -2,6 +2,7 @@ package com.lossydragon.media3.di
 
 import com.lossydragon.media3.BuildConfig
 import com.lossydragon.media3.data.ModArchiveService
+import com.lossydragon.media3.data.XmpPreferences
 import com.lossydragon.media3.player.XmpEngine
 import com.lossydragon.media3.player.XmpPlayer
 import com.lossydragon.media3.player.XmpPlayerViewModel
@@ -21,13 +22,14 @@ import org.koin.dsl.module
 
 val appModule = module {
     viewModel { DownloadViewModel(get()) }
-    viewModel { FileBrowserViewModel(androidContext()) }
-    viewModel { ModuleResultViewModel(androidContext(), get(), get()) }
+    viewModel { FileBrowserViewModel(androidContext(), get()) }
+    viewModel { ModuleResultViewModel(androidContext(), get(), get(), get()) }
     viewModel { XmpPlayerViewModel(androidContext(), get()) }
 
     single { ModArchiveService(get(), BuildConfig.API_KEY) }
     single { XmpEngine(androidContext()) }
     single { XmpPlayer(androidContext(), get()) }
+    single { XmpPreferences(androidContext()) }
     single {
         HttpClient(engineFactory = Android) {
             install(ContentNegotiation) { xml() }

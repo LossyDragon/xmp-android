@@ -45,5 +45,7 @@ data class PlayerUiState(
     val frame: FrameSnapshot? = null,
     val errorMessage: String? = null,
     val queue: ImmutableList<ModuleFile> = persistentListOf(),
-    val currentQueueIndex: Int = 0
+    val currentQueueIndex: Int = 0,
+    val isShuffle: Boolean = false,
+    val isLoop: Boolean = false
 )

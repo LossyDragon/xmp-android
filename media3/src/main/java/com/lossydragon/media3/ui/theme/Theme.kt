@@ -11,7 +11,7 @@ private val seed = Color(0xFF3460ba)
 
 @Composable
 fun XmpTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = true,
     content: @Composable () -> Unit
 ) {
     val colorScheme = rememberDynamicColorScheme(

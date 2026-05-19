@@ -207,7 +207,7 @@ class XmpPlayer(
             COMMAND_STOP,
         ).build()
 
-        val playlist = playlist.mapIndexed { i, item ->
+        val playlistItems = playlist.mapIndexed { i, item ->
             val uid = item.mediaId.ifEmpty {
                 item.localConfiguration?.uri?.toString() ?: i.toString()
             }
@@ -230,7 +230,7 @@ class XmpPlayer(
 
         return State.Builder()
             .setAvailableCommands(commands)
-            .setPlaylist(playlist)
+            .setPlaylist(playlistItems)
             .setCurrentMediaItemIndex(currentIndex)
             .setPlayWhenReady(engine.isPlaying.value, PLAY_WHEN_READY_CHANGE_REASON_USER_REQUEST)
             .setPlaybackState(if (playlist.isEmpty()) STATE_IDLE else STATE_READY)
@@ -300,7 +300,13 @@ class XmpPlayer(
     }
 
     fun previous() {
-        advanceToPrevious()
+        if (engine.positionMs.value > 3_000L) {
+            engine.seek(0)
+            pendingSeekPositionMs = 0L
+            invalidateState()
+        } else {
+            advanceToPrevious()
+        }
     }
 
     fun jumpToIndex(index: Int) {

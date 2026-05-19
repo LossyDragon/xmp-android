@@ -4,10 +4,10 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.DocumentsContract
-import androidx.core.content.edit
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.lossydragon.media3.data.XmpPreferences
 import com.lossydragon.media3.model.BrowserUiState
 import com.lossydragon.media3.model.FileItem
 import com.lossydragon.media3.model.ModuleFile
@@ -18,25 +18,39 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import org.helllabs.libxmp.model.ModInfo
 
-class FileBrowserViewModel(private val appContext: Context) : ViewModel() {
+@Suppress("ktlint:standard:class-signature")
+class FileBrowserViewModel(
+    private val appContext: Context,
+    private val prefs: XmpPreferences
+) : ViewModel() {
 
     val state: StateFlow<BrowserUiState>
         field = MutableStateFlow(BrowserUiState())
 
     private val dirStack = ArrayDeque<Uri>()
 
-    private val prefs = appContext.getSharedPreferences("xmp_prefs", Context.MODE_PRIVATE)
+    private val metadataCache = mutableMapOf<String, ModInfo>()
 
     private var rootTreeUri: Uri? = null
 
     init {
-        val savedUri = prefs.getString("last_directory_uri", null)
-        if (savedUri != null) {
-            state.value = state.value.copy(isLoading = true)
-            onRootFolderPicked(savedUri.toUri())
-        } else {
-            state.value = state.value.copy(isLoading = false)
+        viewModelScope.launch {
+            prefs.getLastDirectoryUri()?.let { savedUri ->
+                state.value = state.value.copy(isLoading = true)
+                onRootFolderPicked(savedUri.toUri())
+            } ?: run {
+                state.value = state.value.copy(isLoading = false)
+            }
+        }
+    }
+
+    fun getMetadata(uri: String): ModInfo = metadataCache[uri] ?: ModInfo()
+
+    fun setMetadata(uri: String, modInfo: ModInfo) {
+        if (modInfo.name.trim().isNotBlank()) {
+            metadataCache[uri] = ModInfo(name = modInfo.name.trim(), type = modInfo.type)
         }
     }
 
@@ -46,7 +60,9 @@ class FileBrowserViewModel(private val appContext: Context) : ViewModel() {
             Intent.FLAG_GRANT_READ_URI_PERMISSION
         )
 
-        prefs.edit { putString("last_directory_uri", uri.toString()) }
+        viewModelScope.launch {
+            prefs.setLastDirectoryUri(uri.toString())
+        }
         rootTreeUri = uri
 
         dirStack.clear()

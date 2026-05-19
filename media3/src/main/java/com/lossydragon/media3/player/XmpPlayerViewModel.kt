@@ -142,6 +142,10 @@ class XmpPlayerViewModel(
         resume()
     }
 
+    fun toggleShuffle() = state.update { it.copy(isShuffle = !it.isShuffle) }
+
+    fun toggleLoop() = state.update { it.copy(isLoop = !it.isLoop) }
+
     fun muteChannel(ch: Int, muted: Boolean) = Xmp.mute(ch, if (muted) 1 else 0)
 
     // override fun onCleared() {
