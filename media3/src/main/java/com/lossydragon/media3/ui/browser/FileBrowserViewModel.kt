@@ -7,6 +7,7 @@ import android.provider.DocumentsContract
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.lossydragon.media3.data.ModuleMetadataRepository
 import com.lossydragon.media3.data.XmpPreferences
 import com.lossydragon.media3.model.BrowserUiState
 import com.lossydragon.media3.model.FileItem
@@ -18,21 +19,17 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import org.helllabs.libxmp.model.ModInfo
 
-@Suppress("ktlint:standard:class-signature")
 class FileBrowserViewModel(
     private val appContext: Context,
-    private val prefs: XmpPreferences
+    private val prefs: XmpPreferences,
+    private val repo: ModuleMetadataRepository
 ) : ViewModel() {
 
     val state: StateFlow<BrowserUiState>
         field = MutableStateFlow(BrowserUiState())
 
     private val dirStack = ArrayDeque<Uri>()
-
-    private val metadataCache = mutableMapOf<String, ModInfo>()
-
     private var rootTreeUri: Uri? = null
 
     init {
@@ -46,51 +43,42 @@ class FileBrowserViewModel(
         }
     }
 
-    fun getMetadata(uri: String): ModInfo = metadataCache[uri] ?: ModInfo()
-
-    fun setMetadata(uri: String, modInfo: ModInfo) {
-        if (modInfo.name.trim().isNotBlank()) {
-            metadataCache[uri] = ModInfo(name = modInfo.name.trim(), type = modInfo.type)
-        }
-    }
-
     fun onRootFolderPicked(uri: Uri) {
         appContext.contentResolver.takePersistableUriPermission(
             uri,
             Intent.FLAG_GRANT_READ_URI_PERMISSION
         )
-
-        viewModelScope.launch {
-            prefs.setLastDirectoryUri(uri.toString())
-        }
+        viewModelScope.launch { prefs.setLastDirectoryUri(uri.toString()) }
         rootTreeUri = uri
-
         dirStack.clear()
         dirStack.addLast(uri)
 
-        loadDirectory(uri)
+        // Wait until we're fully done.
+        // loadDirectory(uri)
+
+        // Background index entire tree
+        viewModelScope.launch(Dispatchers.IO) {
+            indexDirectory(uri)
+            loadDirectory(uri)
+        }
     }
 
     fun navigateInto(item: FileItem) {
         dirStack.addLast(item.uri)
-        loadDirectory(item.uri)
+        viewModelScope.launch(Dispatchers.IO) {
+            indexDirectory(item.uri)
+            loadDirectory(item.uri)
+        }
     }
 
     fun navigateUp(): Boolean {
-        if (dirStack.size <= 1) {
-            return false
-        }
+        if (dirStack.size <= 1) return false
         dirStack.removeLast()
         loadDirectory(dirStack.last())
         return true
     }
 
     fun canNavigateUp() = dirStack.size > 1
-
-    fun navigateToBreadcrumb(index: Int) {
-        while (dirStack.size > index + 1) dirStack.removeLast()
-        loadDirectory(dirStack.last())
-    }
 
     fun setShuffle(value: Boolean) {
         state.value = state.value.copy(isShuffle = value)
@@ -100,113 +88,100 @@ class FileBrowserViewModel(
         state.value = state.value.copy(isLoop = value)
     }
 
+    fun navigateToBreadcrumb(index: Int) {
+        while (dirStack.size > index + 1) dirStack.removeLast()
+        loadDirectory(dirStack.last())
+    }
+
     private fun loadDirectory(uri: Uri) {
         state.value = state.value.copy(isLoading = true, error = null)
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val treeRoot = rootTreeUri ?: uri
-
-                val docId = when {
-                    DocumentsContract.isTreeUri(uri) &&
-                        DocumentsContract.isDocumentUri(appContext, uri) ->
-                        DocumentsContract.getDocumentId(uri)
-
-                    DocumentsContract.isTreeUri(uri) ->
-                        DocumentsContract.getTreeDocumentId(uri)
-
-                    else ->
-                        DocumentsContract.getDocumentId(uri)
-                }
-
-                val childrenUri = DocumentsContract
-                    .buildChildDocumentsUriUsingTree(treeRoot, docId)
-                val projection = arrayOf(
-                    DocumentsContract.Document.COLUMN_DOCUMENT_ID,
-                    DocumentsContract.Document.COLUMN_DISPLAY_NAME,
-                    DocumentsContract.Document.COLUMN_MIME_TYPE,
-                    DocumentsContract.Document.COLUMN_SIZE,
-                )
+                val docId = resolveDocId(uri)
+                val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeRoot, docId)
 
                 val directories = mutableListOf<FileItem>()
                 val modules = mutableListOf<ModuleFile>()
 
                 appContext.contentResolver.query(
-                    /* uri = */ childrenUri,
-                    /* projection = */ projection,
-                    /* selection = */ null,
-                    /* selectionArgs = */ null,
-                    /* sortOrder = */ null
+                    childrenUri,
+                    arrayOf(
+                        DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+                        DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+                        DocumentsContract.Document.COLUMN_MIME_TYPE,
+                        DocumentsContract.Document.COLUMN_SIZE,
+                    ),
+                    null,
+                    null,
+                    null,
                 )?.use { cursor ->
-                    val idCol = cursor
-                        .getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DOCUMENT_ID)
-                    val nameCol = cursor
-                        .getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
-                    val mimeCol = cursor
-                        .getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_MIME_TYPE)
-                    val sizeCol = cursor
-                        .getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_SIZE)
+                    val idCol = cursor.getColumnIndexOrThrow(
+                        DocumentsContract.Document.COLUMN_DOCUMENT_ID
+                    )
+                    val nameCol = cursor.getColumnIndexOrThrow(
+                        DocumentsContract.Document.COLUMN_DISPLAY_NAME
+                    )
+                    val mimeCol = cursor.getColumnIndexOrThrow(
+                        DocumentsContract.Document.COLUMN_MIME_TYPE
+                    )
+                    val sizeCol = cursor.getColumnIndexOrThrow(
+                        DocumentsContract.Document.COLUMN_SIZE
+                    )
 
                     while (cursor.moveToNext()) {
                         val childId = cursor.getString(idCol)
                         val name = cursor.getString(nameCol) ?: continue
                         val mime = cursor.getString(mimeCol) ?: continue
                         val size = cursor.getLong(sizeCol)
-                        val childUri = DocumentsContract
-                            .buildDocumentUriUsingTree(treeRoot, childId)
-
-                        val dotIndex = name.indexOf('.')
-                        val ext = if (dotIndex >= 0) {
-                            name.substringAfterLast('.').lowercase()
-                        } else {
-                            ""
-                        }
-                        val prefix = if (dotIndex >= 0) {
-                            name.substringBefore('.').lowercase()
-                        } else {
-                            ""
-                        }
+                        val childUri = DocumentsContract.buildDocumentUriUsingTree(
+                            treeRoot,
+                            childId
+                        )
+                        val ext = name.substringAfterLast('.', "").lowercase()
+                        val prefix = name.substringBefore('.').lowercase()
 
                         when {
                             mime == DocumentsContract.Document.MIME_TYPE_DIR -> {
-                                FileItem(
-                                    name = name,
-                                    uri = childUri,
-                                    isDirectory = true,
-                                    size = 0L,
-                                ).also(directories::add)
+                                directories.add(
+                                    FileItem(
+                                        name = name,
+                                        uri = childUri,
+                                        isDirectory = true,
+                                        size = 0L,
+                                    )
+                                )
                             }
 
-                            // Skip silently
                             ext in UNSUPPORTED_EXTENSIONS ||
                                 prefix in UNSUPPORTED_EXTENSIONS -> Unit
 
                             ext !in SKIP_EXTENSIONS && prefix !in SKIP_EXTENSIONS -> {
-                                ModuleFile(
-                                    uri = childUri,
-                                    name = name,
-                                    sizeBytes = size,
-                                    extension = when {
-                                        ext.isNotEmpty() && ext !in SKIP_EXTENSIONS -> ext
-                                        else -> prefix
-                                    },
-                                ).also(modules::add)
+                                val cached = repo.get(childUri, name, size)
+                                modules.add(
+                                    ModuleFile(
+                                        uri = childUri,
+                                        name = name,
+                                        sizeBytes = size,
+                                        extension = ext.ifEmpty { prefix },
+                                        resolvedName = cached?.name ?: "",
+                                        resolvedType = cached?.type ?: "",
+                                    )
+                                )
                             }
                         }
                     }
                 }
 
-                val sortedDirs = directories.sortedBy { it.name.lowercase() }
-                val sortedMods = modules.sortedBy { it.name.lowercase() }
                 state.value = state.value.copy(
                     currentPath = uri.lastPathSegment ?: "",
-                    files = sortedMods.toImmutableList(),
-                    directories = sortedDirs.toImmutableList(),
-                    breadcrumbs = dirStack.map { stack ->
-                        stack.lastPathSegment
+                    files = modules.sortedBy { it.name.lowercase() }.toImmutableList(),
+                    directories = directories.sortedBy { it.name.lowercase() }.toImmutableList(),
+                    breadcrumbs = dirStack.map {
+                        it.lastPathSegment
                             ?.substringAfterLast('/')
-                            ?.substringAfterLast(':')
-                            ?: "Root"
+                            ?.substringAfterLast(':') ?: "Root"
                     }.toImmutableList(),
                     isLoading = false,
                     hasStorageAccess = true,
@@ -215,5 +190,65 @@ class FileBrowserViewModel(
                 state.value = state.value.copy(isLoading = false, error = e.message)
             }
         }
+    }
+
+    private suspend fun indexDirectory(uri: Uri) {
+        val treeRoot = rootTreeUri ?: uri
+        val docId = resolveDocId(uri)
+        val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeRoot, docId)
+
+        appContext.contentResolver.query(
+            childrenUri,
+            arrayOf(
+                DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+                DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+                DocumentsContract.Document.COLUMN_MIME_TYPE,
+                DocumentsContract.Document.COLUMN_SIZE,
+            ),
+            null,
+            null,
+            null,
+        )?.use { cursor ->
+            val idCol = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DOCUMENT_ID)
+            val nameCol = cursor.getColumnIndexOrThrow(
+                DocumentsContract.Document.COLUMN_DISPLAY_NAME
+            )
+            val mimeCol = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_MIME_TYPE)
+            val sizeCol = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_SIZE)
+
+            while (cursor.moveToNext()) {
+                val childId = cursor.getString(idCol)
+                val name = cursor.getString(nameCol) ?: continue
+                val mime = cursor.getString(mimeCol) ?: continue
+                val size = cursor.getLong(sizeCol)
+                val childUri = DocumentsContract.buildDocumentUriUsingTree(treeRoot, childId)
+                val ext = name.substringAfterLast('.', "").lowercase()
+                val prefix = name.substringBefore('.').lowercase()
+
+                when {
+                    mime == DocumentsContract.Document.MIME_TYPE_DIR -> Unit
+
+                    ext in UNSUPPORTED_EXTENSIONS || prefix in UNSUPPORTED_EXTENSIONS -> Unit
+
+                    ext !in SKIP_EXTENSIONS && prefix !in SKIP_EXTENSIONS -> {
+                        if (!repo.exists(name, size)) {
+                            repo.fetchAndCache(childUri, name, size, ext.ifEmpty { prefix })
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun resolveDocId(uri: Uri): String = when {
+        DocumentsContract.isTreeUri(uri) &&
+            DocumentsContract.isDocumentUri(appContext, uri) ->
+            DocumentsContract.getDocumentId(uri)
+
+        DocumentsContract.isTreeUri(uri) ->
+            DocumentsContract.getTreeDocumentId(uri)
+
+        else ->
+            DocumentsContract.getDocumentId(uri)
     }
 }

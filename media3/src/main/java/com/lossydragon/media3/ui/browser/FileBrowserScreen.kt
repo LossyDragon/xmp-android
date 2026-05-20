@@ -95,8 +95,6 @@ fun FileBrowserScreenRoute(
         onMiniPlayerToggle = playerViewModel::togglePlayPause,
         onMiniPlayerNext = playerViewModel::next,
         onMiniPlayerPrev = playerViewModel::previous,
-        getCached = browserViewModel::getMetadata,
-        onCache = browserViewModel::setMetadata,
     )
 }
 
@@ -117,9 +115,7 @@ private fun FileBrowserScreen(
     onMiniPlayerTap: () -> Unit,
     onMiniPlayerToggle: () -> Unit,
     onMiniPlayerNext: () -> Unit,
-    onMiniPlayerPrev: () -> Unit,
-    getCached: (String) -> ModInfo,
-    onCache: (String, ModInfo) -> Unit
+    onMiniPlayerPrev: () -> Unit
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val listState = rememberLazyListState()
@@ -198,7 +194,8 @@ private fun FileBrowserScreen(
                 browserState.isLoading -> Box(
                     modifier = Modifier.fillMaxSize().padding(padding),
                     contentAlignment = Alignment.Center,
-                ) { CircularProgressIndicator() }
+                    content = { CircularProgressIndicator() }
+                )
 
                 !browserState.hasStorageAccess -> EmptyPrompt(
                     padding = padding,
@@ -208,7 +205,8 @@ private fun FileBrowserScreen(
                 browserState.files.isEmpty() && browserState.directories.isEmpty() -> Box(
                     modifier = Modifier.fillMaxSize().padding(padding),
                     contentAlignment = Alignment.Center,
-                ) { Text("No module files found in this folder.") }
+                    content = { Text(text = "No module files found in this folder.") }
+                )
 
                 else -> ModuleList(
                     state = browserState,
@@ -216,8 +214,6 @@ private fun FileBrowserScreen(
                     listState = listState,
                     onDir = onDir,
                     onSelect = onSelect,
-                    getCached = getCached,
-                    onCache = onCache,
                 )
             }
         }
@@ -300,8 +296,6 @@ private fun Preview() {
             onMiniPlayerToggle = {},
             onMiniPlayerNext = {},
             onMiniPlayerPrev = {},
-            getCached = { ModInfo() },
-            onCache = { _, _ -> },
         )
     }
 }

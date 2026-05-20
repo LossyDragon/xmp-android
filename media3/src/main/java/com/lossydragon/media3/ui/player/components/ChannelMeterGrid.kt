@@ -13,19 +13,25 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.lossydragon.media3.model.ChannelSnapshot
+import com.lossydragon.media3.ui.theme.XmpTheme
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 
 @Composable
-fun ChannelMeterGrid(channels: List<ChannelSnapshot>) {
+fun ChannelMeterGrid(
+    channels: ImmutableList<ChannelSnapshot>
+) {
     Column {
         Text(
             "Channels (${channels.size})",
@@ -100,4 +106,25 @@ private fun ChannelMeter(
             )
         }
     )
+}
+
+@Preview
+@Composable
+private fun Preview() {
+    XmpTheme {
+        Surface {
+            ChannelMeterGrid(
+                channels = Array(12) {
+                    ChannelSnapshot(
+                        volume = (it + 1) * 5,
+                        finalVol = (it + 2) * 5,
+                        pan = 0,
+                        instrument = 0,
+                        note = 0,
+                        period = 0,
+                    )
+                }.toImmutableList()
+            )
+        }
+    }
 }

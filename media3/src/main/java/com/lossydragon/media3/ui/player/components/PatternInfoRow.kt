@@ -1,16 +1,14 @@
 package com.lossydragon.media3.ui.player.components
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.*
+import androidx.compose.ui.text.font.*
+import androidx.compose.ui.tooling.preview.*
 import com.lossydragon.media3.model.FrameSnapshot
+import com.lossydragon.media3.ui.theme.XmpTheme
+import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 internal fun PatternInfoRow(frame: FrameSnapshot) {
@@ -44,4 +42,27 @@ private fun InfoChip(label: String, value: String) {
             )
         }
     )
+}
+
+@Preview
+@Composable
+private fun Preview() {
+    XmpTheme {
+        Surface {
+            PatternInfoRow(
+                frame = FrameSnapshot(
+                    position = 3,
+                    pattern = 4,
+                    row = 6,
+                    numRows = 64,
+                    speed = 12,
+                    bpm = 128,
+                    timeMs = 0,
+                    totalTimeMs = 0,
+                    channels = persistentListOf(),
+                    presentationNanos = 0,
+                )
+            )
+        }
+    }
 }

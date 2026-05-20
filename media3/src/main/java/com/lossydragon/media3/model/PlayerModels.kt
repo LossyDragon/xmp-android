@@ -8,7 +8,14 @@ import kotlinx.collections.immutable.persistentListOf
 enum class PlaybackStatus { IDLE, LOADING, PLAYING, PAUSED, ERROR }
 
 @Immutable
-data class ModuleFile(val uri: Uri, val name: String, val sizeBytes: Long, val extension: String)
+data class ModuleFile(
+    val uri: Uri,
+    val name: String,
+    val sizeBytes: Long,
+    val extension: String,
+    val resolvedName: String = "",
+    val resolvedType: String = ""
+)
 
 @Immutable
 data class ChannelSnapshot(

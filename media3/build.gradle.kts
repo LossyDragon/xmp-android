@@ -10,6 +10,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.gradle.kotlinter)
     alias(libs.plugins.stability.analyzer)
+    alias(libs.plugins.ksp)
 }
 
 kotlin {
@@ -128,6 +129,11 @@ dependencies {
 
     // Logging
     implementation(libs.timber)
+
+    // Room Database
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
 
     implementation(libs.bundles.ktor)
     implementation(libs.datastore.preferences)

@@ -2,25 +2,27 @@
 java = "17"
 activityCompose = "1.13.0" # https://mvnrepository.com/artifact/androidx.activity/activity-compose
 androidGradlePlugin = "9.2.1" # https://mvnrepository.com/artifact/com.android.application/com.android.application.gradle.plugin
-composeBom = "2026.05.00" # https://mvnrepository.com/artifact/androidx.compose/compose-bom
+composeBom = "2026.05.01" # https://mvnrepository.com/artifact/androidx.compose/compose-bom
 dataStore = "1.2.1" # https://mvnrepository.com/artifact/androidx.datastore/datastore-preferences
-dfc = "1.5" # https://mvnrepository.com/artifact/com.lazygeniouz/dfc
+dfc = "1.6" # https://mvnrepository.com/artifact/com.lazygeniouz/dfc
 extendedSpans = "1.4.0" # https://mvnrepository.com/artifact/me.saket.extendedspans/extendedspans
 koin-bom = "4.2.1" # https://mvnrepository.com/artifact/io.insert-koin/koin-core
 kotlin = "2.3.21" # https://mvnrepository.com/artifact/org.jetbrains.kotlin.android/org.jetbrains.kotlin.android.gradle.plugin
 kotlinXImmutable = "0.4.0" # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-collections-immutable
-kotlinterGradle = "5.4.2" # // https://github.com/jeremymailen/kotlinter-gradle
+kotlinterGradle = "5.5.0" # // https://github.com/jeremymailen/kotlinter-gradle
 kotlinxSerialization = "1.11.0" # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-serialization-json
-ktor = "3.4.3" # https://mvnrepository.com/artifact/io.ktor/ktor-client-core
+ksp  = "2.3.8" # https://mvnrepository.com/artifact/com.google.devtools.ksp/symbol-processing-api
+ktor = "3.5.0" # https://mvnrepository.com/artifact/io.ktor/ktor-client-core
 leakcanaryAndroid = "2.14" # https://mvnrepository.com/artifact/com.squareup.leakcanary/leakcanary-android
 lifecycleViewmodel = "2.10.0" # https://mvnrepository.com/artifact/androidx.lifecycle/lifecycle-viewmodel-navigation3
 materialKolor = "5.0.0-alpha07" # https://mvnrepository.com/artifact/com.materialkolor/material-kolor
 media = "1.8.0" # https://mvnrepository.com/artifact/androidx.media/media
 media3 = "1.10.1" # https://mvnrepository.com/artifact/androidx.media3/media3-common/1.10.0
-navigation3 = "1.1.1" # https://mvnrepository.com/artifact/androidx.navigation3/navigation3-runtime
+navigation3 = "1.1.2" # https://mvnrepository.com/artifact/androidx.navigation3/navigation3-runtime
 oboe = "1.10.0" # https://mvnrepository.com/artifact/com.google.oboe/oboe
 permissionsCompose = "1.0.5" # https://mvnrepository.com/artifact/com.meticha/permissions_compose
 reorderable = "3.1.0" # https://mvnrepository.com/artifact/sh.calvin.reorderable/reorderable
+room = "2.8.4" # https://mvnrepository.com/artifact/androidx.room/room-runtime
 settings = "3.1.0" # https://github.com/alorma/Compose-Settings/releases
 timber = "5.0.1" # https://mvnrepository.com/artifact/com.jakewharton.timber/timber
 
@@ -57,12 +59,15 @@ ktor-client-negotiation = { module = "io.ktor:ktor-client-content-negotiation", 
 ktor-serialization-xml = { module = "io.ktor:ktor-serialization-kotlinx-xml", version.ref = "ktor" }
 leakcanary-android = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanaryAndroid" }
 materialKolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
-media3-common  = { module = "androidx.media3:media3-common",  version.ref = "media3" }
-media3-session = { module = "androidx.media3:media3-session",  version.ref = "media3" }
 media = { module = "androidx.media:media", version.ref = "media" }
+media3-common = { module = "androidx.media3:media3-common", version.ref = "media3" }
+media3-session = { module = "androidx.media3:media3-session", version.ref = "media3" }
 oboe = { module = "com.google.oboe:oboe", version.ref = "oboe" }
 permissions-compose = { group = "com.meticha", name = "permissions_compose", version.ref = "permissionsCompose" }
 reorderable = { module = "sh.calvin.reorderable:reorderable", version.ref = "reorderable" }
+room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
+room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
+room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 
 [bundles]
@@ -103,8 +108,9 @@ nav3 = [
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }
+android-library = { id = "com.android.library", version.ref = "androidGradlePlugin" }
 gradle-kotlinter = { id = "org.jmailen.kotlinter", version.ref = "kotlinterGradle" }
 kotlin-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-stability-analyzer = { id = "com.github.skydoves.compose.stability.analyzer", version = "0.7.4" }
-android-library = { id = "com.android.library", version.ref = "androidGradlePlugin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+stability-analyzer = { id = "com.github.skydoves.compose.stability.analyzer", version = "0.7.5" }
