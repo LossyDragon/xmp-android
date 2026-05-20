@@ -5,9 +5,7 @@ import android.util.Log
 import com.lossydragon.media3.core.CrashHandler
 import com.lossydragon.media3.di.appModule
 import org.koin.android.ext.koin.androidContext
-import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
-import org.koin.core.logger.Level
 import timber.log.Timber
 
 class XmpApp : Application() {
@@ -25,7 +23,6 @@ class XmpApp : Application() {
 
         startKoin {
             androidContext(this@XmpApp)
-            androidLogger(Level.DEBUG)
             modules(appModule)
         }
 

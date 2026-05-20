@@ -1,13 +1,12 @@
 package com.lossydragon.media3.model
 
 import androidx.compose.runtime.*
+import com.lossydragon.media3.core.Constants
 import com.lossydragon.media3.util.fromHtml
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import nl.adaptivity.xmlutil.serialization.*
-
-private val UNSUPPORTED = setOf("AHX", "HVL", "MO3")
 
 @Immutable
 @Serializable
@@ -98,7 +97,7 @@ data class Module(
     @XmlElement val artistInfo: ArtistInfo = ArtistInfo()
 ) {
     val isSupported: Boolean
-        get() = format.uppercase() !in UNSUPPORTED
+        get() = format.lowercase() !in Constants.UNSUPPORTED_EXTENSIONS
     val downloadUrl: String
         get() = url.trim()
     val sizeKb: Int

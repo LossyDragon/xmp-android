@@ -48,7 +48,7 @@ class ModuleMetadataRepository(
             dao.upsert(entity)
             entity
         } catch (e: Exception) {
-            Timber.Forest.e(e)
+            Timber.e(e)
             null
         }
     }

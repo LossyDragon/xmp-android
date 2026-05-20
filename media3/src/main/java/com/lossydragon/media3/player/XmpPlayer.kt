@@ -4,7 +4,6 @@ import android.content.Context
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
-import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import android.provider.DocumentsContract
@@ -16,10 +15,9 @@ import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.common.SimpleBasePlayer
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.session.MediaSession
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
-import com.lossydragon.media3.data.XmpPreferences
+import com.lossydragon.media3.db.XmpPreferences
 import com.lossydragon.media3.model.FrameSnapshot
 import com.lossydragon.media3.model.ModuleFile
 import kotlin.math.abs
@@ -35,7 +33,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.helllabs.libxmp.Xmp
 import org.helllabs.libxmp.model.ModInfo
-import org.koin.compose.koinInject
 import timber.log.Timber
 
 @Suppress("ktlint:standard:class-signature")
@@ -60,7 +57,7 @@ class XmpPlayer(
             .build()
 
         // Great naming!
-        fun ModuleFile.toMediaItem2(duration: Long): MediaMetadata {
+        fun ModuleFile.toRealMetadata(duration: Long): MediaMetadata {
             val realName = Xmp.getModName().ifBlank { this.name }
             val realType = Xmp.getModType().ifBlank { this.extension }
             return MediaMetadata.Builder()
@@ -139,7 +136,7 @@ class XmpPlayer(
 
         Thread {
             if (engine.load(file)) {
-                val metaData = file.toMediaItem2(engine.durationMs.value)
+                val metaData = file.toRealMetadata(engine.durationMs.value)
 
                 val realItem = MediaItem.Builder()
                     .setUri(file.uri)

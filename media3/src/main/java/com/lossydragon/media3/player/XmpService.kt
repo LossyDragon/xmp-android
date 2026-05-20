@@ -3,9 +3,6 @@ package com.lossydragon.media3.player
 import android.app.PendingIntent
 import android.content.ContentResolver
 import android.content.Intent
-import android.media.AudioAttributes
-import android.media.AudioFocusRequest
-import android.media.AudioManager
 import android.net.Uri
 import android.provider.DocumentsContract
 import androidx.annotation.OptIn
@@ -17,14 +14,13 @@ import androidx.media3.session.DefaultMediaNotificationProvider
 import androidx.media3.session.LibraryResult
 import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
-import androidx.media3.session.SessionResult
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import com.lossydragon.media3.MainActivity
 import com.lossydragon.media3.R
 import com.lossydragon.media3.core.AutoMediaId
-import com.lossydragon.media3.data.XmpPreferences
+import com.lossydragon.media3.db.XmpPreferences
 import kotlinx.coroutines.runBlocking
 import org.helllabs.libxmp.Xmp
 import org.helllabs.libxmp.model.ModInfo

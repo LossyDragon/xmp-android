@@ -7,13 +7,12 @@ import android.provider.DocumentsContract
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.lossydragon.media3.core.Constants
 import com.lossydragon.media3.data.ModuleMetadataRepository
-import com.lossydragon.media3.data.XmpPreferences
+import com.lossydragon.media3.db.XmpPreferences
 import com.lossydragon.media3.model.BrowserUiState
 import com.lossydragon.media3.model.FileItem
 import com.lossydragon.media3.model.ModuleFile
-import com.lossydragon.media3.util.SKIP_EXTENSIONS
-import com.lossydragon.media3.util.UNSUPPORTED_EXTENSIONS
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -154,10 +153,11 @@ class FileBrowserViewModel(
                                 )
                             }
 
-                            ext in UNSUPPORTED_EXTENSIONS ||
-                                prefix in UNSUPPORTED_EXTENSIONS -> Unit
+                            ext in Constants.UNSUPPORTED_EXTENSIONS ||
+                                prefix in Constants.UNSUPPORTED_EXTENSIONS -> Unit
 
-                            ext !in SKIP_EXTENSIONS && prefix !in SKIP_EXTENSIONS -> {
+                            ext !in Constants.SKIP_EXTENSIONS &&
+                                prefix !in Constants.SKIP_EXTENSIONS -> {
                                 val cached = repo.get(childUri, name, size)
                                 modules.add(
                                     ModuleFile(
@@ -228,9 +228,11 @@ class FileBrowserViewModel(
                 when {
                     mime == DocumentsContract.Document.MIME_TYPE_DIR -> Unit
 
-                    ext in UNSUPPORTED_EXTENSIONS || prefix in UNSUPPORTED_EXTENSIONS -> Unit
+                    ext in Constants.UNSUPPORTED_EXTENSIONS ||
+                        prefix in Constants.UNSUPPORTED_EXTENSIONS -> Unit
 
-                    ext !in SKIP_EXTENSIONS && prefix !in SKIP_EXTENSIONS -> {
+                    ext !in Constants.SKIP_EXTENSIONS &&
+                        prefix !in Constants.SKIP_EXTENSIONS -> {
                         if (!repo.exists(name, size)) {
                             repo.fetchAndCache(childUri, name, size, ext.ifEmpty { prefix })
                         }

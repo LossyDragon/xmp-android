@@ -1,4 +1,4 @@
-package com.lossydragon.media3.data
+package com.lossydragon.media3.db
 
 import android.content.Context
 import androidx.datastore.core.DataStore
@@ -25,9 +25,7 @@ class XmpPreferences(context: Context) {
 
     private val dataStore: DataStore<Preferences> = context.dataStore
 
-    private object Prefs {
-        val LAST_DIRECTORY_URI = stringPreferencesKey("last_directory_uri")
-    }
+    private val lastDirectoryUri = stringPreferencesKey("last_directory_uri")
 
     private fun <T> flow(key: Preferences.Key<T>, default: T): Flow<T> =
         dataStore.data.map { it[key] ?: default }
@@ -41,7 +39,7 @@ class XmpPreferences(context: Context) {
     private suspend fun <T> set(key: Preferences.Key<T>, value: T) =
         dataStore.edit { it[key] = value }
 
-    fun getLastDirectoryFlow() = flowNullable(Prefs.LAST_DIRECTORY_URI)
-    suspend fun getLastDirectoryUri() = get(Prefs.LAST_DIRECTORY_URI, "").ifEmpty { null }
-    suspend fun setLastDirectoryUri(v: String) = set(Prefs.LAST_DIRECTORY_URI, v)
+    fun getLastDirectoryFlow() = flowNullable(lastDirectoryUri)
+    suspend fun getLastDirectoryUri() = get(lastDirectoryUri, "").ifEmpty { null }
+    suspend fun setLastDirectoryUri(v: String) = set(lastDirectoryUri, v)
 }

@@ -18,10 +18,11 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.lossydragon.media3.BuildConfig
-import com.lossydragon.media3.data.XmpPreferences
+import com.lossydragon.media3.db.XmpPreferences
 import com.lossydragon.media3.model.Module
 import com.lossydragon.media3.model.ModuleFile
 import com.lossydragon.media3.player.XmpPlayerViewModel
+import com.lossydragon.media3.ui.NavKeyDownload
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext

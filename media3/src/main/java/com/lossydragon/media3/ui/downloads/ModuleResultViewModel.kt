@@ -8,7 +8,7 @@ import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lossydragon.media3.data.ModArchiveService
-import com.lossydragon.media3.data.XmpPreferences
+import com.lossydragon.media3.db.XmpPreferences
 import com.lossydragon.media3.model.DownloadStatus
 import com.lossydragon.media3.model.Module
 import com.lossydragon.media3.model.ModuleResultState

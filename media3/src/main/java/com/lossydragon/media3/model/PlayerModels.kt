@@ -1,21 +1,10 @@
 package com.lossydragon.media3.model
 
-import android.net.Uri
 import androidx.compose.runtime.Immutable
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 enum class PlaybackStatus { IDLE, LOADING, PLAYING, PAUSED, ERROR }
-
-@Immutable
-data class ModuleFile(
-    val uri: Uri,
-    val name: String,
-    val sizeBytes: Long,
-    val extension: String,
-    val resolvedName: String = "",
-    val resolvedType: String = ""
-)
 
 @Immutable
 data class ChannelSnapshot(

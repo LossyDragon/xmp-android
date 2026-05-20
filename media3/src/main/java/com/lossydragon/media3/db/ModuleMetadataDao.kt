@@ -12,9 +12,6 @@ interface ModuleMetadataDao {
     )
     suspend fun get(fileName: String, sizeBytes: Long): ModuleMetadataEntity?
 
-    @Query("SELECT * FROM module_metadata WHERE headerHash = :hash LIMIT 1")
-    suspend fun getByHash(hash: String): ModuleMetadataEntity?
-
     @Upsert
     suspend fun upsert(entity: ModuleMetadataEntity)
 

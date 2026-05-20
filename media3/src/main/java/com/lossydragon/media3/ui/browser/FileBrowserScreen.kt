@@ -31,7 +31,6 @@ import com.lossydragon.media3.ui.browser.components.ModuleList
 import com.lossydragon.media3.ui.player.components.MiniPlayerBar
 import com.lossydragon.media3.ui.theme.XmpTheme
 import kotlinx.collections.immutable.persistentListOf
-import org.helllabs.libxmp.model.ModInfo
 import org.koin.androidx.compose.koinViewModel
 
 @Composable

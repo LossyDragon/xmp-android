@@ -1,11 +1,11 @@
 package com.lossydragon.media3.di
 
 import androidx.room.Room
-import com.lossydragon.media3.BuildConfig
+import com.lossydragon.media3.core.Constants
 import com.lossydragon.media3.data.ModArchiveService
 import com.lossydragon.media3.data.ModuleMetadataRepository
-import com.lossydragon.media3.data.XmpPreferences
 import com.lossydragon.media3.db.XmpDatabase
+import com.lossydragon.media3.db.XmpPreferences
 import com.lossydragon.media3.player.XmpEngine
 import com.lossydragon.media3.player.XmpPlayer
 import com.lossydragon.media3.player.XmpPlayerViewModel
@@ -24,31 +24,37 @@ import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
 val appModule = module {
+    // ViewModels
     viewModel { DownloadViewModel(get()) }
     viewModel { FileBrowserViewModel(androidContext(), get(), get()) }
     viewModel { ModuleResultViewModel(androidContext(), get(), get(), get()) }
     viewModel { XmpPlayerViewModel(androidContext(), get()) }
 
-    single { ModArchiveService(get(), BuildConfig.API_KEY) }
-    single { XmpEngine(androidContext()) }
-    single { XmpPlayer(androidContext(), get(), get()) }
-    single { XmpPreferences(androidContext()) }
-    single { get<XmpDatabase>().moduleMetadataDao() }
-    single { ModuleMetadataRepository(androidContext(), get()) }
+    // Database
     single {
         Room.databaseBuilder(
             androidContext(),
             XmpDatabase::class.java,
-            "xmp_database",
+            Constants.ROOM_DATABASE_NAME,
         ).build()
     }
+    single { get<XmpDatabase>().moduleMetadataDao() }
+    single { ModuleMetadataRepository(androidContext(), get()) }
+
+    // Downloads
     single {
         HttpClient(engineFactory = Android) {
             install(ContentNegotiation) { xml() }
             defaultRequest {
-                url("https://api.modarchive.org")
+                url(Constants.HTTP_BASE_URL)
                 accept(ContentType.Application.Xml)
             }
         }
     }
+    single { ModArchiveService(get()) }
+
+    // Media Player
+    single { XmpEngine(androidContext()) }
+    single { XmpPlayer(androidContext(), get(), get()) }
+    single { XmpPreferences(androidContext()) }
 }

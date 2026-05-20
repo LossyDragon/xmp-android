@@ -7,6 +7,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.ui.graphics.vector.*
 import androidx.navigation3.runtime.NavKey
+import com.lossydragon.media3.model.SearchType
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -46,4 +47,14 @@ sealed class NavKeyMain(val title: String) : NavKey {
         override val selectedIcon = Icons.Filled.MusicNote
         override val unselectedIcon = Icons.Outlined.MusicNote
     }
+}
+
+sealed interface NavKeyDownload : NavKey {
+    @Serializable data object Search : NavKeyDownload
+
+    @Serializable data object History : NavKeyDownload
+
+    @Serializable data class SearchResult(val query: String, val type: SearchType) : NavKeyDownload
+
+    @Serializable data class Module(val moduleId: Int) : NavKeyDownload
 }
