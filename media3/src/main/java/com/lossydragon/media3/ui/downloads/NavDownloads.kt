@@ -23,6 +23,7 @@ import com.lossydragon.media3.model.Module
 import com.lossydragon.media3.model.ModuleFile
 import com.lossydragon.media3.player.XmpPlayerViewModel
 import com.lossydragon.media3.ui.NavKeyDownload
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -44,7 +45,7 @@ fun NavDownloads(
     val backStack = rememberNavBackStack(NavKeyDownload.Search)
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
-    val history = remember { mutableStateListOf<Module>() }
+    val history = remember { mutableStateListOf<Module>().toPersistentList() }
     val hasApiKey = remember { BuildConfig.API_KEY.isNotBlank() }
 
     BackHandler(enabled = backStack.size > 1) {
@@ -63,6 +64,7 @@ fun NavDownloads(
                 DownloadSearchScreen(
                     modifier = modifier,
                     hasApiKey = hasApiKey,
+                    snackbarHostState = snackbarHostState,
                     onSearch = { query, type ->
                         backStack.add(NavKeyDownload.SearchResult(query, type))
                     },

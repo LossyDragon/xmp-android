@@ -1,13 +1,10 @@
 package com.lossydragon.media3.ui.downloads
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -18,58 +15,114 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.lossydragon.media3.model.DownloadStatus
 import com.lossydragon.media3.model.Module
-import com.lossydragon.media3.model.ModuleResult
 import com.lossydragon.media3.model.SearchResult
 import com.lossydragon.media3.model.SearchType
-import com.lossydragon.media3.util.fromHtml
+import com.lossydragon.media3.ui.downloads.components.ArtistListItem
+import com.lossydragon.media3.ui.downloads.components.GuruBox
+import com.lossydragon.media3.ui.downloads.components.ModuleListItem
+import com.lossydragon.media3.ui.theme.XmpTheme
+import com.lossydragon.media3.ui.theme.topazFontFamily
+import com.lossydragon.media3.ui.util.annotatedLinkString
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun DownloadSearchScreen(
     modifier: Modifier = Modifier,
     hasApiKey: Boolean,
+    snackbarHostState: SnackbarHostState,
     onSearch: (String, SearchType) -> Unit,
     onRandom: () -> Unit,
     onHistory: () -> Unit
 ) {
+    val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
+    val scope = rememberCoroutineScope()
+
     var query by rememberSaveable { mutableStateOf("") }
     var type by rememberSaveable { mutableStateOf(SearchType.TITLE) }
+    var hasInteracted by rememberSaveable { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        delay(500L) // Chill
+        focusRequester.requestFocus()
+    }
 
     Scaffold(
         modifier = modifier,
-        bottomBar = {
-            Surface(
-                color = MaterialTheme.colorScheme.surfaceContainer,
-                tonalElevation = 3.dp,
-            ) {
-                Box(
-                    Modifier
-                        .fillMaxWidth()
-                        .navigationBarsPadding()
-                        .padding(12.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = "Powered by The Mod Archive",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        topBar = {
+            TopAppBar(
+                title = { Text(text = "Search") },
+                navigationIcon = {
+                    IconButton(
+                        onClick = {
+                            // TODO
+                        },
+                        content = {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = null
+                            )
+                        }
                     )
                 }
-            }
+            )
+        },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = {
+                    scope.launch {
+                        if (!hasApiKey) {
+                            snackbarHostState.showSnackbar(
+                                message = "No API key used to search."
+                            )
+                        } else if (query.length < 3) {
+                            snackbarHostState.showSnackbar(
+                                message = "At least 3 characters required to search"
+                            )
+                        } else {
+                            onSearch(query, type)
+                            focusManager.clearFocus()
+                        }
+                    }
+                },
+                text = { Text(text = "Search") },
+                icon = { Icon(imageVector = Icons.Default.Search, contentDescription = null) }
+            )
+        },
+        bottomBar = {
+            ShortNavigationBar(
+                modifier = Modifier
+                    .navigationBarsPadding()
+                    .imePadding(),
+                content = {
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center,
+                        content = {
+                            Text(
+                                text = annotatedLinkString(
+                                    text = "Powered by The Mod Archive",
+                                    url = "https://modarchive.org/"
+                                ),
+                            )
+                        }
+                    )
+                }
+            )
         }
     ) { padding ->
         Column(
@@ -80,67 +133,117 @@ fun DownloadSearchScreen(
                 .padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top,
-        ) {
-            Spacer(Modifier.height(24.dp))
-
-            OutlinedTextField(
-                modifier = Modifier.fillMaxWidth(),
-                enabled = hasApiKey,
-                value = query,
-                onValueChange = { query = it },
-                isError = query.isEmpty(),
-                singleLine = true,
-                label = { Text("Search") },
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = {
-                    if (query.isNotEmpty()) onSearch(query, type)
-                    focusManager.clearFocus()
-                }),
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                SearchType.entries.forEachIndexed { index, searchType ->
-                    SegmentedButton(
-                        selected = type == searchType,
-                        onClick = { type = searchType },
-                        shape = SegmentedButtonDefaults.itemShape(index, SearchType.entries.size),
-                        label = {
-                            Text(searchType.name.lowercase().replaceFirstChar { it.uppercase() })
-                        },
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                Button(
-                    modifier = Modifier.weight(1f),
-                    enabled = hasApiKey && query.isNotEmpty(),
-                    onClick = {
-                        onSearch(query, type)
-                        focusManager.clearFocus()
+            content = {
+                OutlinedTextField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(focusRequester),
+                    enabled = hasApiKey,
+                    value = query,
+                    onValueChange = {
+                        query = it
+                        hasInteracted = true
                     },
-                ) { Text("Search") }
+                    isError = hasInteracted && query.length < 3,
+                    singleLine = true,
+                    label = { Text(text = "Search") },
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(
+                        onSearch = {
+                            if (query.length >= 3) {
+                                onSearch(query, type)
+                                focusManager.clearFocus()
+                            } else {
+                                scope.launch {
+                                    snackbarHostState.showSnackbar(
+                                        message = "At least 3 characters required to search"
+                                    )
+                                }
+                            }
+                        }
+                    ),
+                )
 
-                OutlinedButton(
-                    modifier = Modifier.weight(1f),
-                    enabled = hasApiKey,
-                    onClick = onRandom,
-                ) { Text("Random") }
+                Spacer(modifier = Modifier.height(24.dp))
 
-                OutlinedButton(
-                    modifier = Modifier.weight(1f),
-                    enabled = hasApiKey,
-                    onClick = onHistory,
-                ) { Text("History") }
+                ButtonGroup(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    expandedRatio = .20f,
+                    overflowIndicator = {},
+                    content = {
+                        toggleableItem(
+                            checked = type == SearchType.TITLE,
+                            label = "Title or Filename",
+                            onCheckedChange = { type = SearchType.TITLE },
+                            weight = 1f,
+                        )
+                        toggleableItem(
+                            checked = type == SearchType.ARTIST,
+                            label = "Artist",
+                            onCheckedChange = { type = SearchType.ARTIST },
+                            weight = 1f,
+                        )
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                ButtonGroup(
+                    overflowIndicator = {},
+                    content = {
+                        customItem(
+                            buttonGroupContent = {
+                                OutlinedButton(
+                                    onClick = onRandom,
+                                    enabled = hasApiKey,
+                                    modifier = Modifier.weight(1f),
+                                    content = {
+                                        Icon(
+                                            imageVector = Icons.Default.Shuffle,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(text = "Random")
+                                    }
+                                )
+                            },
+                            menuContent = {}
+                        )
+                        customItem(
+                            buttonGroupContent = {
+                                OutlinedButton(
+                                    onClick = onHistory,
+                                    content = {
+                                        Icon(
+                                            imageVector = Icons.Default.History,
+                                            contentDescription = null,
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(text = "History")
+                                    }
+                                )
+                            },
+                            menuContent = {}
+                        )
+                    }
+                )
             }
-        }
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun Preview() {
+    XmpTheme {
+        DownloadSearchScreen(
+            hasApiKey = true,
+            snackbarHostState = remember { SnackbarHostState() },
+            onSearch = { _, _ -> },
+            onRandom = {},
+            onHistory = {},
+        )
     }
 }
 
@@ -236,7 +339,7 @@ fun DownloadModuleScreen(
     LaunchedEffect(Unit) {
         // Only fetch if we don't already have a module loaded
         // or if the requested ID differs from what's currently loaded
-        if (state.module == null || (moduleId >= 0 && state.module!!.module.id != moduleId)) {
+        if (state.module == null || (moduleId >= 0 && state.module?.module?.id != moduleId)) {
             viewModel.getModuleById(moduleId)
         }
     }
@@ -375,222 +478,4 @@ fun DownloadModuleScreen(
             }
         }
     }
-}
-
-@Composable
-fun DownloadHistoryScreen(
-    modifier: Modifier = Modifier,
-    history: List<Module>,
-    onBack: () -> Unit,
-    onClear: () -> Unit,
-    onModuleClick: (Int) -> Unit
-) {
-    var showClearDialog by remember { mutableStateOf(false) }
-
-    if (showClearDialog) {
-        AlertDialog(
-            onDismissRequest = { showClearDialog = false },
-            title = { Text("Clear History") },
-            text = { Text("Clear your module search history?") },
-            confirmButton = {
-                TextButton(onClick = {
-                    onClear()
-                    showClearDialog = false
-                }) { Text("Clear") }
-            },
-            dismissButton = {
-                TextButton(onClick = { showClearDialog = false }) { Text("Cancel") }
-            }
-        )
-    }
-
-    Scaffold(
-        modifier = modifier,
-        topBar = {
-            TopAppBar(
-                title = { Text("History") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
-                },
-                actions = {
-                    if (history.isNotEmpty()) {
-                        IconButton(onClick = { showClearDialog = true }) {
-                            Icon(Icons.Default.ClearAll, null)
-                        }
-                    }
-                }
-            )
-        }
-    ) { padding ->
-        Box(
-            Modifier
-                .padding(padding)
-                .fillMaxSize(),
-            contentAlignment = Alignment.Center,
-        ) {
-            if (history.isEmpty()) {
-                GuruBox(message = "No search history yet", onBack = onBack)
-            } else {
-                LazyColumn(Modifier.fillMaxSize()) {
-                    items(history.reversed()) { module ->
-                        ModuleListItem(module = module, onClick = { onModuleClick(module.id) })
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ModuleListItem(module: Module, onClick: () -> Unit) {
-    ListItem(
-        modifier = Modifier.clickable(onClick = onClick),
-        leadingContent = {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(Color(0xff404040), RoundedCornerShape(2.dp))
-                    .border(2.dp, Color(0xff808080), RoundedCornerShape(2.dp)),
-                contentAlignment = Alignment.Center,
-                content = { Text(text = module.format, fontSize = 11.sp, color = Color.White) }
-            )
-        },
-        headlineContent = {
-            Text(
-                text = module.songtitle.ifBlank { "(untitled)" },
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        },
-        supportingContent = {
-            Text(
-                text = module.artist,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        },
-        trailingContent = {
-            Text(text = "${module.sizeKb} KB", style = MaterialTheme.typography.labelSmall)
-        },
-    )
-}
-
-@Composable
-private fun ArtistListItem(alias: String, onClick: () -> Unit) {
-    Surface(
-        shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surfaceContainerHighest,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-    ) {
-        ListItem(
-            colors = ListItemDefaults.colors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
-            ),
-            headlineContent = { Text(text = alias, style = MaterialTheme.typography.bodyLarge) },
-        )
-    }
-}
-
-@Composable
-private fun ModuleDetailLayout(
-    modifier: Modifier = Modifier,
-    moduleResult: ModuleResult
-) {
-    val module = moduleResult.module
-    Column(
-        modifier = modifier.verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = module.songtitle.ifBlank { "(untitled)" }.fromHtml(),
-            style = MaterialTheme.typography.titleLarge,
-            textAlign = TextAlign.Center
-        )
-        Text(
-            text = module.filename.fromHtml(),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
-        )
-        Text(
-            text = "${module.format} · ${module.artist.fromHtml()} · ${module.sizeKb} KB",
-            style = MaterialTheme.typography.bodySmall,
-            textAlign = TextAlign.Center
-        )
-        HorizontalDivider()
-        if (module.license.title.isNotBlank()) {
-            SectionHeader(text = "License")
-            Text(text = module.license.title, textAlign = TextAlign.Center)
-            if (module.license.description.isNotBlank()) {
-                Text(
-                    text = module.license.description,
-                    style = MaterialTheme.typography.bodySmall,
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            HorizontalDivider()
-        }
-        if (module.comment.isNotBlank()) {
-            SectionHeader(text = "Song Message")
-            Text(
-                text = module.formattedComment,
-                fontFamily = FontFamily.Monospace,
-                fontSize = 13.sp
-            )
-            HorizontalDivider()
-        }
-        if (module.instruments.isNotBlank()) {
-            SectionHeader(text = "Instruments")
-            Text(
-                text = module.formattedInstruments,
-                fontFamily = FontFamily.Monospace,
-                fontSize = 13.sp
-            )
-        }
-        if (moduleResult.hasSponsor) {
-            HorizontalDivider()
-            SectionHeader(text = "Sponsor")
-            Text(text = moduleResult.sponsor.details.text, textAlign = TextAlign.Center)
-        }
-        Spacer(Modifier.height(16.dp))
-    }
-}
-
-@Composable
-private fun SectionHeader(text: String) {
-    Text(text = text, fontWeight = FontWeight.Bold, fontStyle = FontStyle.Italic)
-}
-
-@Composable
-private fun GuruBox(message: String, onBack: () -> Unit) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        content = {
-            Box(
-                modifier = Modifier
-                    .padding(32.dp)
-                    .border(
-                        width = 3.dp,
-                        color = MaterialTheme.colorScheme.error,
-                        shape = MaterialTheme.shapes.medium
-                    )
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center,
-                content = {
-                    Text(
-                        text = message,
-                        color = MaterialTheme.colorScheme.error,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            )
-            TextButton(onClick = onBack, content = { Text("Go Back") })
-        }
-    )
 }
