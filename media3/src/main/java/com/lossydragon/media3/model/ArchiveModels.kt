@@ -8,6 +8,12 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import nl.adaptivity.xmlutil.serialization.*
 
+/**
+ * XML models for the ModArchive API.
+ * Deserialized via kotlinx.serialization with xmlutil.
+ * API reference: https://modarchive.org/index.php?xml-api
+ */
+
 @Immutable
 @Serializable
 @SerialName("modarchive")

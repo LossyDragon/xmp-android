@@ -5,6 +5,8 @@ import androidx.compose.runtime.Immutable
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
+/** UI state and domain models for the SAF file browser. */
+
 @Immutable
 data class FileItem(
     val name: String,

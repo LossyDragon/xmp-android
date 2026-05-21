@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.*
 import androidx.navigation3.ui.NavDisplay
-import com.lossydragon.media3.ui.player.PlayerScreen
+import com.lossydragon.media3.ui.screens.player.PlayerScreen
 
 @Composable
 fun XmpNavHost(onBack: () -> Unit) {

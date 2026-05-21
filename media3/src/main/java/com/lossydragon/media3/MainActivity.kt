@@ -10,11 +10,11 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
-import com.lossydragon.media3.core.requestNotificationPermission
-import com.lossydragon.media3.core.requestWriteStoragePermission
 import com.lossydragon.media3.player.XmpService
 import com.lossydragon.media3.ui.XmpNavHost
 import com.lossydragon.media3.ui.theme.XmpTheme
+import com.lossydragon.media3.util.requestNotificationPermission
+import com.lossydragon.media3.util.requestWriteStoragePermission
 
 class MainActivity : ComponentActivity() {
 

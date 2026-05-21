@@ -4,6 +4,8 @@ import androidx.compose.runtime.Immutable
 
 enum class SearchType { TITLE, ARTIST }
 
+/** UI state and domain models for the ModArchive download feature. */
+
 sealed class SearchResult {
     data class Modules(val data: SearchListResult) : SearchResult()
     data class Artists(val data: ArtistResult) : SearchResult()

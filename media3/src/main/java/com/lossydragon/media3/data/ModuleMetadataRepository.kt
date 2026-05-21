@@ -2,8 +2,8 @@ package com.lossydragon.media3.data
 
 import android.content.Context
 import android.net.Uri
-import com.lossydragon.media3.db.ModuleMetadataDao
-import com.lossydragon.media3.db.ModuleMetadataEntity
+import com.lossydragon.media3.db.dao.ModuleMetadataDao
+import com.lossydragon.media3.db.entity.ModuleMetadataEntity
 import java.security.MessageDigest
 import org.helllabs.libxmp.Xmp
 import org.helllabs.libxmp.model.ModInfo
@@ -13,6 +13,14 @@ class ModuleMetadataRepository(
     private val context: Context,
     private val dao: ModuleMetadataDao
 ) {
+
+    suspend fun getByFileNames(fileNames: List<String>): List<ModuleMetadataEntity> =
+        if (fileNames.isEmpty()) {
+            emptyList()
+        } else {
+            dao.getByFileNames(fileNames)
+        }
+
     suspend fun get(
         uri: Uri,
         fileName: String,

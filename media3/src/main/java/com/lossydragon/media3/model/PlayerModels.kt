@@ -4,6 +4,8 @@ import androidx.compose.runtime.Immutable
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
+/** UI state and domain models for the module player. */
+
 enum class PlaybackStatus { IDLE, LOADING, PLAYING, PAUSED, ERROR }
 
 @Immutable

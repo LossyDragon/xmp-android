@@ -11,9 +11,9 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import com.lossydragon.media3.ui.browser.FileBrowserScreenRoute
-import com.lossydragon.media3.ui.downloads.NavDownloads
-import com.lossydragon.media3.ui.player.PlayerScreen
+import com.lossydragon.media3.ui.screens.browser.FileBrowserScreenRoute
+import com.lossydragon.media3.ui.screens.downloads.NavDownloads
+import com.lossydragon.media3.ui.screens.player.PlayerScreen
 import kotlinx.collections.immutable.persistentListOf
 
 private val bottomBarItems = persistentListOf(
@@ -97,6 +97,11 @@ fun MainNavigation(
                     NavDownloads(
                         modifier = Modifier.consumeWindowInsets(padding),
                         snackbarHostState = snackBarHostState,
+                        onBack = {
+                            mainBackStack.removeAt(mainBackStack.lastIndex)
+                            mainBackStack.add(NavKeyMain.Browser)
+                            currentTab = NavKeyMain.Browser
+                        },
                         onNavigateToPlayer = onNavigateToPlayer,
                     )
                 }
