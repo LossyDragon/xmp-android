@@ -47,13 +47,13 @@ jobs:
           echo "modArchiveApiKey=\"${{ secrets.MOD_ARCHIVE_API_KEY }}\"" >> ~/.gradle/gradle.properties
 
       - name: Build :media3
-        run: ./gradlew :media3:assembleRelease
+        run: ./gradlew :media3:assembleGHA
 
       - name: Rename APK
-        run: mv "./media3/build/outputs/apk/release/media3-release.apk" "./media3/build/outputs/apk/release/XmpAndroid-media3.apk"
+        run: mv "./media3/build/outputs/apk/GHA/media3-GHA.apk" "./media3/build/outputs/apk/GHA/XmpAndroid-media3.apk"
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: XmpAndroid-media3
-          path: ${{ github.workspace }}/media3/build/outputs/apk/release/XmpAndroid-media3.apk
+          path: ${{ github.workspace }}/media3/build/outputs/apk/GHA/XmpAndroid-media3.apk
