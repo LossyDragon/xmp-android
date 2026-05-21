@@ -13,5 +13,5 @@ data class ModuleMetadataEntity(
     val name: String,
     val type: String,
     val extension: String,
-    val lastSeen: Long = System.currentTimeMillis()
+    val lastSeen: Long
 )

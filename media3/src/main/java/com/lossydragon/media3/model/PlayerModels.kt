@@ -8,14 +8,13 @@ import kotlinx.collections.immutable.persistentListOf
 
 enum class PlaybackStatus { IDLE, LOADING, PLAYING, PAUSED, ERROR }
 
-@Immutable
 data class ChannelSnapshot(
-    val volume: Int,
-    val finalVol: Int,
-    val pan: Int,
-    val instrument: Int,
-    val note: Int,
-    val period: Int
+    var volume: Int,
+    var finalVol: Int,
+    var pan: Int,
+    var instrument: Int,
+    var note: Int,
+    var period: Int
 )
 
 @Immutable

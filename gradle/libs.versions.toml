@@ -25,6 +25,7 @@ reorderable = "3.1.0" # https://mvnrepository.com/artifact/sh.calvin.reorderable
 room = "2.8.4" # https://mvnrepository.com/artifact/androidx.room/room-runtime
 settings = "3.1.0" # https://github.com/alorma/Compose-Settings/releases
 timber = "5.0.1" # https://mvnrepository.com/artifact/com.jakewharton.timber/timber
+placeholder = "1.0.3" # https://mvnrepository.com/artifact/com.revenuecat.purchases/placeholder-android
 
 [libraries]
 compose-activity = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
@@ -34,7 +35,7 @@ compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeB
 compose-foundation = { module = "androidx.compose.foundation:foundation" }
 compose-material-icons-core = { module = "androidx.compose.material:material-icons-core" }
 compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
-compose-material3 = { module = "androidx.compose.material3:material3", version = "1.5.0-alpha19" }
+compose-material3 = { module = "androidx.compose.material3:material3", version = "1.5.0-alpha20" }
 compose-runtime = { module = "androidx.compose.runtime:runtime" }
 compose-runtime-livedata = { module = "androidx.compose.runtime:runtime-livedata" }
 compose-settings-ui = { module = "com.github.alorma.compose-settings:ui-tiles", version.ref = "settings" }
@@ -42,6 +43,7 @@ compose-settings-ui-extended = { module = "com.github.alorma.compose-settings:ui
 compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 compose-ui-ui = { module = "androidx.compose.ui:ui" }
+compose-placeholder = { module = "com.revenuecat.purchases:placeholder", version.ref = "placeholder" }
 
 androidx-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "lifecycleViewmodel" }
 androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "navigation3" }
@@ -50,7 +52,7 @@ datastore-preferences = { module = "androidx.datastore:datastore-preferences", v
 dfc = { module = "com.lazygeniouz:dfc", version.ref = "dfc" }
 koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose" }
 koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin-bom" }
-koin-navigation3 = { module = "io.insert-koin:koin-compose-navigation3", version = "4.2.1" }
+koin-navigation3 = { module = "io.insert-koin:koin-compose-navigation3" }
 kotlinx-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinXImmutable" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 kotlinx-serialization-xml = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinxSerialization" }

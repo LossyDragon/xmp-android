@@ -17,9 +17,8 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import org.helllabs.libxmp.Xmp
-import timber.log.Timber
 
-@Suppress("ktlint:standard:class-signature")
+/** Bridges [XmpPlayer] state to the UI via [PlayerUiState]. */
 @OptIn(UnstableApi::class)
 class XmpPlayerViewModel(
     private val appContext: Context,
@@ -30,13 +29,11 @@ class XmpPlayerViewModel(
         field = MutableStateFlow(PlayerUiState())
 
     init {
+        // Frame updates — position, duration, channel data
         player.frameFlow.onEach { frame ->
-            if (frame == null) {
-                return@onEach
-            }
-
-            state.update { state ->
-                state.copy(
+            frame ?: return@onEach
+            state.update {
+                it.copy(
                     positionMs = frame.timeMs.toLong(),
                     durationMs = frame.totalTimeMs.toLong(),
                     frame = frame,
@@ -44,21 +41,21 @@ class XmpPlayerViewModel(
             }
         }.launchIn(viewModelScope)
 
+        // Playback status
         player.isPlaying.onEach { playing ->
-            state.update { state ->
-                val status = if (playing) {
-                    PlaybackStatus.PLAYING
-                } else if (state.currentModule != null) {
-                    PlaybackStatus.PAUSED
-                } else {
-                    PlaybackStatus.IDLE
-                }
-                state.copy(status = status)
+            state.update {
+                it.copy(
+                    status = when {
+                        playing -> PlaybackStatus.PLAYING
+                        it.currentModule != null -> PlaybackStatus.PAUSED
+                        else -> PlaybackStatus.IDLE
+                    }
+                )
             }
         }.launchIn(viewModelScope)
 
+        // Queue changes — clear UI state when queue empties
         player.queueFlow.onEach { queue ->
-            Timber.d("queueFlow emitted size=${queue.size}")
             state.update {
                 it.copy(
                     queue = queue.toImmutableList(),
@@ -67,38 +64,40 @@ class XmpPlayerViewModel(
                     frame = if (queue.isEmpty()) null else it.frame,
                 )
             }
-            Timber.d("after queueFlow update currentModule=${state.value.currentModule}")
         }.launchIn(viewModelScope)
 
+        // Track changes — update current module metadata
         player.currentIndexFlow.onEach { index ->
-            val file = player.queueFlow.value.getOrNull(index)
-            if (file != null) {
-                state.update {
-                    it.copy(
-                        currentModule = file,
-                        moduleName = file.name,
-                        moduleType = file.extension.uppercase(),
-                        currentQueueIndex = index,
-                    )
-                }
+            val file = player.queueFlow.value.getOrNull(index) ?: return@onEach
+            state.update {
+                it.copy(
+                    currentModule = file,
+                    moduleName = file.resolvedName.ifBlank { file.name.ifBlank { "(Untitled)" } },
+                    moduleType = file.resolvedType.ifBlank {
+                        file.extension.uppercase().ifBlank { "???" }
+                    },
+                    currentQueueIndex = index,
+                )
             }
         }.launchIn(viewModelScope)
     }
 
+    /** Loads [file] as a single-item queue and starts playback. */
     fun play(file: ModuleFile) {
         state.update {
             it.copy(
                 status = PlaybackStatus.LOADING,
                 currentModule = file,
-                moduleName = file.name,
+                moduleName = file.resolvedName.ifBlank { file.name },
+                moduleType = file.resolvedType.ifBlank { file.extension.uppercase() },
             )
         }
 
         appContext.startService(Intent(appContext, XmpService::class.java))
-
         player.loadQueue(listOf(file), startAt = 0, loop = false)
     }
 
+    /** Loads [files] as a queue, optionally shuffled, and starts playback at [startAt]. */
     fun playAll(
         files: ImmutableList<ModuleFile>,
         startAt: Int,
@@ -112,7 +111,10 @@ class XmpPlayerViewModel(
             it.copy(
                 status = PlaybackStatus.LOADING,
                 currentModule = ordered[startIndex],
-                moduleName = ordered[startIndex].name,
+                moduleName = ordered[startIndex].resolvedName.ifBlank { ordered[startIndex].name },
+                moduleType = ordered[startIndex].resolvedType.ifBlank {
+                    ordered[startIndex].extension.uppercase()
+                },
             )
         }
 
@@ -120,13 +122,13 @@ class XmpPlayerViewModel(
         player.loadQueue(ordered, startIndex, isLoop)
     }
 
-    fun pause() = player.pause()
-
-    fun resume() = player.play()
-
-    fun seek(posMs: Long) {
-        player.seekTo(player.currentMediaItemIndex, posMs)
+    fun togglePlayPause() = if (state.value.status == PlaybackStatus.PLAYING) {
+        player.pause()
+    } else {
+        player.play()
     }
+
+    fun seek(posMs: Long) = player.seekTo(player.currentMediaItemIndex, posMs)
 
     fun next() = player.next()
 
@@ -136,20 +138,9 @@ class XmpPlayerViewModel(
 
     fun playAtIndex(index: Int) = player.jumpToIndex(index)
 
-    fun togglePlayPause() = if (state.value.status == PlaybackStatus.PLAYING) {
-        pause()
-    } else {
-        resume()
-    }
-
     fun toggleShuffle() = state.update { it.copy(isShuffle = !it.isShuffle) }
 
     fun toggleLoop() = state.update { it.copy(isLoop = !it.isLoop) }
 
     fun muteChannel(ch: Int, muted: Boolean) = Xmp.mute(ch, if (muted) 1 else 0)
-
-    // override fun onCleared() {
-    //     super.onCleared()
-    //     // player.releaseEngine()
-    // }
 }

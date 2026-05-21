@@ -4,20 +4,15 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material.icons.*
 import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Alignment.Companion
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.*
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.font.*
+import androidx.compose.ui.text.style.*
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
 import androidx.core.net.toUri
@@ -65,7 +60,7 @@ fun PlayerScreen(
         viewModelStoreOwner = LocalActivity.current as ComponentActivity
     )
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)
 
     var showQueue by remember { mutableStateOf(false) }
     var hasLoadedOnce by remember { mutableStateOf(false) }
@@ -207,9 +202,7 @@ private fun PlayerScreenContent(
                 content = {
                     // TODO Tracker info does not show.
                     Text(
-                        text = state.moduleName.ifBlank {
-                            state.currentModule.name.uppercase().ifBlank { "(untitled)" }
-                        },
+                        text = state.moduleName,
                         style = MaterialTheme.typography.headlineLarge.copy(
                             fontWeight = FontWeight.Bold,
                         ),
@@ -219,9 +212,7 @@ private fun PlayerScreenContent(
                     )
 
                     Text(
-                        text = state.moduleType.ifBlank {
-                            state.currentModule.extension.uppercase().ifBlank { "???" }
-                        },
+                        text = state.moduleType,
                         style = MaterialTheme.typography.headlineMedium.copy(
                             fontWeight = FontWeight.Bold,
                         ),
@@ -329,7 +320,7 @@ private fun Preview(
     val (state, showQueue) = params
     val density = LocalDensity.current
     val sheetState = SheetState(
-        skipPartiallyExpanded = false,
+        enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded),
         initialValue = if (showQueue) SheetValue.Expanded else SheetValue.Hidden,
         positionalThreshold = { with(density) { 56.dp.toPx() } },
         velocityThreshold = { with(density) { 125.dp.toPx() } },

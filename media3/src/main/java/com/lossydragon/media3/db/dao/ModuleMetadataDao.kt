@@ -20,5 +20,5 @@ interface ModuleMetadataDao {
     suspend fun upsert(entity: ModuleMetadataEntity)
 
     @Query("DELETE FROM module_metadata WHERE lastSeen < :cutoff")
-    suspend fun evictStale(cutoff: Long)
+    suspend fun removeStale(cutoff: Long)
 }

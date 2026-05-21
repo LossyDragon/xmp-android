@@ -27,20 +27,25 @@ import org.helllabs.libxmp.model.ModInfo
 import org.koin.android.ext.android.inject
 import timber.log.Timber
 
+/**
+ * [MediaLibraryService] that bridges [XmpPlayer] to the Media3 session API.
+ * Provides a browsable media tree for Android Auto (File Browser + Playlists stub).
+ */
 @OptIn(UnstableApi::class)
 class XmpService : MediaLibraryService() {
 
     private companion object {
-        private const val NOTIFICATION_ID = 669
-        private const val CHANNEL_ID = "669"
-        private const val ROOT_ID = "xmp_root"
+        const val NOTIFICATION_ID = 669
+        const val CHANNEL_ID = "669"
     }
 
     private val player: XmpPlayer by inject()
     private val prefs: XmpPreferences by inject()
+
     private lateinit var mediaLibrarySession: MediaLibrarySession
 
-    private val artworkUri by lazy {
+    /** App icon URI used as artwork in the notification and Auto browse tree. */
+    private val artworkUri: Uri by lazy {
         Uri.Builder()
             .scheme(ContentResolver.SCHEME_ANDROID_RESOURCE)
             .authority(packageName)
@@ -50,24 +55,22 @@ class XmpService : MediaLibraryService() {
     }
 
     private val libraryCallback = object : MediaLibrarySession.Callback {
+
         override fun onGetLibraryRoot(
             session: MediaLibrarySession,
             browser: MediaSession.ControllerInfo,
             params: LibraryParams?
-        ): ListenableFuture<LibraryResult<MediaItem>> {
-            val root = MediaItem.Builder()
-                .setMediaId(AutoMediaId.ROOT)
-                .setMediaMetadata(
-                    MediaMetadata.Builder()
-                        .setTitle("Xmp Player")
-                        .setIsBrowsable(true)
-                        .setIsPlayable(false)
-                        .setMediaType(MediaMetadata.MEDIA_TYPE_FOLDER_MIXED)
-                        .build()
+        ): ListenableFuture<LibraryResult<MediaItem>> =
+            Futures.immediateFuture(
+                LibraryResult.ofItem(
+                    buildBrowsableItem(
+                        id = AutoMediaId.ROOT,
+                        title = "Xmp Player",
+                        type = MediaMetadata.MEDIA_TYPE_FOLDER_MIXED,
+                    ),
+                    params,
                 )
-                .build()
-            return Futures.immediateFuture(LibraryResult.ofItem(root, params))
-        }
+            )
 
         override fun onGetChildren(
             session: MediaLibrarySession,
@@ -87,53 +90,23 @@ class XmpService : MediaLibraryService() {
             return Futures.immediateFuture(LibraryResult.ofItemList(items, params))
         }
 
-        override fun onSetMediaItems(
-            mediaSession: MediaSession,
-            controller: MediaSession.ControllerInfo,
-            mediaItems: List<MediaItem>,
-            startIndex: Int,
-            startPositionMs: Long
-        ): ListenableFuture<MediaSession.MediaItemsWithStartPosition> {
-            Timber.d("Auto onSetMediaItems count=${mediaItems.size} startIndex=$startIndex")
-            mediaItems.forEach {
-                Timber.d("Auto item mediaId=${it.mediaId} uri=${it.localConfiguration?.uri}")
-            }
-            return super.onSetMediaItems(
-                mediaSession,
-                controller,
-                mediaItems,
-                startIndex,
-                startPositionMs
-            )
-        }
-
         override fun onAddMediaItems(
             mediaSession: MediaSession,
             controller: MediaSession.ControllerInfo,
             mediaItems: List<MediaItem>
         ): ListenableFuture<List<MediaItem>> {
-            Timber.d("Auto onAddMediaItems count=${mediaItems.size}")
-
             val resolved = mediaItems.map { item ->
                 val uri = when {
-                    AutoMediaId.isFile(item.mediaId) ->
-                        AutoMediaId.uriFromFile(item.mediaId).toUri()
+                    AutoMediaId.isFile(
+                        item.mediaId
+                    ) -> AutoMediaId.uriFromFile(item.mediaId).toUri()
 
-                    item.localConfiguration?.uri != null ->
-                        item.localConfiguration!!.uri
+                    item.localConfiguration?.uri != null -> item.localConfiguration!!.uri
 
                     else -> null
                 }
-                Timber.d("Auto resolving mediaId=${item.mediaId} uri=$uri")
-                if (uri != null) {
-                    item.buildUpon()
-                        .setUri(uri)
-                        .build()
-                } else {
-                    item
-                }
+                if (uri != null) item.buildUpon().setUri(uri).build() else item
             }
-
             return Futures.immediateFuture(resolved)
         }
 
@@ -141,28 +114,17 @@ class XmpService : MediaLibraryService() {
             mediaSession: MediaSession,
             controller: MediaSession.ControllerInfo,
             isForPlayback: Boolean
-        ): ListenableFuture<MediaSession.MediaItemsWithStartPosition> {
-            // Return empty — no resumption support yet
-            return Futures.immediateFailedFuture(UnsupportedOperationException())
-        }
+        ): ListenableFuture<MediaSession.MediaItemsWithStartPosition> =
+            Futures.immediateFailedFuture(UnsupportedOperationException())
     }
 
     override fun onCreate() {
         super.onCreate()
 
-        val sessionId = getString(R.string.app_name) + "_session"
-        val sessionActivity = PendingIntent.getActivity(
-            this,
-            0,
-            Intent(this, MainActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
-            },
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
-
-        mediaLibrarySession = MediaLibrarySession.Builder(this, player, libraryCallback)
-            .setId(sessionId)
-            .setSessionActivity(sessionActivity)
+        mediaLibrarySession = MediaLibrarySession
+            .Builder(this, player, libraryCallback)
+            .setId(getString(R.string.app_name) + "_session")
+            .setSessionActivity(buildSessionActivity())
             .build()
 
         DefaultMediaNotificationProvider.Builder(this)
@@ -172,16 +134,14 @@ class XmpService : MediaLibraryService() {
             .build()
             .also(::setMediaNotificationProvider)
 
-        // Handle the case where foreground service can't start (API 31+)
-        object : Listener {
+        setListener(object : Listener {
             override fun onForegroundServiceStartNotAllowedException() {
                 Timber.e("Foreground service start not allowed")
             }
-        }.also(::setListener)
+        })
     }
 
-    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibrarySession =
-        mediaLibrarySession
+    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo) = mediaLibrarySession
 
     override fun onDestroy() {
         player.abandonAudioFocus()
@@ -197,59 +157,75 @@ class XmpService : MediaLibraryService() {
         }
     }
 
-    // region Android Auto
+    private fun buildSessionActivity(): PendingIntent =
+        PendingIntent.getActivity(
+            this,
+            0,
+            Intent(this, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
+            },
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+        )
+
+    /** Root level — File Browser and Playlists. */
     private fun getRootChildren(): ImmutableList<MediaItem> = ImmutableList.of(
         buildBrowsableItem(
-            id = AutoMediaId.FILE_BROWSER,
-            title = "File Browser",
-            type = MediaMetadata.MEDIA_TYPE_FOLDER_MIXED,
+            AutoMediaId.FILE_BROWSER,
+            "File Browser",
+            MediaMetadata.MEDIA_TYPE_FOLDER_MIXED
         ),
         buildBrowsableItem(
-            id = AutoMediaId.PLAYLISTS,
-            title = "Playlists",
-            type = MediaMetadata.MEDIA_TYPE_FOLDER_PLAYLISTS,
+            AutoMediaId.PLAYLISTS,
+            "Playlists",
+            MediaMetadata.MEDIA_TYPE_FOLDER_PLAYLISTS
         ),
     )
 
-    // TODO
+    /** Stubbed until playlist persistence is implemented. */
     private fun getPlaylists(): ImmutableList<MediaItem> = ImmutableList.of(
         buildBrowsableItem(
-            id = "playlists_coming_soon",
-            title = "Coming Soon",
-            type = MediaMetadata.MEDIA_TYPE_FOLDER_PLAYLISTS,
+            "playlists_coming_soon",
+            "Coming Soon",
+            MediaMetadata.MEDIA_TYPE_FOLDER_PLAYLISTS
         )
     )
 
+    /** Returns children of the last-opened root directory. */
     private fun getFileBrowserRoot(): ImmutableList<MediaItem> {
-        val rootUriStr = runBlocking { prefs.getLastDirectoryUri() } ?: return ImmutableList.of()
-        val treeUri = rootUriStr.toUri()
-
-        // Ensure we have permission
-        try {
+        val treeUri = runBlocking { prefs.getLastDirectoryUri() }?.toUri()
+            ?: return ImmutableList.of()
+        return try {
             contentResolver.takePersistableUriPermission(
                 treeUri,
                 Intent.FLAG_GRANT_READ_URI_PERMISSION
             )
+            buildChildItems(
+                treeUri,
+                DocumentsContract.buildChildDocumentsUriUsingTree(
+                    treeUri,
+                    DocumentsContract.getTreeDocumentId(treeUri),
+                )
+            )
         } catch (e: SecurityException) {
             Timber.e(e, "No permission for $treeUri")
-            return ImmutableList.of()
+            ImmutableList.of()
         }
-
-        val rootDocId = DocumentsContract.getTreeDocumentId(treeUri)
-        val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, rootDocId)
-        return buildChildItems(treeUri, childrenUri)
     }
 
-    private fun getDirectoryChildren(parentId: String): ImmutableList<MediaItem> {
-        Timber.d("Auto getDirectoryChildren parentId=$parentId")
-        val treeUri = AutoMediaId.treeUriFromDir(parentId)
-        val docId = AutoMediaId.docIdFromDir(parentId)
-        Timber.d("Auto treeUri=$treeUri docId=$docId")
-        val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, docId)
-        Timber.d("Auto childrenUri=$childrenUri")
-        return buildChildItems(treeUri, childrenUri)
-    }
+    /** Returns children of the directory encoded in [parentId]. */
+    private fun getDirectoryChildren(parentId: String): ImmutableList<MediaItem> =
+        buildChildItems(
+            AutoMediaId.treeUriFromDir(parentId),
+            DocumentsContract.buildChildDocumentsUriUsingTree(
+                AutoMediaId.treeUriFromDir(parentId),
+                AutoMediaId.docIdFromDir(parentId),
+            )
+        )
 
+    /**
+     * Queries [childrenUri] and builds browsable dirs and playable modules.
+     * Files are validated via [Xmp.testFromFd] before being included.
+     */
     private fun buildChildItems(treeUri: Uri, childrenUri: Uri): ImmutableList<MediaItem> {
         val items = mutableListOf<MediaItem>()
         contentResolver.query(
@@ -270,25 +246,19 @@ class XmpService : MediaLibraryService() {
                 val childUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, docId)
 
                 when {
-                    mime == DocumentsContract.Document.MIME_TYPE_DIR -> {
+                    mime == DocumentsContract.Document.MIME_TYPE_DIR ->
                         items.add(
                             buildBrowsableItem(
-                                id = AutoMediaId.dir(treeUri, docId), // ← encode both
-                                title = name,
-                                type = MediaMetadata.MEDIA_TYPE_FOLDER_MIXED,
+                                AutoMediaId.dir(treeUri, docId),
+                                name,
+                                MediaMetadata.MEDIA_TYPE_FOLDER_MIXED
                             )
                         )
-                    }
 
-                    Xmp.testFromFd(this, childUri, ModInfo()) -> {
+                    Xmp.testFromFd(this, childUri, ModInfo()) ->
                         items.add(
-                            buildPlayableItem(
-                                id = AutoMediaId.file(childUri.toString()),
-                                title = name,
-                                uri = childUri,
-                            )
+                            buildPlayableItem(AutoMediaId.file(childUri.toString()), name, childUri)
                         )
-                    }
                 }
             }
         }
@@ -313,11 +283,7 @@ class XmpService : MediaLibraryService() {
         MediaItem.Builder()
             .setMediaId(id)
             .setUri(uri)
-            .setRequestMetadata(
-                MediaItem.RequestMetadata.Builder()
-                    .setMediaUri(uri)
-                    .build()
-            )
+            .setRequestMetadata(MediaItem.RequestMetadata.Builder().setMediaUri(uri).build())
             .setMediaMetadata(
                 MediaMetadata.Builder()
                     .setTitle(title)

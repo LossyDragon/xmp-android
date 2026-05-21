@@ -31,38 +31,41 @@ internal fun EmptyPrompt(padding: PaddingValues, onPick: () -> Unit) {
             .padding(padding)
             .padding(32.dp),
         contentAlignment = Alignment.Center,
-    ) {
-        Card {
-            Column(
-                modifier = Modifier.padding(32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-            ) {
-                IconButton(
-                    onClick = onPick,
-                    modifier = Modifier.size(88.dp),
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.FolderOpen,
-                        contentDescription = null,
-                        modifier = Modifier.size(72.dp),
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-                }
-                Text(
-                    text = "No folder selected",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(top = 16.dp),
-                )
-                Text(
-                    text = "Tap the folder to choose your start location",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(top = 8.dp),
-                    textAlign = TextAlign.Center,
+        content = {
+            Card {
+                Column(
+                    modifier = Modifier.padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    content = {
+                        IconButton(
+                            onClick = onPick,
+                            modifier = Modifier.size(88.dp),
+                            content = {
+                                Icon(
+                                    imageVector = Icons.Default.FolderOpen,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(72.dp),
+                                    tint = MaterialTheme.colorScheme.primary,
+                                )
+                            }
+                        )
+                        Text(
+                            text = "No folder selected",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(top = 16.dp),
+                        )
+                        Text(
+                            text = "Tap the folder to choose your start location",
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(top = 8.dp),
+                            textAlign = TextAlign.Center,
+                        )
+                    }
                 )
             }
         }
-    }
+    )
 }
 
 @Preview

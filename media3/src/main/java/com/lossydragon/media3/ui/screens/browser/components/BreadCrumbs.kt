@@ -42,41 +42,42 @@ internal fun BreadCrumbs(
     Surface(
         color = MaterialTheme.colorScheme.surface,
         modifier = Modifier.fillMaxWidth(),
-    ) {
-        LazyRow(
-            modifier = modifier.fillMaxWidth(),
-            state = scrollState,
-            verticalAlignment = Alignment.CenterVertically,
-            contentPadding = PaddingValues(horizontal = 8.dp),
-            content = {
-                itemsIndexed(breadcrumbs) { index, crumb ->
-                    val isLast = index == breadcrumbs.lastIndex
-                    AssistChip(
-                        modifier = Modifier.padding(horizontal = 2.dp),
-                        enabled = !isLast,
-                        onClick = { onCrumbClick(index) },
-                        label = {
-                            Text(
-                                text = crumb,
-                                style = MaterialTheme.typography.labelMedium
-                            )
-                        },
-                        trailingIcon = if (!isLast) {
-                            {
-                                Icon(
-                                    imageVector = Icons.Default.ChevronRight,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp)
+        content = {
+            LazyRow(
+                modifier = modifier.fillMaxWidth(),
+                state = scrollState,
+                verticalAlignment = Alignment.CenterVertically,
+                contentPadding = PaddingValues(horizontal = 8.dp),
+                content = {
+                    itemsIndexed(breadcrumbs) { index, crumb ->
+                        val isLast = index == breadcrumbs.lastIndex
+                        AssistChip(
+                            modifier = Modifier.padding(horizontal = 2.dp),
+                            enabled = !isLast,
+                            onClick = { onCrumbClick(index) },
+                            label = {
+                                Text(
+                                    text = crumb,
+                                    style = MaterialTheme.typography.labelMedium
                                 )
-                            }
-                        } else {
-                            null
-                        },
-                    )
+                            },
+                            trailingIcon = if (!isLast) {
+                                {
+                                    Icon(
+                                        imageVector = Icons.Default.ChevronRight,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            } else {
+                                null
+                            },
+                        )
+                    }
                 }
-            }
-        )
-    }
+            )
+        }
+    )
 }
 
 @Preview

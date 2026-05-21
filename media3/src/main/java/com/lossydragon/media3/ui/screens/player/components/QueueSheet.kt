@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
 import androidx.core.net.toUri
@@ -44,11 +45,12 @@ internal fun QueueSheet(
 @Preview
 @Composable
 private fun Preview() {
+    val density = LocalDensity.current
     val sheetState = SheetState(
-        skipPartiallyExpanded = true,
+        enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded),
         initialValue = SheetValue.Expanded,
-        positionalThreshold = { 0.5f },
-        velocityThreshold = { 125f },
+        positionalThreshold = { with(density) { 56.dp.toPx() } },
+        velocityThreshold = { with(density) { 125.dp.toPx() } },
     )
     XmpTheme {
         Scaffold { paddingValues ->

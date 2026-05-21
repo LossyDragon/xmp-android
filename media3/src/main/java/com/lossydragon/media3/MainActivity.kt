@@ -5,7 +5,6 @@ import android.content.ComponentName
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
@@ -15,6 +14,7 @@ import com.lossydragon.media3.ui.XmpNavHost
 import com.lossydragon.media3.ui.theme.XmpTheme
 import com.lossydragon.media3.util.requestNotificationPermission
 import com.lossydragon.media3.util.requestWriteStoragePermission
+import com.lossydragon.media3.util.setEdgeToEdgeConfig
 
 class MainActivity : ComponentActivity() {
 
@@ -47,7 +47,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        setEdgeToEdgeConfig()
 
         requestNotificationPermission {
             notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)

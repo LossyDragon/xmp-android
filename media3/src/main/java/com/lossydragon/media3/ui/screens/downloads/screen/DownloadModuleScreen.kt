@@ -7,6 +7,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.*
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -19,9 +20,9 @@ import com.lossydragon.media3.model.ModuleResult
 import com.lossydragon.media3.model.ModuleResultState
 import com.lossydragon.media3.ui.components.GuruBox
 import com.lossydragon.media3.ui.screens.downloads.components.ModuleDetailLayout
-import com.lossydragon.media3.ui.screens.downloads.viewmodel.DownloadHistoryViewModel
 import com.lossydragon.media3.ui.screens.downloads.viewmodel.ModuleResultViewModel
 import com.lossydragon.media3.ui.theme.XmpTheme
+import com.lossydragon.media3.util.shareLink
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -40,7 +41,7 @@ internal fun DownloadModuleScreen(
     LaunchedEffect(Unit) {
         // Only fetch if we don't already have a module loaded
         // or if the requested ID differs from what's currently loaded
-        if (state.module == null || (moduleId >= 0 && state.module?.module?.id != moduleId)) {
+        if (state.result == null || (moduleId >= 0 && state.result?.module?.id != moduleId)) {
             viewModel.getModuleById(moduleId)
         }
     }
@@ -50,15 +51,21 @@ internal fun DownloadModuleScreen(
             onDismissRequest = { showDeleteDialog = false },
             icon = { Icon(Icons.Default.Delete, null) },
             title = { Text("Delete Module") },
-            text = { Text("Delete ${state.module?.module?.filename}?") },
+            text = { Text("Delete ${state.result?.module?.filename}?") },
             confirmButton = {
-                TextButton(onClick = {
-                    state.module?.module?.let { viewModel.deleteModule(it) }
-                    showDeleteDialog = false
-                }) { Text("Delete") }
+                TextButton(
+                    onClick = {
+                        state.result?.module?.let { viewModel.deleteModule(it) }
+                        showDeleteDialog = false
+                    },
+                    content = { Text("Delete") }
+                )
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) { Text("Cancel") }
+                TextButton(
+                    onClick = { showDeleteDialog = false },
+                    content = { Text("Cancel") }
+                )
             }
         )
     }
@@ -90,25 +97,56 @@ private fun DownloadModuleContent(
             TopAppBar(
                 title = {
                     Text(
-                        if (state.isRandom) "Random Module" else "Module Details",
+                        text = if (state.isRandom) "Random Module" else "Module Details",
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
+                    IconButton(
+                        onClick = onBack,
+                        content = {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = null
+                            )
+                        }
+                    )
                 },
                 actions = {
                     if (state.moduleExists) {
-                        IconButton(onClick = { onShowDialog(true) }) {
-                            Icon(Icons.Default.Delete, null)
-                        }
-                    }
-                    state.module?.module?.infopage?.let { url ->
-                        if (url.isNotBlank()) {
-                            IconButton(onClick = { /* share */ }) {
-                                Icon(Icons.Default.Share, null)
+                        IconButton(
+                            onClick = { onShowDialog(true) },
+                            content = {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = null
+                                )
                             }
+                        )
+                    }
+                    state.result?.module?.infopage?.let { url ->
+                        val context = LocalContext.current
+                        val module = state.result.module
+                        if (url.isNotBlank()) {
+                            IconButton(
+                                onClick = {
+                                    val title = module.songtitle.ifEmpty { module.filename }
+                                    val artist = module.artist
+                                    val infoPage = module.infopage
+                                    val message = """
+                                        $title (by $artist) from The Mod Archive:
+                                        $infoPage
+                                    """.trimIndent()
+                                    context.shareLink(message = message)
+                                },
+                                content = {
+                                    Icon(
+                                        imageVector = Icons.Default.Share,
+                                        contentDescription = null
+                                    )
+                                }
+                            )
                         }
                     }
                 }
@@ -128,7 +166,7 @@ private fun DownloadModuleContent(
                             modifier = Modifier.fillMaxWidth(),
                         )
 
-                        else -> Spacer(Modifier.height(4.dp)) // keep layout stable
+                        else -> Spacer(modifier = Modifier.height(4.dp)) // keep layout stable
                     }
 
                     Row(
@@ -136,70 +174,75 @@ private fun DownloadModuleContent(
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 8.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        val module = state.module?.module
-                        val isDownloading = state.downloadStatus is DownloadStatus.Loading ||
-                            state.downloadStatus is DownloadStatus.Progress
-                        val buttonLabel = when {
-                            state.isLoading -> "Loading..."
+                        content = {
+                            val module = state.result?.module
+                            val isDownloading = state.downloadStatus is DownloadStatus.Loading ||
+                                state.downloadStatus is DownloadStatus.Progress
+                            val buttonLabel = when {
+                                state.isLoading -> "Loading..."
 
-                            isDownloading -> when (val s = state.downloadStatus) {
-                                is DownloadStatus.Progress -> "%.0f%%".format(s.percent)
-                                else -> "Downloading..."
-                            }
-
-                            state.moduleExists -> "Play"
-
-                            module?.isSupported == false -> "Unsupported"
-
-                            else -> "Download"
-                        }
-
-                        Button(
-                            modifier = Modifier.weight(1f),
-                            enabled =
-                                !state.isLoading && !isDownloading && module?.isSupported != false,
-                            onClick = {
-                                if (state.moduleExists) {
-                                    module?.let { onPlay(it) }
-                                } else {
-                                    module?.let { onDownloadModule(it) }
+                                isDownloading -> when (val s = state.downloadStatus) {
+                                    is DownloadStatus.Progress -> "%.0f%%".format(s.percent)
+                                    else -> "Downloading..."
                                 }
-                            }
-                        ) { Text(buttonLabel) }
 
-                        OutlinedButton(
-                            modifier = Modifier.weight(1f),
-                            enabled = !state.isLoading && !isDownloading,
-                            onClick = onRandomModule,
-                        ) { Text("Random") }
-                    }
+                                state.moduleExists -> "Play"
+
+                                module?.isSupported == false -> "Unsupported"
+
+                                else -> "Download"
+                            }
+
+                            Button(
+                                modifier = Modifier.weight(1f),
+                                enabled = !state.isLoading && !isDownloading &&
+                                    module?.isSupported != false,
+                                onClick = {
+                                    if (state.moduleExists) {
+                                        module?.let { onPlay(it) }
+                                    } else {
+                                        module?.let { onDownloadModule(it) }
+                                    }
+                                },
+                                content = { Text(text = buttonLabel) }
+                            )
+
+                            OutlinedButton(
+                                modifier = Modifier.weight(1f),
+                                enabled = !state.isLoading && !isDownloading,
+                                onClick = onRandomModule,
+                                content = { Text(text = "Random") }
+                            )
+                        }
+                    )
                 }
             }
-        }
-    ) { padding ->
-        Box(
-            Modifier
-                .padding(padding)
-                .fillMaxSize(),
-            contentAlignment = Alignment.Center,
-        ) {
-            if (state.isLoading) CircularProgressIndicator()
+        },
+        content = { padding ->
+            Box(
+                Modifier
+                    .padding(padding)
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center,
+                content = {
+                    if (state.isLoading) CircularProgressIndicator()
 
-            state.softError?.let {
-                GuruBox(message = it, onBack = onBack)
-            }
+                    state.softError?.let {
+                        GuruBox(message = it, onBack = onBack)
+                    }
 
-            state.module?.let { result ->
-                ModuleDetailLayout(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp),
-                    moduleResult = result,
-                )
-            }
+                    state.result?.let { result ->
+                        ModuleDetailLayout(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 16.dp),
+                            moduleResult = result,
+                        )
+                    }
+                }
+            )
         }
-    }
+    )
 }
 
 private class DownloadModulePreviewParameter : PreviewParameterProvider<ModuleResultState> {
@@ -209,17 +252,18 @@ private class DownloadModulePreviewParameter : PreviewParameterProvider<ModuleRe
             songtitle = "alpharapii",
             format = "MOD",
             bytes = 45678,
+            infopage = "website"
         )
     )
 
     override val values = sequenceOf(
         ModuleResultState(isLoading = true),
-        ModuleResultState(isRandom = true, module = sampleModule),
-        ModuleResultState(module = sampleModule),
-        ModuleResultState(module = sampleModule, moduleExists = true),
-        ModuleResultState(module = sampleModule, downloadStatus = DownloadStatus.Loading),
-        ModuleResultState(module = sampleModule, downloadStatus = DownloadStatus.Progress(66f)),
-        ModuleResultState(module = sampleModule, downloadStatus = DownloadStatus.Success),
+        ModuleResultState(isRandom = true, result = sampleModule),
+        ModuleResultState(result = sampleModule),
+        ModuleResultState(result = sampleModule, moduleExists = true),
+        ModuleResultState(result = sampleModule, downloadStatus = DownloadStatus.Loading),
+        ModuleResultState(result = sampleModule, downloadStatus = DownloadStatus.Progress(66f)),
+        ModuleResultState(result = sampleModule, downloadStatus = DownloadStatus.Success),
         ModuleResultState(softError = "Could not fetch module."),
     )
 }

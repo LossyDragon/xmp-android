@@ -115,6 +115,7 @@ dependencies {
     implementation(libs.bundles.compose)
     implementation(libs.kotlinx.immutable)
     implementation(libs.materialKolor)
+    implementation(libs.compose.placeholder) // TODO try out
 
     // Koin
     implementation(platform(libs.koin.bom))

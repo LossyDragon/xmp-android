@@ -32,7 +32,7 @@ sealed class DownloadStatus {
 data class ModuleResultState(
     val isLoading: Boolean = false,
     val isRandom: Boolean = false,
-    val module: ModuleResult? = null,
+    val result: ModuleResult? = null,
     val moduleExists: Boolean = false,
     val softError: String? = null,
     val hardError: String? = null,

@@ -5,7 +5,6 @@ import com.lossydragon.media3.core.Constants
 import com.lossydragon.media3.data.DownloadHistoryRepository
 import com.lossydragon.media3.data.ModArchiveService
 import com.lossydragon.media3.data.ModuleMetadataRepository
-import com.lossydragon.media3.db.MIGRATION_1_2
 import com.lossydragon.media3.db.XmpDatabase
 import com.lossydragon.media3.db.XmpPreferences
 import com.lossydragon.media3.player.XmpEngine
@@ -40,7 +39,7 @@ val appModule = module {
             androidContext(),
             XmpDatabase::class.java,
             Constants.ROOM_DATABASE_NAME,
-        ).addMigrations(MIGRATION_1_2).build()
+        ).fallbackToDestructiveMigration(true).build()
     }
     single { get<XmpDatabase>().moduleMetadataDao() }
     single { get<XmpDatabase>().downloadHistoryDao() }

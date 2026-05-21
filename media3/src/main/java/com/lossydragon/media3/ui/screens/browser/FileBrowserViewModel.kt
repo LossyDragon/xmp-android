@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
 class FileBrowserViewModel(
     private val appContext: Context,
     private val prefs: XmpPreferences,
-    private val repo: ModuleMetadataRepository
+    private val db: ModuleMetadataRepository
 ) : ViewModel() {
 
     val state: StateFlow<BrowserUiState>
@@ -159,7 +159,7 @@ class FileBrowserViewModel(
                 }
 
                 // Single batch DB query instead of N individual queries
-                val cachedMap = repo.getByFileNames(rawFiles.map { it.name })
+                val cachedMap = db.getByFileNames(rawFiles.map { it.name })
                     .associateBy { it.fileName }
 
                 val modules = rawFiles.map { raw ->
@@ -232,8 +232,8 @@ class FileBrowserViewModel(
 
                     ext !in Constants.SKIP_EXTENSIONS &&
                         prefix !in Constants.SKIP_EXTENSIONS -> {
-                        if (!repo.exists(name, size)) {
-                            repo.fetchAndCache(childUri, name, size, ext.ifEmpty { prefix })
+                        if (!db.exists(name, size)) {
+                            db.fetchAndCache(childUri, name, size, ext.ifEmpty { prefix })
                         }
                     }
                 }

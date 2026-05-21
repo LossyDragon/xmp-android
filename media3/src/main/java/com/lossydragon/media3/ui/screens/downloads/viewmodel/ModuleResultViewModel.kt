@@ -54,7 +54,7 @@ class ModuleResultViewModel(
                 onSuccess = { result ->
                     state.update {
                         it.copy(
-                            module = result,
+                            result = result,
                             moduleExists = checkExists(result.module),
                             isLoading = false,
                             softError = null,
@@ -82,7 +82,7 @@ class ModuleResultViewModel(
                 onSuccess = { result ->
                     state.update {
                         it.copy(
-                            module = result,
+                            result = result,
                             moduleExists = checkExists(result.module),
                             isLoading = false,
                             softError = null,
@@ -210,7 +210,7 @@ class ModuleResultViewModel(
 
     fun refreshExists() {
         viewModelScope.launch {
-            val module = state.value.module?.module ?: return@launch
+            val module = state.value.result?.module ?: return@launch
             state.update { it.copy(moduleExists = checkExists(module)) }
         }
     }

@@ -15,11 +15,9 @@ fun XmpTheme(
 ) {
     val colorScheme = rememberDynamicColorScheme(
         seedColor = seed,
-        primary = seed,
-        secondary = Color(0xFF4A90BA),
         isDark = darkTheme,
         isAmoled = false, // Maybe Pure-Dark mode?
-        style = PaletteStyle.Expressive,
+        style = PaletteStyle.Rainbow,
     )
 
     MaterialTheme(

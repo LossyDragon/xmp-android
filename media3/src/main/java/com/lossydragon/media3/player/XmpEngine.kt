@@ -23,17 +23,17 @@ class XmpEngine(private val context: Context) {
         private const val CHANNELS = Xmp.MAX_CHANNELS
     }
 
-    private val _frameFlow = MutableStateFlow<FrameSnapshot?>(null)
-    val frameFlow: StateFlow<FrameSnapshot?> = _frameFlow.asStateFlow()
+    val frameFlow: StateFlow<FrameSnapshot?>
+        field = MutableStateFlow<FrameSnapshot?>(null)
 
-    private val _isPlaying = MutableStateFlow(false)
-    val isPlaying: StateFlow<Boolean> = _isPlaying.asStateFlow()
+    val isPlaying: StateFlow<Boolean>
+        field = MutableStateFlow(false)
 
-    private val _positionMs = MutableStateFlow(0L)
-    val positionMs: StateFlow<Long> = _positionMs.asStateFlow()
+    val positionMs: StateFlow<Long>
+        field = MutableStateFlow(0L)
 
-    private val _durationMs = MutableStateFlow(0L)
-    val durationMs: StateFlow<Long> = _durationMs.asStateFlow()
+    val durationMs: StateFlow<Long>
+        field = MutableStateFlow(0L)
 
     @Volatile
     private var paused = false
@@ -60,6 +60,7 @@ class XmpEngine(private val context: Context) {
         ChannelSnapshot(0, 0, 0, 0, 0, 0)
     }
 
+    /** Loads [file] into the engine. Returns false on failure. */
     fun load(file: ModuleFile): Boolean {
         endedNaturally = false
         stopRequest = false
@@ -86,12 +87,13 @@ class XmpEngine(private val context: Context) {
 
         Xmp.getModVars(modVars)
 
-        _durationMs.value = modVars.seqDuration.toLong()
-        _positionMs.value = 0L
+        durationMs.value = modVars.seqDuration.toLong()
+        positionMs.value = 0L
 
         return true
     }
 
+    /** Starts the render thread and audio stream. */
     fun start() {
         Timber.d("start() called")
         if (!initialized) return
@@ -117,19 +119,12 @@ class XmpEngine(private val context: Context) {
         Xmp.setPlayer(Xmp.PLAYER_VOLUME, 100)
 
         var prefillCount = 0
-        while (Xmp.hasFreeBuffer()) {
-            val result = Xmp.fillBuffer(false)
-            Timber.d("start() prefill #$prefillCount result=$result XMP_END=${Xmp.XMP_END}")
-            if (result < 0) break
-            prefillCount++
-            if (prefillCount > 100) {
-                Timber.e("start() prefill loop exceeded 100 iterations — breaking")
-                break
-            }
+        while (Xmp.hasFreeBuffer() && prefillCount++ < 100) {
+            if (Xmp.fillBuffer(false) < 0) break
         }
 
         Xmp.playAudio()
-        _isPlaying.value = true
+        isPlaying.value = true
 
         renderThread = Thread(::renderLoop, "XmpRenderThread").also {
             it.priority = Thread.MAX_PRIORITY
@@ -137,28 +132,32 @@ class XmpEngine(private val context: Context) {
         }
     }
 
+    /** Pauses playback — audio stream stopped, position preserved. */
     fun pause() {
         endedNaturally = false
         paused = true
         Xmp.stopAudio()
-        _isPlaying.value = false
+        isPlaying.value = false
     }
 
+    /** Resumes from paused state. No-op if not paused. */
     fun resume() {
         if (!paused) return
 
         paused = false
         Xmp.dropAudio()
         Xmp.playAudio()
-        _isPlaying.value = true
+        isPlaying.value = true
     }
 
+    /** Seeks to [posMs] milliseconds. */
     fun seek(posMs: Int) {
         Timber.d("engine.seek posMs=$posMs")
         Xmp.seek(posMs)
-        _positionMs.value = posMs.toLong()
+        positionMs.value = posMs.toLong()
     }
 
+    /** Stops playback and releases all native resources. */
     fun stop() {
         endedNaturally = false
         stopRequest = true
@@ -173,16 +172,15 @@ class XmpEngine(private val context: Context) {
             initialized = false
         }
 
-        _isPlaying.value = false
-        _positionMs.value = 0L
-        _frameFlow.value = null
+        isPlaying.value = false
+        positionMs.value = 0L
+        frameFlow.value = null
     }
-
-    fun release() = stop()
 
     private fun renderLoop() {
         while (!stopRequest) {
             try {
+                // Fast-path: skip JNI calls entirely while paused
                 if (paused) {
                     Thread.sleep(50)
                     continue
@@ -191,7 +189,6 @@ class XmpEngine(private val context: Context) {
                 while (!Xmp.hasFreeBuffer() && !paused && !stopRequest) {
                     Thread.sleep(40)
                 }
-                // Timber.d("renderLoop: hasFreeBuffer=${Xmp.hasFreeBuffer()} stopRequest=$stopRequest paused=$paused")
 
                 if (stopRequest) break
 
@@ -205,17 +202,17 @@ class XmpEngine(private val context: Context) {
                 val numCh = modVars.numChannels.coerceIn(0, CHANNELS)
 
                 for (i in 0 until numCh) {
-                    channelSnapshots[i] = ChannelSnapshot(
-                        volume = channelInfo.volumes[i],
-                        finalVol = channelInfo.finalVols[i],
-                        pan = channelInfo.pans[i],
-                        instrument = channelInfo.instruments[i],
-                        note = channelInfo.keys[i],
-                        period = channelInfo.periods[i],
-                    )
+                    channelSnapshots[i].apply {
+                        volume = channelInfo.volumes[i]
+                        finalVol = channelInfo.finalVols[i]
+                        pan = channelInfo.pans[i]
+                        instrument = channelInfo.instruments[i]
+                        note = channelInfo.keys[i]
+                        period = channelInfo.periods[i]
+                    }
                 }
 
-                _frameFlow.value = FrameSnapshot(
+                frameFlow.value = FrameSnapshot(
                     position = frameInfo.pos,
                     pattern = frameInfo.pattern,
                     row = frameInfo.row,
@@ -228,13 +225,11 @@ class XmpEngine(private val context: Context) {
                     presentationNanos = System.nanoTime(),
                 )
 
-                _positionMs.value = timeMs.toLong()
+                positionMs.value = timeMs.toLong()
 
                 if (endReached) {
-                    // Timber.d("renderLoop endReached at positionMs=${_positionMs.value} durationMs=${_durationMs.value}")
-                    // Timber.d("renderLoop endReached — setting endedNaturally=$endedNaturally")
                     endedNaturally = true
-                    _isPlaying.value = false
+                    isPlaying.value = false
                     Xmp.stopAudio()
                     break
                 }

@@ -11,5 +11,5 @@ data class DownloadHistoryEntity(
     val format: String,
     val bytes: Int,
     val artist: String,
-    val viewedAt: Long = System.currentTimeMillis()
+    val viewedAt: Long
 )

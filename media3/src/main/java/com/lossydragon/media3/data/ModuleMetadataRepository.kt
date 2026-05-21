@@ -4,7 +4,9 @@ import android.content.Context
 import android.net.Uri
 import com.lossydragon.media3.db.dao.ModuleMetadataDao
 import com.lossydragon.media3.db.entity.ModuleMetadataEntity
+import java.lang.System
 import java.security.MessageDigest
+import kotlin.Long
 import org.helllabs.libxmp.Xmp
 import org.helllabs.libxmp.model.ModInfo
 import timber.log.Timber
@@ -52,6 +54,7 @@ class ModuleMetadataRepository(
                 name = modInfo.name.trim().ifBlank { fileName },
                 type = modInfo.type.trim(),
                 extension = extension,
+                lastSeen = System.currentTimeMillis(),
             )
             dao.upsert(entity)
             entity
@@ -61,9 +64,9 @@ class ModuleMetadataRepository(
         }
     }
 
-    suspend fun evictStale(olderThanDays: Int = 30) {
+    suspend fun removeStale(olderThanDays: Int = 365) {
         val cutoff = System.currentTimeMillis() - (olderThanDays * 24 * 60 * 60 * 1000L)
-        dao.evictStale(cutoff)
+        dao.removeStale(cutoff)
     }
 
     suspend fun exists(fileName: String, sizeBytes: Long): Boolean =
