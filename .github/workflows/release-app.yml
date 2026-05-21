@@ -1,0 +1,59 @@
+name: Release — :app
+
+on:
+  push:
+    branches: [ 2023 ]
+    paths:
+      - 'app/build.gradle.kts'
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 17
+          cache: 'gradle'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Configure Keystore
+        env:
+          PLAY_STORE_UPLOAD_KEY: ${{ secrets.PLAY_STORE_UPLOAD_KEY }}
+          KEYSTORE_KEY_ALIAS: ${{ secrets.KEYSTORE_KEY_ALIAS }}
+          KEYSTORE_KEY_PASSWORD: ${{ secrets.KEYSTORE_KEY_PASSWORD }}
+          KEYSTORE_STORE_PASSWORD: ${{ secrets.KEYSTORE_STORE_PASSWORD }}
+        run: |
+          echo "$PLAY_STORE_UPLOAD_KEY" | base64 --decode > ${{ github.workspace }}/upload-keystore.jks
+          echo "storeFile=${{ github.workspace }}/upload-keystore.jks" >> key.properties
+          echo "keyAlias=$KEYSTORE_KEY_ALIAS" >> key.properties
+          echo "storePassword=$KEYSTORE_STORE_PASSWORD" >> key.properties
+          echo "keyPassword=$KEYSTORE_KEY_PASSWORD" >> key.properties
+
+      - name: Restore gradle.properties
+        run: |
+          mkdir -p ~/.gradle/
+          echo "modArchiveApiKey=\"${{ secrets.MOD_ARCHIVE_API_KEY }}\"" >> ~/.gradle/gradle.properties
+
+      - name: Build :app
+        run: ./gradlew :app:assembleGHA
+
+      - name: Rename APK
+        run: mv "./app/build/outputs/apk/GHA/app-GHA.apk" "./app/build/outputs/apk/GHA/XmpAndroid.apk"
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: XmpAndroid-app
+          path: ${{ github.workspace }}/app/build/outputs/apk/GHA/XmpAndroid.apk
