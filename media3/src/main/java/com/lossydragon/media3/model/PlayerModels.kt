@@ -1,6 +1,7 @@
 package com.lossydragon.media3.model
 
-import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.*
+import androidx.media3.common.Player
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -8,13 +9,14 @@ import kotlinx.collections.immutable.persistentListOf
 
 enum class PlaybackStatus { IDLE, LOADING, PLAYING, PAUSED, ERROR }
 
+@Immutable
 data class ChannelSnapshot(
-    var volume: Int,
-    var finalVol: Int,
-    var pan: Int,
-    var instrument: Int,
-    var note: Int,
-    var period: Int
+    val volume: Int,
+    val finalVol: Int,
+    val pan: Int,
+    val instrument: Int,
+    val note: Int,
+    val period: Int
 )
 
 @Immutable
@@ -44,5 +46,10 @@ data class PlayerUiState(
     val queue: ImmutableList<ModuleFile> = persistentListOf(),
     val currentQueueIndex: Int = 0,
     val isShuffle: Boolean = false,
-    val isLoop: Boolean = false
+    val repeatMode: Int = Player.REPEAT_MODE_OFF,
+    val songMessage: String = "",
+    val songInstruments: ImmutableList<String> = persistentListOf(),
+    val sequenceDurations: ImmutableList<Int> = persistentListOf(),
+    val currentSequence: Int = 0,
+    val playAllSequences: Boolean = false
 )

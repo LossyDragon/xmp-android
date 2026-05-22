@@ -16,11 +16,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.input.nestedscroll.*
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.*
 import androidx.compose.ui.text.style.*
 import androidx.compose.ui.tooling.preview.*
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.lossydragon.media3.model.BrowserSortOrder
 import com.lossydragon.media3.model.BrowserUiState
 import com.lossydragon.media3.model.FileItem
 import com.lossydragon.media3.model.ModuleFile
@@ -76,9 +77,10 @@ fun FileBrowserScreenRoute(
         onNavigateToPlayer = onNavigateToPlayer,
         onBack = onBack,
         onFolderPick = { folderPicker.launch(null) },
-        onNavigateUp = { browserViewModel.navigateUp() },
-        canNavigateUp = { browserViewModel.canNavigateUp() },
-        onBreadcrumb = { browserViewModel.navigateToBreadcrumb(it) },
+        onSortOrder = browserViewModel::setSortOrder,
+        onNavigateUp = browserViewModel::navigateUp,
+        canNavigateUp = browserViewModel::canNavigateUp,
+        onBreadcrumb = browserViewModel::navigateToBreadcrumb,
         onPlayAll = {
             if (browserState.files.isNotEmpty()) {
                 playerViewModel.playAll(
@@ -116,6 +118,7 @@ private fun FileBrowserScreen(
     onNavigateToPlayer: () -> Unit,
     onBack: () -> Unit,
     onFolderPick: () -> Unit,
+    onSortOrder: (BrowserSortOrder) -> Unit,
     onNavigateUp: () -> Unit,
     canNavigateUp: () -> Boolean,
     onBreadcrumb: (Int) -> Unit,
@@ -152,13 +155,92 @@ private fun FileBrowserScreen(
                     navigationIcon = {
                         if (canNavigateUp()) {
                             IconButton(onClick = onNavigateUp) {
-                                Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = null
+                                )
                             }
                         }
                     },
                     actions = {
+                        var showSortMenu by remember { mutableStateOf(false) }
+
                         IconButton(onClick = onFolderPick) {
-                            Icon(Icons.Default.FolderOpen, null)
+                            Icon(Icons.Default.FolderOpen, contentDescription = null)
+                        }
+
+                        Box {
+                            IconButton(onClick = { showSortMenu = true }) {
+                                Icon(Icons.AutoMirrored.Filled.Sort, contentDescription = "Sort")
+                            }
+                            DropdownMenu(
+                                expanded = showSortMenu,
+                                onDismissRequest = { showSortMenu = false },
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Name") },
+                                    onClick = {
+                                        onSortOrder(BrowserSortOrder.NAME)
+                                        showSortMenu = false
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Default.SortByAlpha,
+                                            contentDescription = null
+                                        )
+                                    },
+                                    trailingIcon = {
+                                        if (browserState.sortOrder == BrowserSortOrder.NAME) {
+                                            Icon(
+                                                imageVector = Icons.Default.Check,
+                                                contentDescription = null
+                                            )
+                                        }
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Type") },
+                                    onClick = {
+                                        onSortOrder(BrowserSortOrder.TYPE)
+                                        showSortMenu = false
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Default.Extension,
+                                            contentDescription = null
+                                        )
+                                    },
+                                    trailingIcon = {
+                                        if (browserState.sortOrder == BrowserSortOrder.TYPE) {
+                                            Icon(
+                                                imageVector = Icons.Default.Check,
+                                                contentDescription = null
+                                            )
+                                        }
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text(text = "Size") },
+                                    onClick = {
+                                        onSortOrder(BrowserSortOrder.SIZE)
+                                        showSortMenu = false
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Default.DataArray,
+                                            contentDescription = null
+                                        )
+                                    },
+                                    trailingIcon = {
+                                        if (browserState.sortOrder == BrowserSortOrder.SIZE) {
+                                            Icon(
+                                                imageVector = Icons.Default.Check,
+                                                contentDescription = null
+                                            )
+                                        }
+                                    }
+                                )
+                            }
                         }
                     },
                     scrollBehavior = scrollBehavior,
@@ -202,7 +284,9 @@ private fun FileBrowserScreen(
         content = { padding ->
             when {
                 browserState.isLoading -> Box(
-                    modifier = Modifier.fillMaxSize().padding(padding),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
                     contentAlignment = Alignment.Center,
                     content = { CircularProgressIndicator() }
                 )
@@ -213,7 +297,9 @@ private fun FileBrowserScreen(
                 )
 
                 browserState.files.isEmpty() && browserState.directories.isEmpty() -> Box(
-                    modifier = Modifier.fillMaxSize().padding(padding),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
                     contentAlignment = Alignment.Center,
                     content = { Text(text = "No module files found in this folder.") }
                 )
@@ -296,6 +382,7 @@ private fun Preview() {
             onNavigateToPlayer = {},
             onBack = {},
             onFolderPick = {},
+            onSortOrder = {},
             onNavigateUp = {},
             canNavigateUp = { false },
             onBreadcrumb = {},

@@ -1,11 +1,13 @@
 package com.lossydragon.media3.model
 
 import android.net.Uri
-import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.*
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 /** UI state and domain models for the SAF file browser. */
+
+enum class BrowserSortOrder { NAME, TYPE, SIZE }
 
 @Immutable
 data class FileItem(
@@ -25,5 +27,7 @@ data class BrowserUiState(
     val hasStorageAccess: Boolean = false,
     val isShuffle: Boolean = false,
     val isLoop: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val sortOrder: BrowserSortOrder = BrowserSortOrder.NAME,
+    val filterQuery: String = ""
 )

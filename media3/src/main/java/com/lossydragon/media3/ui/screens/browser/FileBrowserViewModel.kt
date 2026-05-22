@@ -10,9 +10,11 @@ import androidx.lifecycle.viewModelScope
 import com.lossydragon.media3.core.Constants
 import com.lossydragon.media3.data.ModuleMetadataRepository
 import com.lossydragon.media3.db.XmpPreferences
+import com.lossydragon.media3.model.BrowserSortOrder
 import com.lossydragon.media3.model.BrowserUiState
 import com.lossydragon.media3.model.FileItem
 import com.lossydragon.media3.model.ModuleFile
+import kotlin.comparisons.compareBy
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -92,8 +94,25 @@ class FileBrowserViewModel(
         loadDirectory(dirStack.last())
     }
 
+    fun setSortOrder(order: BrowserSortOrder) {
+        state.value = state.value.copy(sortOrder = order)
+        dirStack.lastOrNull()?.let { loadDirectory(it) }
+    }
+
+    fun setFilter(query: String) {
+        state.value = state.value.copy(filterQuery = query)
+        dirStack.lastOrNull()?.let { loadDirectory(it) }
+    }
+
+    fun clearFilter() {
+        state.value = state.value.copy(filterQuery = "")
+        dirStack.lastOrNull()?.let { loadDirectory(it) }
+    }
+
     private fun loadDirectory(uri: Uri) {
         state.value = state.value.copy(isLoading = true, error = null)
+        val filterQuery = state.value.filterQuery
+        val sortOrder = state.value.sortOrder
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -174,9 +193,26 @@ class FileBrowserViewModel(
                     )
                 }
 
+                val filtered = modules.filter { file ->
+                    val name = file.resolvedName.ifBlank { file.name }
+                    filterQuery.isBlank() || name.contains(filterQuery, ignoreCase = true)
+                }.sortedWith(
+                    when (sortOrder) {
+                        BrowserSortOrder.NAME -> compareBy {
+                            it.resolvedName.ifBlank { it.name }.lowercase()
+                        }
+
+                        BrowserSortOrder.TYPE -> compareBy {
+                            it.resolvedType.ifBlank { it.extension }.lowercase()
+                        }
+
+                        BrowserSortOrder.SIZE -> compareBy { it.sizeBytes }
+                    }
+                )
+
                 state.value = state.value.copy(
                     currentPath = uri.lastPathSegment ?: "",
-                    files = modules.sortedBy { it.name.lowercase() }.toImmutableList(),
+                    files = filtered.toImmutableList(),
                     directories = directories.sortedBy { it.name.lowercase() }.toImmutableList(),
                     breadcrumbs = dirStack.map {
                         it.lastPathSegment?.substringAfterLast('/')?.substringAfterLast(':')

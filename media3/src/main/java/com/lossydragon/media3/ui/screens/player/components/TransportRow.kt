@@ -1,30 +1,14 @@
 package com.lossydragon.media3.ui.screens.player.components
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Repeat
-import androidx.compose.material.icons.filled.Shuffle
-import androidx.compose.material.icons.filled.SkipNext
-import androidx.compose.material.icons.filled.SkipPrevious
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.*
+import androidx.compose.material.icons.automirrored.filled.*
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.*
+import androidx.compose.ui.tooling.preview.*
+import androidx.compose.ui.unit.*
 import com.lossydragon.media3.model.PlaybackStatus
 import com.lossydragon.media3.ui.theme.XmpTheme
 
@@ -35,30 +19,26 @@ internal fun TransportRow(
     status: PlaybackStatus,
     hasNext: Boolean,
     hasPrev: Boolean,
-    isShuffle: Boolean,
-    isLoop: Boolean,
-    onToggle: () -> Unit,
-    onNext: () -> Unit,
+    onStop: () -> Unit,
     onPrev: () -> Unit,
-    onShuffle: () -> Unit,
-    onLoop: () -> Unit
+    onPlayPause: () -> Unit,
+    onNext: () -> Unit,
+    onQueueSheet: () -> Unit
 ) {
-    val activeColor = MaterialTheme.colorScheme.primary
-    val inactiveColor = MaterialTheme.colorScheme.onSurfaceVariant
-
     Row(
-        modifier = modifier.padding(vertical = 4.dp).fillMaxWidth(),
+        modifier = modifier
+            .padding(vertical = 4.dp)
+            .fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(
-            onClick = onShuffle,
+            onClick = onStop,
             shapes = IconButtonDefaults.shapes(),
             content = {
                 Icon(
-                    imageVector = Icons.Default.Shuffle,
-                    contentDescription = "Shuffle",
-                    tint = if (isShuffle) activeColor else inactiveColor,
+                    imageVector = Icons.Default.Stop,
+                    contentDescription = "Stop",
                     modifier = Modifier.size(24.dp),
                 )
             }
@@ -78,7 +58,7 @@ internal fun TransportRow(
         )
 
         FilledIconButton(
-            onClick = onToggle,
+            onClick = onPlayPause,
             modifier = Modifier.size(68.dp),
             shapes = IconButtonDefaults.shapes(),
             content = {
@@ -108,13 +88,12 @@ internal fun TransportRow(
         )
 
         IconButton(
-            onClick = onLoop,
+            onClick = onQueueSheet,
             shapes = IconButtonDefaults.shapes(),
             content = {
                 Icon(
-                    imageVector = Icons.Default.Repeat,
-                    contentDescription = "Loop",
-                    tint = if (isLoop) activeColor else inactiveColor,
+                    imageVector = Icons.AutoMirrored.Filled.QueueMusic,
+                    contentDescription = "Open Queue",
                     modifier = Modifier.size(24.dp),
                 )
             }
@@ -131,13 +110,11 @@ private fun Preview() {
                 status = PlaybackStatus.PLAYING,
                 hasNext = false,
                 hasPrev = true,
-                isShuffle = false,
-                isLoop = true,
-                onToggle = {},
-                onNext = {},
+                onStop = {},
                 onPrev = {},
-                onShuffle = {},
-                onLoop = {},
+                onPlayPause = {},
+                onNext = {},
+                onQueueSheet = {},
             )
         }
     }

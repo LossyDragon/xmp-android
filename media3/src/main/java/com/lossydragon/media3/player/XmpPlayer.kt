@@ -49,6 +49,10 @@ class XmpPlayer(
     private val prefs: XmpPreferences
 ) : SimpleBasePlayer(Looper.getMainLooper()) {
 
+    private var repeatMode = REPEAT_MODE_OFF
+    private var shuffleModeEnabled = false
+    private var hasFocus = false
+
     private val artworkUri: Uri by lazy {
         Uri.Builder()
             .scheme(ContentResolver.SCHEME_ANDROID_RESOURCE)
@@ -83,12 +87,11 @@ class XmpPlayer(
             .setIsPlayable(true)
             .build()
 
-    @Volatile private var pendingSeekPositionMs: Long = -1L
+    @Volatile
+    private var pendingSeekPositionMs: Long = -1L
 
     private val playlist = mutableListOf<MediaItem>()
     private val queue = mutableListOf<ModuleFile>()
-    private var playWhenReady = false
-    private var isLooping = false
     private var currentIndex = 0
 
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -98,16 +101,31 @@ class XmpPlayer(
     val frameFlow: StateFlow<FrameSnapshot?> get() = engine.frameFlow
     val isPlaying: StateFlow<Boolean> get() = engine.isPlaying
     val positionMs: StateFlow<Long> get() = engine.positionMs
+    val currentSequenceFlow: StateFlow<Int> get() = engine.currentSequenceFlow
 
     val currentIndexFlow: StateFlow<Int>
         field = MutableStateFlow(0)
     val queueFlow: StateFlow<List<ModuleFile>>
         field = MutableStateFlow(emptyList())
+    val moduleLoadedFlow: StateFlow<Int>
+        field = MutableStateFlow(0)
 
     private var audioFocusRequest: AudioFocusRequest? = null
     private val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
+    var playAllSequences: Boolean
+        get() = engine.playAllSequences
+        set(value) {
+            engine.playAllSequences = value
+        }
+
+    fun setSequence(index: Int): Boolean = engine.setSequence(index)
+
+    fun getSequenceDurations(): List<Int> = engine.getSequenceDurations()
+
     private fun requestAudioFocus() {
+        if (hasFocus) return
+
         val request = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
             .setAudioAttributes(
                 AudioAttributes.Builder()
@@ -118,21 +136,33 @@ class XmpPlayer(
             .setAcceptsDelayedFocusGain(true)
             .setOnAudioFocusChangeListener { change ->
                 when (change) {
-                    AudioManager.AUDIOFOCUS_GAIN -> engine.resume()
+                    AudioManager.AUDIOFOCUS_GAIN -> {
+                        hasFocus = true
+                        engine.resume()
+                    }
 
                     AudioManager.AUDIOFOCUS_LOSS,
-                    AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> engine.pause()
+                    AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
+                        hasFocus = false
+                        engine.pause()
+                    }
                 }
             }
             .build()
+
         audioFocusRequest = request
-        Timber.d("Audio focus result=${audioManager.requestAudioFocus(request)}")
+
+        val result = audioManager.requestAudioFocus(request)
+        if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) hasFocus = true
+
+        Timber.d("Audio focus result=$result")
     }
 
     /** Releases audio focus. Call from [XmpService.onDestroy]. */
     fun abandonAudioFocus() {
         audioFocusRequest?.let { audioManager.abandonAudioFocusRequest(it) }
         audioFocusRequest = null
+        hasFocus = false
     }
 
     init {
@@ -150,8 +180,8 @@ class XmpPlayer(
     }
 
     /** Loads [files] into the queue and starts playback at [startAt]. */
-    fun loadQueue(files: List<ModuleFile>, startAt: Int, loop: Boolean = false) {
-        isLooping = loop
+    fun loadQueue(files: List<ModuleFile>, startAt: Int) {
+        requestAudioFocus()
 
         queue.clear()
         queue.addAll(files)
@@ -159,7 +189,6 @@ class XmpPlayer(
         playlist.clear()
         playlist.addAll(files.map { it.toMediaItem() })
 
-        playWhenReady = true
         currentIndex = startAt.coerceIn(0, playlist.lastIndex)
         queueFlow.value = files
         currentIndexFlow.value = currentIndex
@@ -181,6 +210,7 @@ class XmpPlayer(
 
                 mainHandler.post {
                     playlist[index] = realItem
+                    moduleLoadedFlow.value++
                     invalidateState()
                 }
 
@@ -210,19 +240,59 @@ class XmpPlayer(
     }
 
     private fun advanceToNext() {
-        val next = currentIndex + 1
         when {
-            next < queue.size -> navigate(next)
-            isLooping -> navigate(0)
+            shuffleModeEnabled -> {
+                val candidates = queue.indices.filter { it != currentIndex }
+                if (candidates.isEmpty()) {
+                    clearQueue()
+                } else {
+                    navigate(candidates.random())
+                }
+            }
+
+            repeatMode == Player.REPEAT_MODE_ONE -> navigate(currentIndex)
+
+            repeatMode == Player.REPEAT_MODE_ALL ->
+                navigate(
+                    if (currentIndex + 1 <
+                        queue.size
+                    ) {
+                        currentIndex + 1
+                    } else {
+                        0
+                    }
+                )
+
+            currentIndex + 1 < queue.size -> navigate(currentIndex + 1)
+
             else -> clearQueue()
         }
     }
 
     private fun advanceToPrevious() {
-        val prev = currentIndex - 1
         when {
-            prev >= 0 -> navigate(prev)
-            isLooping -> navigate(queue.lastIndex)
+            shuffleModeEnabled -> {
+                val candidates = queue.indices.filter { it != currentIndex }
+                if (candidates.isNotEmpty()) {
+                    navigate(candidates.random())
+                } else {
+                    navigate(currentIndex)
+                }
+            }
+
+            repeatMode == Player.REPEAT_MODE_ONE -> navigate(currentIndex)
+
+            repeatMode == Player.REPEAT_MODE_ALL -> navigate(
+                if (currentIndex - 1 >=
+                    0
+                ) {
+                    currentIndex - 1
+                } else {
+                    queue.lastIndex
+                }
+            )
+
+            currentIndex - 1 >= 0 -> navigate(currentIndex - 1)
         }
     }
 
@@ -276,6 +346,8 @@ class XmpPlayer(
             COMMAND_PREPARE,
             COMMAND_SET_MEDIA_ITEM,
             COMMAND_CHANGE_MEDIA_ITEMS,
+            COMMAND_SET_REPEAT_MODE,
+            COMMAND_SET_SHUFFLE_MODE,
         ).build()
 
         val playlistItems = playlist.mapIndexed { i, item ->
@@ -303,6 +375,8 @@ class XmpPlayer(
         return State.Builder()
             .setAvailableCommands(commands)
             .setPlaylist(playlistItems)
+            .setShuffleModeEnabled(shuffleModeEnabled)
+            .setRepeatMode(repeatMode)
             .setCurrentMediaItemIndex(currentIndex)
             .setPlayWhenReady(engine.isPlaying.value, PLAY_WHEN_READY_CHANGE_REASON_USER_REQUEST)
             .setPlaybackState(if (playlist.isEmpty()) STATE_IDLE else STATE_READY)
@@ -311,13 +385,24 @@ class XmpPlayer(
     }
 
     override fun handleSetPlayWhenReady(playWhenReady: Boolean): ListenableFuture<*> {
-        this.playWhenReady = playWhenReady
         if (!playWhenReady) {
             engine.pause()
         } else if (!engine.isPlaying.value) {
             requestAudioFocus()
             engine.resume()
         }
+        return Futures.immediateVoidFuture()
+    }
+
+    override fun handleSetRepeatMode(repeatMode: Int): ListenableFuture<*> {
+        this.repeatMode = repeatMode
+        invalidateState()
+        return Futures.immediateVoidFuture()
+    }
+
+    override fun handleSetShuffleModeEnabled(shuffleModeEnabled: Boolean): ListenableFuture<*> {
+        this.shuffleModeEnabled = shuffleModeEnabled
+        invalidateState()
         return Futures.immediateVoidFuture()
     }
 
@@ -344,7 +429,6 @@ class XmpPlayer(
 
     override fun handleStop(): ListenableFuture<*> {
         Thread { engine.stop() }.start()
-        playWhenReady = false
         clearQueue()
         return Futures.immediateVoidFuture()
     }
@@ -390,7 +474,7 @@ class XmpPlayer(
                 val sibDocId = cursor.getString(0)
                 val name = cursor.getString(1)
                 val mime = cursor.getString(2)
-                if (mime == DocumentsContract.Document.MIME_TYPE_DIR) return@use
+                if (mime == DocumentsContract.Document.MIME_TYPE_DIR) continue
                 val sibUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, sibDocId)
                 if (Xmp.testFromFd(context, sibUri, ModInfo())) {
                     siblings.add(
@@ -413,6 +497,6 @@ class XmpPlayer(
     /** Releases coroutine scope and audio engine. Call from [XmpService.onDestroy]. */
     fun releaseEngine() {
         scope.cancel("Releasing Engine")
-        engine.stop()
+        Thread { engine.stop() }.start()
     }
 }

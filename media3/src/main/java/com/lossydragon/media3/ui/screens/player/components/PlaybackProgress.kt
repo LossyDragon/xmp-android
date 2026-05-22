@@ -4,10 +4,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.*
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.*
 import com.lossydragon.media3.model.PlayerUiState
 import com.lossydragon.media3.ui.theme.XmpTheme
 import com.lossydragon.media3.util.formatMs
@@ -40,7 +38,7 @@ internal fun PlaybackProgress(
                 } else {
                     state.positionMs.formatMs()
                 },
-                style = MaterialTheme.typography.labelMedium,
+                style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
@@ -60,7 +58,7 @@ internal fun PlaybackProgress(
             Text(
                 modifier = Modifier.padding(horizontal = 6.dp),
                 text = state.durationMs.formatMs(),
-                style = MaterialTheme.typography.labelMedium,
+                style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }

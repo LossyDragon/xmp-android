@@ -7,7 +7,6 @@ import com.lossydragon.media3.model.ModuleFile
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import org.helllabs.libxmp.Xmp
 import org.helllabs.libxmp.model.ChannelInfo
 import org.helllabs.libxmp.model.FrameInfo
@@ -35,6 +34,9 @@ class XmpEngine(private val context: Context) {
     val durationMs: StateFlow<Long>
         field = MutableStateFlow(0L)
 
+    val currentSequenceFlow: StateFlow<Int>
+        field = MutableStateFlow(0)
+
     @Volatile
     private var paused = false
 
@@ -55,15 +57,34 @@ class XmpEngine(private val context: Context) {
     private val modVars = ModVars()
     private val channelInfo = ChannelInfo()
 
-    // Maybe stop GC
-    private val channelSnapshots = Array(CHANNELS) {
-        ChannelSnapshot(0, 0, 0, 0, 0, 0)
+    var playAllSequences = false
+        internal set
+    private var currentSequence = 0
+
+    val numSequences: Int
+        get() = modVars.numSequence
+
+    /** Switches to sequence [index]. Updates duration and resets position. Returns false if invalid. */
+    fun setSequence(index: Int): Boolean {
+        val result = Xmp.setSequence(index)
+        if (result) {
+            Xmp.getModVars(modVars)
+            durationMs.value = modVars.seqDuration.toLong()
+            positionMs.value = 0L
+            currentSequenceFlow.value = index
+        }
+        return result
     }
+
+    /** Returns duration in ms for each sequence. Call after [load]. */
+    fun getSequenceDurations(): List<Int> = Xmp.getSeqVars().asList()
 
     /** Loads [file] into the engine. Returns false on failure. */
     fun load(file: ModuleFile): Boolean {
         endedNaturally = false
         stopRequest = false
+        currentSequence = 0
+        currentSequenceFlow.value = 0
 
         if (initialized) {
             stop()
@@ -201,17 +222,6 @@ class XmpEngine(private val context: Context) {
                 val timeMs = Xmp.time()
                 val numCh = modVars.numChannels.coerceIn(0, CHANNELS)
 
-                for (i in 0 until numCh) {
-                    channelSnapshots[i].apply {
-                        volume = channelInfo.volumes[i]
-                        finalVol = channelInfo.finalVols[i]
-                        pan = channelInfo.pans[i]
-                        instrument = channelInfo.instruments[i]
-                        note = channelInfo.keys[i]
-                        period = channelInfo.periods[i]
-                    }
-                }
-
                 frameFlow.value = FrameSnapshot(
                     position = frameInfo.pos,
                     pattern = frameInfo.pattern,
@@ -221,13 +231,29 @@ class XmpEngine(private val context: Context) {
                     bpm = frameInfo.bpm,
                     timeMs = timeMs,
                     totalTimeMs = modVars.seqDuration,
-                    channels = channelSnapshots.take(numCh).toImmutableList(),
+                    channels = Array(numCh) { i ->
+                        ChannelSnapshot(
+                            volume = channelInfo.volumes[i],
+                            finalVol = channelInfo.finalVols[i],
+                            pan = channelInfo.pans[i],
+                            instrument = channelInfo.instruments[i],
+                            note = channelInfo.keys[i],
+                            period = channelInfo.periods[i],
+                        )
+                    }.toImmutableList(),
                     presentationNanos = System.nanoTime(),
                 )
 
                 positionMs.value = timeMs.toLong()
 
                 if (endReached) {
+                    if (playAllSequences) {
+                        currentSequence++
+                        if (setSequence(currentSequence)) {
+                            // keep playing — don't set endedNaturally
+                            continue
+                        }
+                    }
                     endedNaturally = true
                     isPlaying.value = false
                     Xmp.stopAudio()
