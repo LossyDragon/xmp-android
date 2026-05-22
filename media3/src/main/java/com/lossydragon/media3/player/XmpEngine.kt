@@ -53,16 +53,18 @@ class XmpEngine(private val context: Context) {
 
     private var renderThread: Thread? = null
 
-    private val frameInfo = FrameInfo()
     private val modVars = ModVars()
+    private val frameInfo = FrameInfo()
     private val channelInfo = ChannelInfo()
 
     var playAllSequences = false
-        internal set
     private var currentSequence = 0
 
-    val numSequences: Int
-        get() = modVars.numSequence
+    val numPatterns: Int get() = modVars.numPatterns
+    val numChannels: Int get() = modVars.numChannels
+    val numInstruments: Int get() = modVars.numInstruments
+    val numSamples: Int get() = modVars.numSamples
+    val numSequences: Int get() = modVars.numSequence
 
     /** Switches to sequence [index]. Updates duration and resets position. Returns false if invalid. */
     fun setSequence(index: Int): Boolean {
@@ -216,7 +218,7 @@ class XmpEngine(private val context: Context) {
                 val endReached = Xmp.fillBuffer(false) < 0
 
                 Xmp.getInfo(frameInfo)
-                Xmp.getModVars(modVars)
+                // Xmp.getModVars(modVars)
                 Xmp.getChannelData(channelInfo)
 
                 val timeMs = Xmp.time()

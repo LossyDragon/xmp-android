@@ -30,7 +30,7 @@ val appModule = module {
     viewModel { DownloadViewModel(get()) }
     viewModel { FileBrowserViewModel(androidContext(), get(), get()) }
     viewModel { ModuleResultViewModel(androidContext(), get(), get(), get(), get()) }
-    viewModel { XmpPlayerViewModel(androidContext(), get()) }
+    viewModel { XmpPlayerViewModel(androidContext(), get(), get()) }
     viewModel { DownloadHistoryViewModel(get()) }
 
     // Database
@@ -39,7 +39,8 @@ val appModule = module {
             androidContext(),
             XmpDatabase::class.java,
             Constants.ROOM_DATABASE_NAME,
-        ).fallbackToDestructiveMigration(true).build()
+        ).fallbackToDestructiveMigration(true)
+            .build() // TODO: replace with proper migrations before release
     }
     single { get<XmpDatabase>().moduleMetadataDao() }
     single { get<XmpDatabase>().downloadHistoryDao() }

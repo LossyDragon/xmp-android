@@ -9,15 +9,16 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.text.input.*
 import androidx.compose.material.icons.*
-import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.*
 import androidx.compose.ui.platform.*
-import androidx.compose.ui.text.style.*
 import androidx.compose.ui.tooling.preview.*
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -29,6 +30,7 @@ import com.lossydragon.media3.model.PlaybackStatus
 import com.lossydragon.media3.model.PlayerUiState
 import com.lossydragon.media3.player.XmpPlayerViewModel
 import com.lossydragon.media3.ui.screens.browser.components.BreadCrumbs
+import com.lossydragon.media3.ui.screens.browser.components.BrowserInputField
 import com.lossydragon.media3.ui.screens.browser.components.EmptyPrompt
 import com.lossydragon.media3.ui.screens.browser.components.ModuleList
 import com.lossydragon.media3.ui.screens.player.components.MiniPlayerBar
@@ -74,6 +76,8 @@ fun FileBrowserScreenRoute(
         modifier = modifier,
         browserState = browserState,
         playerState = playerState,
+        filterQuery = browserState.filterQuery,
+        onFilter = browserViewModel::setFilter,
         onNavigateToPlayer = onNavigateToPlayer,
         onBack = onBack,
         onFolderPick = { folderPicker.launch(null) },
@@ -87,7 +91,6 @@ fun FileBrowserScreenRoute(
                     files = browserState.files,
                     startAt = 0,
                     isShuffle = browserState.isShuffle,
-                    isLoop = browserState.isLoop,
                 )
                 onNavigateToPlayer()
             }
@@ -98,7 +101,6 @@ fun FileBrowserScreenRoute(
                 files = browserState.files,
                 startAt = if (index >= 0) index else 0,
                 isShuffle = browserState.isShuffle,
-                isLoop = browserState.isLoop,
             )
             onNavigateToPlayer()
         },
@@ -110,11 +112,14 @@ fun FileBrowserScreenRoute(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun FileBrowserScreen(
     modifier: Modifier = Modifier,
     browserState: BrowserUiState,
     playerState: PlayerUiState,
+    filterQuery: String,
+    onFilter: (String) -> Unit,
     onNavigateToPlayer: () -> Unit,
     onBack: () -> Unit,
     onFolderPick: () -> Unit,
@@ -130,132 +135,60 @@ private fun FileBrowserScreen(
     onMiniPlayerNext: () -> Unit,
     onMiniPlayerPrev: () -> Unit
 ) {
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+    val searchBarState = rememberSearchBarWithGapState()
+    val textFieldState = rememberTextFieldState()
+    val scrollBehavior = SearchBarDefaults.enterAlwaysSearchBarScrollBehavior()
+    val appBarWithSearchColors = SearchBarDefaults.appBarWithSearchColors(
+        scrolledSearchBarContainerColor = Color.Unspecified,
+        scrolledAppBarContainerColor = Color.Unspecified,
+    )
     val listState = rememberLazyListState()
     val hasModule = playerState.currentModule != null
+
+    LaunchedEffect(textFieldState) {
+        snapshotFlow { textFieldState.text.toString() }
+            .collect { onFilter(it) }
+    }
+
+    val inputField: @Composable () -> Unit = {
+        BrowserInputField(
+            textFieldState = textFieldState,
+            searchBarState = searchBarState,
+            colors = appBarWithSearchColors.searchBarColors.inputFieldColors,
+            sortOrder = browserState.sortOrder,
+            onSortOrder = onSortOrder,
+            onFolderPick = onFolderPick,
+            onFilter = onFilter,
+        )
+    }
 
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             Column {
-                TopAppBar(
-                    title = {
-                        Text(
-                            text = if (browserState.currentPath.isEmpty()) {
-                                "Module Browser"
-                            } else {
-                                browserState.currentPath.substringAfterLast(
-                                    '/'
-                                ).substringAfterLast(':')
-                            },
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    },
-                    navigationIcon = {
-                        if (canNavigateUp()) {
-                            IconButton(onClick = onNavigateUp) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = null
-                                )
-                            }
-                        }
-                    },
-                    actions = {
-                        var showSortMenu by remember { mutableStateOf(false) }
-
-                        IconButton(onClick = onFolderPick) {
-                            Icon(Icons.Default.FolderOpen, contentDescription = null)
-                        }
-
-                        Box {
-                            IconButton(onClick = { showSortMenu = true }) {
-                                Icon(Icons.AutoMirrored.Filled.Sort, contentDescription = "Sort")
-                            }
-                            DropdownMenu(
-                                expanded = showSortMenu,
-                                onDismissRequest = { showSortMenu = false },
-                            ) {
-                                DropdownMenuItem(
-                                    text = { Text("Name") },
-                                    onClick = {
-                                        onSortOrder(BrowserSortOrder.NAME)
-                                        showSortMenu = false
-                                    },
-                                    leadingIcon = {
-                                        Icon(
-                                            imageVector = Icons.Default.SortByAlpha,
-                                            contentDescription = null
-                                        )
-                                    },
-                                    trailingIcon = {
-                                        if (browserState.sortOrder == BrowserSortOrder.NAME) {
-                                            Icon(
-                                                imageVector = Icons.Default.Check,
-                                                contentDescription = null
-                                            )
-                                        }
-                                    }
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("Type") },
-                                    onClick = {
-                                        onSortOrder(BrowserSortOrder.TYPE)
-                                        showSortMenu = false
-                                    },
-                                    leadingIcon = {
-                                        Icon(
-                                            imageVector = Icons.Default.Extension,
-                                            contentDescription = null
-                                        )
-                                    },
-                                    trailingIcon = {
-                                        if (browserState.sortOrder == BrowserSortOrder.TYPE) {
-                                            Icon(
-                                                imageVector = Icons.Default.Check,
-                                                contentDescription = null
-                                            )
-                                        }
-                                    }
-                                )
-                                DropdownMenuItem(
-                                    text = { Text(text = "Size") },
-                                    onClick = {
-                                        onSortOrder(BrowserSortOrder.SIZE)
-                                        showSortMenu = false
-                                    },
-                                    leadingIcon = {
-                                        Icon(
-                                            imageVector = Icons.Default.DataArray,
-                                            contentDescription = null
-                                        )
-                                    },
-                                    trailingIcon = {
-                                        if (browserState.sortOrder == BrowserSortOrder.SIZE) {
-                                            Icon(
-                                                imageVector = Icons.Default.Check,
-                                                contentDescription = null
-                                            )
-                                        }
-                                    }
-                                )
-                            }
-                        }
-                    },
+                AppBarWithSearch(
                     scrollBehavior = scrollBehavior,
+                    state = searchBarState,
+                    colors = appBarWithSearchColors,
+                    inputField = inputField,
+                )
+                ExpandedDockedSearchBarWithGap(
+                    state = searchBarState,
+                    inputField = inputField,
+                    content = { /* TODO maybe add this, for single plays */ }
                 )
                 if (browserState.breadcrumbs.isNotEmpty()) {
-                    BreadCrumbs(
-                        breadcrumbs = browserState.breadcrumbs,
-                        onCrumbClick = onBreadcrumb,
-                    )
+                    Surface(color = MaterialTheme.colorScheme.surface) {
+                        BreadCrumbs(
+                            breadcrumbs = browserState.breadcrumbs,
+                            onCrumbClick = onBreadcrumb,
+                        )
+                    }
                     HorizontalDivider()
                 }
             }
         },
         floatingActionButton = {
-            // Hide FAB when mini player is visible to avoid overlap
             AnimatedVisibility(
                 visible = !hasModule && browserState.hasStorageAccess && !browserState.isLoading,
                 enter = scaleIn() + fadeIn(),
@@ -379,6 +312,8 @@ private fun Preview() {
                 durationMs = 252849L,
                 currentQueueIndex = 0,
             ),
+            filterQuery = "",
+            onFilter = {},
             onNavigateToPlayer = {},
             onBack = {},
             onFolderPick = {},

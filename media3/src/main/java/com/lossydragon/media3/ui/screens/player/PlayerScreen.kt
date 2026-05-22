@@ -7,10 +7,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.material.icons.*
 import androidx.compose.material.icons.automirrored.filled.*
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.SheetValue.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.graphics.vector.*
 import androidx.compose.ui.text.font.*
 import androidx.compose.ui.text.style.*
 import androidx.compose.ui.tooling.preview.*
@@ -32,8 +34,11 @@ import com.lossydragon.media3.ui.screens.player.components.PlayerBottomAppBar
 import com.lossydragon.media3.ui.screens.player.components.QueueSheet
 import com.lossydragon.media3.ui.screens.player.components.TransportRow
 import com.lossydragon.media3.ui.theme.XmpTheme
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -52,6 +57,7 @@ private sealed class PlayerAction {
     data object OnPlayPause : PlayerAction()
     data object OnPrevious : PlayerAction()
     data object OnShuffle : PlayerAction()
+    data object OnAudioInfo : PlayerAction()
     data object OnSongMessage : PlayerAction()
     data object OnStop : PlayerAction()
 }
@@ -81,23 +87,54 @@ fun PlayerScreen(
     var showQueue by remember { mutableStateOf(false) }
     var showDurations by remember { mutableStateOf(false) }
     var hasLoadedOnce by remember { mutableStateOf(false) }
+    var showAudioInfo by remember { mutableStateOf(false) }
+    var audioInfoText by remember { mutableStateOf("") }
+    var showModInfo by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.currentModule) {
         if (state.currentModule != null) hasLoadedOnce = true
         if (hasLoadedOnce && state.currentModule == null) onBack()
     }
 
-    if (state.songInstruments.isNotEmpty()) {
-        AlertDialog(
-            onDismissRequest = viewModel::closeModInstruments,
-            icon = {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.List,
-                    contentDescription = null
-                )
+    LaunchedEffect(showAudioInfo) {
+        while (isActive && showAudioInfo) {
+            audioInfoText = viewModel.getAudioStats()
+            delay(3.seconds)
+        }
+    }
+
+    if (showModInfo) {
+        PlayerAlertDialog(
+            onDismissRequest = { showModInfo = false },
+            icon = Icons.Default.MusicNote,
+            title = "Mod Info",
+            content = {
+                Column {
+                    Text(text = "Number of Channels: ${state.numChannels}")
+                    Text(text = "Number of Instruments: ${state.numInstruments}")
+                    Text(text = "Number of Patterns: ${state.numPatterns}")
+                    Text(text = "Number of Samples: ${state.numSamples}")
+                    Text(text = "Number of Sequences ${state.numSequences}")
+                }
             },
-            title = { Text(text = "Song Instruments") },
-            text = {
+        )
+    }
+
+    if (showAudioInfo) {
+        PlayerAlertDialog(
+            onDismissRequest = { showAudioInfo = false },
+            icon = Icons.Default.Info,
+            title = "Audio Info",
+            content = { Text(text = audioInfoText) },
+        )
+    }
+
+    if (state.songInstruments.isNotEmpty()) {
+        PlayerAlertDialog(
+            onDismissRequest = viewModel::closeModInstruments,
+            icon = Icons.AutoMirrored.Filled.List,
+            title = "Song Instruments",
+            content = {
                 val listState = rememberLazyListState()
                 LazyColumn(
                     state = listState,
@@ -109,38 +146,21 @@ fun PlayerScreen(
                     }
                 )
             },
-            confirmButton = {
-                TextButton(
-                    onClick = viewModel::closeModInstruments,
-                    content = { Text(text = "Close") }
-                )
-            }
         )
     }
 
     if (state.songMessage.isNotBlank()) {
-        AlertDialog(
+        PlayerAlertDialog(
             onDismissRequest = viewModel::closeModComment,
-            icon = {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Message,
-                    contentDescription = null
-                )
-            },
-            title = { Text(text = "Song Message") },
-            text = {
+            icon = Icons.AutoMirrored.Filled.Message,
+            title = "Song Message",
+            content = {
                 val scrollState = rememberScrollState()
                 Column(
                     modifier = Modifier.verticalScroll(scrollState),
                     content = { Text(text = state.songMessage) }
                 )
             },
-            confirmButton = {
-                TextButton(
-                    onClick = viewModel::closeModComment,
-                    content = { Text(text = "Close") }
-                )
-            }
         )
     }
 
@@ -180,11 +200,9 @@ fun PlayerScreen(
                     }
                 }
 
-                PlayerAction.OnModInfo -> {
-                    scope.launch {
-                        TODO()
-                    }
-                }
+                PlayerAction.OnModInfo -> showModInfo = true
+
+                PlayerAction.OnAudioInfo -> showAudioInfo = true
 
                 PlayerAction.OnSongMessage -> {
                     if (!viewModel.getModComment()) {
@@ -303,7 +321,8 @@ private fun PlayerScreenContent(
                         onShowSongMessage = { onAction(PlayerAction.OnSongMessage) },
                         onShowSongInstruments = { onAction(PlayerAction.OnInstruments) },
                         onPlaySubSongs = { onAction(PlayerAction.OnAllSequences) },
-                        onShowDurations = { onAction(PlayerAction.OnDurationSheet(true)) }
+                        onShowDurations = { onAction(PlayerAction.OnDurationSheet(true)) },
+                        onAudioInfo = { onAction(PlayerAction.OnAudioInfo) }
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     TransportRow(
@@ -348,6 +367,27 @@ private fun PlayerScreenContent(
                     onDismiss = { onAction(PlayerAction.OnQueueSheet(false)) },
                 )
             }
+        }
+    )
+}
+
+@Composable
+private fun PlayerAlertDialog(
+    onDismissRequest: () -> Unit,
+    icon: ImageVector,
+    title: String,
+    content: @Composable (() -> Unit)
+) {
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        icon = { Icon(imageVector = icon, contentDescription = null) },
+        title = { Text(text = title) },
+        text = content,
+        confirmButton = {
+            TextButton(
+                onClick = onDismissRequest,
+                content = { Text(text = "Close") }
+            )
         }
     )
 }
@@ -434,7 +474,7 @@ private fun Preview(
     )
     val durationsSheetState = SheetState(
         enabledValues = setOf(Hidden, Expanded),
-        initialValue = if (showQueue) Expanded else Hidden,
+        initialValue = if (showDurations) Expanded else Hidden,
         positionalThreshold = { 1f },
         velocityThreshold = { 1f },
     )

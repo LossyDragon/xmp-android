@@ -40,6 +40,6 @@ class XmpPreferences(context: Context) {
         dataStore.edit { it[key] = value }
 
     fun getLastDirectoryFlow() = flowNullable(lastDirectoryUri)
-    suspend fun getLastDirectoryUri() = get(lastDirectoryUri, "").ifEmpty { null }
+    suspend fun getLastDirectoryUri() = get(lastDirectoryUri, "").ifBlank { null }
     suspend fun setLastDirectoryUri(v: String) = set(lastDirectoryUri, v)
 }

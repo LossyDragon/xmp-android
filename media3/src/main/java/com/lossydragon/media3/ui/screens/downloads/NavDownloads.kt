@@ -14,7 +14,6 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.lossydragon.media3.BuildConfig
-import com.lossydragon.media3.db.XmpPreferences
 import com.lossydragon.media3.model.ModuleFile
 import com.lossydragon.media3.player.XmpPlayerViewModel
 import com.lossydragon.media3.ui.NavKeyDownload
@@ -26,7 +25,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.androidx.compose.koinViewModel
-import org.koin.compose.koinInject
 
 @Composable
 fun NavDownloads(
@@ -38,7 +36,6 @@ fun NavDownloads(
     val viewModel: XmpPlayerViewModel = koinViewModel(
         viewModelStoreOwner = LocalActivity.current as ComponentActivity
     )
-    val prefs: XmpPreferences = koinInject()
 
     val backStack = rememberNavBackStack(NavKeyDownload.Search)
     val scope = rememberCoroutineScope()
@@ -96,7 +93,7 @@ fun NavDownloads(
                     onBack = { backStack.removeLastOrNull() },
                     onPlay = { module ->
                         scope.launch(Dispatchers.IO) {
-                            val rootUriStr = prefs.getLastDirectoryUri() ?: return@launch
+                            val rootUriStr = viewModel.getLastDirectoryUri() ?: return@launch
                             val rootUri = rootUriStr.toUri()
                             val filename = module.url.substringAfterLast('#')
 

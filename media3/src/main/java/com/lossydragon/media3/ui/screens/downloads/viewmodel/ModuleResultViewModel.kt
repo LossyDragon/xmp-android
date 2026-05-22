@@ -62,15 +62,7 @@ class ModuleResultViewModel(
                     }
                     history.add(result.module)
                 },
-                onFailure = {
-                    Timber.e(it)
-                    state.update { s ->
-                        s.copy(
-                            softError = it.message,
-                            isLoading = false
-                        )
-                    }
-                }
+                onFailure = ::handleFailure
             )
         }
     }
@@ -91,15 +83,7 @@ class ModuleResultViewModel(
 
                     history.add(result.module)
                 },
-                onFailure = {
-                    Timber.e(it)
-                    state.update { s ->
-                        s.copy(
-                            softError = it.message,
-                            isLoading = false
-                        )
-                    }
-                }
+                onFailure = ::handleFailure
             )
         }
     }
@@ -173,35 +157,9 @@ class ModuleResultViewModel(
     fun deleteModule(module: Module) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val rootUri = (lastDirectory.firstOrNull() ?: return@launch).toUri()
-                val dirUri = appContext.getDownloadDir(rootUri, module) ?: return@launch
-                val dirDocId = DocumentsContract.getDocumentId(dirUri)
-                val filename = module.url.substringAfterLast('#')
-
-                val childrenUri =
-                    DocumentsContract.buildChildDocumentsUriUsingTree(rootUri, dirDocId)
-                appContext.contentResolver.query(
-                    childrenUri,
-                    arrayOf(
-                        DocumentsContract.Document.COLUMN_DOCUMENT_ID,
-                        DocumentsContract.Document.COLUMN_DISPLAY_NAME,
-                    ),
-                    null,
-                    null,
-                    null
-                )?.use { cursor ->
-                    while (cursor.moveToNext()) {
-                        if (cursor.getString(1) == filename) {
-                            val fileUri = DocumentsContract.buildDocumentUriUsingTree(
-                                rootUri,
-                                cursor.getString(0)
-                            )
-                            DocumentsContract.deleteDocument(appContext.contentResolver, fileUri)
-                            state.update { it.copy(moduleExists = false) }
-                            return@launch
-                        }
-                    }
-                }
+                val fileUri = findModuleUri(module) ?: return@launch
+                DocumentsContract.deleteDocument(appContext.contentResolver, fileUri)
+                state.update { it.copy(moduleExists = false) }
             } catch (e: Exception) {
                 Timber.e(e)
             }
@@ -215,29 +173,36 @@ class ModuleResultViewModel(
         }
     }
 
-    private suspend fun checkExists(module: Module): Boolean {
-        return try {
-            val rootUri = (lastDirectory.firstOrNull() ?: return false).toUri()
-            val dirUri = appContext.getDownloadDir(rootUri, module) ?: return false
-            val dirDocId = DocumentsContract.getDocumentId(dirUri)
-            val filename = module.url.substringAfterLast('#')
+    private fun handleFailure(t: Throwable) {
+        Timber.e(t)
+        state.update { it.copy(softError = t.message, isLoading = false) }
+    }
 
-            val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(rootUri, dirDocId)
-            appContext.contentResolver.query(
-                childrenUri,
-                arrayOf(DocumentsContract.Document.COLUMN_DISPLAY_NAME),
-                null,
-                null,
-                null
-            )?.use { cursor ->
-                while (cursor.moveToNext()) {
-                    if (cursor.getString(0) == filename) return true
+    private suspend fun checkExists(module: Module) = findModuleUri(module) != null
+
+    private suspend fun findModuleUri(module: Module): android.net.Uri? {
+        val rootUri = (lastDirectory.firstOrNull() ?: return null).toUri()
+        val dirUri = appContext.getDownloadDir(rootUri, module) ?: return null
+        val dirDocId = DocumentsContract.getDocumentId(dirUri)
+        val filename = module.url.substringAfterLast('#')
+        val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(rootUri, dirDocId)
+
+        appContext.contentResolver.query(
+            childrenUri,
+            arrayOf(
+                DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+                DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+            ),
+            null,
+            null,
+            null,
+        )?.use { cursor ->
+            while (cursor.moveToNext()) {
+                if (cursor.getString(1) == filename) {
+                    return DocumentsContract.buildDocumentUriUsingTree(rootUri, cursor.getString(0))
                 }
             }
-            false
-        } catch (e: Exception) {
-            Timber.e(e)
-            false
         }
+        return null
     }
 }

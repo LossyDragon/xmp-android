@@ -5,7 +5,6 @@ import com.lossydragon.media3.db.entity.DownloadHistoryEntity
 import com.lossydragon.media3.model.Artist
 import com.lossydragon.media3.model.ArtistInfo
 import com.lossydragon.media3.model.Module
-import java.lang.System
 
 class DownloadHistoryRepository(private val dao: DownloadHistoryDao) {
 

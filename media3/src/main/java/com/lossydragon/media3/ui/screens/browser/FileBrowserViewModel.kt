@@ -14,7 +14,6 @@ import com.lossydragon.media3.model.BrowserSortOrder
 import com.lossydragon.media3.model.BrowserUiState
 import com.lossydragon.media3.model.FileItem
 import com.lossydragon.media3.model.ModuleFile
-import kotlin.comparisons.compareBy
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
+import com.lossydragon.media3.db.XmpPreferences
 import com.lossydragon.media3.model.ModuleFile
 import com.lossydragon.media3.model.PlaybackStatus
 import com.lossydragon.media3.model.PlayerUiState
@@ -26,14 +27,14 @@ import org.helllabs.libxmp.Xmp
 @OptIn(UnstableApi::class)
 class XmpPlayerViewModel(
     private val appContext: Context,
-    private val player: XmpPlayer
+    private val player: XmpPlayer,
+    private val prefs: XmpPreferences
 ) : ViewModel() {
 
     val state: StateFlow<PlayerUiState>
         field = MutableStateFlow(PlayerUiState())
 
     init {
-        // Frame updates — position, duration, channel data
         player.frameFlow.onEach { frame ->
             frame ?: return@onEach
             state.update {
@@ -45,20 +46,14 @@ class XmpPlayerViewModel(
             }
         }.launchIn(viewModelScope)
 
-        player.moduleLoadedFlow.onEach {
-            state.update { s ->
-                s.copy(
-                    sequenceDurations = player.getSequenceDurations().toImmutableList(),
-                    currentSequence = 0,
-                )
-            }
-        }.launchIn(viewModelScope)
+        player.moduleLoadedFlow
+            .onEach { syncModuleInfo() }
+            .launchIn(viewModelScope)
 
-        player.currentSequenceFlow.onEach { sequence ->
-            state.update { it.copy(currentSequence = sequence) }
-        }.launchIn(viewModelScope)
+        player.currentSequenceFlow
+            .onEach { state.update { s -> s.copy(currentSequence = it) } }
+            .launchIn(viewModelScope)
 
-        // Playback status
         player.isPlaying.onEach { playing ->
             state.update {
                 it.copy(
@@ -71,7 +66,6 @@ class XmpPlayerViewModel(
             }
         }.launchIn(viewModelScope)
 
-        // Queue changes — clear UI state when queue empties
         player.queueFlow.onEach { queue ->
             state.update {
                 it.copy(
@@ -83,22 +77,54 @@ class XmpPlayerViewModel(
             }
         }.launchIn(viewModelScope)
 
-        // Track changes — update current module metadata
         player.currentIndexFlow.onEach { index ->
             val file = player.queueFlow.value.getOrNull(index) ?: return@onEach
             state.update {
                 it.copy(
                     currentModule = file,
-                    moduleName = file.resolvedName.ifBlank { file.name.ifBlank { "(Untitled)" } },
-                    moduleType = file.resolvedType.ifBlank {
-                        file.extension.uppercase().ifBlank { "???" }
-                    },
+                    moduleName = file.displayName(),
+                    moduleType = file.displayType(),
                     currentQueueIndex = index,
-                    sequenceDurations = player.getSequenceDurations().toImmutableList(),
                     currentSequence = 0,
                 )
             }
         }.launchIn(viewModelScope)
+    }
+
+    private fun ModuleFile.displayName() =
+        resolvedName.ifBlank { name.ifBlank { "(Untitled)" } }
+
+    private fun ModuleFile.displayType() =
+        resolvedType.ifBlank { extension.uppercase().ifBlank { "???" } }
+
+    private fun ensureServiceRunning() {
+        appContext.startService(Intent(appContext, XmpService::class.java))
+    }
+
+    private fun syncModuleInfo() {
+        state.update {
+            it.copy(
+                sequenceDurations = player.sequenceDurations.toImmutableList(),
+                currentSequence = 0,
+                numPatterns = player.numPatterns,
+                numChannels = player.numChannels,
+                numInstruments = player.numInstruments,
+                numSamples = player.numSamples,
+                numSequences = player.numSequences,
+            )
+        }
+    }
+
+    /** Returns a formatted string of current Oboe audio stream statistics. */
+    fun getAudioStats(): String = Xmp.getAudioStats().let { stats ->
+        """
+        Audio Glitches: ${stats.xrunCount} (system), ${stats.underrunCount} (app)
+        Sample Rate: ${stats.sampleRate} Hz
+        Buffer: ${stats.bufferSize} / ${stats.bufferCapacity} frames
+        Frames Per Burst: ${stats.framesPerBurst}
+        Audio API: ${stats.audioApi}
+        Sharing Mode: ${stats.sharingMode}
+        """.trimIndent()
     }
 
     /** Loads [file] as a single-item queue and starts playback. */
@@ -107,12 +133,12 @@ class XmpPlayerViewModel(
             it.copy(
                 status = PlaybackStatus.LOADING,
                 currentModule = file,
-                moduleName = file.resolvedName.ifBlank { file.name },
-                moduleType = file.resolvedType.ifBlank { file.extension.uppercase() },
+                moduleName = file.displayName(),
+                moduleType = file.displayType(),
             )
         }
 
-        appContext.startService(Intent(appContext, XmpService::class.java))
+        ensureServiceRunning()
         player.loadQueue(listOf(file), startAt = 0)
     }
 
@@ -120,24 +146,22 @@ class XmpPlayerViewModel(
     fun playAll(
         files: ImmutableList<ModuleFile>,
         startAt: Int,
-        isShuffle: Boolean,
-        isLoop: Boolean
+        isShuffle: Boolean
     ) {
         val ordered = if (isShuffle) files.shuffled() else files.toList()
         val startIndex = if (isShuffle) 0 else startAt.coerceIn(0, ordered.lastIndex)
+        val file = ordered[startIndex]
 
         state.update {
             it.copy(
                 status = PlaybackStatus.LOADING,
-                currentModule = ordered[startIndex],
-                moduleName = ordered[startIndex].resolvedName.ifBlank { ordered[startIndex].name },
-                moduleType = ordered[startIndex].resolvedType.ifBlank {
-                    ordered[startIndex].extension.uppercase()
-                },
+                currentModule = file,
+                moduleName = file.displayName(),
+                moduleType = file.displayType(),
             )
         }
 
-        appContext.startService(Intent(appContext, XmpService::class.java))
+        ensureServiceRunning()
         player.loadQueue(ordered, startIndex)
     }
 
@@ -175,11 +199,7 @@ class XmpPlayerViewModel(
 
     fun muteChannel(ch: Int, muted: Boolean) = Xmp.mute(ch, if (muted) 1 else 0)
 
-    fun setSequence(index: Int) {
-        if (player.setSequence(index)) { // need to expose engine or route through player
-            state.update { it.copy(currentSequence = index) }
-        }
-    }
+    fun setSequence(index: Int) = player.setSequence(index)
 
     fun toggleAllSequences() {
         val new = !state.value.playAllSequences
@@ -202,4 +222,6 @@ class XmpPlayerViewModel(
     }
 
     fun closeModComment() = state.update { it.copy(songMessage = "") }
+
+    suspend fun getLastDirectoryUri(): String? = prefs.getLastDirectoryUri()
 }

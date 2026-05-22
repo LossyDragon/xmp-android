@@ -51,5 +51,10 @@ data class PlayerUiState(
     val songInstruments: ImmutableList<String> = persistentListOf(),
     val sequenceDurations: ImmutableList<Int> = persistentListOf(),
     val currentSequence: Int = 0,
-    val playAllSequences: Boolean = false
+    val playAllSequences: Boolean = false,
+    val numPatterns: Int = 0,
+    val numChannels: Int = 0,
+    val numInstruments: Int = 0,
+    val numSamples: Int = 0,
+    val numSequences: Int = 0
 )

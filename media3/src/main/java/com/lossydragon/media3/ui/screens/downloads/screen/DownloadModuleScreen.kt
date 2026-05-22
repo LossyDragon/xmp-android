@@ -128,18 +128,12 @@ private fun DownloadModuleContent(
                     state.result?.module?.infopage?.let { url ->
                         val context = LocalContext.current
                         val module = state.result.module
+                        fun Module.shareText() = "${songtitle.ifBlank { filename }} " +
+                            "(by $artist) from The Mod Archive:\n$infopage"
+
                         if (url.isNotBlank()) {
                             IconButton(
-                                onClick = {
-                                    val title = module.songtitle.ifEmpty { module.filename }
-                                    val artist = module.artist
-                                    val infoPage = module.infopage
-                                    val message = """
-                                        $title (by $artist) from The Mod Archive:
-                                        $infoPage
-                                    """.trimIndent()
-                                    context.shareLink(message = message)
-                                },
+                                onClick = { context.shareLink(message = module.shareText()) },
                                 content = {
                                     Icon(
                                         imageVector = Icons.Default.Share,

@@ -21,7 +21,6 @@ import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import com.lossydragon.media3.R
 import com.lossydragon.media3.db.XmpPreferences
-import com.lossydragon.media3.model.FrameSnapshot
 import com.lossydragon.media3.model.ModuleFile
 import kotlin.math.abs
 import kotlinx.coroutines.CoroutineScope
@@ -62,31 +61,6 @@ class XmpPlayer(
             .build()
     }
 
-    /** Builds a [MediaItem] with placeholder metadata for initial queue population. */
-    private fun ModuleFile.toMediaItem(): MediaItem =
-        MediaItem.Builder()
-            .setUri(uri)
-            .setMediaId(uri.toString())
-            .setMediaMetadata(
-                MediaMetadata.Builder()
-                    .setTitle(resolvedName.ifBlank { name })
-                    .setArtist(resolvedType.ifBlank { extension.uppercase() })
-                    .setArtworkUri(artworkUri)
-                    .setIsPlayable(true)
-                    .build()
-            )
-            .build()
-
-    /** Builds [MediaMetadata] from libxmp after the module is loaded — includes real duration. */
-    private fun ModuleFile.toRealMetadata(duration: Long): MediaMetadata =
-        MediaMetadata.Builder()
-            .setTitle(Xmp.getModName().ifBlank { resolvedName.ifBlank { name } })
-            .setArtist(Xmp.getModType().ifBlank { resolvedType.ifBlank { extension.uppercase() } })
-            .setDurationMs(duration)
-            .setArtworkUri(artworkUri)
-            .setIsPlayable(true)
-            .build()
-
     @Volatile
     private var pendingSeekPositionMs: Long = -1L
 
@@ -98,10 +72,16 @@ class XmpPlayer(
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var positionUpdateJob: Job? = null
 
-    val frameFlow: StateFlow<FrameSnapshot?> get() = engine.frameFlow
-    val isPlaying: StateFlow<Boolean> get() = engine.isPlaying
-    val positionMs: StateFlow<Long> get() = engine.positionMs
-    val currentSequenceFlow: StateFlow<Int> get() = engine.currentSequenceFlow
+    val frameFlow by engine::frameFlow
+    val isPlaying by engine::isPlaying
+    val currentSequenceFlow by engine::currentSequenceFlow
+
+    val numPatterns: Int get() = engine.numPatterns
+    val numChannels: Int get() = engine.numChannels
+    val numInstruments: Int get() = engine.numInstruments
+    val numSamples: Int get() = engine.numSamples
+    val numSequences: Int get() = engine.numSequences
+    val sequenceDurations: List<Int> get() = engine.getSequenceDurations()
 
     val currentIndexFlow: StateFlow<Int>
         field = MutableStateFlow(0)
@@ -120,8 +100,6 @@ class XmpPlayer(
         }
 
     fun setSequence(index: Int): Boolean = engine.setSequence(index)
-
-    fun getSequenceDurations(): List<Int> = engine.getSequenceDurations()
 
     private fun requestAudioFocus() {
         if (hasFocus) return
@@ -250,9 +228,9 @@ class XmpPlayer(
                 }
             }
 
-            repeatMode == Player.REPEAT_MODE_ONE -> navigate(currentIndex)
+            repeatMode == REPEAT_MODE_ONE -> navigate(currentIndex)
 
-            repeatMode == Player.REPEAT_MODE_ALL ->
+            repeatMode == REPEAT_MODE_ALL ->
                 navigate(
                     if (currentIndex + 1 <
                         queue.size
@@ -280,9 +258,9 @@ class XmpPlayer(
                 }
             }
 
-            repeatMode == Player.REPEAT_MODE_ONE -> navigate(currentIndex)
+            repeatMode == REPEAT_MODE_ONE -> navigate(currentIndex)
 
-            repeatMode == Player.REPEAT_MODE_ALL -> navigate(
+            repeatMode == REPEAT_MODE_ALL -> navigate(
                 if (currentIndex - 1 >=
                     0
                 ) {
@@ -499,4 +477,29 @@ class XmpPlayer(
         scope.cancel("Releasing Engine")
         Thread { engine.stop() }.start()
     }
+
+    /** Builds a [MediaItem] with placeholder metadata for initial queue population. */
+    private fun ModuleFile.toMediaItem(): MediaItem =
+        MediaItem.Builder()
+            .setUri(uri)
+            .setMediaId(uri.toString())
+            .setMediaMetadata(
+                MediaMetadata.Builder()
+                    .setTitle(resolvedName.ifBlank { name })
+                    .setArtist(resolvedType.ifBlank { extension.uppercase() })
+                    .setArtworkUri(artworkUri)
+                    .setIsPlayable(true)
+                    .build()
+            )
+            .build()
+
+    /** Builds [MediaMetadata] from libxmp after the module is loaded — includes real duration. */
+    private fun ModuleFile.toRealMetadata(duration: Long): MediaMetadata =
+        MediaMetadata.Builder()
+            .setTitle(Xmp.getModName().ifBlank { resolvedName.ifBlank { name } })
+            .setArtist(Xmp.getModType().ifBlank { resolvedType.ifBlank { extension.uppercase() } })
+            .setDurationMs(duration)
+            .setArtworkUri(artworkUri)
+            .setIsPlayable(true)
+            .build()
 }

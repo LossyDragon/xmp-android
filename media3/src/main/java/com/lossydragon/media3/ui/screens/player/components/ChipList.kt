@@ -9,10 +9,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
 import androidx.media3.common.Player
 import com.lossydragon.media3.ui.theme.XmpTheme
+import kotlinx.collections.immutable.persistentListOf
+
+private data class ChipItem(val label: String, val icon: ImageVector, val onClick: () -> Unit)
 
 @Composable
 internal fun ChipList(
@@ -25,8 +29,17 @@ internal fun ChipList(
     onShowSongMessage: () -> Unit,
     onShowSongInstruments: () -> Unit,
     onPlaySubSongs: () -> Unit,
-    onShowDurations: () -> Unit
+    onShowDurations: () -> Unit,
+    onAudioInfo: () -> Unit
 ) {
+    val assistChips = persistentListOf(
+        ChipItem("Show Subsongs", Icons.Default.FormatListNumbered, onShowDurations),
+        ChipItem("Mod Info", Icons.Default.Info, onModInfo),
+        ChipItem("Mod Instruments", Icons.AutoMirrored.Filled.List, onShowSongInstruments),
+        ChipItem("Song Message", Icons.AutoMirrored.Filled.Comment, onShowSongMessage),
+        ChipItem("Audio Info (Oboe)", Icons.Default.BugReport, onAudioInfo),
+    )
+
     LazyRow(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(
@@ -107,54 +120,16 @@ internal fun ChipList(
                     }
                 )
             }
-            item {
+
+            items(assistChips) { chip ->
                 AssistChip(
-                    onClick = onShowDurations,
-                    label = { Text(text = "Show Subsongs") },
+                    onClick = chip.onClick,
+                    label = { Text(chip.label) },
                     leadingIcon = {
                         Icon(
-                            imageVector = Icons.Default.FormatListNumbered,
-                            contentDescription = null,
-                            modifier = Modifier.size(AssistChipDefaults.IconSize)
-                        )
-                    }
-                )
-            }
-            item {
-                AssistChip(
-                    onClick = onModInfo,
-                    label = { Text(text = "Mod Info") },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Info,
-                            contentDescription = null,
-                            modifier = Modifier.size(AssistChipDefaults.IconSize)
-                        )
-                    }
-                )
-            }
-            item {
-                AssistChip(
-                    onClick = onShowSongInstruments,
-                    label = { Text(text = "Mod Instruments") },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.List,
-                            contentDescription = null,
-                            modifier = Modifier.size(AssistChipDefaults.IconSize)
-                        )
-                    }
-                )
-            }
-            item {
-                AssistChip(
-                    onClick = onShowSongMessage,
-                    label = { Text(text = "Song Message") },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Comment,
-                            contentDescription = null,
-                            modifier = Modifier.size(AssistChipDefaults.IconSize)
+                            chip.icon,
+                            null,
+                            Modifier.size(AssistChipDefaults.IconSize)
                         )
                     }
                 )
@@ -179,6 +154,7 @@ private fun Preview() {
                 onShowSongInstruments = {},
                 onPlaySubSongs = {},
                 onShowDurations = {},
+                onAudioInfo = {},
             )
         }
     }
