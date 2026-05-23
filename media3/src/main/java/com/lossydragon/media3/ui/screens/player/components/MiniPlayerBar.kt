@@ -1,39 +1,19 @@
 package com.lossydragon.media3.ui.screens.player.components
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.SkipNext
-import androidx.compose.material.icons.filled.SkipPrevious
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.*
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.*
+import androidx.compose.ui.graphics.*
+import androidx.compose.ui.res.*
+import androidx.compose.ui.text.style.*
+import androidx.compose.ui.tooling.preview.*
+import androidx.compose.ui.unit.*
 import androidx.core.net.toUri
+import com.lossydragon.media3.R
 import com.lossydragon.media3.model.ModuleFile
 import com.lossydragon.media3.model.PlaybackStatus
 import com.lossydragon.media3.model.PlayerUiState
@@ -52,120 +32,80 @@ fun MiniPlayerBar(
     val progress = (state.positionMs.toFloat() / duration).coerceIn(0f, 1f)
     val isPlaying = state.status == PlaybackStatus.PLAYING
 
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onTap),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        tonalElevation = 6.dp,
+    ListItem(
+        modifier = Modifier.padding(6.dp),
+        onClick = onTap,
+        colors = ListItemDefaults.colors(
+            containerColor = MaterialTheme.colorScheme.onSecondary
+        ),
+        leadingContent = {
+            Image(
+                painter = painterResource(R.drawable.icon512_trimmed),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(48.dp)
+                    .graphicsLayer {
+                        compositingStrategy = CompositingStrategy.Offscreen
+                    },
+            )
+        },
+        trailingContent = {
+            Row {
+                IconButton(
+                    onClick = onPrevious,
+                    content = {
+                        Icon(
+                            imageVector = Icons.Default.SkipPrevious,
+                            contentDescription = null
+                        )
+                    }
+                )
+                IconButton(
+                    onClick = onPlayPause,
+                    content = {
+                        val icon = if (isPlaying) {
+                            Icons.Default.Pause
+                        } else {
+                            Icons.Default.PlayArrow
+                        }
+                        Icon(imageVector = icon, contentDescription = null)
+                    }
+                )
+                IconButton(
+                    onClick = onNext,
+                    content = {
+                        Icon(
+                            imageVector = Icons.Default.SkipNext,
+                            contentDescription = null
+                        )
+                    }
+                )
+            }
+        },
         content = {
-            Column(
-                modifier = Modifier.wrapContentHeight(),
-                verticalArrangement = Arrangement.Center
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(44.dp)
-                            .clip(MaterialTheme.shapes.small)
-                            .background(MaterialTheme.colorScheme.primaryContainer),
-                        contentAlignment = Alignment.Center,
-                        content = {
-                            Text(
-                                text = state.moduleType.ifBlank {
-                                    state.currentModule?.extension?.uppercase() ?: "MOD"
-                                }.take(4),
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    letterSpacing = 0.5.sp,
-                                ),
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            )
-                        }
-                    )
-
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        content = {
-                            Text(
-                                text = state.moduleName.ifBlank {
-                                    state.currentModule?.name ?: ""
-                                },
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    fontWeight = FontWeight.SemiBold,
-                                ),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                            Text(
-                                text = state.moduleType.ifBlank {
-                                    state.currentModule?.extension?.uppercase() ?: ""
-                                },
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    )
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        content = {
-                            IconButton(
-                                onClick = onPrevious,
-                                content = {
-                                    Icon(
-                                        imageVector = Icons.Default.SkipPrevious,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(28.dp),
-                                        tint = MaterialTheme.colorScheme.onSurface,
-                                    )
-                                }
-                            )
-                            IconButton(
-                                onClick = onPlayPause,
-                                content = {
-                                    val isPlayingIcon = if (isPlaying) {
-                                        Icons.Default.Pause
-                                    } else {
-                                        Icons.Default.PlayArrow
-                                    }
-                                    Icon(
-                                        imageVector = isPlayingIcon,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(28.dp),
-                                        tint = MaterialTheme.colorScheme.onSurface,
-                                    )
-                                }
-                            )
-                            IconButton(
-                                onClick = onNext,
-                                content = {
-                                    Icon(
-                                        imageVector = Icons.Default.SkipNext,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(28.dp),
-                                        tint = MaterialTheme.colorScheme.onSurface,
-                                    )
-                                }
-                            )
-                        }
-                    )
-                }
-
-                LinearProgressIndicator(
+            Text(
+                text = state.moduleName,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        },
+        supportingContent = {
+            Column {
+                Text(
+                    text = state.moduleType,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                LinearWavyProgressIndicator(
                     progress = { progress },
                     modifier = Modifier.fillMaxWidth(),
+                    amplitude = if (isPlaying) {
+                        WavyProgressIndicatorDefaults.indicatorAmplitude
+                    } else {
+                        { 0f }
+                    }
+
                 )
             }
         }

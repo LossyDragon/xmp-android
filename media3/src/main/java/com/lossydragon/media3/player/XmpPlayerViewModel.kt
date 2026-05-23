@@ -98,7 +98,8 @@ class XmpPlayerViewModel(
         resolvedType.ifBlank { extension.uppercase().ifBlank { "???" } }
 
     private fun ensureServiceRunning() {
-        appContext.startService(Intent(appContext, XmpService::class.java))
+        val intent = Intent(appContext, XmpService::class.java)
+        appContext.startService(intent)
     }
 
     private fun syncModuleInfo() {
@@ -146,23 +147,29 @@ class XmpPlayerViewModel(
     fun playAll(
         files: ImmutableList<ModuleFile>,
         startAt: Int,
-        isShuffle: Boolean
+        isShuffle: Boolean,
+        repeatMode: Int = state.value.repeatMode
     ) {
-        val ordered = if (isShuffle) files.shuffled() else files.toList()
-        val startIndex = if (isShuffle) 0 else startAt.coerceIn(0, ordered.lastIndex)
-        val file = ordered[startIndex]
+        val startIndex = startAt.coerceIn(0, files.lastIndex)
 
         state.update {
             it.copy(
                 status = PlaybackStatus.LOADING,
-                currentModule = file,
-                moduleName = file.displayName(),
-                moduleType = file.displayType(),
+                currentModule = files[startIndex],
+                moduleName = files[startIndex].displayName(),
+                moduleType = files[startIndex].displayType(),
+                isShuffle = isShuffle,
+                repeatMode = repeatMode,
             )
         }
 
         ensureServiceRunning()
-        player.loadQueue(ordered, startIndex)
+        player.loadQueue(
+            files = files.toList(),
+            startAt = startIndex,
+            shuffle = isShuffle,
+            repeatMode = repeatMode,
+        )
     }
 
     fun togglePlayPause() = if (state.value.status == PlaybackStatus.PLAYING) {

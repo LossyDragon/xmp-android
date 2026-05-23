@@ -3,6 +3,8 @@ package com.lossydragon.media3.ui.screens.player.components
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
+import androidx.compose.material.icons.*
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.SheetValue.*
 import androidx.compose.runtime.*
@@ -23,57 +25,53 @@ internal fun DurationsSheet(
     onDismiss: () -> Unit,
     onItemClick: (Int) -> Unit
 ) {
+    val listState = rememberLazyListState()
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
+        sheetGesturesEnabled = false,
+        dragHandle = null,
         content = {
-            Text(
-                text = "Sub Songs",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            )
-            DurationsList(
+            Box(
                 modifier = Modifier.fillMaxWidth(),
-                sequenceDurations = sequenceDurations,
-                currentSequence = currentSequence,
-                onItemClick = onItemClick
+                contentAlignment = Alignment.Center,
+                content = {
+                    Text(
+                        text = "Sub Songs (${sequenceDurations.size})",
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    IconButton(
+                        modifier = Modifier
+                            .padding(end = 6.dp)
+                            .align(Alignment.CenterEnd),
+                        onClick = onDismiss,
+                        content = {
+                            Icon(imageVector = Icons.Default.Close, contentDescription = null)
+                        }
+                    )
+                }
             )
-        }
-    )
-}
-
-@Composable
-internal fun DurationsList(
-    modifier: Modifier = Modifier,
-    sequenceDurations: ImmutableList<Int>,
-    currentSequence: Int,
-    onItemClick: (Int) -> Unit
-) {
-    val listState = rememberLazyListState()
-
-    // Scroll to current item
-    LaunchedEffect(currentSequence) {
-        if (currentSequence in 0..<sequenceDurations.size) {
-            listState.animateScrollToItem(currentSequence)
-        }
-    }
-
-    LazyColumn(
-        state = listState,
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
-        content = {
-            itemsIndexed(
-                items = sequenceDurations,
-                key = { idx, _ -> idx },
-            ) { idx, duration ->
-                DurationItem(
-                    isCurrentItem = idx == currentSequence,
-                    index = idx,
-                    duration = duration,
-                    onItemClick = onItemClick,
-                )
-            }
+            HorizontalDivider()
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+                content = {
+                    itemsIndexed(
+                        items = sequenceDurations,
+                        key = { idx, _ -> idx },
+                        itemContent = { idx, duration ->
+                            DurationItem(
+                                isCurrentItem = idx == currentSequence,
+                                index = idx,
+                                duration = duration,
+                                onItemClick = onItemClick,
+                            )
+                        }
+                    )
+                }
+            )
         }
     )
 }

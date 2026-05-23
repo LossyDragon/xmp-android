@@ -1,6 +1,7 @@
 package com.lossydragon.media3.ui.screens.player.components
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material.icons.*
 import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
@@ -29,7 +30,7 @@ internal fun TransportRow(
         modifier = modifier
             .padding(vertical = 4.dp)
             .fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(
@@ -57,10 +58,8 @@ internal fun TransportRow(
             }
         )
 
-        FilledIconButton(
+        FloatingActionButton(
             onClick = onPlayPause,
-            modifier = Modifier.size(68.dp),
-            shapes = IconButtonDefaults.shapes(),
             content = {
                 Icon(
                     imageVector = if (status == PlaybackStatus.PLAYING) {
@@ -69,7 +68,6 @@ internal fun TransportRow(
                         Icons.Default.PlayArrow
                     },
                     contentDescription = null,
-                    modifier = Modifier.size(36.dp),
                 )
             }
         )

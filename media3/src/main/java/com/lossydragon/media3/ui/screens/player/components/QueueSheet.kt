@@ -27,54 +27,59 @@ internal fun QueueSheet(
     onItemClick: (Int) -> Unit,
     onDismiss: () -> Unit
 ) {
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        content = {
-            Text(
-                text = "Queue",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            )
-            QueueList(
-                modifier = Modifier.fillMaxWidth(),
-                queue = queue,
-                currentIndex = currentIndex,
-                onItemClick = onItemClick,
-            )
-        }
-    )
-}
-
-@Composable
-private fun QueueList(
-    modifier: Modifier = Modifier,
-    queue: ImmutableList<ModuleFile>,
-    currentIndex: Int,
-    onItemClick: (Int) -> Unit
-) {
     val listState = rememberLazyListState()
 
-    // Scroll to current item
     LaunchedEffect(currentIndex) {
-        if (currentIndex >= 0 && currentIndex < queue.size) {
+        if (currentIndex in queue.indices) {
             listState.animateScrollToItem(currentIndex)
         }
     }
 
-    LazyColumn(
-        state = listState,
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        sheetGesturesEnabled = false,
+        dragHandle = null,
         content = {
-            itemsIndexed(queue, key = { _, f -> f.uri.toString() }) { index, file ->
-                QueueListItem(
-                    isCurrentItem = index == currentIndex,
-                    index = index,
-                    file = file,
-                    onItemClick = onItemClick,
-                )
-            }
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center,
+                content = {
+                    Text(
+                        text = "Queue (${queue.size})",
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    IconButton(
+                        modifier = Modifier
+                            .padding(end = 6.dp)
+                            .align(Alignment.CenterEnd),
+                        onClick = onDismiss,
+                        content = {
+                            Icon(imageVector = Icons.Default.Close, contentDescription = null)
+                        }
+                    )
+                }
+            )
+            HorizontalDivider()
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+                content = {
+                    itemsIndexed(
+                        items = queue,
+                        key = { _, f -> f.uri.toString() },
+                        itemContent = { index, file ->
+                            QueueListItem(
+                                isCurrentItem = index == currentIndex,
+                                index = index,
+                                file = file,
+                                onItemClick = onItemClick,
+                            )
+                        }
+                    )
+                }
+            )
         }
     )
 }

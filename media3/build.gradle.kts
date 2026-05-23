@@ -138,4 +138,5 @@ dependencies {
 
     implementation(libs.bundles.ktor)
     implementation(libs.datastore.preferences)
+    implementation(libs.kotlinx.serialization.json)
 }

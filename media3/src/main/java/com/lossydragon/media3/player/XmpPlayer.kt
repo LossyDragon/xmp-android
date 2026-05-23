@@ -66,6 +66,7 @@ class XmpPlayer(
 
     private val playlist = mutableListOf<MediaItem>()
     private val queue = mutableListOf<ModuleFile>()
+    private val originalQueue = mutableListOf<ModuleFile>()
     private var currentIndex = 0
 
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -157,22 +158,51 @@ class XmpPlayer(
         }
     }
 
-    /** Loads [files] into the queue and starts playback at [startAt]. */
-    fun loadQueue(files: List<ModuleFile>, startAt: Int) {
+    /** Loads [files] into the queue and starts playback at [startAt]. Respects current shuffle state. */
+    fun loadQueue(
+        files: List<ModuleFile>,
+        startAt: Int,
+        shuffle: Boolean = shuffleModeEnabled,
+        repeatMode: Int = this.repeatMode
+    ) {
+        this.shuffleModeEnabled = shuffle
+        this.repeatMode = repeatMode
+
         requestAudioFocus()
 
-        queue.clear()
-        queue.addAll(files)
+        originalQueue.clear()
+        originalQueue.addAll(files)
 
-        playlist.clear()
-        playlist.addAll(files.map { it.toMediaItem() })
-
-        currentIndex = startAt.coerceIn(0, playlist.lastIndex)
-        queueFlow.value = files
-        currentIndexFlow.value = currentIndex
-
+        applyQueueOrder(startAt)
         invalidateState()
         loadAndStartAt(currentIndex)
+    }
+
+    private fun applyQueueOrder(startAt: Int = 0) {
+        Timber.d(
+            "applyQueueOrder shuffleModeEnabled=$shuffleModeEnabled startAt=$startAt originalQueue.size=${originalQueue.size}"
+        )
+        queue.clear()
+        playlist.clear()
+
+        if (shuffleModeEnabled) {
+            val shuffled = originalQueue.toMutableList()
+            val first = shuffled.removeAt(startAt.coerceIn(0, shuffled.lastIndex))
+            shuffled.shuffle()
+            queue.add(first)
+            queue.addAll(shuffled)
+            currentIndex = 0
+            Timber.d("Shuffled queue: ${queue.map { it.name }}")
+        } else {
+            queue.addAll(originalQueue)
+            currentIndex = startAt.coerceIn(0, queue.lastIndex)
+            Timber.d("Sequential queue: ${queue.map { it.name }}")
+        }
+
+        playlist.addAll(queue.map { it.toMediaItem() })
+        queueFlow.value = queue.toList()
+        currentIndexFlow.value = currentIndex
+        invalidateState()
     }
 
     private fun loadAndStartAt(index: Int) {
@@ -211,6 +241,7 @@ class XmpPlayer(
     private fun clearQueue() {
         playlist.clear()
         queue.clear()
+        originalQueue.clear()
         currentIndex = 0
         currentIndexFlow.value = 0
         queueFlow.value = emptyList()
@@ -219,15 +250,6 @@ class XmpPlayer(
 
     private fun advanceToNext() {
         when {
-            shuffleModeEnabled -> {
-                val candidates = queue.indices.filter { it != currentIndex }
-                if (candidates.isEmpty()) {
-                    clearQueue()
-                } else {
-                    navigate(candidates.random())
-                }
-            }
-
             repeatMode == REPEAT_MODE_ONE -> navigate(currentIndex)
 
             repeatMode == REPEAT_MODE_ALL ->
@@ -249,15 +271,6 @@ class XmpPlayer(
 
     private fun advanceToPrevious() {
         when {
-            shuffleModeEnabled -> {
-                val candidates = queue.indices.filter { it != currentIndex }
-                if (candidates.isNotEmpty()) {
-                    navigate(candidates.random())
-                } else {
-                    navigate(currentIndex)
-                }
-            }
-
             repeatMode == REPEAT_MODE_ONE -> navigate(currentIndex)
 
             repeatMode == REPEAT_MODE_ALL -> navigate(
@@ -271,6 +284,8 @@ class XmpPlayer(
             )
 
             currentIndex - 1 >= 0 -> navigate(currentIndex - 1)
+
+            else -> navigate(0) // Fallback
         }
     }
 
@@ -380,6 +395,45 @@ class XmpPlayer(
 
     override fun handleSetShuffleModeEnabled(shuffleModeEnabled: Boolean): ListenableFuture<*> {
         this.shuffleModeEnabled = shuffleModeEnabled
+
+        if (queue.isEmpty()) {
+            invalidateState()
+            return Futures.immediateVoidFuture()
+        }
+
+        val currentFile = queue.getOrNull(currentIndex)
+
+        queue.clear()
+        playlist.clear()
+
+        if (shuffleModeEnabled) {
+            // Shuffle remaining, keep current track at index 0
+            val remaining = originalQueue.toMutableList()
+            currentFile?.let { remaining.remove(it) }
+            remaining.shuffle()
+            currentFile?.let { queue.add(it) }
+            queue.addAll(remaining)
+            currentIndex = 0
+        } else {
+            // Restore original order, seek to current track's position
+            queue.addAll(originalQueue)
+            currentIndex = currentFile?.let { originalQueue.indexOf(it) }
+                ?.coerceAtLeast(0) ?: 0
+        }
+
+        playlist.addAll(queue.map { it.toMediaItem() })
+        // Re-update the real metadata for current index
+        val currentItem = queue.getOrNull(currentIndex)
+        if (currentItem != null) {
+            playlist[currentIndex] = MediaItem.Builder()
+                .setUri(currentItem.uri)
+                .setMediaId(currentItem.uri.toString())
+                .setMediaMetadata(currentItem.toRealMetadata(engine.durationMs.value))
+                .build()
+        }
+
+        currentIndexFlow.value = currentIndex
+        queueFlow.value = queue.toList()
         invalidateState()
         return Futures.immediateVoidFuture()
     }

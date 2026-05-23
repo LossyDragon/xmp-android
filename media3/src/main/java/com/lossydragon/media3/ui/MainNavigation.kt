@@ -11,7 +11,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import com.lossydragon.media3.ui.screens.browser.FileBrowserScreenRoute
+import com.lossydragon.media3.ui.screens.browser.FileBrowserScreen
 import com.lossydragon.media3.ui.screens.downloads.NavDownloads
 import com.lossydragon.media3.ui.screens.player.PlayerScreen
 import kotlinx.collections.immutable.persistentListOf
@@ -79,7 +79,7 @@ fun MainNavigation(
             ),
             entryProvider = entryProvider {
                 entry<NavKeyMain.Browser> {
-                    FileBrowserScreenRoute(
+                    FileBrowserScreen(
                         modifier = Modifier.consumeWindowInsets(padding),
                         onNavigateToPlayer = onNavigateToPlayer,
                         onBack = onBack,

@@ -2,6 +2,7 @@ package com.lossydragon.media3.model
 
 import android.net.Uri
 import androidx.compose.runtime.*
+import androidx.media3.common.Player
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -26,7 +27,7 @@ data class BrowserUiState(
     val isLoading: Boolean = true,
     val hasStorageAccess: Boolean = false,
     val isShuffle: Boolean = false,
-    val isLoop: Boolean = false,
+    val repeatMode: Int = Player.REPEAT_MODE_OFF,
     val error: String? = null,
     val sortOrder: BrowserSortOrder = BrowserSortOrder.NAME,
     val filterQuery: String = ""

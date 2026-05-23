@@ -9,19 +9,22 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.*
 import androidx.compose.material.icons.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.FloatingToolbarDefaults.ScreenOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.*
 import androidx.compose.ui.input.nestedscroll.*
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.tooling.preview.*
+import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.media3.common.Player
 import com.lossydragon.media3.model.BrowserSortOrder
 import com.lossydragon.media3.model.BrowserUiState
 import com.lossydragon.media3.model.FileItem
@@ -39,7 +42,7 @@ import kotlinx.collections.immutable.persistentListOf
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun FileBrowserScreenRoute(
+fun FileBrowserScreen(
     modifier: Modifier = Modifier,
     onNavigateToPlayer: () -> Unit,
     onBack: () -> Unit
@@ -72,13 +75,15 @@ fun FileBrowserScreenRoute(
         }
     }
 
-    FileBrowserScreen(
+    FileBrowserScreenContent(
         modifier = modifier,
         browserState = browserState,
         playerState = playerState,
         filterQuery = browserState.filterQuery,
         onFilter = browserViewModel::setFilter,
         onNavigateToPlayer = onNavigateToPlayer,
+        onShuffle = browserViewModel::setShuffle,
+        onRepeatMode = browserViewModel::setRepeatMode,
         onBack = onBack,
         onFolderPick = { folderPicker.launch(null) },
         onSortOrder = browserViewModel::setSortOrder,
@@ -91,6 +96,7 @@ fun FileBrowserScreenRoute(
                     files = browserState.files,
                     startAt = 0,
                     isShuffle = browserState.isShuffle,
+                    repeatMode = browserState.repeatMode,
                 )
                 onNavigateToPlayer()
             }
@@ -101,6 +107,7 @@ fun FileBrowserScreenRoute(
                 files = browserState.files,
                 startAt = if (index >= 0) index else 0,
                 isShuffle = browserState.isShuffle,
+                repeatMode = browserState.repeatMode,
             )
             onNavigateToPlayer()
         },
@@ -114,13 +121,15 @@ fun FileBrowserScreenRoute(
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun FileBrowserScreen(
+private fun FileBrowserScreenContent(
     modifier: Modifier = Modifier,
     browserState: BrowserUiState,
     playerState: PlayerUiState,
     filterQuery: String,
     onFilter: (String) -> Unit,
     onNavigateToPlayer: () -> Unit,
+    onShuffle: (Boolean) -> Unit,
+    onRepeatMode: (Int) -> Unit,
     onBack: () -> Unit,
     onFolderPick: () -> Unit,
     onSortOrder: (BrowserSortOrder) -> Unit,
@@ -171,6 +180,7 @@ private fun FileBrowserScreen(
                     state = searchBarState,
                     colors = appBarWithSearchColors,
                     inputField = inputField,
+                    shape = RoundedCornerShape(16.dp)
                 )
                 ExpandedDockedSearchBarWithGap(
                     state = searchBarState,
@@ -188,18 +198,84 @@ private fun FileBrowserScreen(
                 }
             }
         },
-        floatingActionButton = {
+        bottomBar = {
             AnimatedVisibility(
                 visible = !hasModule && browserState.hasStorageAccess && !browserState.isLoading,
                 enter = scaleIn() + fadeIn(),
                 exit = scaleOut() + fadeOut(),
             ) {
-                FloatingActionButton(onClick = onPlayAll) {
-                    Icon(Icons.Default.PlayArrow, contentDescription = "Play All")
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    HorizontalFloatingToolbar(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .offset(y = -ScreenOffset)
+                            .zIndex(1f),
+                        expanded = true,
+                        shape = RoundedCornerShape(16.dp),
+                        floatingActionButton = {
+                            FloatingActionButton(
+                                onClick = onPlayAll,
+                                content = {
+                                    Icon(
+                                        imageVector = Icons.Default.PlayArrow,
+                                        contentDescription = null
+                                    )
+                                }
+                            )
+                        },
+                        content = {
+                            IconButton(
+                                onClick = { onShuffle(!browserState.isShuffle) },
+                                content = {
+                                    val icon = if (browserState.isShuffle) {
+                                        Icons.Default.ShuffleOn
+                                    } else {
+                                        Icons.Default.Shuffle
+                                    }
+                                    Icon(
+                                        imageVector = icon,
+                                        contentDescription = null,
+                                        tint = if (browserState.isShuffle) {
+                                            MaterialTheme.colorScheme.primary
+                                        } else {
+                                            MaterialTheme.colorScheme.onSurfaceVariant
+                                        }
+                                    )
+                                }
+                            )
+
+                            IconButton(
+                                onClick = {
+                                    val next = when (browserState.repeatMode) {
+                                        Player.REPEAT_MODE_OFF -> Player.REPEAT_MODE_ONE
+                                        Player.REPEAT_MODE_ONE -> Player.REPEAT_MODE_ALL
+                                        else -> Player.REPEAT_MODE_OFF
+                                    }
+                                    onRepeatMode(next)
+                                },
+                                content = {
+                                    Icon(
+                                        imageVector = when (browserState.repeatMode) {
+                                            Player.REPEAT_MODE_ONE -> Icons.Default.RepeatOneOn
+                                            Player.REPEAT_MODE_ALL -> Icons.Default.RepeatOn
+                                            else -> Icons.Default.Repeat
+                                        },
+                                        contentDescription = "Repeat",
+                                        tint = if (browserState.repeatMode !=
+                                            Player.REPEAT_MODE_OFF
+                                        ) {
+                                            MaterialTheme.colorScheme.primary
+                                        } else {
+                                            MaterialTheme.colorScheme.onSurfaceVariant
+                                        }
+                                    )
+                                }
+                            )
+                        }
+                    )
                 }
             }
-        },
-        bottomBar = {
+
             AnimatedVisibility(
                 visible = hasModule,
                 enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
@@ -249,77 +325,162 @@ private fun FileBrowserScreen(
     )
 }
 
-@Preview
-@Composable
-private fun Preview() {
-    XmpTheme {
-        FileBrowserScreen(
-            modifier = Modifier,
-            browserState = BrowserUiState(
-                currentPath = "primary:Xmp/Modules",
-                hasStorageAccess = true,
-                isLoading = false,
+/**
+ * Preview
+ */
+private data class BrowserPreviewState(
+    val browserState: BrowserUiState,
+    val playerState: PlayerUiState,
+    val description: String
+)
+
+private class BrowserPreviewParameter : PreviewParameterProvider<BrowserPreviewState> {
+
+    private val sampleFiles = persistentListOf(
+        ModuleFile(
+            uri = "content://preview/1".toUri(),
+            name = "a_journey_into_sound.far",
+            sizeBytes = 123_456L,
+            extension = "far",
+            resolvedName = "A Journey Into Sound",
+            resolvedType = "Farandole Composer",
+        ),
+        ModuleFile(
+            uri = "content://preview/2".toUri(),
+            name = "aegis_-_beneath_the_fallen_stars.it",
+            sizeBytes = 1_820_792L,
+            extension = "it",
+            resolvedName = "Beneath the Fallen Stars",
+            resolvedType = "Impulse Tracker",
+        ),
+        ModuleFile(
+            uri = "content://preview/3".toUri(),
+            name = "alpharapii.mod",
+            sizeBytes = 45_678L,
+            extension = "mod",
+            resolvedName = "alpharapii",
+            resolvedType = "Amiga Protracker/Compatible",
+        ),
+        ModuleFile(
+            uri = "content://preview/4".toUri(),
+            name = "chiptune_no_184.mod",
+            sizeBytes = 6_658L,
+            extension = "mod",
+            resolvedName = "Chiptune No. 184",
+            resolvedType = "Amiga Protracker/Compatible",
+        ),
+    )
+
+    private val sampleDirs = persistentListOf(
+        FileItem(name = "TheModArchive", uri = "1".toUri(), isDirectory = true, size = 0L),
+        FileItem(name = "Demos", uri = "2".toUri(), isDirectory = true, size = 0L),
+    )
+
+    private val playingState = PlayerUiState(
+        status = PlaybackStatus.PLAYING,
+        currentModule = sampleFiles[1],
+        moduleName = "Beneath the Fallen Stars",
+        moduleType = "Impulse Tracker",
+        positionMs = 62_000L,
+        durationMs = 252_849L,
+        currentQueueIndex = 1,
+    )
+
+    private val baseBrowserState = BrowserUiState(
+        currentPath = "primary:Xmp/Modules",
+        hasStorageAccess = true,
+        isLoading = false,
+        isShuffle = false,
+        breadcrumbs = persistentListOf("Xmp", "Modules"),
+        directories = sampleDirs,
+        files = sampleFiles,
+        sortOrder = BrowserSortOrder.NAME,
+    )
+
+    override val values = sequenceOf(
+        // Normal browsing, no playback
+        BrowserPreviewState(
+            description = "Browsing — idle",
+            browserState = baseBrowserState.copy(
                 isShuffle = true,
-                isLoop = false,
-                breadcrumbs = persistentListOf("Xmp", "Modules"),
-                directories = persistentListOf(
-                    FileItem(
-                        name = "TheModArchive",
-                        uri = "1".toUri(),
-                        isDirectory = true,
-                        size = 0L
-                    ),
-                    FileItem(name = "Demos", uri = "2".toUri(), isDirectory = true, size = 0L),
-                ),
+                repeatMode = Player.REPEAT_MODE_ONE
+            ),
+            playerState = PlayerUiState(),
+        ),
+        // Browsing with mini player visible
+        BrowserPreviewState(
+            description = "Browsing — playing",
+            browserState = baseBrowserState,
+            playerState = playingState,
+        ),
+        // No storage access yet
+        BrowserPreviewState(
+            description = "No storage access",
+            browserState = BrowserUiState(hasStorageAccess = false, isLoading = false),
+            playerState = PlayerUiState(),
+        ),
+        // Loading state
+        BrowserPreviewState(
+            description = "Loading",
+            browserState = BrowserUiState(hasStorageAccess = true, isLoading = true),
+            playerState = PlayerUiState(),
+        ),
+        // Empty directory
+        BrowserPreviewState(
+            description = "Empty directory",
+            browserState = baseBrowserState.copy(
+                files = persistentListOf(),
+                directories = persistentListOf(),
+                breadcrumbs = persistentListOf("Xmp", "Empty"),
+            ),
+            playerState = PlayerUiState(),
+        ),
+        // Filtered results
+        BrowserPreviewState(
+            description = "Filtered — 'mod'",
+            browserState = baseBrowserState.copy(
+                filterQuery = "mod",
+                files = persistentListOf(sampleFiles[2], sampleFiles[3]),
+                directories = persistentListOf(),
+            ),
+            playerState = playingState,
+        ),
+        // Sorted by size
+        BrowserPreviewState(
+            description = "Sorted by size",
+            browserState = baseBrowserState.copy(
+                sortOrder = BrowserSortOrder.SIZE,
                 files = persistentListOf(
-                    ModuleFile(
-                        uri = "content://preview/1".toUri(),
-                        name = "a_journey_into_sound.far",
-                        sizeBytes = 123456L,
-                        extension = "far"
-                    ),
-                    ModuleFile(
-                        uri = "content://preview/2".toUri(),
-                        name = "aegis_-_beneath_the_fallen_stars.it",
-                        sizeBytes = 1820792L,
-                        extension = "it"
-                    ),
-                    ModuleFile(
-                        uri = "content://preview/3".toUri(),
-                        name = "alpharapii.mod",
-                        sizeBytes = 45678L,
-                        extension = "mod"
-                    ),
-                    ModuleFile(
-                        uri = "content://preview/4".toUri(),
-                        name = "chiptune_no_184.mod",
-                        sizeBytes = 6658L,
-                        extension = "mod"
-                    ),
+                    sampleFiles[3], // 6KB
+                    sampleFiles[2], // 45KB
+                    sampleFiles[0], // 123KB
+                    sampleFiles[1], // 1.8MB
                 ),
             ),
-            playerState = PlayerUiState(
-                status = PlaybackStatus.PLAYING,
-                currentModule = ModuleFile(
-                    uri = "content://preview/1".toUri(),
-                    name = "a_journey_into_sound.far",
-                    sizeBytes = 123456L,
-                    extension = "far",
-                ),
-                moduleName = "A Journey Into Sound",
-                moduleType = "FAR",
-                positionMs = 62000L,
-                durationMs = 252849L,
-                currentQueueIndex = 0,
-            ),
-            filterQuery = "",
+            playerState = PlayerUiState(),
+        ),
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun Preview(
+    @PreviewParameter(BrowserPreviewParameter::class) params: BrowserPreviewState
+) {
+    XmpTheme {
+        FileBrowserScreenContent(
+            browserState = params.browserState,
+            playerState = params.playerState,
+            filterQuery = params.browserState.filterQuery,
             onFilter = {},
+            onShuffle = {},
+            onRepeatMode = {},
             onNavigateToPlayer = {},
             onBack = {},
             onFolderPick = {},
             onSortOrder = {},
             onNavigateUp = {},
-            canNavigateUp = { false },
+            canNavigateUp = { params.browserState.breadcrumbs.size > 1 },
             onBreadcrumb = {},
             onPlayAll = {},
             onSelect = {},

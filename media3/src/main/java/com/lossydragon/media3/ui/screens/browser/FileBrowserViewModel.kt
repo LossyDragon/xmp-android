@@ -84,8 +84,8 @@ class FileBrowserViewModel(
         state.value = state.value.copy(isShuffle = value)
     }
 
-    fun setLoop(value: Boolean) {
-        state.value = state.value.copy(isLoop = value)
+    fun setRepeatMode(mode: Int) {
+        state.value = state.value.copy(repeatMode = mode)
     }
 
     fun navigateToBreadcrumb(index: Int) {
