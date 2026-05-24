@@ -32,7 +32,9 @@ internal fun EmptyPrompt(padding: PaddingValues, onPick: () -> Unit) {
             .padding(32.dp),
         contentAlignment = Alignment.Center,
         content = {
-            Card {
+            Card(
+                shape = MaterialTheme.shapes.small,
+            ) {
                 Column(
                     modifier = Modifier.padding(32.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,

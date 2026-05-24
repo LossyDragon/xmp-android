@@ -3,7 +3,6 @@ package com.lossydragon.media3.ui.screens.player.components
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.*
@@ -69,7 +68,6 @@ private fun Preview() {
                     timeMs = 0,
                     totalTimeMs = 0,
                     channels = persistentListOf(),
-                    presentationNanos = 0,
                 )
             )
         }

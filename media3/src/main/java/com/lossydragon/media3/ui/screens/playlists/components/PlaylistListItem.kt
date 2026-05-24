@@ -13,6 +13,7 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,6 +39,11 @@ internal fun PlaylistListItem(
 
     ListItem(
         onClick = onSelect,
+        shapes = ListItemDefaults.shapes(
+            shape = MaterialTheme.shapes.small,
+            focusedShape = MaterialTheme.shapes.small,
+            pressedShape = MaterialTheme.shapes.small,
+        ),
         content = { Text(text = item.name) },
         supportingContent = {
             Column {

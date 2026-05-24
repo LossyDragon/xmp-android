@@ -189,6 +189,7 @@ private fun DownloadModuleContent(
 
                             Button(
                                 modifier = Modifier.weight(1f),
+                                shape = MaterialTheme.shapes.small,
                                 enabled = !state.isLoading && !isDownloading &&
                                     module?.isSupported != false,
                                 onClick = {
@@ -203,6 +204,7 @@ private fun DownloadModuleContent(
 
                             OutlinedButton(
                                 modifier = Modifier.weight(1f),
+                                shape = MaterialTheme.shapes.small,
                                 enabled = !state.isLoading && !isDownloading,
                                 onClick = onRandomModule,
                                 content = { Text(text = "Random") }

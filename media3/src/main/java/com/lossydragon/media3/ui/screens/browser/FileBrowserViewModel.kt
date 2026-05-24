@@ -18,6 +18,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class FileBrowserViewModel(
@@ -48,7 +49,10 @@ class FileBrowserViewModel(
             uri,
             Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
         )
+
         viewModelScope.launch { prefs.setLastDirectoryUri(uri.toString()) }
+        state.update { it.copy(isLoading = true) }
+
         rootTreeUri = uri
         dirStack.clear()
         dirStack.addLast(uri)
@@ -65,6 +69,7 @@ class FileBrowserViewModel(
 
     fun navigateInto(item: FileItem) {
         dirStack.addLast(item.uri)
+        state.update { it.copy(isLoading = true) }
         viewModelScope.launch(Dispatchers.IO) {
             indexDirectory(item.uri)
             loadDirectory(item.uri)

@@ -26,6 +26,7 @@ internal fun SortMenu(
         DropdownMenu(
             expanded = showSortMenu,
             onDismissRequest = { showSortMenu = false },
+            shape = MaterialTheme.shapes.small,
             content = {
                 DropdownMenuItem(
                     text = { Text(text = "Name") },

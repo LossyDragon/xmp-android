@@ -30,8 +30,7 @@ data class FrameSnapshot(
     val bpm: Int,
     val timeMs: Int,
     val totalTimeMs: Int,
-    val channels: ImmutableList<ChannelSnapshot>,
-    val presentationNanos: Long
+    val channels: ImmutableList<ChannelSnapshot>
 )
 
 @Immutable

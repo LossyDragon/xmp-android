@@ -6,15 +6,21 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.retain.*
 import androidx.compose.ui.*
+import androidx.compose.ui.platform.*
+import androidx.compose.ui.tooling.preview.*
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import com.lossydragon.media3.di.appModule
 import com.lossydragon.media3.ui.screens.browser.FileBrowserScreen
 import com.lossydragon.media3.ui.screens.downloads.NavDownloads
 import com.lossydragon.media3.ui.screens.playlists.NavPlaylists
+import com.lossydragon.media3.ui.theme.XmpTheme
 import kotlinx.collections.immutable.persistentListOf
+import org.koin.android.ext.koin.androidContext
+import org.koin.core.context.startKoin
 
 private val bottomBarItems = persistentListOf(
     NavKeyMain.Browser,
@@ -40,9 +46,9 @@ fun MainNavigation(
 
     Scaffold(
         bottomBar = {
-            NavigationBar {
+            ShortNavigationBar {
                 bottomBarItems.forEach { destination ->
-                    NavigationBarItem(
+                    ShortNavigationBarItem(
                         selected = currentTab == destination,
                         label = { Text(destination.title) },
                         icon = {
@@ -116,6 +122,22 @@ fun MainNavigation(
                 //     )
                 // }
             }
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun Preview() {
+    val context = LocalContext.current
+    startKoin {
+        androidContext(context)
+        modules(appModule)
+    }
+    XmpTheme {
+        MainNavigation(
+            onNavigateToPlayer = {},
+            onBack = {},
         )
     }
 }

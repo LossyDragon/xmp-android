@@ -15,7 +15,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.net.toUri
 import com.lossydragon.media3.model.ModuleFile
 import com.lossydragon.media3.ui.theme.XmpTheme
-import kotlinx.coroutines.CoroutineScope
 import sh.calvin.reorderable.DragGestureDetector
 import sh.calvin.reorderable.ReorderableCollectionItemScope
 
@@ -31,6 +30,11 @@ internal fun ReorderableCollectionItemScope.PlaylistEntryItem(
 
     ListItem(
         onClick = onPlay,
+        shapes = ListItemDefaults.shapes(
+            shape = MaterialTheme.shapes.small,
+            focusedShape = MaterialTheme.shapes.small,
+            pressedShape = MaterialTheme.shapes.small,
+        ),
         content = {
             Text(
                 text = file.resolvedName.ifBlank { file.name },

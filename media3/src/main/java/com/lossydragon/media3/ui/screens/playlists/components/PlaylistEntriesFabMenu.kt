@@ -27,6 +27,7 @@ internal fun PlaylistEntriesFabMenu(
         button = {
             FloatingActionButton(
                 onClick = onExpand,
+                shape = MaterialTheme.shapes.small,
                 content = {
                     Icon(
                         imageVector = if (expanded) {

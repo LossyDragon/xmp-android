@@ -13,6 +13,7 @@ import androidx.compose.ui.text.style.*
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
 import androidx.core.net.toUri
+import androidx.media3.common.Player
 import com.lossydragon.media3.R
 import com.lossydragon.media3.model.ModuleFile
 import com.lossydragon.media3.model.PlaybackStatus
@@ -32,8 +33,30 @@ fun MiniPlayerBar(
     val progress = (state.positionMs.toFloat() / duration).coerceIn(0f, 1f)
     val isPlaying = state.status == PlaybackStatus.PLAYING
 
+    val hasNext = when {
+        state.queue.isEmpty() -> false
+
+        state.repeatMode == Player.REPEAT_MODE_ALL ||
+            state.repeatMode == Player.REPEAT_MODE_ONE -> true
+
+        else -> state.currentQueueIndex < state.queue.lastIndex
+    }
+    val hasPrev = when {
+        state.queue.isEmpty() -> false
+
+        state.repeatMode == Player.REPEAT_MODE_ALL ||
+            state.repeatMode == Player.REPEAT_MODE_ONE -> true
+
+        else -> state.currentQueueIndex > 0
+    }
+
     ListItem(
         modifier = Modifier.padding(6.dp),
+        shapes = ListItemDefaults.shapes(
+            shape = MaterialTheme.shapes.small,
+            focusedShape = MaterialTheme.shapes.small,
+            pressedShape = MaterialTheme.shapes.small,
+        ),
         onClick = onTap,
         colors = ListItemDefaults.colors(
             containerColor = MaterialTheme.colorScheme.onSecondary
@@ -53,6 +76,7 @@ fun MiniPlayerBar(
             Row {
                 IconButton(
                     onClick = onPrevious,
+                    enabled = hasPrev,
                     content = {
                         Icon(
                             imageVector = Icons.Default.SkipPrevious,
@@ -73,6 +97,7 @@ fun MiniPlayerBar(
                 )
                 IconButton(
                     onClick = onNext,
+                    enabled = hasNext,
                     content = {
                         Icon(
                             imageVector = Icons.Default.SkipNext,

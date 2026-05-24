@@ -9,19 +9,17 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.*
 import androidx.compose.material.icons.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.material3.FloatingToolbarDefaults.ScreenOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.input.nestedscroll.*
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.tooling.preview.*
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.*
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
@@ -49,9 +47,17 @@ fun FileBrowserScreen(
 ) {
     val context = LocalContext.current
     val browserViewModel = koinViewModel<FileBrowserViewModel>()
-    val playerViewModel = koinViewModel<XmpPlayerViewModel>(
-        viewModelStoreOwner = LocalActivity.current as ComponentActivity
-    )
+    // val playerViewModel = koinViewModel<XmpPlayerViewModel>(
+    //     viewModelStoreOwner = LocalActivity.current as ComponentActivity
+    // )
+
+    // Cheap hack to have @Preview work with MainNavigation
+    val activity = LocalActivity.current
+    val playerViewModel = if (activity != null) {
+        koinViewModel<XmpPlayerViewModel>(viewModelStoreOwner = activity as ComponentActivity)
+    } else {
+        koinViewModel<XmpPlayerViewModel>()
+    }
 
     val browserState by browserViewModel.state.collectAsStateWithLifecycle()
     val playerState by playerViewModel.state.collectAsStateWithLifecycle()
@@ -180,11 +186,12 @@ private fun FileBrowserScreenContent(
                     state = searchBarState,
                     colors = appBarWithSearchColors,
                     inputField = inputField,
-                    shape = RoundedCornerShape(16.dp)
+                    shape = MaterialTheme.shapes.small,
                 )
                 ExpandedDockedSearchBarWithGap(
                     state = searchBarState,
                     inputField = inputField,
+                    shape = MaterialTheme.shapes.small,
                     content = { /* TODO maybe add this, for single plays */ }
                 )
                 if (browserState.breadcrumbs.isNotEmpty()) {
@@ -198,84 +205,81 @@ private fun FileBrowserScreenContent(
                 }
             }
         },
-        bottomBar = {
+        floatingActionButton = {
             AnimatedVisibility(
                 visible = !hasModule && browserState.hasStorageAccess && !browserState.isLoading,
                 enter = scaleIn() + fadeIn(),
                 exit = scaleOut() + fadeOut(),
             ) {
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    HorizontalFloatingToolbar(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .offset(y = -ScreenOffset)
-                            .zIndex(1f),
-                        expanded = true,
-                        shape = RoundedCornerShape(16.dp),
-                        floatingActionButton = {
-                            FloatingActionButton(
-                                onClick = onPlayAll,
-                                content = {
-                                    Icon(
-                                        imageVector = Icons.Default.PlayArrow,
-                                        contentDescription = null
-                                    )
+                HorizontalFloatingToolbar(
+                    modifier = Modifier.offset(y = 12.dp),
+                    expanded = true,
+                    shape = MaterialTheme.shapes.small,
+                    floatingActionButton = {
+                        FloatingActionButton(
+                            shape = MaterialTheme.shapes.small,
+                            onClick = onPlayAll,
+                            content = {
+                                Icon(
+                                    imageVector = Icons.Default.PlayArrow,
+                                    contentDescription = null
+                                )
+                            }
+                        )
+                    },
+                    content = {
+                        IconButton(
+                            onClick = { onShuffle(!browserState.isShuffle) },
+                            content = {
+                                val icon = if (browserState.isShuffle) {
+                                    Icons.Default.ShuffleOn
+                                } else {
+                                    Icons.Default.Shuffle
                                 }
-                            )
-                        },
-                        content = {
-                            IconButton(
-                                onClick = { onShuffle(!browserState.isShuffle) },
-                                content = {
-                                    val icon = if (browserState.isShuffle) {
-                                        Icons.Default.ShuffleOn
+                                Icon(
+                                    imageVector = icon,
+                                    contentDescription = null,
+                                    tint = if (browserState.isShuffle) {
+                                        MaterialTheme.colorScheme.primary
                                     } else {
-                                        Icons.Default.Shuffle
+                                        MaterialTheme.colorScheme.onSurfaceVariant
                                     }
-                                    Icon(
-                                        imageVector = icon,
-                                        contentDescription = null,
-                                        tint = if (browserState.isShuffle) {
-                                            MaterialTheme.colorScheme.primary
-                                        } else {
-                                            MaterialTheme.colorScheme.onSurfaceVariant
-                                        }
-                                    )
-                                }
-                            )
+                                )
+                            }
+                        )
 
-                            IconButton(
-                                onClick = {
-                                    val next = when (browserState.repeatMode) {
-                                        Player.REPEAT_MODE_OFF -> Player.REPEAT_MODE_ONE
-                                        Player.REPEAT_MODE_ONE -> Player.REPEAT_MODE_ALL
-                                        else -> Player.REPEAT_MODE_OFF
-                                    }
-                                    onRepeatMode(next)
-                                },
-                                content = {
-                                    Icon(
-                                        imageVector = when (browserState.repeatMode) {
-                                            Player.REPEAT_MODE_ONE -> Icons.Default.RepeatOneOn
-                                            Player.REPEAT_MODE_ALL -> Icons.Default.RepeatOn
-                                            else -> Icons.Default.Repeat
-                                        },
-                                        contentDescription = "Repeat",
-                                        tint = if (browserState.repeatMode !=
-                                            Player.REPEAT_MODE_OFF
-                                        ) {
-                                            MaterialTheme.colorScheme.primary
-                                        } else {
-                                            MaterialTheme.colorScheme.onSurfaceVariant
-                                        }
-                                    )
+                        IconButton(
+                            onClick = {
+                                val next = when (browserState.repeatMode) {
+                                    Player.REPEAT_MODE_OFF -> Player.REPEAT_MODE_ONE
+                                    Player.REPEAT_MODE_ONE -> Player.REPEAT_MODE_ALL
+                                    else -> Player.REPEAT_MODE_OFF
                                 }
-                            )
-                        }
-                    )
-                }
+                                onRepeatMode(next)
+                            },
+                            content = {
+                                Icon(
+                                    imageVector = when (browserState.repeatMode) {
+                                        Player.REPEAT_MODE_ONE -> Icons.Default.RepeatOneOn
+                                        Player.REPEAT_MODE_ALL -> Icons.Default.RepeatOn
+                                        else -> Icons.Default.Repeat
+                                    },
+                                    contentDescription = "Repeat",
+                                    tint = if (browserState.repeatMode !=
+                                        Player.REPEAT_MODE_OFF
+                                    ) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                    }
+                                )
+                            }
+                        )
+                    }
+                )
             }
-
+        },
+        bottomBar = {
             AnimatedVisibility(
                 visible = hasModule,
                 enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),

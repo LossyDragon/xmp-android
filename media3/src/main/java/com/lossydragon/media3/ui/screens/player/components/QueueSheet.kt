@@ -99,6 +99,11 @@ private fun QueueListItem(
     }
     ListItem(
         onClick = { onItemClick(index) },
+        shapes = ListItemDefaults.shapes(
+            shape = MaterialTheme.shapes.small,
+            focusedShape = MaterialTheme.shapes.small,
+            pressedShape = MaterialTheme.shapes.small,
+        ),
         content = {
             Text(
                 text = file.name,

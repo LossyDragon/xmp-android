@@ -20,6 +20,11 @@ internal fun ModuleListItem(
 ) {
     ListItem(
         onClick = onClick,
+        shapes = ListItemDefaults.shapes(
+            shape = MaterialTheme.shapes.small,
+            focusedShape = MaterialTheme.shapes.small,
+            pressedShape = MaterialTheme.shapes.small,
+        ),
         modifier = Modifier.fillMaxWidth(),
         content = {
             Text(

@@ -29,7 +29,7 @@ fun MessageBox(
             Surface(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                shape = MaterialTheme.shapes.extraLarge,
+                shape = MaterialTheme.shapes.small,
                 tonalElevation = 3.dp,
             ) {
                 Column(

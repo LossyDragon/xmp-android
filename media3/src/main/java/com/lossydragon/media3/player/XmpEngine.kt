@@ -244,7 +244,6 @@ class XmpEngine(private val context: Context) {
                             period = channelInfo.periods[i],
                         )
                     }.toImmutableList(),
-                    presentationNanos = System.nanoTime(),
                 )
 
                 positionMs.value = timeMs.toLong()

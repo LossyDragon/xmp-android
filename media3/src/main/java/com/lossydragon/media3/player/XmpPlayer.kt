@@ -23,6 +23,7 @@ import com.lossydragon.media3.R
 import com.lossydragon.media3.db.XmpPreferences
 import com.lossydragon.media3.model.ModuleFile
 import kotlin.math.abs
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -70,7 +71,10 @@ class XmpPlayer(
     private val playlist = mutableListOf<MediaItem>()
     private val queue = mutableListOf<ModuleFile>()
     private val originalQueue = mutableListOf<ModuleFile>()
+
     private var currentIndex = 0
+    private var lastNavDirection: Int = 1 // 1 = forward, -1 = backward
+    private var skipAttempts: Int = 0
 
     private val mainHandler = Handler(Looper.getMainLooper())
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
@@ -228,9 +232,19 @@ class XmpPlayer(
                 engine.start()
                 mainHandler.post { invalidateState() }
             } else {
-                mainHandler.post { advanceToNext() }
+                mainHandler.post { skipUnplayable() }
             }
         }.start()
+    }
+
+    private fun skipUnplayable() {
+        skipAttempts++
+        if (skipAttempts >= queue.size) {
+            skipAttempts = 0
+            clearQueue()
+            return
+        }
+        if (lastNavDirection < 0) advanceToPrevious() else advanceToNext()
     }
 
     private fun navigate(to: Int) {
@@ -252,6 +266,8 @@ class XmpPlayer(
     }
 
     private fun advanceToNext() {
+        lastNavDirection = 1
+
         when {
             repeatMode == REPEAT_MODE_ONE -> navigate(currentIndex)
 
@@ -273,6 +289,8 @@ class XmpPlayer(
     }
 
     private fun advanceToPrevious() {
+        lastNavDirection = -1
+
         when {
             repeatMode == REPEAT_MODE_ONE -> navigate(currentIndex)
 
@@ -305,14 +323,17 @@ class XmpPlayer(
     }
 
     fun jumpToIndex(index: Int) {
-        if (index in queue.indices) navigate(index)
+        if (index in queue.indices) {
+            lastNavDirection = if (index >= currentIndex) 1 else -1
+            navigate(index)
+        }
     }
 
     private fun startPositionUpdates() {
         positionUpdateJob?.cancel()
         positionUpdateJob = scope.launch {
             while (true) {
-                delay(500L)
+                delay(500L.milliseconds)
                 if (pendingSeekPositionMs >= 0 &&
                     abs(engine.positionMs.value - pendingSeekPositionMs) < 2_000L
                 ) {

@@ -53,6 +53,7 @@ internal fun BreadCrumbs(
                         val isLast = index == breadcrumbs.lastIndex
                         AssistChip(
                             modifier = Modifier.padding(horizontal = 2.dp),
+                            shape = MaterialTheme.shapes.small,
                             enabled = !isLast,
                             onClick = { onCrumbClick(index) },
                             label = {

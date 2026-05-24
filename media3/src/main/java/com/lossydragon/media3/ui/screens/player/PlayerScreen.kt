@@ -19,6 +19,7 @@ import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.media3.common.Player
 import com.lossydragon.media3.model.ChannelSnapshot
 import com.lossydragon.media3.model.FrameSnapshot
 import com.lossydragon.media3.model.ModuleFile
@@ -327,8 +328,16 @@ private fun PlayerScreenContent(
                     Spacer(modifier = Modifier.height(4.dp))
                     TransportRow(
                         status = state.status,
-                        hasNext = state.currentQueueIndex < state.queue.lastIndex,
-                        hasPrev = state.currentQueueIndex > 0,
+                        hasNext = state.queue.isNotEmpty() && (
+                            state.repeatMode == Player.REPEAT_MODE_ALL ||
+                                state.repeatMode == Player.REPEAT_MODE_ONE ||
+                                state.currentQueueIndex < state.queue.lastIndex
+                            ),
+                        hasPrev = state.queue.isNotEmpty() && (
+                            state.repeatMode == Player.REPEAT_MODE_ALL ||
+                                state.repeatMode == Player.REPEAT_MODE_ONE ||
+                                state.currentQueueIndex > 0
+                            ),
                         onStop = { onAction(PlayerAction.OnStop) },
                         onPrev = { onAction(PlayerAction.OnPrevious) },
                         onPlayPause = { onAction(PlayerAction.OnPlayPause) },
@@ -446,7 +455,6 @@ private val previewPlayerState = PlayerUiState(
                 period = 0,
             )
         }.toImmutableList(),
-        presentationNanos = 0L,
     ),
 )
 

@@ -97,6 +97,11 @@ private fun DurationItem(
 
     ListItem(
         onClick = { onItemClick(index) },
+        shapes = ListItemDefaults.shapes(
+            shape = MaterialTheme.shapes.small,
+            focusedShape = MaterialTheme.shapes.small,
+            pressedShape = MaterialTheme.shapes.small,
+        ),
         modifier = Modifier
             .fillMaxWidth()
             .background(background),

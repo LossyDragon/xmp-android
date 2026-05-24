@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.*
 import com.lossydragon.media3.model.SearchType
 import com.lossydragon.media3.ui.theme.XmpTheme
 import com.lossydragon.media3.ui.util.annotatedLinkString
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -41,7 +42,7 @@ fun DownloadSearchScreen(
     var hasInteracted by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        delay(500L) // Chill
+        delay(500L.milliseconds) // Chill
         focusRequester.requestFocus()
     }
 
@@ -65,6 +66,7 @@ fun DownloadSearchScreen(
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
+                shape = MaterialTheme.shapes.small,
                 onClick = {
                     scope.launch {
                         if (!hasApiKey) {
@@ -120,6 +122,7 @@ fun DownloadSearchScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .focusRequester(focusRequester),
+                    shape = MaterialTheme.shapes.small,
                     enabled = hasApiKey,
                     value = query,
                     onValueChange = {
@@ -177,6 +180,7 @@ fun DownloadSearchScreen(
                             buttonGroupContent = {
                                 OutlinedButton(
                                     onClick = onRandom,
+                                    shape = MaterialTheme.shapes.small,
                                     enabled = hasApiKey,
                                     modifier = Modifier.weight(1f),
                                     content = {
@@ -196,6 +200,7 @@ fun DownloadSearchScreen(
                             buttonGroupContent = {
                                 OutlinedButton(
                                     onClick = onHistory,
+                                    shape = MaterialTheme.shapes.small,
                                     content = {
                                         Icon(
                                             imageVector = Icons.Default.History,
