@@ -23,10 +23,22 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: 17
-          cache: 'gradle'
+          # cache: 'gradle'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+
+      - name: Cache native build
+        uses: actions/cache@v4
+        with:
+          path: |
+            libxmp/.cxx
+            libxmp/build/intermediates/cxx
+          key: ndk-${{ runner.os }}-${{ hashFiles('libxmp/src/main/jni/**', 'libxmp/build.gradle.kts') }}
+          restore-keys: ndk-${{ runner.os }}-
 
       - name: Configure Keystore
         env:

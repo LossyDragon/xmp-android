@@ -20,27 +20,8 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
--keep public class org.helllabs.libxmp.model.AudioStats {
-    public *;
-}
-
--keep public class org.helllabs.libxmp.model.ChannelInfo {
-    public *;
-}
-
-
--keep public class org.helllabs.libxmp.model.FrameInfo {
-    public *;
-}
-
-
--keep public class org.helllabs.libxmp.model.ModInfo {
-    public *;
-}
-
--keep public class org.helllabs.libxmp.model.ModVars {
-    public *;
-}
+-keep class org.helllabs.libxmp.** { *; }
+-keepclassmembers class org.helllabs.libxmp.** { *; }
 
 -keep public class * extends android.app.Application
 

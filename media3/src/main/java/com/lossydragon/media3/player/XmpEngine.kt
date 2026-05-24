@@ -249,16 +249,21 @@ class XmpEngine(private val context: Context) {
                 positionMs.value = timeMs.toLong()
 
                 if (endReached) {
+                    Timber.i(
+                        "renderLoop: endReached, playAllSequences=$playAllSequences seq=$currentSequence/$numSequences"
+                    )
                     if (playAllSequences) {
                         currentSequence++
                         if (setSequence(currentSequence)) {
                             // keep playing — don't set endedNaturally
+                            Timber.i("renderLoop: advanced to seq $currentSequence")
                             continue
                         }
                     }
                     endedNaturally = true
                     isPlaying.value = false
                     Xmp.stopAudio()
+                    Timber.i("renderLoop: ended naturally, exiting loop")
                     break
                 }
             } catch (_: InterruptedException) {

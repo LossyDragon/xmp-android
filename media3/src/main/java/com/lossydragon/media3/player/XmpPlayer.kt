@@ -154,6 +154,9 @@ class XmpPlayer(
     init {
         scope.launch {
             engine.isPlaying.collect { playing ->
+                Timber.i(
+                    "isPlaying collector: playing=$playing endedNaturally=${engine.endedNaturally} idx=$currentIndex/${queue.size}"
+                )
                 invalidateState()
                 if (playing) {
                     startPositionUpdates()
