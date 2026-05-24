@@ -64,6 +64,9 @@ class XmpPlayer(
     @Volatile
     private var pendingSeekPositionMs: Long = -1L
 
+    @Volatile
+    var isReordering = false
+
     private val playlist = mutableListOf<MediaItem>()
     private val queue = mutableListOf<ModuleFile>()
     private val originalQueue = mutableListOf<ModuleFile>()
@@ -401,13 +404,15 @@ class XmpPlayer(
             return Futures.immediateVoidFuture()
         }
 
+        isReordering = true
+
         val currentFile = queue.getOrNull(currentIndex)
+        val currentRealItem = playlist.getOrNull(currentIndex)
 
         queue.clear()
         playlist.clear()
 
         if (shuffleModeEnabled) {
-            // Shuffle remaining, keep current track at index 0
             val remaining = originalQueue.toMutableList()
             currentFile?.let { remaining.remove(it) }
             remaining.shuffle()
@@ -415,26 +420,26 @@ class XmpPlayer(
             queue.addAll(remaining)
             currentIndex = 0
         } else {
-            // Restore original order, seek to current track's position
             queue.addAll(originalQueue)
             currentIndex = currentFile?.let { originalQueue.indexOf(it) }
                 ?.coerceAtLeast(0) ?: 0
         }
 
         playlist.addAll(queue.map { it.toMediaItem() })
-        // Re-update the real metadata for current index
-        val currentItem = queue.getOrNull(currentIndex)
-        if (currentItem != null) {
-            playlist[currentIndex] = MediaItem.Builder()
-                .setUri(currentItem.uri)
-                .setMediaId(currentItem.uri.toString())
-                .setMediaMetadata(currentItem.toRealMetadata(engine.durationMs.value))
-                .build()
+
+        // Restore real metadata for current track — don't use toRealMetadata()
+        // since Xmp.getModName/Type() may not reflect the current track if called
+        // during shuffle toggle. Use the saved item instead.
+        if (currentRealItem != null) {
+            playlist[currentIndex] = currentRealItem
         }
 
         currentIndexFlow.value = currentIndex
         queueFlow.value = queue.toList()
+
+        isReordering = false
         invalidateState()
+
         return Futures.immediateVoidFuture()
     }
 

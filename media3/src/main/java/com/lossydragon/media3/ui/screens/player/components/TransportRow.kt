@@ -35,7 +35,6 @@ internal fun TransportRow(
     ) {
         IconButton(
             onClick = onStop,
-            shapes = IconButtonDefaults.shapes(),
             content = {
                 Icon(
                     imageVector = Icons.Default.Stop,
@@ -48,7 +47,6 @@ internal fun TransportRow(
         IconButton(
             onClick = onPrev,
             enabled = hasPrev,
-            shapes = IconButtonDefaults.shapes(),
             content = {
                 Icon(
                     imageVector = Icons.Default.SkipPrevious,
@@ -75,7 +73,6 @@ internal fun TransportRow(
         IconButton(
             onClick = onNext,
             enabled = hasNext,
-            shapes = IconButtonDefaults.shapes(),
             content = {
                 Icon(
                     imageVector = Icons.Default.SkipNext,
@@ -87,7 +84,6 @@ internal fun TransportRow(
 
         IconButton(
             onClick = onQueueSheet,
-            shapes = IconButtonDefaults.shapes(),
             content = {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.QueueMusic,

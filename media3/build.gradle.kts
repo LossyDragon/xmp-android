@@ -20,6 +20,10 @@ kotlin {
     }
 }
 
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+
 /**
  * For GitHub Actions, using 'GHA' build variant
  */
@@ -42,10 +46,10 @@ android {
         /*
          * https://apilevels.com/
          */
-        minSdk = 26
-        targetSdk = 37
+        minSdk = 26 // Oreo
+        targetSdk = 37 // Cinnamon Bun (terrible codename).
 
-        versionCode = 3
+        versionCode = 4
         versionName = "1.0"
 
         ndk.abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
@@ -116,6 +120,7 @@ dependencies {
     implementation(libs.kotlinx.immutable)
     implementation(libs.materialKolor)
     implementation(libs.compose.placeholder) // TODO try out
+    implementation(libs.reorderable)
 
     // Koin
     implementation(platform(libs.koin.bom))

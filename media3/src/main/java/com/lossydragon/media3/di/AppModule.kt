@@ -5,6 +5,7 @@ import com.lossydragon.media3.core.Constants
 import com.lossydragon.media3.data.DownloadHistoryRepository
 import com.lossydragon.media3.data.ModArchiveService
 import com.lossydragon.media3.data.ModuleMetadataRepository
+import com.lossydragon.media3.data.PlaylistRepository
 import com.lossydragon.media3.db.XmpDatabase
 import com.lossydragon.media3.db.XmpPreferences
 import com.lossydragon.media3.player.XmpEngine
@@ -14,6 +15,7 @@ import com.lossydragon.media3.ui.screens.browser.FileBrowserViewModel
 import com.lossydragon.media3.ui.screens.downloads.viewmodel.DownloadHistoryViewModel
 import com.lossydragon.media3.ui.screens.downloads.viewmodel.DownloadViewModel
 import com.lossydragon.media3.ui.screens.downloads.viewmodel.ModuleResultViewModel
+import com.lossydragon.media3.ui.screens.playlists.PlaylistsViewModel
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.android.Android
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -32,20 +34,24 @@ val appModule = module {
     viewModel { ModuleResultViewModel(androidContext(), get(), get(), get(), get()) }
     viewModel { XmpPlayerViewModel(androidContext(), get(), get()) }
     viewModel { DownloadHistoryViewModel(get()) }
+    viewModel { PlaylistsViewModel(androidContext(), get(), get()) }
 
     // Database
     single {
+        // TODO: remove fallbackToDestructiveMigration
         Room.databaseBuilder(
             androidContext(),
             XmpDatabase::class.java,
             Constants.ROOM_DATABASE_NAME,
         ).fallbackToDestructiveMigration(true)
-            .build() // TODO: replace with proper migrations before release
+            .build()
     }
     single { get<XmpDatabase>().moduleMetadataDao() }
     single { get<XmpDatabase>().downloadHistoryDao() }
+    single { get<XmpDatabase>().playlistDao() }
     single { ModuleMetadataRepository(androidContext(), get()) }
     single { DownloadHistoryRepository(get()) }
+    single { PlaylistRepository(get()) }
 
     // Downloads
     single {

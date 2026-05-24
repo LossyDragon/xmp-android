@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import org.helllabs.libxmp.Xmp
+import timber.log.Timber
 
 /** Bridges [XmpPlayer] state to the UI via [PlayerUiState]. */
 @OptIn(UnstableApi::class)
@@ -67,6 +68,7 @@ class XmpPlayerViewModel(
         }.launchIn(viewModelScope)
 
         player.queueFlow.onEach { queue ->
+            Timber.d("queueFlow fired, size=${queue.size}")
             state.update {
                 it.copy(
                     queue = queue.toImmutableList(),
@@ -82,12 +84,17 @@ class XmpPlayerViewModel(
             state.update {
                 it.copy(
                     currentModule = file,
-                    moduleName = file.displayName(),
-                    moduleType = file.displayType(),
                     currentQueueIndex = index,
-                    currentSequence = 0,
+                    moduleName = if (player.isReordering) it.moduleName else file.displayName(),
+                    moduleType = if (player.isReordering) it.moduleType else file.displayType(),
+                    currentSequence = if (player.isReordering) it.currentSequence else 0,
                 )
             }
+        }.launchIn(viewModelScope)
+
+        player.moduleLoadedFlow.onEach {
+            Timber.d("moduleLoadedFlow fired")
+            syncModuleInfo()
         }.launchIn(viewModelScope)
     }
 
@@ -204,6 +211,7 @@ class XmpPlayerViewModel(
         state.update { it.copy(repeatMode = newMode) }
     }
 
+    // TODO implement muting
     fun muteChannel(ch: Int, muted: Boolean) = Xmp.mute(ch, if (muted) 1 else 0)
 
     fun setSequence(index: Int) = player.setSequence(index)

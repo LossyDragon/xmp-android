@@ -10,6 +10,16 @@ import androidx.navigation3.runtime.NavKey
 import com.lossydragon.media3.model.SearchType
 import kotlinx.serialization.Serializable
 
+sealed interface NavKeyPlaylists : NavKey {
+    @Serializable data object List : NavKeyPlaylists
+
+    @Serializable data class Entries(
+        val playlistId: Long,
+        val playlistName: String,
+        val playlistComment: String
+    ) : NavKeyPlaylists
+}
+
 @Serializable
 sealed class NavKeyRoot : NavKey {
     @Serializable
@@ -42,11 +52,11 @@ sealed class NavKeyMain(val title: String) : NavKey {
         override val unselectedIcon = Icons.Outlined.Download
     }
 
-    @Serializable
-    data object NowPlaying : NavKeyMain("Now Playing") {
-        override val selectedIcon = Icons.Filled.MusicNote
-        override val unselectedIcon = Icons.Outlined.MusicNote
-    }
+    // @Serializable
+    // data object NowPlaying: NavKeyMain("Now Playing") {
+    //     override val selectedIcon = Icons.Filled.MusicNote
+    //     override val unselectedIcon = Icons.Outlined.MusicNote
+    // }
 }
 
 sealed interface NavKeyDownload : NavKey {

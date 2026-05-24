@@ -2,14 +2,16 @@ package org.helllabs.libxmp
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import org.helllabs.libxmp.model.AudioStats
 import org.helllabs.libxmp.model.ChannelInfo
 import org.helllabs.libxmp.model.FrameInfo
 import org.helllabs.libxmp.model.ModInfo
 import org.helllabs.libxmp.model.ModVars
-import timber.log.Timber
 
 object Xmp {
+
+    private const val TAG = "XMP Library"
 
     const val MIN_BUFFER_MS = 80
 
@@ -160,22 +162,22 @@ object Xmp {
         get() = getFormats().sorted()
 
     fun testFromFd(context: Context, uri: Uri, modInfo: ModInfo = ModInfo()): Boolean {
-        Timber.d("Testing: $uri")
+        Log.d(TAG, "Testing: $uri")
         return context.contentResolver.openFileDescriptor(uri, "r")?.use { pfd ->
             testModuleFd(pfd.detachFd(), modInfo).also { success ->
-                if (success) Timber.i("Test Success: ${modInfo.name} | ${modInfo.type}")
+                if (success) Log.i(TAG, "Test Success: ${modInfo.name} | ${modInfo.type}")
             }
         } ?: false
     }
 
     fun loadFromFd(context: Context, uri: Uri, modInfo: ModInfo = ModInfo()): Int {
-        Timber.d("Loading: $uri")
+        Log.d(TAG, "Loading: $uri")
         return context.contentResolver.openFileDescriptor(uri, "r")?.use { pfd ->
             loadModuleFd(pfd.detachFd(), modInfo).also { result ->
                 when (result) {
-                    0 -> Timber.i("Loaded: ${modInfo.name} | ${modInfo.type}")
-                    -2 -> Timber.w("Test failed for $uri")
-                    else -> Timber.e("Load failed: $result for $uri")
+                    0 -> Log.i(TAG, "Loaded: ${modInfo.name} | ${modInfo.type}")
+                    -2 -> Log.w(TAG, "Test failed for $uri")
+                    else -> Log.e(TAG, "Load failed: $result for $uri")
                 }
             }
         } ?: -1

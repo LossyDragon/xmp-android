@@ -13,7 +13,7 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.lossydragon.media3.ui.screens.browser.FileBrowserScreen
 import com.lossydragon.media3.ui.screens.downloads.NavDownloads
-import com.lossydragon.media3.ui.screens.player.PlayerScreen
+import com.lossydragon.media3.ui.screens.playlists.NavPlaylists
 import kotlinx.collections.immutable.persistentListOf
 
 private val bottomBarItems = persistentListOf(
@@ -86,11 +86,15 @@ fun MainNavigation(
                     )
                 }
                 entry<NavKeyMain.Playlists> {
-                    // TODO: SearchScreen()
-                    Box(
-                        Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center,
-                        content = { Text("Search — coming soon") }
+                    NavPlaylists(
+                        modifier = Modifier.consumeWindowInsets(padding),
+                        snackbarHostState = snackBarHostState,
+                        onBack = {
+                            mainBackStack.removeAt(mainBackStack.lastIndex)
+                            mainBackStack.add(NavKeyMain.Browser)
+                            currentTab = NavKeyMain.Browser
+                        },
+                        onNavigateToPlayer = onNavigateToPlayer,
                     )
                 }
                 entry<NavKeyMain.Downloads> {
@@ -105,12 +109,12 @@ fun MainNavigation(
                         onNavigateToPlayer = onNavigateToPlayer,
                     )
                 }
-                entry<NavKeyMain.NowPlaying> {
-                    PlayerScreen(
-                        modifier = Modifier.consumeWindowInsets(padding),
-                        onBack = { /* no back from now playing tab */ },
-                    )
-                }
+                // entry<NavKeyMain.NowPlaying> {
+                //     PlayerScreen(
+                //         modifier = Modifier.consumeWindowInsets(padding),
+                //         onBack = { /* no back from now playing tab */ },
+                //     )
+                // }
             }
         )
     }

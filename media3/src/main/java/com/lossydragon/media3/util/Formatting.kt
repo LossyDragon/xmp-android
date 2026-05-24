@@ -18,3 +18,11 @@ fun Long.formatSize(): String = when {
 /** Strips HTML tags and decodes HTML entities. */
 fun String.fromHtml(): String =
     Html.fromHtml(this, Html.FROM_HTML_MODE_LEGACY).toString().trim()
+
+/** Formats a Unix epoch timestamp in milliseconds to a human-readable date string e.g. "May 23, 2026". */
+fun Long.toReadableDate(): String {
+    val formatter = java.time.format.DateTimeFormatter
+        .ofPattern("MMM d, yyyy")
+        .withZone(java.time.ZoneId.systemDefault())
+    return formatter.format(java.time.Instant.ofEpochMilli(this))
+}

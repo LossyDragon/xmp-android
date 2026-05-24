@@ -16,6 +16,7 @@ import timber.log.Timber
 
 class XmpEngine(private val context: Context) {
 
+    // TODO user preferences
     companion object {
         const val SAMPLE_RATE = 44100
         private const val BUFFER_MS = 200

@@ -38,6 +38,5 @@ android {
         implementation(platform(libs.compose.bom))
         implementation(libs.compose.runtime)
         implementation(libs.oboe)
-        implementation(libs.timber)
     }
 }

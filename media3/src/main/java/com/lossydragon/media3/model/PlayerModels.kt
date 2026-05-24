@@ -7,6 +7,7 @@ import kotlinx.collections.immutable.persistentListOf
 
 /** UI state and domain models for the module player. */
 
+// TODO PlaybackStatus.error
 enum class PlaybackStatus { IDLE, LOADING, PLAYING, PAUSED, ERROR }
 
 @Immutable
