@@ -29,6 +29,8 @@ int stop_audio(void);
 
 void close_audio(void);
 
+void set_expect_silence(int val);
+
 struct AudioStats {
   int32_t xrun_count;
   int32_t underrun_count;

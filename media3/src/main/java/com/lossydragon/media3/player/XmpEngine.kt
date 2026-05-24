@@ -90,15 +90,16 @@ class XmpEngine(private val context: Context) {
         currentSequenceFlow.value = 0
 
         if (initialized) {
-            stop()
+            // Shouldn't happen — caller should use loadNext()
+            softStop()
+            Xmp.releaseModule()
+        } else {
+            if (!Xmp.init(SAMPLE_RATE, BUFFER_MS)) {
+                Timber.e("Xmp.init() failed")
+                return false
+            }
+            initialized = true
         }
-
-        if (!Xmp.init(SAMPLE_RATE, BUFFER_MS)) {
-            Timber.e("Xmp.init() failed")
-            return false
-        }
-
-        initialized = true
 
         val modInfo = ModInfo()
         val result = Xmp.loadFromFd(context, file.uri, modInfo)
@@ -117,11 +118,43 @@ class XmpEngine(private val context: Context) {
         return true
     }
 
+    /** Loads next [file] without tearing down audio. Use between tracks. */
+    fun loadNext(file: ModuleFile): Boolean {
+        endedNaturally = false
+        stopRequest = false
+        currentSequence = 0
+        currentSequenceFlow.value = 0
+
+        if (!initialized) {
+            // First load — fall back to full init path
+            return load(file)
+        }
+
+        // Stop render loop without closing Oboe
+        softStop()
+
+        Xmp.releaseModule()
+
+        val modInfo = ModInfo()
+        val result = Xmp.loadFromFd(context, file.uri, modInfo)
+        if (result != 0) {
+            Timber.e("Xmp.loadFromFd() returned $result")
+            return false
+        }
+
+        Xmp.getModVars(modVars)
+        durationMs.value = modVars.seqDuration.toLong()
+        positionMs.value = 0L
+        return true
+    }
+
     /** Starts the render thread and audio stream. */
     fun start() {
         Timber.d("start() called")
         if (!initialized) return
         if (renderThread?.isAlive == true) return
+
+        Xmp.setExpectSilence(false)
 
         stopRequest = false
         paused = false
@@ -160,17 +193,18 @@ class XmpEngine(private val context: Context) {
     fun pause() {
         endedNaturally = false
         paused = true
-        Xmp.stopAudio()
+        Xmp.setExpectSilence(true)
+        Xmp.dropAudio() // drain
         isPlaying.value = false
     }
 
     /** Resumes from paused state. No-op if not paused. */
     fun resume() {
         if (!paused) return
-
         paused = false
-        Xmp.dropAudio()
-        Xmp.playAudio()
+        Xmp.setExpectSilence(false)
+        // Xmp.dropAudio()
+        // Xmp.playAudio()
         isPlaying.value = true
     }
 
@@ -190,12 +224,28 @@ class XmpEngine(private val context: Context) {
         renderThread = null
 
         if (initialized) {
+            Xmp.setExpectSilence(true)
+            Xmp.dropAudio()
+            Thread.sleep(60) // drain
             Xmp.endPlayer()
             Xmp.releaseModule()
             Xmp.deinit()
             initialized = false
         }
 
+
+        isPlaying.value = false
+        positionMs.value = 0L
+        frameFlow.value = null
+    }
+
+    /** Stops render loop + libxmp player, but keeps Oboe stream and context alive. */
+    private fun softStop() {
+        stopRequest = true
+        renderThread?.interrupt()
+        renderThread?.join(2_000)
+        renderThread = null
+        Xmp.endPlayer()
         isPlaying.value = false
         positionMs.value = 0L
         frameFlow.value = null
@@ -262,8 +312,9 @@ class XmpEngine(private val context: Context) {
                     }
                     endedNaturally = true
                     isPlaying.value = false
-                    Xmp.stopAudio()
                     Timber.i("renderLoop: ended naturally, exiting loop")
+                    // Xmp.stopAudio()
+                    Xmp.setExpectSilence(true)
                     break
                 }
             } catch (_: InterruptedException) {

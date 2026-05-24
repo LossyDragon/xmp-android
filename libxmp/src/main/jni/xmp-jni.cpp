@@ -1166,6 +1166,10 @@ JNIEXPORT jintArray JNICALL JNI_FUNCTION(getSeqVars)(JNIEnv* env, jobject obj) {
   return result;
 }
 
+JNIEXPORT void JNICALL JNI_FUNCTION(setExpectSilence)(JNIEnv* env, jobject obj, jboolean value) {
+  set_expect_silence(value == JNI_TRUE ? 1 : 0);
+}
+
 JNIEXPORT jint JNICALL JNI_FUNCTION(getVolume)(JNIEnv* env, jobject obj) {
   return get_volume();
 }

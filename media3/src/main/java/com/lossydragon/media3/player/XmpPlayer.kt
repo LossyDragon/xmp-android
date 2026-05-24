@@ -219,7 +219,7 @@ class XmpPlayer(
         val file = queue.getOrNull(index) ?: return
 
         Thread {
-            if (engine.load(file)) {
+            if (engine.loadNext(file)) {
                 val realItem = MediaItem.Builder()
                     .setUri(file.uri)
                     .setMediaId(file.uri.toString())

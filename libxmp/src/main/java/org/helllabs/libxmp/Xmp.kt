@@ -155,6 +155,8 @@ object Xmp {
 
     external fun getAudioStats(): AudioStats
 
+    external fun setExpectSilence(value: Boolean)
+
     /**
      * Helper to get formats
      */

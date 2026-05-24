@@ -18,6 +18,8 @@
 #define lock() pthread_mutex_lock(&mutex)
 #define unlock() pthread_mutex_unlock(&mutex)
 
+static std::atomic<bool> expect_silence(false);
+
 // Helper to safely load atomic_int
 static inline int atomic_load_int(atomic_int* ptr) {
   return atomic_load(ptr);
@@ -31,11 +33,8 @@ static inline void atomic_store_int(atomic_int* ptr, int val) {
 class XmpAudioCallback : public oboe::AudioStreamDataCallback,
                          public oboe::AudioStreamErrorCallback {
 public:
-  XmpAudioCallback(char* buf, int bufSize, int bufNum, atomic_int* firstFree, atomic_int* lastFree,
-    std::atomic<float>* volScale, std::atomic<int32_t>* underrunCount)
-    : buffer(buf), buffer_size(bufSize), buffer_num(bufNum), first_free(firstFree),
-      last_free(lastFree), volume_scale(*volScale), underrun_count_(*underrunCount),
-      buffer_position(0) {}
+  XmpAudioCallback(char* buf, int bufSize, int bufNum, atomic_int* firstFree, atomic_int* lastFree, std::atomic<float>* volScale, std::atomic<int32_t>* underrunCount)
+    : buffer(buf), buffer_size(bufSize), buffer_num(bufNum), first_free(firstFree), last_free(lastFree), volume_scale(*volScale), underrun_count_(*underrunCount), buffer_position(0) {}
 
   oboe::DataCallbackResult onAudioReady(oboe::AudioStream* audioStream, void* audioData, int32_t numFrames) override {
     static int callback_count = 0;
@@ -67,10 +66,11 @@ public:
 
       // Check if we have data available
       if (lf == ff) {
-        // No more data - fill rest with silence
         int32_t remainingBytes = bytesRequested - bytesCopied;
-        LOGW("UNDERRUN: No audio data available, filling %d bytes with silence", remainingBytes);
-        underrun_count_.fetch_add(1, std::memory_order_relaxed);
+        if (!expect_silence.load(std::memory_order_relaxed)) {
+          LOGW("UNDERRUN: No audio data available, filling %d bytes with silence", remainingBytes);
+          underrun_count_.fetch_add(1, std::memory_order_relaxed);
+        }
         memset(&outputBuffer[bytesCopied / sizeof(int16_t)], 0, remainingBytes);
         return oboe::DataCallbackResult::Continue;
       }
@@ -302,6 +302,10 @@ int play_audio() {
   if (restart_audio() < 0) return -1;
 
   return 0;
+}
+
+void set_expect_silence(int val) {
+  expect_silence.store(val != 0, std::memory_order_relaxed);
 }
 
 int has_free_buffer() {
