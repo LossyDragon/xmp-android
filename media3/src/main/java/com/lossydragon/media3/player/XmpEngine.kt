@@ -169,7 +169,7 @@ class XmpEngine(private val context: Context) {
             Xmp.mute(i, 0)
         }
 
-        Xmp.setPlayer(Xmp.PLAYER_AMP, 2)
+        Xmp.setPlayer(Xmp.PLAYER_AMP, 1)
         Xmp.setPlayer(Xmp.PLAYER_INTERP, Xmp.INTERP_LINEAR)
         Xmp.setPlayer(Xmp.PLAYER_DSP, Xmp.DSP_LOWPASS)
         Xmp.setPlayer(Xmp.PLAYER_MIX, 70)
